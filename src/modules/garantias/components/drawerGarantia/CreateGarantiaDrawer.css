@@ -1,0 +1,97 @@
+.ant-drawer-title {
+    font-size: 20px;
+    font-weight: 600;
+    text-align: left;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .ant-drawer-content {
+    background-color: #f9f9f9;
+  }
+  
+  .custom-steps {
+    margin-bottom: 20px;
+  }
+  
+  .custom-steps .ant-steps-item-title {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .custom-steps .ant-steps-item-process .ant-steps-item-icon {
+    background-color: red !important;
+    border-color: red !important;
+  }
+  
+  .custom-steps .ant-steps-item-process .ant-steps-item-icon > .ant-steps-icon {
+    color: white !important;
+  }
+  
+  .custom-steps .ant-steps-item-finish .ant-steps-item-icon {
+    background-color: red !important;
+    border-color: red !important;
+  }
+  
+  .custom-steps .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon {
+    color: white !important;
+  }
+  
+  .custom-steps .ant-steps-item-tail::after {
+    background-color: red !important;
+  }
+  
+  .custom-steps .ant-steps-item-description {
+    color: #666;
+  }
+  
+  .ant-btn-primary {
+    background-color: red !important;
+    border-color: red !important;
+  }
+  
+  .ant-btn-primary:hover {
+    background-color: darkred !important;
+    border-color: darkred !important;
+  }
+  
+  .ant-btn-primary:focus {
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+  }
+  
+  .ant-input:focus,
+  .ant-input-focused {
+    border-color: red !important;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2) !important;
+  }
+  
+  .ant-form-item-has-error .ant-input:focus {
+    border-color: red !important;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2) !important;
+  }
+  
+  .ant-input:hover {
+    border-color: red !important;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2) !important;
+  }
+  
+  .custom-steps .ant-steps-item:hover .ant-steps-item-icon {
+    border-color: red !important;
+    background-color: rgba(255, 0, 0, 0.8) !important;
+  }
+  
+  .custom-steps .ant-steps-item:hover .ant-steps-icon {
+    color: white !important;
+  }
+  
+  .ant-btn-primary:hover {
+    background-color: red !important;
+    border-color: red !important;
+  }
+  
+  .headerTitleStep{
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    background-color: rgb(247, 247, 247);
+  }
