@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HeaderContainer, TabContainer, Tab, Button } from '../header/Header.styles';
+import { HeaderContainer, TabContainer, Tab, Button } from './Header.styles.ts';
 import SearchField from '../../../../components/input_search/input_search';
 import CreateGarantiaDrawer from '../drawerGarantia/CreateGarantiaDrawer'; 
 
