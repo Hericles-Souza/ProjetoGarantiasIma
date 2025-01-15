@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import Header from './components/header/header';
 import { Content } from 'antd/es/layout/layout';
-import CardCategorias from '../../components/card_garantia/card_garantias';
 import { Drawer, Button, Space, Tabs } from 'antd';
 import styles from './screenGarantia.style';
-import '../garantias/tabGarantia.css'; 
+import '../garantias/tabGarantia.css';
+import CardCategorias from "@shared/components/card_garantia/card_garantias.tsx";
 
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('garantias');

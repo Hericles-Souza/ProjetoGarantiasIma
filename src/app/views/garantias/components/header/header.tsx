@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { HeaderContainer, TabContainer, Tab, Button } from './Header.styles.ts';
-import SearchField from '../../../../components/input_search/input_search';
-import CreateGarantiaDrawer from '../drawerGarantia/CreateGarantiaDrawer'; 
+import CreateGarantiaDrawer from '../drawerGarantia/CreateGarantiaDrawer';
+import SearchField from "@shared/components/input_search/input_search.tsx";
 
 interface HeaderProps {
   activeTab: string;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Drawer, Steps, Form, Input, Button } from 'antd';
-import EmpresaIcon from '../../../../assets/image/svg/empresa.svg';
+import EmpresaIcon from '@assets/image/svg/empresa.svg';
 import './CreateGarantiaDrawer.css'; // Importa o CSS atualizado
 
 const { Step } = Steps;

@@ -1,24 +1,24 @@
-import { LoginPage } from "../modules/auth/login";
-import Garantias from "../modules/garantias/screenGarantia";
-import Home from "../modules/home/home";
-import MainInitial from "../modules/mainInitial/main_initial";
+import {LoginPage} from "../app/views/auth/login.tsx";
+import MainInitial from "../app/views/mainInitial/main_initial.tsx";
+import Home from "../app/views/home/home.tsx";
+import Garantias from "../app/views/garantias/screenGarantia.tsx";
 
 export const routes = [
   {
     path: "/login",
-    element: <LoginPage />
+    element: <LoginPage/>
   },
   {
     path: "/home",
-    element: <MainInitial />,
+    element: <MainInitial/>,
     children: [
       {
         path: "home",
-        element: <Home />
+        element: <Home/>
       },
       {
         path: "garantias",
-        element: <Garantias />
+        element: <Garantias/>
       }
     ]
   }

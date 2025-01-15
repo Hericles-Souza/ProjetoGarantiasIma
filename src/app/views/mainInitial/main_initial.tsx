@@ -3,8 +3,8 @@ import {Avatar, ConfigProvider, Layout, Menu} from 'antd';
 import {Link, Outlet} from 'react-router-dom';
 import {ArrowLeftOutlined, ArrowRightOutlined, UserOutlined} from '@ant-design/icons';
 import styles from './styles';
-import LogoIma from '../../assets/image/png/logo-ima.png';
-import IconGarantia from '../../assets/image/svg/icon_garantia.svg';
+import LogoIma from '@assets/image/png/logo-ima.png';
+import IconGarantia from '@assets/image/svg/icon_garantia.svg';
 
 const {Sider, Content, Header} = Layout;
 

@@ -1,16 +1,15 @@
 import {LockOutlined, UserOutlined} from '@ant-design/icons';
-import {Button} from '../../components/button';
-import {Input} from '../../components/input';
-import {Card} from '../../components/card';
-import LogoIma from '../../assets/image/png/logo-ima.png';
-import LogoCigam from '../../assets/image/png/logo-cigam.png';
-import LogoAllSoft from '../../assets/image/png/icone_allsoft.jpeg';
-import backgroundImage from '../../assets/image/png/background.png';
-
+import LogoIma from '@assets/image/png/logo-ima.png';
+import LogoCigam from '@assets/image/png/logo-cigam.png';
+import LogoAllSoft from '@assets/image/png/icone_allsoft.jpeg';
+import backgroundImage from '@assets/image/png/background.png';
 import {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import CreateAccount from '../create-account/create-account';
-import {InputPassword} from '../../components/input-password';
+import {Card} from "@shared/components/card";
+import {Input} from "@shared/components/input";
+import {InputPassword} from "@shared/components/input-password";
+import {Button} from "@shared/components/button";
 
 export const LoginPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
