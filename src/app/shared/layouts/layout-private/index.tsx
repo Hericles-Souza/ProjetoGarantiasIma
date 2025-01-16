@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {Avatar, ConfigProvider, Layout, Menu} from 'antd';
 import {Link, Outlet} from 'react-router-dom';
 import {ArrowLeftOutlined, ArrowRightOutlined, UserOutlined} from '@ant-design/icons';
-import styles from './styles';
+import styles from './styles.ts';
 import LogoIma from '@assets/image/png/logo-ima.png';
 import IconGarantia from '@assets/image/svg/icon_garantia.svg';
 
@@ -24,7 +24,7 @@ const menuData: MenuItem[] = [
   },
 ];
 
-const MainInitial: React.FC = () => {
+const LayoutPrivate: React.FC = () => {
   const [collapsed, setCollapsed] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string>('1');
   const toggleSidebar = () => setCollapsed(prev => !prev);
@@ -109,4 +109,4 @@ const MainInitial: React.FC = () => {
   );
 };
 
-export default MainInitial;
+export default LayoutPrivate;

@@ -7,7 +7,7 @@ interface CreateAccountProps {
   onClose: () => void
 }
 
-const CreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose}) => {
+const DialogCreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose}) => {
   const [form] = Form.useForm()
 
   const onFinish = async (values: any) => {
@@ -138,4 +138,4 @@ const CreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose}) => {
   )
 }
 
-export default CreateAccount
+export default DialogCreateAccount

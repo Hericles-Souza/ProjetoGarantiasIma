@@ -5,7 +5,7 @@ import LogoAllSoft from '@assets/image/png/icone_allsoft.jpeg';
 import backgroundImage from '@assets/image/png/background.png';
 import {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import CreateAccount from '../create-account/create-account';
+import DialogCreateAccount from '@shared/dialogs/dialog-create-account/dialog-create-account.tsx';
 import {Card} from "@shared/components/card";
 import {Input} from "@shared/components/input";
 import {InputPassword} from "@shared/components/input-password";
@@ -33,7 +33,7 @@ export const LoginPage = () => {
     <>
 
       {isModalVisible && (
-        <CreateAccount isVisible={isModalVisible} onClose={hideModal}/>
+        <DialogCreateAccount isVisible={isModalVisible} onClose={hideModal}/>
       )}
 
       <div

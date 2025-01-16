@@ -1,18 +1,15 @@
-import { Routes, Route } from 'react-router-dom';
-import { routes } from './routes/routes';
+import React from "react";
+import {AuthProvider} from "@shared/contexts/AuthContext.tsx";
+import AppRoutes from "@app/routes/AppRoutes.tsx";
 
-function App() {
+
+const App: React.FC = () => {
   return (
-    <Routes>
-      {routes.map((route, index) => (
-        <Route key={index} path={route.path} element={route.element}>
-          {route.children && route.children.map((child, childIndex) => (
-            <Route key={childIndex} path={child.path} element={child.element} />
-          ))}
-        </Route>
-      ))}
-    </Routes>
+    <AuthProvider>
+      <AppRoutes/>
+    </AuthProvider>
   );
-}
+};
+
 
 export default App;

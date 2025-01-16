@@ -1,0 +1,26 @@
+import MainInitial from "@shared/layouts/layout-private/main_initial.tsx";
+import Home from "@app/views/private/home/home.tsx";
+import Garantias from "@app/views/private/garantias/screenGarantia.tsx";
+import {RouteConfig} from "@shared/models/RouteConfig.ts";
+import {authRouter} from "@app/views/auth/auth-router.tsx";
+
+export const routes: RouteConfig[] = [
+  ...authRouter,
+  {
+    path: "/home",
+    element: <MainInitial/>,
+    private: true,
+    children: [
+      {
+        path: "home",
+        element: <Home/>,
+        private: true
+      },
+      {
+        path: "garantias",
+        element: <Garantias/>,
+        private: true
+      }
+    ]
+  }
+];
