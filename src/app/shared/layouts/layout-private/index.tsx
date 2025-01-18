@@ -20,7 +20,7 @@ const menuData: MenuItem[] = [
     key: '1',
     label: 'Garantias',
     icon: <img src={IconGarantia} alt="Garantias"/>,
-    path: '/home/garantias',
+    path: '/garantias',
   },
 ];
 

@@ -3,18 +3,24 @@ import LogoIma from '@assets/image/png/logo-ima.png';
 import LogoCigam from '@assets/image/png/logo-cigam.png';
 import LogoAllSoft from '@assets/image/png/icone_allsoft.jpeg';
 import backgroundImage from '@assets/image/png/background.png';
-import {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import DialogCreateAccount from '@shared/dialogs/dialog-create-account/dialog-create-account.tsx';
 import {Card} from "@shared/components/card";
 import {Input} from "@shared/components/input";
 import {InputPassword} from "@shared/components/input-password";
 import {Button} from "@shared/components/button";
+import {AuthService} from "@shared/services/AuthService.ts";
+import {toast, ToastContainer} from 'react-toastify'; // Importe o ToastContainer e toast
+import 'react-toastify/dist/ReactToastify.css';
+import {AuthContext} from "@shared/contexts/Auth/AuthContext.tsx"; // Importe o estilo do Toast
 
 export const LoginPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-
+  const {login} = useContext(AuthContext) || {};
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -23,14 +29,24 @@ export const LoginPage = () => {
     setIsModalVisible(false);
   };
 
-  const handleLogin = (e: { preventDefault: () => void; }) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    navigate('/home/garantias');
+    try {
+      await AuthService.login(username, password, (user) => {
+        if (login) {
+          login(user);
+        }
+      });
+      navigate('/garantias');
+    } catch {
+      toast.error("Falha no login. Verifique suas credenciais e tente novamente.");
+    }
   };
 
   return (
     <>
+      <ToastContainer/> {/* Adicione o container do toast */}
 
       {isModalVisible && (
         <DialogCreateAccount isVisible={isModalVisible} onClose={hideModal}/>
@@ -142,40 +158,44 @@ export const LoginPage = () => {
               <form style={{width: '400px'}} onSubmit={handleLogin}>
                 <div style={{marginBottom: '16px'}}>
                   <Input
-                    name='username'
+                    name="username"
                     prefix={
                       <UserOutlined
-                        className='text-neutral-400'
+                        className="text-neutral-400"
                         style={{fontSize: '18px', color: 'red', paddingRight: '5px'}}
                       />
                     }
-                    size='large'
-                    placeholder='Digite seu Usuário'
+                    size="large"
+                    placeholder="Digite seu Usuário"
                     style={{
                       height: '55px',
                       fontSize: '18px',
                       borderRadius: '15px',
                     }}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
                 <div style={{marginBottom: '16px'}}>
                   <InputPassword
-                    name='password'
+                    name="password"
                     prefix={
                       <LockOutlined
-                        className='text-neutral-900'
+                        className="text-neutral-900"
                         style={{fontSize: '18px', color: 'red', paddingRight: '5px'}}
                       />
                     }
-                    placeholder='Digite sua senha'
+                    placeholder="Digite sua senha"
                     style={{height: '55px', fontSize: '18px', borderRadius: '15px'}}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
                 <div style={{marginBottom: '16px'}}>
                   <Button
-                    size='large'
-                    type='primary'
-                    htmlType='submit'
+                    size="large"
+                    type="primary"
+                    htmlType="submit"
                     style={{
                       height: '55px',
                       textAlign: 'center',
@@ -224,15 +244,15 @@ export const LoginPage = () => {
                 alignItems: 'center',
               }}
             >
-            <span
-              style={{
-                fontStyle: 'italic',
-                fontSize: '12px',
-                color: 'black'
-              }}
-            >
+              <span
+                style={{
+                  fontStyle: 'italic',
+                  fontSize: '12px',
+                  color: 'black',
+                }}
+              >
                 Desenvolvido por
-            </span>
+              </span>
               <img src={LogoCigam} width={80} style={{marginLeft: '12px'}} alt=""/>
               <img src={LogoAllSoft} width={80} style={{marginLeft: '12px'}} alt=""/>
             </div>

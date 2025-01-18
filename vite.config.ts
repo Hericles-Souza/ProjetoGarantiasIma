@@ -16,4 +16,7 @@ export default defineConfig({
       '@assets': '/src/assets',
     },
   },
+  define: {
+    'process.env.API_URL': JSON.stringify(process.env.API_URL),
+  },
 });

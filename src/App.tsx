@@ -1,6 +1,6 @@
 import React from "react";
-import {AuthProvider} from "@shared/contexts/AuthContext.tsx";
 import AppRoutes from "@app/routes/AppRoutes.tsx";
+import {AuthProvider} from "@shared/contexts/Auth/AuthProvider.tsx";
 
 
 const App: React.FC = () => {

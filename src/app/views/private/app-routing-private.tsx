@@ -5,7 +5,7 @@ import LayoutPrivate from "@shared/layouts/layout-private";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
-    path: "/home",
+    path: "/",
     element: <LayoutPrivate/>,
     private: true,
     children: [
