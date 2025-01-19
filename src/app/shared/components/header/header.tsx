@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
-import { HeaderContainer, TabContainer, Tab, Button } from './Header.styles.ts';
+import React, {useState} from 'react';
+import {Button, HeaderContainer} from './Header.styles.ts';
 import CreateGarantiaDrawer from '../drawerGarantia/CreateGarantiaDrawer.tsx';
-import SearchField from "@shared/components/input_search/input_search.tsx";
+import {Tabs} from 'antd';
 
 interface HeaderProps {
-  activeTab: string;
-  onTabClick: (tab: string) => void;
-  onSearchChange: (value: string) => void; // Adicionando a função de mudança de pesquisa
+  filterStatus: string;
+  handleFilterChange: (key: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onSearchChange }) => {
+const Header: React.FC<HeaderProps> = ({filterStatus, handleFilterChange}) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleDrawerOpen = () => {
@@ -22,22 +21,34 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onSearchChange }
 
   return (
     <HeaderContainer>
-      <TabContainer>
-        <Tab isActive={activeTab === 'garantias'} onClick={() => onTabClick('garantias')}>
-          Garantias
-        </Tab>
-      </TabContainer>
+      <div
+        style={{display: 'flex', alignItems: 'end', height: '100%'}}>
+        <Tabs
+          activeKey={filterStatus}
+          onChange={handleFilterChange}
+          style={{padding: '0px 20px'}}
+          tabBarStyle={{
+            display: 'flex',
+            justifyContent: 'center',
+            margin: "0"
+          }}
+          className="custom-tabs"
+          items={[
+            {label: <span>TODOS</span>, key: 'garantias'},
+            {label: <span>REQUISIÇÕES DE GARANTIA (RGI)</span>, key: 'rgi'},
+            {label: <span>ACORDOS COMERCIAIS (ACI)</span>, key: 'aci'},
+          ]}
+        />
+      </div>
 
       <div
         style={{
           display: 'flex',
-          gap: '15px',
-          height: '45px',
+          padding: "1rem",
           alignItems: 'center',
         }}
       >
-        <SearchField onSearchChange={onSearchChange} />
-        <Button onClick={handleDrawerOpen}>Criar Garantia</Button>
+        <Button style={{margin: "0"}} onClick={handleDrawerOpen}>NOVA SOLICITAÇÃO</Button>
       </div>
 
       {/* Drawer separado em componente */}

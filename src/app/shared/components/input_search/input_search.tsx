@@ -14,7 +14,7 @@ const SearchField: React.FC<SearchFieldProps> = ({ onSearchChange }) => {
     <SearchContainer>
       <StyledInput
         type="text"
-        placeholder="Buscar garantia"
+        placeholder="Busque por uma solicitação"
         onChange={handleChange}
       />
       <SearchIcon />

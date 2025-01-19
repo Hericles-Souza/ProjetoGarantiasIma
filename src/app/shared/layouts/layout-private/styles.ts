@@ -1,8 +1,7 @@
 const styles = {
   layout: {
-    height: '100vh',
-    width: '100vw',
     overflow: 'hidden',
+    height: '100%',
   },
   sider: {
     borderRight: '1px solid #d9d9d9',
@@ -49,7 +48,8 @@ const styles = {
   }),
   content: {
     margin: 0,
-    minHeight: 'calc(100vh - 80px)',
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
     background: '#ffffff',
     color: '#000',
     overflow: 'hidden',

@@ -1,0 +1,60 @@
+.carousel-container {
+  padding: 1rem;
+  display: flex;
+  overflow-x: auto; /* Habilita rolagem horizontal */
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  white-space: nowrap;
+  width: 100%; /* Garante que ocupa o espaço restante */
+
+  /* Oculta a barra de rolagem */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE e Edge */
+}
+
+.carousel-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari e Edge */
+}
+
+.carousel-content {
+  display: inline-flex;
+  transition: transform 0.3s ease-in-out;
+}
+
+.carousel-tag {
+  flex-shrink: 0;
+  margin: 0 8px;
+  cursor: pointer;
+}
+
+.carousel-tag:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s;
+}
+
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease-in-out;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-in-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

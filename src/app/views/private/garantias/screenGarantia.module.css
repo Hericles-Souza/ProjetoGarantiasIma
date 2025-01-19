@@ -1,0 +1,40 @@
+.tabsContainer {
+  display: flex;
+  justify-content: start;
+}
+
+.tab {
+  padding: 7px 12px 7px 12px;
+  gap: 4px;
+  border-radius: 1rem;
+}
+
+.button {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.content {
+  flex-shrink: 0; /* Impede que o conteúdo acima da row encolha */
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.containerGrid {
+  padding: 1rem;
+  padding-bottom: 4rem;
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  overflow-y: auto;
+  gap: 1rem;
+  margin-bottom: 8rem;
+}

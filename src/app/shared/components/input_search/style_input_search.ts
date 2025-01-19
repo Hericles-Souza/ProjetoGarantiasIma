@@ -20,6 +20,7 @@ export const SearchInput = styled.input`
   background-color: transparent;
   font-size: 14px;
   color: #161616;
+  width: 444px;
 `;
 
 export const SearchIcon = styled(SearchOutlined)`

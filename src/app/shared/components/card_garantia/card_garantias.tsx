@@ -1,17 +1,22 @@
-import { CalendarOutlined, RightOutlined, UserOutlined } from '@ant-design/icons';
+import {CalendarOutlined, RightOutlined, UserOutlined} from '@ant-design/icons';
 import React from 'react';
 import styled from 'styled-components';
+import {GarantiasStatusEnum} from "@shared/enums/GarantiasStatusEnum.ts";
 
 const CardContainer = styled.div<{ clickable: boolean }>`
+  flex: 0 0 calc(25% - 12px); /* Isso vai garantir que cada item ocupe 25% da linha, considerando o espaço de gap */
+  max-width: 100%; /* Impede que o item ocupe mais de 25% da largura da linha */
+  box-sizing: border-box; /* Inclui o padding no cálculo do tamanho */
+  max-height: 300px;
   background-color: #fff;
   border-radius: 15px;
-  width: 410px;
-  height: 270px;
-  margin: 10px auto;
   border: 1px solid #ddd;
   cursor: ${(props) => (props.clickable ? 'pointer' : 'default')};
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  
   &:hover {
     transform: ${(props) => (props.clickable ? 'scale(1.01)' : 'none')};
     box-shadow: ${(props) =>
@@ -47,19 +52,20 @@ const PieceCode = styled.p`
   margin: 0;
 `;
 
-const Defect = styled.p`
+const Defect = styled.div`
   font-size: 14px;
   margin-left: 15px;
   color: #555;
   margin-top: 15px;
 `;
 
-const ValueDefect = styled.p`
+const ValueDefect = styled.div`
   font-size: 16px;
   margin-top: 1px;
   font-weight: bold;
   color: #555;
 `;
+
 
 const Footer = styled.div`
   display: flex;
@@ -94,44 +100,81 @@ const RedContainer = styled.div`
 `;
 
 interface CardCategoriasProps {
-  status: string;
+  status: GarantiasStatusEnum;
   code: string;
   pieceCode: string;
   defectValue: string;
   person: string;
   date: string;
-  onClick?: () => void; 
+  onClick?: () => void;
 }
 
+const statusStyles = {
+  [GarantiasStatusEnum.NAO_ENVIADO]: {
+    backgroundColor: '#F9F9F9',
+    color: '#5F5A56',
+  },
+  [GarantiasStatusEnum.EM_ANALISE]: {
+    backgroundColor: '#B3E5FC',
+    color: '#0277BD',
+  },
+  [GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE]: {
+    backgroundColor: '#9747FF1F',
+    color: '#9747FF',
+  },
+  [GarantiasStatusEnum.AGUARDANDO_NF_DEVOLUCAO]: {
+    backgroundColor: '#FFE0B2',
+    color: '#EF6C00',
+  },
+  [GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: {
+    backgroundColor: '#fffbe6',
+    color: '#faad14',
+  },
+  [GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA]: {
+    backgroundColor: '#fff1f0',
+    color: '#ff7875',
+  },
+  [GarantiasStatusEnum.CONFIRMADO]: {
+    backgroundColor: '#e6ffed',
+    color: '#52c41a',
+  },
+};
+
+
 const CardCategorias: React.FC<CardCategoriasProps> = ({
-  status,
-  code,
-  pieceCode,
-  defectValue,
-  person,
-  date,
-  onClick,
-}) => {
+                                                         status,
+                                                         code,
+                                                         pieceCode,
+                                                         defectValue,
+                                                         person,
+                                                         date,
+                                                         onClick,
+                                                       }) => {
+
+  const statusStyle = statusStyles[status];
+
   return (
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
-        <Status>{status}</Status>
-        <RightOutlined />
+        <Status style={{backgroundColor: statusStyle.backgroundColor, color: statusStyle.color}}>
+          {status}
+        </Status>
+        <RightOutlined/>
       </Header>
       <RedContainer>
         <Code>{code}</Code>
         <PieceCode>Código da Peça: {pieceCode}</PieceCode>
       </RedContainer>
       <Defect>
-        Possível Defeito: <br />
+        Possível Defeito:
         <ValueDefect>{defectValue}</ValueDefect>
       </Defect>
       <Footer>
         <Person>
-          <UserOutlined style={{ marginRight: 5 }} /> {person}
+          <UserOutlined style={{marginRight: 5}}/> {person}
         </Person>
         <Date>
-          <CalendarOutlined style={{ marginRight: 5 }} /> {date}
+          <CalendarOutlined style={{marginRight: 5}}/> {date}
         </Date>
       </Footer>
     </CardContainer>
