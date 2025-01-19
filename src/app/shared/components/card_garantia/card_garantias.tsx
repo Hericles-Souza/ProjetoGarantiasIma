@@ -110,33 +110,33 @@ interface CardCategoriasProps {
 }
 
 const statusStyles = {
-  [GarantiasStatusEnum.NAO_ENVIADO]: {
+  [GarantiasStatusEnum.NAO_ENVIADO]: { // ok
     backgroundColor: '#F9F9F9',
     color: '#5F5A56',
   },
-  [GarantiasStatusEnum.EM_ANALISE]: {
+  [GarantiasStatusEnum.EM_ANALISE]: { // ok
     backgroundColor: '#B3E5FC',
     color: '#0277BD',
   },
-  [GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE]: {
+  [GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE]: { // ok
     backgroundColor: '#9747FF1F',
     color: '#9747FF',
   },
-  [GarantiasStatusEnum.AGUARDANDO_NF_DEVOLUCAO]: {
+  [GarantiasStatusEnum.AGUARDANDO_NF_DEVOLUCAO]: { // ok
     backgroundColor: '#FFE0B2',
     color: '#EF6C00',
   },
-  [GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: {
-    backgroundColor: '#fffbe6',
-    color: '#faad14',
+  [GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: { // ok
+    backgroundColor: '#FFE0B2',
+    color: '#EF6C00',
   },
-  [GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA]: {
-    backgroundColor: '#fff1f0',
-    color: '#ff7875',
+  [GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA]: { // ok
+    backgroundColor: '#4A32163D',
+    color: '#4A3216',
   },
-  [GarantiasStatusEnum.CONFIRMADO]: {
-    backgroundColor: '#e6ffed',
-    color: '#52c41a',
+  [GarantiasStatusEnum.CONFIRMADO]: { // ok
+    backgroundColor: '#C8E6C9',
+    color: '#2E7D32',
   },
 };
 
