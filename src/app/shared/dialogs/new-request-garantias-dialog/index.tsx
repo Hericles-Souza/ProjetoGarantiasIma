@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { Button, Divider, Form, Tag } from 'antd';
-import { CloseOutlined, FileOutlined } from '@ant-design/icons'; // Importe os ícones necessários
+import {useEffect, useRef, useState} from 'react';
+import {Button, Divider, Form, Tag} from 'antd';
+import {FileOutlined} from '@ant-design/icons'; // Importe os ícones necessários
 import styles from './new-request-garantias.module.css';
-import { Input } from "@shared/components/input";
+import {Input} from "@shared/components/input/index.tsx";
 
 enum FilterStatus {
   GARANTIAS = 'garantias',
   ACORDO = 'acordo',
 }
 
-const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
+const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTab, setCurrentTab] = useState(FilterStatus.GARANTIAS);
@@ -49,12 +49,12 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, name: string) => {
     const file = e.target.files?.[0] || null;
     setFileInputValue(file ? file.name : null); // Atualiza o nome do arquivo selecionado
-    form.setFieldsValue({ [name]: file }); // Atualiza o campo do formulário com o arquivo selecionado
+    form.setFieldsValue({[name]: file}); // Atualiza o campo do formulário com o arquivo selecionado
   };
 
   const handleDeleteFile = () => {
     setFileInputValue(null); // Reseta o nome do arquivo
-    form.setFieldsValue({ garantiaAnexo: null }); // Remove o arquivo do campo do formulário
+    form.setFieldsValue({garantiaAnexo: null}); // Remove o arquivo do campo do formulário
   };
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className={styles.container}>
-      <header style={{ display: 'flex', flexDirection: 'column' }}>
+      <header style={{display: 'flex', flexDirection: 'column'}}>
         <div className={styles.header}>
           <h2>NOVA SOLICITAÇÃO</h2>
           <div className={styles.tabsContainer}>
@@ -97,7 +97,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
             </div>
           </div>
         </div>
-        <Divider style={{ margin: '0' }} />
+        <Divider style={{margin: '0'}}/>
       </header>
       <main className={styles.main}>
         <Form
@@ -118,9 +118,9 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
               )}
               <h3>RGI N° 000666-00147</h3>
               <Form.Item
-                style={{ margin: 0 }}
+                style={{margin: 0}}
                 name="N° NF de origem"
-                rules={[{ required: true, message: 'Este campo é obrigatório' }]}
+                rules={[{required: true, message: 'Este campo é obrigatório'}]}
               >
                 <Input
                   size="large"
@@ -134,18 +134,18 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
                 />
               </Form.Item>
               <Form.Item
-                style={{ margin: 0 }}
+                style={{margin: 0}}
                 name="garantiaAnexo"
                 valuePropName="fileList"
                 getValueFromEvent={(e) => e?.fileList}
-                rules={[{ required: true, message: 'Anexo é obrigatório' }]}
+                rules={[{required: true, message: 'Anexo é obrigatório'}]}
               >
                 <div className={styles.anexoVenda}>
                   <p>Anexo da NF de venda</p>
                   {fileInputValue && (
                     <Tag
                       className={styles.tag}
-                      icon={<FileOutlined style={{color: "#FF0000"}} />}
+                      icon={<FileOutlined style={{color: "#FF0000"}}/>}
                       closable
                       onClose={handleDeleteFile}
                     >
@@ -162,7 +162,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
                   <input
                     id="garantiaFileInput"
                     type="file"
-                    style={{ display: 'none' }}
+                    style={{display: 'none'}}
                     accept=".pdf,.png,.jpg"
                     onChange={(e) => handleFileChange(e, 'garantiaAnexo')}
                   />
@@ -180,9 +180,9 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
               )}
               <h3>ACI N° 000666-00150</h3>
               <Form.Item
-                style={{ margin: 0 }}
+                style={{margin: 0}}
                 name="N° NF de origem"
-                rules={[{ required: true, message: 'Este campo é obrigatório' }]}
+                rules={[{required: true, message: 'Este campo é obrigatório'}]}
               >
                 <Input
                   size="large"
@@ -196,18 +196,18 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
                 />
               </Form.Item>
               <Form.Item
-                style={{ margin: 0 }}
+                style={{margin: 0}}
                 name="acordoAnexo"
                 valuePropName="fileList"
                 getValueFromEvent={(e) => e?.fileList}
-                rules={[{ required: true, message: 'Anexo é obrigatório' }]}
+                rules={[{required: true, message: 'Anexo é obrigatório'}]}
               >
                 <div className={styles.anexoVenda}>
                   <p>Anexo da NF de venda</p>
                   {fileInputValue && (
                     <Tag
                       className={styles.tag}
-                      icon={<FileOutlined style={{color: "#FF0000"}} />}
+                      icon={<FileOutlined style={{color: "#FF0000"}}/>}
                       closable
                       onClose={handleDeleteFile}
                     >
@@ -224,7 +224,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
                   <input
                     id="acordoFileInput"
                     type="file"
-                    style={{ display: 'none' }}
+                    style={{display: 'none'}}
                     accept=".pdf,.png,.jpg"
                     onChange={(e) => handleFileChange(e, 'acordoAnexo')}
                   />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, HeaderContainer } from './Header.styles.ts';
 import { Tabs, Modal } from 'antd';
-import NewRequestGarantiasDialog from "@shared/dialogs/new-request-garantias-dialog";
+import NewRequestGarantiasDialog from "@shared/dialogs/new-request-garantias-dialog/index.tsx";
 
 interface HeaderProps {
   filterStatus: string;

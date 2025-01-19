@@ -1,8 +1,9 @@
 import styled from 'styled-components'
+import React from 'react'
 import { Input as AntInput, InputProps as AntInputProps } from 'antd'
-import { Tooltip } from '../tooltip'
+import { Tooltip } from '../tooltip/index.tsx'
 import { TbQuestionMark } from 'react-icons/tb'
-import { Label } from '../label'
+import { Label } from '../label/index.tsx'
 
 const Error = styled.div`
   padding: 4px 0 2px 0;

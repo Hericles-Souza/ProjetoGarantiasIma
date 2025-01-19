@@ -1,7 +1,7 @@
 import {RouteConfig} from "@shared/models/RouteConfig.ts";
 import Home from "@app/views/private/home/home.tsx";
 import Garantias from "@app/views/private/garantias/screenGarantia.tsx";
-import LayoutPrivate from "@shared/layouts/layout-private";
+import LayoutPrivate from "@shared/layouts/layout-private/index.tsx";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {

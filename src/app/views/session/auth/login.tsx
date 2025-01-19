@@ -6,10 +6,10 @@ import backgroundImage from '@assets/image/png/background.png';
 import React, {useContext, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import DialogCreateAccount from '@shared/dialogs/dialog-create-account/dialog-create-account.tsx';
-import {Card} from "@shared/components/card";
-import {Input} from "@shared/components/input";
-import {InputPassword} from "@shared/components/input-password";
-import {Button} from "@shared/components/button";
+import {Card} from "@shared/components/card/index.tsx";
+import {Input} from "@shared/components/input/index.tsx";
+import {InputPassword} from "@shared/components/input-password/index.tsx";
+import {Button} from "@shared/components/button/button.tsx";
 import {AuthService} from "@shared/services/AuthService.ts";
 import {toast, ToastContainer} from 'react-toastify'; // Importe o ToastContainer e toast
 import 'react-toastify/dist/ReactToastify.css';

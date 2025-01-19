@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Input as AntInput, InputProps as AntInputProps } from 'antd'
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
-import { Label } from '../label'
-import { Tooltip } from '../tooltip'
+import { Label } from '../label/index.tsx'
+import { Tooltip } from '../tooltip/index.tsx'
 import { TbQuestionMark } from 'react-icons/tb'
 import { styled } from 'styled-components'
 
