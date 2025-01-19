@@ -51,7 +51,7 @@ const Garantias: React.FC = () => {
                     key={status}
                     className={`carousel-tag ${styled.tab}`}
                     color={filterStatus === status ? 'red' : 'default'}
-                    onClick={() => setFilterStatus((prevStatus) => (prevStatus === status ? 'todos' : status))}
+                    onClick={() => setFilterStatus(status)}
                   >
                     {status}
                   </Tag>

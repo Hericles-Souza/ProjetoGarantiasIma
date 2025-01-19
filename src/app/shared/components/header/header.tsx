@@ -1,32 +1,31 @@
-import React, {useState} from 'react';
-import {Button, HeaderContainer} from './Header.styles.ts';
-import CreateGarantiaDrawer from '../drawerGarantia/CreateGarantiaDrawer.tsx';
-import {Tabs} from 'antd';
+import React, { useState } from 'react';
+import { Button, HeaderContainer } from './Header.styles.ts';
+import { Tabs, Modal } from 'antd';
+import NewRequestGarantiasDialog from "@shared/dialogs/new-request-garantias-dialog";
 
 interface HeaderProps {
   filterStatus: string;
   handleFilterChange: (key: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({filterStatus, handleFilterChange}) => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+const Header: React.FC<HeaderProps> = ({ filterStatus, handleFilterChange }) => {
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
 
-  const handleDrawerOpen = () => {
-    setIsDrawerOpen(true);
+  const handleDialogOpen = () => {
+    setIsDialogVisible(true);
   };
 
-  const handleDrawerClose = () => {
-    setIsDrawerOpen(false);
+  const handleDialogClose = () => {
+    setIsDialogVisible(false);
   };
 
   return (
     <HeaderContainer>
-      <div
-        style={{display: 'flex', alignItems: 'end', height: '100%'}}>
+      <div style={{ display: 'flex', alignItems: 'end', height: '100%' }}>
         <Tabs
           activeKey={filterStatus}
           onChange={handleFilterChange}
-          style={{padding: '0px 20px'}}
+          style={{ padding: '0px 20px' }}
           tabBarStyle={{
             display: 'flex',
             justifyContent: 'center',
@@ -34,28 +33,28 @@ const Header: React.FC<HeaderProps> = ({filterStatus, handleFilterChange}) => {
           }}
           className="custom-tabs"
           items={[
-            {label: <span>TODOS</span>, key: 'garantias'},
-            {label: <span>REQUISIÇÕES DE GARANTIA (RGI)</span>, key: 'rgi'},
-            {label: <span>ACORDOS COMERCIAIS (ACI)</span>, key: 'aci'},
+            { label: <span>TODOS</span>, key: 'garantias' },
+            { label: <span>REQUISIÇÕES DE GARANTIA (RGI)</span>, key: 'rgi' },
+            { label: <span>ACORDOS COMERCIAIS (ACI)</span>, key: 'aci' },
           ]}
         />
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          padding: "1rem",
-          alignItems: 'center',
-        }}
-      >
-        <Button style={{margin: "0"}} onClick={handleDrawerOpen}>NOVA SOLICITAÇÃO</Button>
+      <div style={{ display: 'flex', padding: "1rem", alignItems: 'center' }}>
+        <Button style={{ margin: "0" }} onClick={handleDialogOpen}>NOVA SOLICITAÇÃO</Button>
       </div>
 
-      {/* Drawer separado em componente */}
-      <CreateGarantiaDrawer
-        isVisible={isDrawerOpen}
-        onClose={handleDrawerClose}
-      />
+      <Modal
+        visible={isDialogVisible}
+        onCancel={handleDialogClose}
+        footer={null}
+        width={600}
+        closeIcon={null} // Remove o "X" de fechar
+      >
+        <NewRequestGarantiasDialog onClose={handleDialogClose} />
+      </Modal>
+
+
     </HeaderContainer>
   );
 };
