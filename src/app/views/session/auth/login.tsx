@@ -11,9 +11,9 @@ import {Input} from "@shared/components/input/index.tsx";
 import {InputPassword} from "@shared/components/input-password/index.tsx";
 import {Button} from "@shared/components/button/button.tsx";
 import {AuthService} from "@shared/services/AuthService.ts";
-import {toast, ToastContainer} from 'react-toastify'; // Importe o ToastContainer e toast
+import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {AuthContext} from "@shared/contexts/Auth/AuthContext.tsx"; // Importe o estilo do Toast
+import {AuthContext} from "@shared/contexts/Auth/AuthContext.tsx";
 
 export const LoginPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -46,7 +46,7 @@ export const LoginPage = () => {
 
   return (
     <>
-      <ToastContainer/> {/* Adicione o container do toast */}
+      <ToastContainer/>
 
       {isModalVisible && (
         <DialogCreateAccount isVisible={isModalVisible} onClose={hideModal}/>

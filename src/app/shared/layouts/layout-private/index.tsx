@@ -22,7 +22,7 @@ const menuData: MenuItem[] = [
     key: '1',
     label: 'Garantias',
     icon: <img src={IconGarantia} alt="Garantias"/>,
-    path: '/garantias',
+    path: '/garantia',
   },
 ];
 
@@ -63,7 +63,7 @@ const LayoutPrivate: React.FC = () => {
     },
   }));
 
-  // Procurar o nome do item selecionado no menu
+
   const selectedMenuItem = menuData.find(item => item.key === selectedKey);
 
   return (
@@ -84,7 +84,7 @@ const LayoutPrivate: React.FC = () => {
             }}
             defaultSelectedKeys={['1']}
             selectedKeys={[selectedKey]}
-            items={menuItems} // Usando a nova API com a propriedade `items`
+            items={menuItems} 
           />
         </Sider>
         <Layout>

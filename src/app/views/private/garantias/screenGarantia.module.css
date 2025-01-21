@@ -22,7 +22,7 @@
 }
 
 .content {
-  flex-shrink: 0; /* Impede que o conteúdo acima da row encolha */
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   gap: 1rem;

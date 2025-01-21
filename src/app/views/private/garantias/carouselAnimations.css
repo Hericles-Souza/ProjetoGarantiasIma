@@ -1,19 +1,18 @@
 .carousel-container {
   padding: 1rem;
   display: flex;
-  overflow-x: auto; /* Habilita rolagem horizontal */
+  overflow-x: auto; 
   overflow-y: hidden;
   scroll-behavior: smooth;
   white-space: nowrap;
-  width: 100%; /* Garante que ocupa o espaço restante */
+  width: 100%; 
 
-  /* Oculta a barra de rolagem */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE e Edge */
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
 }
 
 .carousel-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari e Edge */
+  display: none; 
 }
 
 .carousel-content {

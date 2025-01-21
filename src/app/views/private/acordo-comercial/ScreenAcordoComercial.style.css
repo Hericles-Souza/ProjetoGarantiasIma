@@ -1,0 +1,160 @@
+.acordo-container {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #dadada;
+}
+
+.back-link {
+  color: black;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: red;
+}
+
+.aci-info {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.aci-info h1 {
+  color: red;
+}
+
+.status {
+  font-weight: bold;
+  color: gray;
+}
+
+.actions button {
+  margin-left: 10px;
+  padding: 10px;
+}
+
+.delete-btn {
+  background-color: #ffffff;
+  border: solid 1px #dadada;
+  color: #5F5A56;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.delete-btn:hover {
+  border: solid 1px red;
+  color: red;
+}
+
+.save-btn {
+  background-color: #ffffff;
+  border: solid 1px #dadada;
+  color: #5F5A56;
+  padding-left: 10px;
+  padding-right: 10px;
+  outline: none;
+}
+
+.save-btn:hover {
+  border: solid 1px red;
+  color: red;
+}
+
+.send-btn {
+  background-color: red;
+  color: white;
+}
+
+.general-info {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  background-color: #F9F9F9;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.inputs-general {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.info-row {
+  flex: 1;
+  min-width: 200px;
+}
+
+.info-row:first-child {
+  flex: 1 1 50%;
+}
+
+.info-row:nth-child(2),
+.info-row:nth-child(3) {
+  flex: 1 1 20%;
+}
+
+.nf-section {
+  margin-top: 20px;
+}
+
+.nf-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.add-nf-btn {
+  margin-top: 10px;
+  background-color: red;
+  color: white;
+  padding: 10px;
+}
+
+
+.code-aci {
+  color: red;
+  font-size: 28px;
+}
+
+.back-arrow {
+  margin-right: 8px;
+  font-size: 16px;
+
+}
+
+.outlined-input {
+  margin-bottom: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.info-row {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+
+.title{
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #5F5A56;
+
+}

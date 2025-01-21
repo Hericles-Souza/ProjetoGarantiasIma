@@ -1,8 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
-import {Button, Divider, Form, Tag} from 'antd';
-import {FileOutlined} from '@ant-design/icons'; // Importe os ícones necessários
-import styles from './new-request-garantias.module.css';
+import {useNavigate} from 'react-router-dom';
+import {Button, Divider, Form} from 'antd';
 import {Input} from "@shared/components/input/index.tsx";
+import styles from './new-request-garantias.module.css';
 
 enum FilterStatus {
   GARANTIAS = 'garantias',
@@ -15,16 +15,19 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   const [currentTab, setCurrentTab] = useState(FilterStatus.GARANTIAS);
   const [indicatorWidth, setIndicatorWidth] = useState(0);
   const [garantiasFieldsFilled, setGarantiasFieldsFilled] = useState(false);
-  const [acordoFieldsFilled, setAcordoFieldsFilled] = useState(false);
-  const [fileInputValue, setFileInputValue] = useState<string | null>(null); // Para armazenar o arquivo selecionado
   const garantiaButtonRef = useRef<HTMLButtonElement>(null);
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
+  const navigate = useNavigate();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: unknown) => {
     setIsSubmitting(true);
     try {
       console.log('Criando solicitação:', values);
-      onClose();
+      if (currentTab === FilterStatus.ACORDO) {
+        navigate('/acordo-comercial'); //aqui quero chamar e navegar para a tela de acordo comercial
+      } else {
+        onClose();
+      }
     } catch (error) {
       console.error('Erro ao criar solicitação:', error);
     } finally {
@@ -36,25 +39,11 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
     setCurrentTab(tab);
   };
 
-  const handleFieldChange = (changedValues: any, allValues: any) => {
+  const handleFieldChange = (changedValues: unknown, allValues: unknown) => {
     if (currentTab === FilterStatus.GARANTIAS) {
       const isFilled = !!allValues['N° NF de origem'] && !!allValues['garantiaAnexo'];
       setGarantiasFieldsFilled(isFilled);
-    } else if (currentTab === FilterStatus.ACORDO) {
-      const isFilled = !!allValues['N° NF de origem'] && !!allValues['acordoAnexo'];
-      setAcordoFieldsFilled(isFilled);
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, name: string) => {
-    const file = e.target.files?.[0] || null;
-    setFileInputValue(file ? file.name : null); // Atualiza o nome do arquivo selecionado
-    form.setFieldsValue({[name]: file}); // Atualiza o campo do formulário com o arquivo selecionado
-  };
-
-  const handleDeleteFile = () => {
-    setFileInputValue(null); // Reseta o nome do arquivo
-    form.setFieldsValue({garantiaAnexo: null}); // Remove o arquivo do campo do formulário
   };
 
   useEffect(() => {
@@ -142,20 +131,10 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
               >
                 <div className={styles.anexoVenda}>
                   <p>Anexo da NF de venda</p>
-                  {fileInputValue && (
-                    <Tag
-                      className={styles.tag}
-                      icon={<FileOutlined style={{color: "#FF0000"}}/>}
-                      closable
-                      onClose={handleDeleteFile}
-                    >
-                      {fileInputValue.length > 20 ? `${fileInputValue.slice(0, 20)}...` : fileInputValue}
-                    </Tag>
-                  )}
                   <Button
                     className={`${styles.button} ${styles.secondary}`}
                     type="default"
-                    onClick={() => document.getElementById('garantiaFileInput')?.click()} // Aciona o clique no input de arquivo
+                    onClick={() => document.getElementById('garantiaFileInput')?.click()}
                   >
                     ANEXAR
                   </Button>
@@ -164,7 +143,6 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
                     type="file"
                     style={{display: 'none'}}
                     accept=".pdf,.png,.jpg"
-                    onChange={(e) => handleFileChange(e, 'garantiaAnexo')}
                   />
                 </div>
               </Form.Item>
@@ -173,11 +151,6 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
 
           {currentTab === FilterStatus.ACORDO && (
             <div className={styles.requiredFieldsContainer}>
-              {currentTab === FilterStatus.ACORDO && !acordoFieldsFilled && (
-                <p className={styles.requiredFields}>
-                  Preencha todos os campos obrigatórios para salvar
-                </p>
-              )}
               <h3>ACI N° 000666-00150</h3>
               <Form.Item
                 style={{margin: 0}}
@@ -194,41 +167,6 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
                   }}
                   className={styles.input}
                 />
-              </Form.Item>
-              <Form.Item
-                style={{margin: 0}}
-                name="acordoAnexo"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => e?.fileList}
-                rules={[{required: true, message: 'Anexo é obrigatório'}]}
-              >
-                <div className={styles.anexoVenda}>
-                  <p>Anexo da NF de venda</p>
-                  {fileInputValue && (
-                    <Tag
-                      className={styles.tag}
-                      icon={<FileOutlined style={{color: "#FF0000"}}/>}
-                      closable
-                      onClose={handleDeleteFile}
-                    >
-                      {fileInputValue.length > 20 ? `${fileInputValue.slice(0, 20)}...` : fileInputValue}
-                    </Tag>
-                  )}
-                  <Button
-                    className={`${styles.button} ${styles.secondary}`}
-                    type="default"
-                    onClick={() => document.getElementById('acordoFileInput')?.click()} // Aciona o clique no input de arquivo
-                  >
-                    ANEXAR
-                  </Button>
-                  <input
-                    id="acordoFileInput"
-                    type="file"
-                    style={{display: 'none'}}
-                    accept=".pdf,.png,.jpg"
-                    onChange={(e) => handleFileChange(e, 'acordoAnexo')}
-                  />
-                </div>
               </Form.Item>
             </div>
           )}

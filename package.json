@@ -10,11 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^3.9.1",
+    "@mui/material": "^6.4.0",
     "@types/styled-components": "^5.1.34",
     "antd": "^5.22.2",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
+    "font-awesome": "^4.7.0",
     "lodash": "^4.17.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
