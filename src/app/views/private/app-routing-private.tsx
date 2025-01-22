@@ -3,6 +3,7 @@ import Home from "@app/views/private/home/home.tsx";
 import Garantias from "@app/views/private/garantias/screenGarantia.tsx";
 import LayoutPrivate from "@shared/layouts/layout-private/index.tsx";
 import ScreenAcordoComercial from "./acordo-comercial/ScreenAcordoComercial";
+import UserRegistration from "@shared/components/userRegistration";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -23,6 +24,11 @@ export const appRoutingPrivate: RouteConfig[] = [
       {
         path: "acordo-comercial",
         element: <ScreenAcordoComercial/>,
+        private: true
+      },
+      {
+        path: "usuarios",
+        element: <UserRegistration/>,
         private: true
       }
     ]

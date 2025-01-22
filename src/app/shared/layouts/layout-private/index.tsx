@@ -1,14 +1,16 @@
-import React, {useState} from 'react';
-import {ConfigProvider, Layout, Menu} from 'antd';
-import {Link, Outlet} from 'react-router-dom';
-import {ArrowLeftOutlined, ArrowRightOutlined} from '@ant-design/icons';
+import React, { useState } from 'react';
+import { ConfigProvider, Layout, Menu } from 'antd';
+import { Link, Outlet } from 'react-router-dom';
+import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import styles from './styles.ts';
 import LogoIma from '@assets/image/png/logo-ima.png';
 import IconGarantia from '@assets/image/svg/icon_garantia.svg';
-import {FaCog} from "react-icons/fa";
-import {PiBuildingApartment} from "react-icons/pi";
+import { FaCog } from "react-icons/fa";
+import { PiBuildingApartment } from "react-icons/pi";
+import { UserOutlined } from '@ant-design/icons';
 
-const {Sider, Content, Header} = Layout;
+
+const { Sider, Content, Header } = Layout;
 
 interface MenuItem {
   key: string;
@@ -21,8 +23,15 @@ const menuData: MenuItem[] = [
   {
     key: '1',
     label: 'Garantias',
-    icon: <img src={IconGarantia} alt="Garantias"/>,
-    path: '/garantia',
+    icon: <img src={IconGarantia} alt="Garantias" style={{ width: "25px", height: "25px" }} />,
+    path: '/garantias',
+    
+  },
+  {
+    key: '2',
+    label: 'Cadastro de Usuários',
+    icon: <UserOutlined style={{ fontSize: "25px" }} />,
+    path: '/usuarios',
   },
 ];
 
@@ -34,18 +43,9 @@ const LayoutPrivate: React.FC = () => {
   const menuItems = menuData.map(item => ({
     key: item.key,
     label: (
-      <Link to={item.path} style={{color: 'inherit', display: 'flex', alignItems: 'center'}}>
-        <img
-          src={IconGarantia}
-          alt="Garantias"
-          style={{
-            width: collapsed ? '27px' : '30px',
-            height: collapsed ? '27px' : '30px',
-            marginRight: collapsed ? '0px' : '10px',
-            marginBottom: '5px',
-          }}
-        />
-        {!collapsed && <span style={{fontSize: '16px'}}>{item.label}</span>}
+      <Link to={item.path} style={{ color: "inherit", display: "flex", alignItems: "center" }}>
+        {item.icon} 
+        {!collapsed && <span style={{ marginLeft: "15px", fontSize: "16px" }}>{item.label}</span>} 
       </Link>
     ),
     onClick: () => setSelectedKey(item.key),
@@ -55,9 +55,10 @@ const LayoutPrivate: React.FC = () => {
       borderRadius: '15px',
       display: 'flex',
       alignItems: 'center',
+      justifyContent: collapsed ? "center" : "flex-start",
       paddingTop: collapsed ? '5px' : '0px',
       paddingLeft: collapsed ? '20px' : '15px',
-      backgroundColor: item.key === selectedKey ? 'rgba(255, 0, 0, 0.14)' : 'transparent',
+      backgroundColor: item.key === selectedKey ? "rgba(255, 0, 0, 0.14)" : "transparent",
       color: item.key === selectedKey ? '#FF0000' : '',
       border: item.key === selectedKey ? '0.25px solid rgba(255, 0, 0, 0.35)' : 'none',
     },
@@ -74,7 +75,7 @@ const LayoutPrivate: React.FC = () => {
             <img
               src={LogoIma}
               alt="Logo"
-              style={{height: collapsed ? '20px' : '40px', objectFit: 'contain'}}
+              style={{ height: collapsed ? '20px' : '40px', objectFit: 'contain' }}
             />
           </div>
           <Menu
@@ -84,23 +85,16 @@ const LayoutPrivate: React.FC = () => {
             }}
             defaultSelectedKeys={['1']}
             selectedKeys={[selectedKey]}
-            items={menuItems} 
+            items={menuItems}
           />
         </Sider>
         <Layout>
           <Header style={styles.header}>
-            <div
-              style={styles.arrowButtonMenu(collapsed)}
-              onClick={toggleSidebar}
-            >
-              {React.createElement(collapsed ? ArrowRightOutlined : ArrowLeftOutlined, {
-                style: {fontSize: 12, cursor: 'pointer'},
-              })}
+            <div onClick={toggleSidebar} style={{ cursor: "pointer", fontSize: "16px", marginRight: "20px" }}>
+              {React.createElement(collapsed ? ArrowRightOutlined : ArrowLeftOutlined)} 
             </div>
-
-            {/* Título dinâmico baseado no menu selecionado */}
-            <h2 className='titleHeader' style={styles.titleHeader}>
-              {selectedMenuItem ? selectedMenuItem.label : 'Dashboard'}
+            <h2 style={{ margin: 0, fontSize: "18px" }}> 
+              {selectedMenuItem ? selectedMenuItem.label : "Dashboard"}
             </h2>
 
             <div style={{
@@ -120,15 +114,15 @@ const LayoutPrivate: React.FC = () => {
                   borderRadius: '1rem',
                   padding: '0.5rem 1rem',
                 }}>
-                  <PiBuildingApartment style={{color: '#FF0000', fontSize: '1.2rem',}}/>
-                  <span style={{fontWeight: "500"}}>00.623.904/0001-73</span>
+                  <PiBuildingApartment style={{ color: '#FF0000', fontSize: '1.2rem', }} />
+                  <span style={{ fontWeight: "500" }}>00.623.904/0001-73</span>
                 </div>
               </div>
-              <FaCog style={{color: "#5f5a56"}}/>
+              <FaCog style={{ color: "#5f5a56", fontSize: "18px" }} />
             </div>
           </Header>
-          <Content style={styles.content}>
-            <Outlet/>
+          <Content style={{ padding: "20px", backgroundColor: "#f5f5f5" }}>
+            <Outlet />
           </Content>
         </Layout>
       </Layout>
