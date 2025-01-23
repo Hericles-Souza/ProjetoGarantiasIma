@@ -1,5 +1,5 @@
-import { FormControl, InputAdornment, InputLabel, MenuItem, SelectChangeEvent, TextField } from '@mui/material';
-import { Button, Checkbox, Form, Input, message, Modal, Select, Space, Table, TableColumnsType, TableProps, Typography, } from 'antd';
+import { FormControl, InputAdornment, InputLabel, MenuItem, SelectChangeEvent, TextField, Checkbox } from '@mui/material';
+import { Button, Form, Input, message, Modal, Select, Space, Table, TableColumnsType, TableProps, Typography, } from 'antd';
 import { SearchProps } from 'antd/es/input';
 import form from 'antd/lib/form';
 import React, { useState } from 'react';
@@ -51,6 +51,9 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
         setValue(e.target.value);
     };
 
+    const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
+
+
     const currencies = [
         {
             value: 'Cliente',
@@ -69,9 +72,28 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
     return (
 
         <div >
-            <div style={{ justifyContent: 'space-between', left: '32px', borderBottom: '1px solid #ddd', width: '100%' }}>
+            <div
+                style={{
+                    justifyContent: 'space-between',
+                    left: '32px',
+                    borderBottom: '1px solid #ddd',
+                    marginBottom: '25px',
+                    width: '100%'
+                }}>
                 <Space >
-                    <Typography style={{ fontWeight: 'bold', fontSize: '16px', color: '#FF0000', height: '50px', width: '200px', marginLeft: '140px', }} >CRIAR NOVO USUÁRIO</Typography>
+                    <Typography
+                        style={{
+                            fontWeight: 'bold',
+                            fontSize: '16px',
+                            color: '#FF0000',
+                            height: '40px',
+                            width: '200px',
+                            marginLeft: '140px',
+                            marginBottom: '0px',
+                            paddingBottom: '0px'
+                        }} >
+                        CRIAR NOVO USUÁRIO
+                    </Typography>
                 </Space>
             </div>
 
@@ -87,7 +109,7 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
 
 
             >
-                <Space style={{ width: "100%", }}>
+                <Space direction="horizontal" style={{ width: "100%" }}>
                     <TextField
                         id="input-container-select"
                         select
@@ -111,19 +133,22 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
                             </option>
                         ))}
                     </TextField>
-
-                    <Form.Item
-                        className='button-user'
-                        name="isActive"
-                        valuePropName="checked"
-                        style={{ marginBottom: 20, marginTop: "32px" }}
-                    >
-                        <Checkbox>Usuário Ativo</Checkbox>
-                    </Form.Item>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Checkbox
+                            {...label}
+                            defaultChecked
+                            //className='outlined-input-select'
+                            sx={{
+                                color: '#FF0000',
+                                '&.Mui-checked': {
+                                    color: '#FF0000',
+                                },
+                                marginTop: '-22px',
+                            }}
+                        />
+                        <span style={{ marginTop: '-22px' }}>Usuário Ativo</span>
+                    </div>
                 </Space>
-
-
-
                 <Space direction="horizontal" style={{ width: "100%" }}>
                     <TextField
                         label="CNPJ"
@@ -133,7 +158,7 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
                         fullWidth
                         focused
                         required
-                        className="outlined-input"
+                        className="outlined-input-cnpj"
                         placeholder="000.000.000/0001-00"
                         {...props}
                         style={{ width: '220px', }}
@@ -148,7 +173,7 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
                         fullWidth
                         focused
                         required
-                        className="outlined-input"
+                        className="outlined-input-cnpj"
                         placeholder="65465465465465"
                         {...props}
                         style={{ width: '220px', }}
@@ -162,7 +187,7 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
                         value={value}
                         onChange={handleChange}
                         fullWidth
-                        required 
+                        required
                         focused
                         placeholder="Razão Social"
                         className="outlined-input-razao"

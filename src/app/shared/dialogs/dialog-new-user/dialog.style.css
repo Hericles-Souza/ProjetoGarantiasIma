@@ -3,6 +3,7 @@
     left: 0px;
     font-size: 16px;
     color: #5F5A56; 
+    margin-bottom: 20px;
   }
 
   
@@ -14,6 +15,7 @@
   .outlined-input-select .MuiOutlinedInput-root {
     border-radius: 4px;
     height:40px;
+    margin-bottom: 20px;
   }
   
   .outlined-input-select .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
@@ -27,6 +29,7 @@
     left: 0px;
     font-size: 16px;
     color: #5F5A56;
+    
   }
 
   
@@ -125,6 +128,57 @@
     border-color: #dadada;
     border-radius: 10px;
     width: 450px;
+  }
+  .outlined-input-name .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    margin-bottom: 20px;
+  }
+
+  
+  .outlined-input-name .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+  }
+  
+  .outlined-input-name .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+  }
+  
+  .outlined-input-name .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+    width: 450px;
+  }
+
+
+  .outlined-input-cnpj .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    
+  }
+  
+  .outlined-input-cnpj .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+  }
+  
+  .outlined-input-cnpj .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+  }
+  
+  .outlined-input-cnpj .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+    
   }
   
 
