@@ -176,7 +176,7 @@ const UserRegistration: React.FC = () => {
                     <Search
                         placeholder="Pesquisar"
                         onSearch={(value) => console.log(value)}
-                        style={{ width: 200 }}
+                        style={{ width: 200,  }}
                     />
                     <Button type="default">Editar</Button>
                     <Button type="primary" danger onClick={openModal}>
@@ -185,14 +185,15 @@ const UserRegistration: React.FC = () => {
                 </Space>
             </div>
             <Modal
-                title="Criar Usuário"
+                //title="CRIAR NOVO USUÁRIO" 
                 open={isModalOpen}
                 footer={null}
-                style={{ width: '601px', alignItems: 'center' }}
+                
+                style={{ width: '601px', alignItems: 'center',  }}
             >
                 <div style={{top:'20px'}}>
                     <DialogUserRegistration 
-                        
+
                     />
                 </div>
             </Modal>
