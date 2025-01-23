@@ -1,4 +1,7 @@
-import { Table, TableColumnsType, TableProps } from 'antd';
+import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
+import { Button, Checkbox, Form, Input, message, Modal, Select, Space, Table, TableColumnsType, TableProps, } from 'antd';
+import { SearchProps } from 'antd/es/input';
+import form from 'antd/lib/form';
 import React, { useState } from 'react';
 
 type TableRowSelection<T extends object = object> =
@@ -63,14 +66,57 @@ const dataSource = Array.from({ length: 46 }).map<DataType>((_, i) => ({
     lastAlteration: "00/00/0000",
 }));
 
+const { Search } = Input;
+
+const { Option } = Select;
+
+
 const UserRegistration: React.FC = () => {
 
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [form] = Form.useForm();
 
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
         console.log("selectedRowKeys changed: ", newSelectedRowKeys);
         setSelectedRowKeys(newSelectedRowKeys);
     };
+
+    const openModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleGeneratePassword = () => {
+        const randomPassword = Math.random().toString(36).slice(-8);
+        form.setFieldsValue({ password: randomPassword });
+    };
+
+    const handleCopyPassword = () => {
+        const password = form.getFieldValue('password');
+        if (password) {
+            navigator.clipboard.writeText(password)
+                .then(() => message.success('Senha copiada para a área de transferência!'))
+                .catch(() => message.error('Falha ao copiar a senha.'));
+        } else {
+            message.warning('Nenhuma senha para copiar.');
+        }
+    };
+
+    const handleSubmit = () => {
+        form.validateFields()
+            .then((values) => {
+                console.log("Form Values:", values);
+                closeModal();
+            })
+            .catch((info) => {
+                console.log("Validate Failed:", info);
+            });
+    };
+
 
     const rowSelection: TableRowSelection<DataType> = {
         selectedRowKeys,
@@ -110,15 +156,56 @@ const UserRegistration: React.FC = () => {
         ],
     };
     return (
-        
+
         <div>
-            <Table
-                rowSelection={rowSelection}
-                columns={columns}
-                dataSource={dataSource}
-            />
+            <div
+                style={{
+                    position: "fixed",
+                    top: 80,
+                    right: 0,
+                    left: 0,
+                    zIndex: 1000,
+                    padding: "10px 20px",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "10px",
+                    borderBottom: "1px #ddd",
+                }}
+            >
+                <Space direction="horizontal">
+                    <Search
+                        placeholder="Pesquisar"
+                        onSearch={(value) => console.log(value)}
+                        style={{ width: 200 }}
+                    />
+                    <Button type="default">Editar</Button>
+                    <Button type="primary" danger onClick={openModal}>
+                        Criar Usuário
+                    </Button>
+                </Space>
+            </div>
+            <Modal
+                title="Criar Usuário"
+                open={isModalOpen}
+                footer={null}
+                style={{ width: '601px', alignItems: 'center' }}
+            >
+                <div style={{top:'20px'}}>
+                    <DialogUserRegistration 
+                        
+                    />
+                </div>
+            </Modal>
+
+            <div style={{ marginTop: "60px" }}>
+                <Table
+                    rowSelection={rowSelection}
+                    columns={columns}
+                    dataSource={dataSource}
+                />
+            </div>
         </div>
-        
+
     );
 };
 
