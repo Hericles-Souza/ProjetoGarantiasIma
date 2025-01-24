@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "antd";
 import { RightOutlined, DownOutlined, LeftOutlined } from "@ant-design/icons";
-
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import styles from "./InvoiceDetails.module.css";
 import OutlinedInputWithLabel from "../../../shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import OutlinedSelectWithLabel from "../../../shared/components/select/OutlinedSelectWithLabel";
-import MultilineTextFields from '../../../shared/components/multline/multLine';
+import MultilineTextFields from "../../../shared/components/multline/multLine";
 
 const InvoiceDetails: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
@@ -19,11 +18,8 @@ const InvoiceDetails: React.FC = () => {
   };
 
   useEffect(() => {
-    
     if (!quillInstance.current && editorRef.current) {
-    
       editorRef.current.innerHTML = "";
-
 
       quillInstance.current = new Quill(editorRef.current, {
         theme: "snow",
@@ -43,13 +39,11 @@ const InvoiceDetails: React.FC = () => {
     }
 
     return () => {
-     
       if (quillInstance.current) {
         quillInstance.current = null;
       }
     };
-  }, []); 
-
+  }, []);
 
   return (
     <div className={styles.containerApp}>
@@ -93,7 +87,7 @@ const InvoiceDetails: React.FC = () => {
           <div className={styles.hiddenContent}>
             {/* Anexo da NF de Vendas */}
             <div className={styles.containerAnexo}>
-              <span className={styles.labelAnexo}>Anexo da NF de Vendas</span>
+              <span className={styles.labelAnexo}>Anexo da NF de venda</span>
               <div className={styles.botoesAnexo}>
                 <Button type="default" danger>
                   VISUALIZAR
@@ -103,7 +97,6 @@ const InvoiceDetails: React.FC = () => {
                 </Button>
               </div>
             </div>
-
             {/* Informações Gerais */}
             <h3 className={styles.tituloSecao}>Informações Gerais</h3>
 
@@ -174,7 +167,7 @@ const InvoiceDetails: React.FC = () => {
               </span>
               <div className={styles.botoesAnexo}>
                 <Button type="default" danger>
-                  VIZUALIZAR
+                  VISUALIZAR
                 </Button>
                 <Button type="primary" danger>
                   BAIXAR ARQUIVO
@@ -183,62 +176,111 @@ const InvoiceDetails: React.FC = () => {
             </div>
 
             <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-            <ul className={styles.listaAnexosImagens}>
-              {[
-                "Foto do lado com a gravação IMA:",
-                "Foto da peça danificada/amassada/quebrada:",
-                "Foto de marcas suspeitas na peça:",
-                "Foto da peça completa:",
-                "Outras fotos relevantes:",
-              ].map((label, index) => (
-                <li key={index} className={styles.itemAnexoImagem}>
-                  <span>
-                    {index + 1}. {label}
-                  </span>
-                  <div className={styles.botoesAnexo}>
-                    <Button type="default" danger>
-                      VIZUALIZAR
-                    </Button>
-                    <Button type="primary" danger>
-                      BAIXAR ARQUIVO
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.itemAnexo}>
+              <span className={styles.itemLabelAnexo}>
+                1. Foto do lado onde está a gravação IMA:
+              </span>
+              <div className={styles.botoesAnexo}>
+                <Button type="default" danger>
+                  VISUALIZAR
+                </Button>
+                <Button type="primary" danger>
+                  BAIXAR ARQUIVO
+                </Button>
+              </div>
+            </div>
+
+            <div className={styles.itemAnexo}>
+              <span className={styles.itemLabelAnexo}>
+                2. Foto da parte danificada/amassada/quebrada:
+              </span>
+              <div className={styles.botoesAnexo}>
+                <Button type="default" danger>
+                  VISUALIZAR
+                </Button>
+                <Button type="primary" danger>
+                  BAIXAR ARQUIVO
+                </Button>
+              </div>
+            </div>
+
+            <div className={styles.itemAnexo}>
+              <span className={styles.itemLabelAnexo}>
+                3. Foto de marcas suspeitas na peça:
+              </span>
+              <div className={styles.botoesAnexo}>
+                <Button type="default" danger>
+                  VISUALIZAR
+                </Button>
+                <Button type="primary" danger>
+                  BAIXAR ARQUIVO
+                </Button>
+              </div>
+            </div>
+
+            <div className={styles.itemAnexo}>
+              <span className={styles.itemLabelAnexo}>
+                4. Foto da peça completa:
+              </span>
+              <div className={styles.botoesAnexo}>
+                <Button type="default" danger>
+                  VISUALIZAR
+                </Button>
+                <Button type="primary" danger>
+                  BAIXAR ARQUIVO
+                </Button>
+              </div>
+            </div>
+
+            <div className={styles.itemAnexo}>
+              <span className={styles.itemLabelAnexo}>
+                5. Outras fotos relevantes:
+              </span>
+              <div className={styles.botoesAnexo}>
+                <Button type="default" danger>
+                  VISUALIZAR
+                </Button>
+                <Button type="primary" danger>
+                  BAIXAR ARQUIVO
+                </Button>
+              </div>
+            </div>
+
             <hr className={styles.divisor} />
             {/* Envio Autorizado */}
             <div className={styles.containerSelect}>
-            <div className={styles.containerSelected}>
-              <label className={styles.labelInput}></label>
-              <OutlinedSelectWithLabel
-                label="Envio Autorizado"
-                options={[
-                  {
-                    value: "Garantia procedente",
-                    label: "Garantia procedente",
-                  },
-                  {
-                    value: "Garantia improcedente",
-                    label: "Garantia improcedente",
-                  },
-                ]}
-                defaultValue={undefined}
-                style={{
-                  width: "300px", 
-                  height: "40px", 
-                  borderRadius: "4px 4px 0 0", 
-                }}
-              />
-               </div>
+              <div className={styles.containerSelected}>
+                <label className={styles.labelInput}></label>
+                <OutlinedSelectWithLabel
+                  label="Envio Autorizado"
+                  options={[
+                    {
+                      value: "Garantia procedent",
+                      label: "Garantia procedente",
+                    },
+                    {
+                      value: "Garantia improcedente",
+                      label: "Garantia improcedente",
+                    },
+                  ]}
+                  defaultValue={undefined}
+                  style={{
+                    width: "300px",
+                    height: "40px",
+                    borderRadius: "4px 4px 0 0",
+                    transform: "scale(0.8)",
+                    transformOrigin: "top left",
+                    
+                  }}
+                />
+              </div>
             </div>
 
             <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
-            <div> 
-            <div ref={editorRef} style={{ height: "300px" }} />
+            <div>
+              <div ref={editorRef} style={{ height: "300px" }} />
             </div>
 
-          
             <h3 className={styles.tituloA}>Conclusão</h3>
             <MultilineTextFields />
           </div>
