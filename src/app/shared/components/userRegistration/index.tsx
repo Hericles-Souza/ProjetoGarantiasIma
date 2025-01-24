@@ -1,3 +1,4 @@
+import DialogAttention from '@shared/dialogs/dialog-attention/dialog-attention';
 import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
 import { Button, Checkbox, Form, Input, message, Modal, Select, Space, Table, TableColumnsType, TableProps, } from 'antd';
 import { SearchProps } from 'antd/es/input';
@@ -155,6 +156,15 @@ const UserRegistration: React.FC = () => {
             },
         ],
     };
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const handleOpen = () => setIsModalVisible(true);
+    const handleClose = () => setIsModalVisible(false);
+    const handleConfirm = () => {
+        setIsModalVisible(false);
+        console.log('Dados enviados!');
+    };
     return (
 
         <div>
@@ -176,23 +186,29 @@ const UserRegistration: React.FC = () => {
                     <Search
                         placeholder="Pesquisar"
                         onSearch={(value) => console.log(value)}
-                        style={{ width: 200,  }}
+                        style={{ width: 200, }}
                     />
-                    <Button type="default">Editar</Button>
+                    <Button type="default" onClick={handleOpen}>Editar</Button>
                     <Button type="primary" danger onClick={openModal}>
                         Criar Usuário
                     </Button>
                 </Space>
-            </div>
+            </div>          
+                <DialogAttention
+                    isVisible={isModalVisible}
+                    onClose={handleClose}
+                    onConfirm={handleConfirm}
+                />
             <Modal
                 //title="CRIAR NOVO USUÁRIO" 
                 open={isModalOpen}
                 footer={null}
-                
-                style={{ width: '601px', alignItems: 'center',  }}
+                onCancel={closeModal}
+
+                style={{ width: '601px', alignItems: 'center', }}
             >
-                <div style={{top:'20px'}}>
-                    <DialogUserRegistration 
+                <div style={{ top: '20px' }}>
+                    <DialogUserRegistration
 
                     />
                 </div>

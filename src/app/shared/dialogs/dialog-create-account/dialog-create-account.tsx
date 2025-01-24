@@ -1,5 +1,5 @@
 import React from 'react'
-import {Button, Form, message, Modal} from 'antd'
+import { Button, Form, message, Modal } from 'antd'
 import Input from 'antd/lib/input'
 
 interface CreateAccountProps {
@@ -7,7 +7,7 @@ interface CreateAccountProps {
   onClose: () => void
 }
 
-const DialogCreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose}) => {
+const DialogCreateAccount: React.FC<CreateAccountProps> = ({ isVisible, onClose }) => {
   const [form] = Form.useForm()
 
   const onFinish = async (values: any) => {
@@ -55,7 +55,7 @@ const DialogCreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose})
       <Form
         form={form}
         name='trigger'
-        style={{maxWidth: 600}}
+        style={{ maxWidth: 600 }}
         layout='vertical'
         autoComplete='off'
         onFinish={onFinish}
@@ -64,7 +64,7 @@ const DialogCreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose})
           hasFeedback
           label='CNPJ'
           name='cnpj'
-          rules={[{required: true, message: 'CNPJ é obrigatório!'}]}
+          rules={[{ required: true, message: 'CNPJ é obrigatório!' }]}
         >
           <Input
             placeholder='Digite seu CNPJ'
@@ -80,22 +80,22 @@ const DialogCreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose})
           hasFeedback
           label='Razão Social'
           name='razaoSocial'
-          rules={[{required: true, message: 'Razão Social é obrigatória!'}]}
+          rules={[{ required: true, message: 'Razão Social é obrigatória!' }]}
         >
           <Input
             placeholder='Digite seu Razão Social'
-            style={{height: '50px', fontSize: '18px', borderRadius: '10px'}}
+            style={{ height: '50px', fontSize: '18px', borderRadius: '10px' }}
           />
         </Form.Item>
         <Form.Item
           hasFeedback
           label='Telefone'
           name='phone'
-          rules={[{required: true, message: 'Telefone é obrigatório!'}]}
+          rules={[{ required: true, message: 'Telefone é obrigatório!' }]}
         >
           <Input
             placeholder='Digite seu Telefone'
-            style={{height: '50px', fontSize: '18px', borderRadius: '10px'}}
+            style={{ height: '50px', fontSize: '18px', borderRadius: '10px' }}
           />
         </Form.Item>
         <Form.Item
@@ -115,7 +115,7 @@ const DialogCreateAccount: React.FC<CreateAccountProps> = ({isVisible, onClose})
         >
           <Input
             placeholder='Digite seu E-mail'
-            style={{height: '50px', fontSize: '18px', borderRadius: '10px'}}
+            style={{ height: '50px', fontSize: '18px', borderRadius: '10px' }}
           />
         </Form.Item>
         <Button

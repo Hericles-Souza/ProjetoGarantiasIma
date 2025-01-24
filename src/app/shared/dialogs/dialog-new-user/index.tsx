@@ -271,7 +271,7 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
                     <Button onClick={closeModal} style={{ backgroundColor: "white", color: "red" }}>
                         CANCELAR
                     </Button>
-                    <Button type="primary" onClick={handleSubmit} style={{ backgroundColor: "red" }}>
+                    <Button type="primary" onClick={closeModal}  style={{ backgroundColor: "red" }}>
                         CRIAR
                     </Button>
                 </div>
