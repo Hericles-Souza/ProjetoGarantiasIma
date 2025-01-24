@@ -97,18 +97,7 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
                 </Space>
             </div>
 
-            <Form
-                form={form}
-                layout="vertical"
-                initialValues={{
-                    profile: "Cliente",
-                    isActive: true,
-                    password: "Q1234icL3M4",
-                }}
-
-
-
-            >
+            
                 <Space direction="horizontal" style={{ width: "100%" }}>
                     <TextField
                         id="input-container-select"
@@ -275,7 +264,7 @@ const DialogUserRegistration: React.FC = ({ ...props }) => {
                         CRIAR
                     </Button>
                 </div>
-            </Form>
+            
 
 
         </div >

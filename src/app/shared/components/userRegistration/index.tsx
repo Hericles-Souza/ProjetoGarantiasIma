@@ -1,4 +1,5 @@
 import DialogAttention from '@shared/dialogs/dialog-attention/dialog-attention';
+import DialogEditUser from '@shared/dialogs/dialog-editUser';
 import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
 import { Button, Checkbox, Form, Input, message, Modal, Select, Space, Table, TableColumnsType, TableProps, } from 'antd';
 import { SearchProps } from 'antd/es/input';
@@ -69,7 +70,6 @@ const dataSource = Array.from({ length: 46 }).map<DataType>((_, i) => ({
 
 const { Search } = Input;
 
-const { Option } = Select;
 
 
 const UserRegistration: React.FC = () => {
@@ -90,34 +90,6 @@ const UserRegistration: React.FC = () => {
     const closeModal = () => {
         setIsModalOpen(false);
     };
-
-    const handleGeneratePassword = () => {
-        const randomPassword = Math.random().toString(36).slice(-8);
-        form.setFieldsValue({ password: randomPassword });
-    };
-
-    const handleCopyPassword = () => {
-        const password = form.getFieldValue('password');
-        if (password) {
-            navigator.clipboard.writeText(password)
-                .then(() => message.success('Senha copiada para a área de transferência!'))
-                .catch(() => message.error('Falha ao copiar a senha.'));
-        } else {
-            message.warning('Nenhuma senha para copiar.');
-        }
-    };
-
-    const handleSubmit = () => {
-        form.validateFields()
-            .then((values) => {
-                console.log("Form Values:", values);
-                closeModal();
-            })
-            .catch((info) => {
-                console.log("Validate Failed:", info);
-            });
-    };
-
 
     const rowSelection: TableRowSelection<DataType> = {
         selectedRowKeys,
@@ -194,11 +166,12 @@ const UserRegistration: React.FC = () => {
                     </Button>
                 </Space>
             </div>          
-                <DialogAttention
+                {/*<DialogEditUser
                     isVisible={isModalVisible}
                     onClose={handleClose}
                     onConfirm={handleConfirm}
-                />
+                />*/}
+
             <Modal
                 //title="CRIAR NOVO USUÁRIO" 
                 open={isModalOpen}
