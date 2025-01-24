@@ -27,6 +27,16 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true
       },
       {
+        path: "RgiDetailsPage",
+        element: <RgiDetailsPage/>,
+        private: true
+      },
+      {
+        path: "InvoiceDetails",
+        element: <InvoiceDetails />, 
+        private: true,
+      },
+      {
         path: "usuarios",
         element: <UserRegistration/>,
         private: true
