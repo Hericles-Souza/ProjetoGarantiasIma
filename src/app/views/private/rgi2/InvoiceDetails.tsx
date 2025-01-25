@@ -43,7 +43,9 @@ const InvoiceDetails: React.FC = () => {
         quillInstance.current = null;
       }
     };
-  }, []);
+  }, [isContentVisible]);  
+
+
 
   return (
     <div className={styles.containerApp}>
