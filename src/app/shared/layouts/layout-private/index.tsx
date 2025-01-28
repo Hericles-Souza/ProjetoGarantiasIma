@@ -83,6 +83,7 @@ const LayoutPrivate: React.FC = () => {
               backgroundColor: '#ffffff',
               overflowY: 'auto',
             }}
+            defaultSelectedKeys={['1']}
             selectedKeys={[selectedKey]}
           >
             {menuData.filter(item =>
@@ -111,8 +112,13 @@ const LayoutPrivate: React.FC = () => {
         </Sider>
         <Layout>
           <Header style={styles.header}>
-            <div onClick={toggleSidebar} style={{cursor: "pointer", fontSize: "16px", marginRight: "20px"}}>
-              {React.createElement(collapsed ? ArrowRightOutlined : ArrowLeftOutlined)}
+            <div
+              style={styles.arrowButtonMenu(collapsed)}
+              onClick={toggleSidebar}
+            >
+              {React.createElement(collapsed ? ArrowRightOutlined : ArrowLeftOutlined, {
+                style: {fontSize: 12, cursor: 'pointer'},
+              })}
             </div>
             <h2 style={{margin: 0, fontSize: "18px"}}>
               {menuData.find(item => item.key === selectedKey)?.label || "Dashboard"}
@@ -152,7 +158,7 @@ const LayoutPrivate: React.FC = () => {
               </Dropdown>
             </div>
           </Header>
-          <Content style={{padding: "20px", backgroundColor: "#f5f5f5"}}>
+          <Content style={styles.content}>
             <Outlet/>
           </Content>
         </Layout>
