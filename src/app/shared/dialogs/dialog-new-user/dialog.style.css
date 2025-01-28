@@ -1,0 +1,187 @@
+.outlined-input-select .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56; 
+    margin-bottom: 20px;
+  }
+
+  
+  .outlined-input-select .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+    
+  }
+  
+  .outlined-input-select .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+  }
+  
+  .outlined-input-select .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 8px;
+  }
+
+  .outlined-input .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    
+  }
+
+  
+  .outlined-input .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+  }
+  
+  .outlined-input .MuiOutlinedInput-root {
+    border-radius: 4px;
+    margin: 0;
+    /*height:40px;*/
+    /*margin-bottom: 20px;*/
+  }
+  
+  .outlined-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+    
+  }
+
+  .outlined-input-razao .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    margin-bottom: 20px;
+    
+  }
+
+  
+  .outlined-input-razao .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+  }
+  
+  .outlined-input-razao .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+    
+  }
+  
+  .outlined-input-razao .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+    width: 450px;
+    
+  }
+
+  .outlined-input-contact .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    margin-bottom: 20px;
+  }
+
+  
+  .outlined-input-contact .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+    
+  }
+  
+  .outlined-input-contact .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+  }
+  
+  .outlined-input-contact .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+  }
+  .outlined-input-password .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    margin-bottom: 20px;
+  }
+
+  
+  .outlined-input-password .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+  }
+  
+  .outlined-input-password .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+  }
+  
+  .outlined-input-password .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+    width: 450px;
+  }
+  .outlined-input-name .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    margin-bottom: 20px;
+  }
+
+  
+  .outlined-input-name .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+  }
+  
+  .outlined-input-name .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+  }
+  
+  .outlined-input-name .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+    width: 450px;
+  }
+
+
+  .outlined-input-cnpj .MuiInputLabel-root {
+    top: 2px;
+    left: 0px;
+    font-size: 16px;
+    color: #5F5A56;
+    
+  }
+  
+  .outlined-input-cnpj .MuiInputLabel-root.Mui-focused {
+    color: #5F5A56; 
+  }
+  
+  .outlined-input-cnpj .MuiOutlinedInput-root {
+    border-radius: 4px;
+    height:40px;
+    margin-bottom: 20px;
+  }
+  
+  .outlined-input-cnpj .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    color: #5F5A56;
+    border-color: #dadada;
+    border-radius: 10px;
+    
+  }
+  
+
+  
+  

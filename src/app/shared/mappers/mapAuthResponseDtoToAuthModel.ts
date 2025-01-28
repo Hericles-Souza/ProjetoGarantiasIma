@@ -9,7 +9,12 @@ export const mapMeResponseToAuthModel = (meResponse: AuthResponseDto, token: str
     email: meResponse.email,
     isActive: meResponse.isActive,
     isAdmin: meResponse.isAdmin,
-    rule: meResponse.rule.name,
+    rule: meResponse?.rule,
+    cnpj: meResponse.cnpj,
+    codigoCigam: meResponse.codigoCigam,
+    createdAt: meResponse.createdAt,
+    shortname: meResponse.shortname,
+    updatedAt: meResponse.updatedAt,
     token: token,
   };
 };

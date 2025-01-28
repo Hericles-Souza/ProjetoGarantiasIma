@@ -8,6 +8,7 @@ const styles = {
     background: '#ffffff',
     transition: 'all 0.2s',
     overflow: 'auto',
+    zIndex: 2,
   },
   siderHeader: (collapsed: boolean) => ({
     height: 80,

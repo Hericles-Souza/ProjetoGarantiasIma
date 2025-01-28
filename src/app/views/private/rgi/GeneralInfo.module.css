@@ -1,0 +1,228 @@
+.appContainer {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  .backButtonContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+.backButton {
+  font-family: 'DM Sans', sans-serif;  
+  font-weight: 500;  
+  font-size: 10px;  
+  line-height: 13.02px;  
+  color: #000;  
+}
+
+
+  .headerRgi {
+    font-size: 10px;
+    font-weight: 400;
+    color: #ff4d4f;
+  }
+
+  .headerContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .rgiTitle {
+    font-family: 'DM Sans', sans-serif;  
+    font-weight: 400;  
+    font-size: 30px;  
+    line-height: 39.06px;  
+    color: #FF0000;  
+    width: 262px;  
+    height: 40px;  
+    margin: 0;  
+  }
+  
+  
+  .statusTag {
+    background-color: #f5f5f5;  
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-family: 'DM Sans', sans-serif;  
+    font-weight: 400;  
+    font-size: 14px;  
+    line-height: 18.23px;  
+    color: #5F5A56;
+  }
+  
+  .buttonsContainer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  
+  .buttonsContainer button {
+    padding: 8px 16px;
+    border-radius: 12px; 
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+ 
+  
+  .divider {
+    margin-bottom: 16px;
+    border: none;
+    border-top: 1px solid #d9d9d9;
+  }
+  
+  
+  .infoContainer {
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding-top: .5%;
+    margin-bottom: 2px;
+  }
+  
+  .infoTitle {
+    font-family: 'DM Sans', sans-serif;  
+    font-weight: 500;  
+    font-size: 16px;  
+    line-height: 20.83px;  
+    color: #5F5A56;  
+    margin-top: 16px; 
+    margin-bottom: 16px;  
+  }
+  
+
+ 
+  
+  .inputsContainer {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-start; 
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1; 
+}
+
+.inputLabel {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 4px; 
+}
+
+.inputLarge {
+    width: 100%;
+    height: 40px; 
+    border-radius: 8px; 
+    border: 1px solid #d9d9d9;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.inputMedium {
+    width: 100%; 
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+.inputLarge, .inputMedium {
+  background-color: #f5f5f5; 
+  border-color: #d9d9d9; 
+  color: #000; 
+}
+
+.inputLarge:focus, .inputMedium:focus {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2); 
+}
+
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;  
+  gap: 4px; 
+  width: 174px;  
+  height: 20px;  
+}
+
+.checkboxContainer .ant-checkbox-inner {
+  width: 14.17px; 
+  height: 14.17px; 
+  top: 2.92px;   
+  left: 2.92px;   
+}
+
+.checkboxContainer label {
+  width: auto;  
+  height: 18px;  
+  font-family: 'DM Sans', sans-serif;  
+  font-weight: 400; 
+  font-size: 14px;  
+  line-height: 27px; 
+  color: #5F5A56;  
+  white-space: nowrap;  
+}
+
+
+  
+  .nfsContainer {
+    margin-left: 0;
+  }
+  
+  .nfsTitle {
+    font-family: 'DM Sans', sans-serif;  
+    font-weight: 400;  
+    font-size: 25px;  
+    line-height: 32.55px;  
+    color: #5F5A56;  
+    margin-top: 15px;  
+    margin-bottom: 15px; 
+  }
+  
+  
+  .nfsItem {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    gap: 8px;
+  }
+  
+  .nfsCode {
+    font-size: 14px;
+    color: #555;
+    font-weight: 400;
+  }
+  
+  .nfsDivider {
+    font-size: 14px;
+    color: #aaa;
+  }
+  
+  .nfsQuantity {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .nextButton {
+    margin-left: auto;
+    font-size: 16px;
+    color: #000;
+  }
