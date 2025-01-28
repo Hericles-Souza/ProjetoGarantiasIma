@@ -1,80 +1,49 @@
 import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
-import {Button, Form, Input, Modal, Space, Table, TableColumnsType, TableProps,} from 'antd';
-import React, {useState} from 'react';
+import {Button, Input, Modal, Space, Table, TableColumnsType, TableProps,} from 'antd';
+import React, {useEffect, useState} from 'react';
+import {getAllUsers, GetAllUsersResponse} from "@shared/services/UserService.ts";
 
 type TableRowSelection<T extends object = object> =
   TableProps<T>["rowSelection"];
 
 interface DataType {
-  key: React.Key;
-  id: number;
-  age: number;
-  telefone: number;
-  status: string;
+  key: string;
+  id: string;
+  age: string;
+  telefone: string;  // Alteração aqui para string
+  status: boolean;
   email: string;
   user: string;
   create: string;
   lastAlteration: string;
 }
 
+
 const columns: TableColumnsType<DataType> = [
-  {
-    title: "ID",
-    dataIndex: "id",
-  },
-  {
-    title: "Razão Social",
-    dataIndex: "age",
-  },
-  {
-    title: "Telefone",
-    dataIndex: "telefone",
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-  },
-  {
-    title: "E-mail",
-    dataIndex: "email",
-  },
-  {
-    title: "Perfil do Usuário",
-    dataIndex: "user",
-  },
-  {
-    title: "Criado",
-    dataIndex: "create",
-  },
-  {
-    title: "Ultima Alteração",
-    dataIndex: "lastAlteration",
-  },
+  {title: 'ID', dataIndex: 'id'},
+  {title: 'Razão Social', dataIndex: 'age'},
+  {title: 'Telefone', dataIndex: 'telefone'},
+  {title: 'Status', dataIndex: 'status'},
+  {title: 'E-mail', dataIndex: 'email'},
+  {title: 'Perfil do Usuário', dataIndex: 'user'},
+  {title: 'Criado', dataIndex: 'create'},
+  {title: 'Última Alteração', dataIndex: 'lastAlteration'},
 ];
 
-const dataSource = Array.from({length: 46}).map<DataType>((_, i) => ({
-  key: i,
-  id: 1,
-  age: 32,
-  telefone: 88524226,
-  status: "Ativo",
-  email: "amanda@gmail.com",
-  user: "Admin",
-  create: "00/00/0000",
-  lastAlteration: "00/00/0000",
-}));
 
 const {Search} = Input;
 
 
 const UserRegistration: React.FC = () => {
-
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form] = Form.useForm();
+  const [dataSource, setDataSource] = useState<DataType[]>([]);
+  const [loading, setLoading] = useState(false); // Para mostrar o carregamento durante a requisição
+
+  const [page, setPage] = useState(1); // Página inicial
+  const [limit, setLimit] = useState(10); // Limite de itens por página
 
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-    console.log("selectedRowKeys changed: ", newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
   };
 
@@ -86,111 +55,101 @@ const UserRegistration: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const onSearch = () => {
+    closeModal();
+    fetchData().then();
+  };
+
+  const fetchData = async () => {
+    setLoading(true); // Começa o carregamento
+    try {
+      const response: GetAllUsersResponse = await getAllUsers(page, limit);
+      const usersData = response.data.data.data.map((user) => ({
+        key: user.id,
+        id: user.id,
+        age: user.fullname,
+        telefone: "(31) 99847-5278",
+        status: user.isActive,
+        email: user.email,
+        user: user.rule?.name,
+        create: user.createdAt,
+        lastAlteration: user.updatedAt,
+      }));
+      setDataSource(usersData);
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+    } finally {
+      setLoading(false); // Finaliza o carregamento
+    }
+  };
+
+  useEffect(() => {
+    fetchData(); // Chama a função de busca quando o componente é montado
+  }, [page, limit]); // Recarrega a lista sempre que a página ou limite mudarem
+
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
     onChange: onSelectChange,
-    selections: [
-      Table.SELECTION_ALL,
-      Table.SELECTION_INVERT,
-      Table.SELECTION_NONE,
-      {
-        key: "odd",
-        text: "Select Odd Row",
-        onSelect: (changeableRowKeys) => {
-          let newSelectedRowKeys = [];
-          newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
-            if (index % 2 !== 0) {
-              return false;
-            }
-            return true;
-          });
-          setSelectedRowKeys(newSelectedRowKeys);
-        },
-      },
-      {
-        key: "even",
-        text: "Select Even Row",
-        onSelect: (changeableRowKeys) => {
-          let newSelectedRowKeys = [];
-          newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
-            if (index % 2 !== 0) {
-              return true;
-            }
-            return false;
-          });
-          setSelectedRowKeys(newSelectedRowKeys);
-        },
-      },
-    ],
   };
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const handleOpen = () => setIsModalVisible(true);
-  const handleClose = () => setIsModalVisible(false);
-  const handleConfirm = () => {
-    setIsModalVisible(false);
-    console.log('Dados enviados!');
-  };
   return (
-
     <div>
       <div
         style={{
-          position: "fixed",
+          position: 'fixed',
           top: 80,
           right: 0,
           left: 0,
-          zIndex: 1000,
-          padding: "10px 20px",
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: "10px",
-          borderBottom: "1px #ddd",
+          padding: '10px 20px',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '10px',
+          borderBottom: '1px #ddd',
         }}
       >
         <Space direction="horizontal">
           <Search
             placeholder="Pesquisar"
             onSearch={(value) => console.log(value)}
-            style={{width: 200,}}
+            style={{width: 200}}
           />
-          <Button type="default" onClick={handleOpen}>Editar</Button>
+          <Button type="default">Editar</Button>
           <Button type="primary" danger onClick={openModal}>
             Criar Usuário
           </Button>
         </Space>
       </div>
-      {/*<DialogEditUser
-                    isVisible={isModalVisible}
-                    onClose={handleClose}
-                    onConfirm={handleConfirm}
-                />*/}
 
       <Modal
-        //title="CRIAR NOVO USUÁRIO"
         open={isModalOpen}
         footer={null}
         onCancel={closeModal}
-
-        style={{width: '601px', alignItems: 'center',}}
+        style={{ width: '601px', alignItems: 'center' }}
       >
-        <div style={{top: '20px'}}>
-          <DialogUserRegistration
-
-          />
+        <div style={{ top: '20px' }}>
+          <DialogUserRegistration closeModal={closeModal} onSearch={onSearch} />
         </div>
       </Modal>
 
-      <div style={{marginTop: "60px"}}>
+
+      <div style={{marginTop: '60px'}}>
         <Table
           rowSelection={rowSelection}
           columns={columns}
           dataSource={dataSource}
+          loading={loading} // Mostra o carregamento durante a requisição
+          pagination={{
+            current: page,
+            pageSize: limit,
+            total: dataSource.length, // Ajuste isso conforme o total de registros recebido da API
+            onChange: (newPage, newPageSize) => {
+              setPage(newPage); // Muda a página ao clicar no paginador
+              setLimit(newPageSize); // Ajusta o limite por página
+            },
+          }}
         />
       </div>
     </div>
-
   );
 };
 

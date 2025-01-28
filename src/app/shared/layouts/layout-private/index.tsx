@@ -1,71 +1,71 @@
-import React, { useState } from 'react';
-import { ConfigProvider, Layout, Menu } from 'antd';
-import { Link, Outlet } from 'react-router-dom';
-import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import React, {useContext, useEffect, useState} from 'react';
+import {ConfigProvider, Dropdown, Layout, Menu} from 'antd';
+import {Link, Outlet, useLocation} from 'react-router-dom';
+import {ArrowLeftOutlined, ArrowRightOutlined} from '@ant-design/icons';
 import styles from './styles.ts';
 import LogoIma from '@assets/image/png/logo-ima.png';
 import IconGarantia from '@assets/image/svg/icon_garantia.svg';
-import { FaCog } from "react-icons/fa";
-import { PiBuildingApartment } from "react-icons/pi";
-import { UserOutlined } from '@ant-design/icons';
+import IconUser from '@assets/image/svg/user.svg';
+import {FaCog, FaUser} from "react-icons/fa";
+import {PiBuildingApartment} from "react-icons/pi";
+import {FaRegBell} from "react-icons/fa6";
+import {AuthContext} from "@shared/contexts/Auth/AuthContext.tsx";
+import {UserRoleEnum} from "@shared/enums/UserRoleEnum.ts";
 
-
-const { Sider, Content, Header } = Layout;
+const {Sider, Content, Header} = Layout;
 
 interface MenuItem {
   key: string;
   label: string;
   icon: React.ReactNode;
   path: string;
+  allowedRoles?: UserRoleEnum[]
 }
 
 const menuData: MenuItem[] = [
   {
     key: '1',
     label: 'Garantias',
-    icon: <img src={IconGarantia} alt="Garantias" style={{ width: "25px", height: "25px" }} />,
+    icon: <img src={IconGarantia} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
     path: '/garantias',
-    
   },
   {
     key: '2',
     label: 'Cadastro de Usuários',
-    icon: <UserOutlined style={{ fontSize: "25px" }} />,
-    path: '/usuarios',
+    icon: <img src={IconUser} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
+    path: '/users',
+    allowedRoles: [UserRoleEnum.Admin]
   },
 ];
 
 const LayoutPrivate: React.FC = () => {
   const [collapsed, setCollapsed] = useState(true);
-  const [selectedKey, setSelectedKey] = useState<string>('1');
+  const [selectedKey, setSelectedKey] = useState<string>();
+  const location = useLocation();
+  const {user, logout} = useContext(AuthContext); // Adicionei a função de logout no contexto
+
+  useEffect(() => {
+    const currentItem = menuData.find(item => location.pathname.startsWith(item.path));
+    if (currentItem) {
+      setSelectedKey(currentItem.key);
+    }
+  }, [location.pathname]);
+
   const toggleSidebar = () => setCollapsed(prev => !prev);
 
-  const menuItems = menuData.map(item => ({
-    key: item.key,
-    label: (
-      <Link to={item.path} style={{ color: "inherit", display: "flex", alignItems: "center" }}>
-        {item.icon} 
-        {!collapsed && <span style={{ marginLeft: "15px", fontSize: "16px" }}>{item.label}</span>} 
-      </Link>
-    ),
-    onClick: () => setSelectedKey(item.key),
-    style: {
-      ...styles.menuItem,
-      height: '55px',
-      borderRadius: '15px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: collapsed ? "center" : "flex-start",
-      paddingTop: collapsed ? '5px' : '0px',
-      paddingLeft: collapsed ? '20px' : '15px',
-      backgroundColor: item.key === selectedKey ? "rgba(255, 0, 0, 0.14)" : "transparent",
-      color: item.key === selectedKey ? '#FF0000' : '',
-      border: item.key === selectedKey ? '0.25px solid rgba(255, 0, 0, 0.35)' : 'none',
-    },
-  }));
+  // Função para lidar com o logout
+  const handleLogout = () => {
+    if (logout) {
+      logout(); // Chame a função de logout
+    }
+  };
 
-
-  const selectedMenuItem = menuData.find(item => item.key === selectedKey);
+  // Menu do Dropdown
+  const menu = (
+    <Menu>
+      <Menu.Item onClick={handleLogout}>Logout</Menu.Item>
+    </Menu>
+  );
 
   return (
     <ConfigProvider>
@@ -75,7 +75,7 @@ const LayoutPrivate: React.FC = () => {
             <img
               src={LogoIma}
               alt="Logo"
-              style={{ height: collapsed ? '20px' : '40px', objectFit: 'contain' }}
+              style={{height: collapsed ? '20px' : '40px', objectFit: 'contain'}}
             />
           </div>
           <Menu
@@ -83,20 +83,40 @@ const LayoutPrivate: React.FC = () => {
               backgroundColor: '#ffffff',
               overflowY: 'auto',
             }}
-            defaultSelectedKeys={['1']}
             selectedKeys={[selectedKey]}
-            items={menuItems}
-          />
+          >
+            {menuData.filter(item =>
+              !item.allowedRoles || item.allowedRoles.includes(user?.rule?.name)).map(item => (
+              <Menu.Item
+                key={item.key}
+                style={{
+                  ...styles.menuItem,
+                  height: '55px',
+                  borderRadius: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: collapsed ? "center" : "flex-start",
+                  backgroundColor: item.key === selectedKey ? "rgba(255, 0, 0, 0.14)" : "transparent",
+                  color: item.key === selectedKey ? '#FF0000' : '',
+                  border: item.key === selectedKey ? '0.25px solid rgba(255, 0, 0, 0.35)' : 'none',
+                }}
+              >
+                <Link to={item.path} style={{color: "inherit", display: "flex", alignItems: "center"}}>
+                  {item.icon}
+                  {!collapsed && <span style={{marginLeft: "15px", fontSize: "16px"}}>{item.label}</span>}
+                </Link>
+              </Menu.Item>
+            ))}
+          </Menu>
         </Sider>
         <Layout>
           <Header style={styles.header}>
-            <div onClick={toggleSidebar} style={{ cursor: "pointer", fontSize: "16px", marginRight: "20px" }}>
-              {React.createElement(collapsed ? ArrowRightOutlined : ArrowLeftOutlined)} 
+            <div onClick={toggleSidebar} style={{cursor: "pointer", fontSize: "16px", marginRight: "20px"}}>
+              {React.createElement(collapsed ? ArrowRightOutlined : ArrowLeftOutlined)}
             </div>
-            <h2 style={{ margin: 0, fontSize: "18px" }}> 
-              {selectedMenuItem ? selectedMenuItem.label : "Dashboard"}
+            <h2 style={{margin: 0, fontSize: "18px"}}>
+              {menuData.find(item => item.key === selectedKey)?.label || "Dashboard"}
             </h2>
-
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -114,15 +134,26 @@ const LayoutPrivate: React.FC = () => {
                   borderRadius: '1rem',
                   padding: '0.5rem 1rem',
                 }}>
-                  <PiBuildingApartment style={{ color: '#FF0000', fontSize: '1.2rem', }} />
-                  <span style={{ fontWeight: "500" }}>00.623.904/0001-73</span>
+                  {user && (
+                    user?.rule?.name === UserRoleEnum.Cliente || user?.rule?.name === UserRoleEnum.Admin ?
+                      <FaUser style={{color: '#FF0000', fontSize: '1.2rem',}}/> :
+                      <PiBuildingApartment style={{color: '#FF0000', fontSize: '1.2rem',}}/>
+                  )}
+                  <span style={{fontWeight: "500"}}>
+                    {user && (
+                      user?.rule?.name === UserRoleEnum.Cliente || user?.rule?.name === UserRoleEnum.Admin ? user.shortname : user.cnpj
+                    )}
+                  </span>
                 </div>
               </div>
-              <FaCog style={{ color: "#5f5a56", fontSize: "18px" }} />
+              <FaRegBell style={{color: "#5f5a56", fontSize: "18px"}}/>
+              <Dropdown overlay={menu} trigger={['click']}>
+                <FaCog style={{color: "#5f5a56", fontSize: "18px", cursor: "pointer"}}/>
+              </Dropdown>
             </div>
           </Header>
-          <Content style={{ padding: "20px", backgroundColor: "#f5f5f5" }}>
-            <Outlet />
+          <Content style={{padding: "20px", backgroundColor: "#f5f5f5"}}>
+            <Outlet/>
           </Content>
         </Layout>
       </Layout>

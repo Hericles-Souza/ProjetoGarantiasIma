@@ -6,6 +6,7 @@ import ScreenAcordoComercial from "./acordo-comercial/ScreenAcordoComercial";
 import RgiDetailsPage from "./rgi/RgiDetailsPage";
 import InvoiceDetails from "./rgi2/InvoiceDetails";
 import UserRegistration from "@shared/components/userRegistration";
+import {UserRoleEnum} from "@shared/enums/UserRoleEnum.ts";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -35,13 +36,14 @@ export const appRoutingPrivate: RouteConfig[] = [
       },
       {
         path: "InvoiceDetails",
-        element: <InvoiceDetails />, 
+        element: <InvoiceDetails/>,
         private: true,
       },
       {
-        path: "usuarios",
+        path: "users",
         element: <UserRegistration/>,
-        private: true
+        private: true,
+        allowedRoles: [UserRoleEnum.Admin]
       }
     ]
   }
