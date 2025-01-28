@@ -93,18 +93,12 @@ const UserRegistration: React.FC = () => {
   };
 
   return (
-    <div>
+    <div style={{padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem'}}>
       <div
         style={{
-          position: 'fixed',
-          top: 80,
-          right: 0,
-          left: 0,
-          padding: '10px 20px',
           display: 'flex',
           justifyContent: 'flex-end',
           gap: '10px',
-          borderBottom: '1px #ddd',
         }}
       >
         <Space direction="horizontal">
@@ -132,7 +126,7 @@ const UserRegistration: React.FC = () => {
       </Modal>
 
 
-      <div style={{marginTop: '60px'}}>
+      <div>
         <Table
           rowSelection={rowSelection}
           columns={columns}

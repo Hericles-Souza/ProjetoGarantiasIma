@@ -5,8 +5,8 @@ import LayoutPrivate from "@shared/layouts/layout-private/index.tsx";
 import ScreenAcordoComercial from "./acordo-comercial/ScreenAcordoComercial";
 import RgiDetailsPage from "./rgi/RgiDetailsPage";
 import InvoiceDetails from "./rgi2/InvoiceDetails";
-import UserRegistration from "@shared/components/userRegistration";
 import {UserRoleEnum} from "@shared/enums/UserRoleEnum.ts";
+import UserRegistration from "@app/views/private/userRegistration";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
