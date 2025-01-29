@@ -4,28 +4,39 @@
     background-color: white;
   }
 
-  .backButtonContainer {
+  .ContainerButtonBack {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    gap: 16px;
+    margin-top: 30px;
+    margin-bottom: 20px;
   }
   
-.backButton {
-  font-family: 'DM Sans', sans-serif;  
-  font-weight: 500;  
-  font-size: 10px;  
-  line-height: 13.02px;  
-  color: #000;  
-}
-
-
-  .headerRgi {
-    font-size: 10px;
-    font-weight: 400;
-    color: #ff4d4f;
+  .ButtonBack {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #a7a7a7;
+    outline: none !important;
+  
+  }
+  
+  .ButtonBack:hover{
+    outline: none;
+    border-color: transparent;
+    color: red !important;
   }
 
+  .RgiCode {
+    font-weight: 500;
+    font-size: 14px;
+    color: #555;
+    text-align: right;
+  }
+  
   .headerContainer {
     display: flex;
     justify-content: space-between;
@@ -73,6 +84,7 @@
     height: 40px;
     border-radius: 12px; 
     cursor: pointer;
+    outline: none !important;
     transition: background-color 0.3s ease;
   }
  
@@ -211,7 +223,6 @@
     justify-content: space-between;
     height: 65px;
     background-color: #f5f5f5;
-    cursor: pointer;
     border-radius: 10px;
     margin-top: 10px;
     gap: 8px;
@@ -238,9 +249,14 @@
   .nextButton {
     margin-left: auto;
     font-size: 25px;
+    outline: none !important;
     color: #555;
   }
-
+  .nextButton:hover{
+    background-color: transparent !important;
+    color: #FF0000;
+    border: solid 1px transparent;
+  }
 
   .buttonDeleteRgi{
     border: solid 1px #dadada !important;
@@ -248,8 +264,8 @@
   }
 
   .buttonDeleteRgi:hover{
-    border: solid 1px #dadada !important;
-    color: #5F5A56  !important;
+    color: red  !important;
+    border: solid 1px red !important;
   }
   
   .buttonSaveRgi{
@@ -259,5 +275,10 @@
 
   .buttonSaveRgi:hover{
     border: solid 1px #dadada !important;
-    color: #5F5A56  !important;
+    color: red  !important;
+    border: solid 1px red !important;
+  }
+
+  .DeleteOutlined:hover{
+    color: red !important;
   }

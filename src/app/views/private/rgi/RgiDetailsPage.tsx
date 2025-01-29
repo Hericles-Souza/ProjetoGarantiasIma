@@ -4,7 +4,6 @@ import { DeleteOutlined, FileOutlined, LeftOutlined } from "@ant-design/icons";
 import styles from "./GeneralInfo.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
-import ColorCheckboxes from "@shared/components/checkBox/checkBox.tsx";
 import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from "dayjs";
@@ -58,11 +57,11 @@ const RgiDetailsPage: React.FC = () => {
 
   return (
     <div className={styles.appContainer} style={{ backgroundColor: "#fffff" }}>
-      <div className={styles.backButtonContainer}>
-        <Button type="link" className={styles.backButton} onClick={() => navigate("/garantias")}>
+      <div className={styles.ContainerButtonBack}>
+        <Button type="link" className={styles.ButtonBack} onClick={() => navigate("/garantias")}>
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.headerRgi}>RGI N° 000666-0001</span>
+        <span className={styles.RgiCode}>RGI N° 000666-0001</span>
       </div>
 
       <div className={styles.headerContainer}>
@@ -77,7 +76,7 @@ const RgiDetailsPage: React.FC = () => {
           <Button type="default" danger className={styles.buttonSaveRgi}>
             Salvar
           </Button>
-          <Button type="primary" danger>
+          <Button type="primary" danger  style={{ backgroundColor: "red" }} className={styles.buttonSendRgi}>
             Enviar
           </Button>
         </div>
@@ -108,7 +107,7 @@ const RgiDetailsPage: React.FC = () => {
       <div className={styles.nfsContainer}>
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-          <Button type="primary" danger style={{ height: "45px", borderRadius: "10px" }} onClick={() => setModalOpen(true)}>
+          <Button type="primary" danger style={{ height: "45px", borderRadius: "10px", backgroundColor:"red" }} onClick={() => setModalOpen(true)}>
             Adicionar NF de Origem
           </Button>
         </div>
@@ -122,7 +121,7 @@ const RgiDetailsPage: React.FC = () => {
               <span className={styles.nfsQuantity}> {nf.itens}  ITENS</span>
             </div>
             <div style={{display: "flex", alignItems: "center"}}>
-              <DeleteOutlined style={{ color: "#555", fontSize: "22px" }} onClick={() => showDeleteConfirm(nf.nf)} />
+              <DeleteOutlined style={{ color: "#555", fontSize: "22px" }} className={styles.DeleteOutlined} onClick={() => showDeleteConfirm(nf.nf)} />
               <Button type="text" className={styles.nextButton} onClick={() => navigate(`/garantias/rgi/details-itens-nf/${id}`)}>
                 &gt;
               </Button>
