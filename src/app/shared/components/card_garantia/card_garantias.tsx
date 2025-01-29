@@ -1,7 +1,9 @@
-import {CalendarOutlined, RightOutlined, UserOutlined} from '@ant-design/icons';
+import {CalendarOutlined, RightOutlined} from '@ant-design/icons';
 import React from 'react';
 import styled from 'styled-components';
-import {GarantiasStatusEnum} from "@shared/enums/GarantiasStatusEnum.ts";
+import {converterStatusGarantia, GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
+import {GarantiaItem} from "@shared/models/GarantiasModel.ts";
+import dayjs from 'dayjs';
 
 const CardContainer = styled.div<{ clickable: boolean }>`
   flex: 0 0 calc(25% - 12px); /* Isso vai garantir que cada item ocupe 25% da linha, considerando o espaço de gap */
@@ -16,7 +18,7 @@ const CardContainer = styled.div<{ clickable: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  
+
   &:hover {
     transform: ${(props) => (props.clickable ? 'scale(1.01)' : 'none')};
     box-shadow: ${(props) =>
@@ -78,13 +80,6 @@ const Footer = styled.div`
   margin-right: 15px;
 `;
 
-const Person = styled.p`
-  font-size: 16px;
-  font-weight: bold;
-  color: #555;
-  margin: 0;
-`;
-
 const Date = styled.p`
   font-size: 16px;
   color: #555;
@@ -100,81 +95,66 @@ const RedContainer = styled.div`
 `;
 
 interface CardCategoriasProps {
-  status: GarantiasStatusEnum;
-  code: string;
-  pieceCode: string;
-  defectValue: string;
-  person: string;
-  date: string;
+  GarantiaItem: GarantiaItem;
+  data: Date;
   onClick?: () => void;
 }
 
 const statusStyles = {
-  [GarantiasStatusEnum.NAO_ENVIADO]: { // ok
+  [GarantiasStatusEnum2.NAO_ENVIADO]: { // ok
     backgroundColor: '#F9F9F9',
     color: '#5F5A56',
   },
-  [GarantiasStatusEnum.EM_ANALISE]: { // ok
+  [GarantiasStatusEnum2.EM_ANALISE]: { // ok
     backgroundColor: '#B3E5FC',
     color: '#0277BD',
   },
-  [GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE]: { // ok
+  [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: { // ok
     backgroundColor: '#9747FF1F',
     color: '#9747FF',
   },
-  [GarantiasStatusEnum.AGUARDANDO_NF_DEVOLUCAO]: { // ok
+  [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: { // ok
     backgroundColor: '#FFE0B2',
     color: '#EF6C00',
   },
-  [GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: { // ok
+  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: { // ok
     backgroundColor: '#FFE0B2',
     color: '#EF6C00',
   },
-  [GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA]: { // ok
+  [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: { // ok
     backgroundColor: '#4A32163D',
     color: '#4A3216',
   },
-  [GarantiasStatusEnum.CONFIRMADO]: { // ok
+  [GarantiasStatusEnum2.CONFIRMADO]: { // ok
     backgroundColor: '#C8E6C9',
     color: '#2E7D32',
   },
 };
 
 
-const CardCategorias: React.FC<CardCategoriasProps> = ({
-                                                         status,
-                                                         code,
-                                                         pieceCode,
-                                                         defectValue,
-                                                         person,
-                                                         date,
-                                                         onClick,
-                                                       }) => {
+const CardCategorias: React.FC<CardCategoriasProps> = ({data, GarantiaItem, onClick}) => {
 
-  const statusStyle = statusStyles[status];
+  const statusStyle = statusStyles[GarantiaItem.codigoStatus];
 
   return (
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
         <Status style={{backgroundColor: statusStyle.backgroundColor, color: statusStyle.color}}>
-          {status}
+          {converterStatusGarantia(GarantiaItem.codigoStatus)}
         </Status>
         <RightOutlined/>
       </Header>
       <RedContainer>
-        <Code>{code}</Code>
-        <PieceCode>Código da Peça: {pieceCode}</PieceCode>
+        <Code>{GarantiaItem.rgi}</Code>
+        <PieceCode>Código da Peça: {GarantiaItem.nfReferencia}</PieceCode>
       </RedContainer>
       <Defect>
         Possível Defeito:
-        <ValueDefect>{defectValue}</ValueDefect>
+        <ValueDefect>{GarantiaItem.tipoDefeito}</ValueDefect>
       </Defect>
       <Footer>
-        <Person>
-          <UserOutlined style={{marginRight: 5}}/> {person}
-        </Person>
         <Date>
-          <CalendarOutlined style={{marginRight: 5}}/> {date}
+          <CalendarOutlined style={{marginRight: 5}}/> {dayjs(data).format('DD/MM/YYYY')}
         </Date>
       </Footer>
     </CardContainer>

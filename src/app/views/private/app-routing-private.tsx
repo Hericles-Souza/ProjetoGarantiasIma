@@ -31,9 +31,9 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true
       },
       {
-        path: "RgiDetailsPage",
-        element: <RgiDetailsPage/>,
-        private: true
+        path: "garantias/rgi/:id",
+        element: <RgiDetailsPage />,
+        private: true,
       },
       {
         path: "InvoiceDetails",
@@ -41,7 +41,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
       },
       {
-        path: "details-itens-nf",
+        path: "garantias/rgi/details-itens-nf/:id",
         element: <DetailsItensNF/>,
         private: true,
       },

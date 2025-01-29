@@ -1,20 +1,45 @@
-import React, { useState } from "react";
-import { Button } from "antd";
-import { FileDoneOutlined, LeftOutlined } from "@ant-design/icons";
-import OutlinedInputWithLabel from "../../../shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import ColorCheckboxes from "../../../shared/components/checkBox/checkBox"; // Importando o novo componente
+import React, {useEffect, useState} from "react";
+import {Button} from "antd";
+import {FileDoneOutlined, LeftOutlined} from "@ant-design/icons";
 import styles from "./GeneralInfo.module.css";
+import {useNavigate, useParams} from "react-router-dom";
+import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
+import ColorCheckboxes from "@shared/components/checkBox/checkBox.tsx";
+import {getGarantiaByIdAsync} from "@shared/services/GarantiasService.ts";
+import {GarantiasModel} from "@shared/models/GarantiasModel.ts";
+import dayjs from "dayjs";
 
 const RgiDetailsPage: React.FC = () => {
-  const [socialReason, setSocialReason] = useState("Magnetis Consultoria de Investimentos Ltda.");
-  const [phone, setPhone] = useState("(31) 99847-5278");
-  const [requestDate, setRequestDate] = useState("12/07/2008");
+  const [socialReason, setSocialReason] = useState("");
+  const [phone, setPhone] = useState("");
+  const [requestDate, setRequestDate] = useState("");
+  const {id} = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [cardData, setCardData] = useState<GarantiasModel>();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getGarantiaByIdAsync(id);
+        const data = await response.data.data as GarantiasModel;
+        setSocialReason(data.razaoSocial);
+        setPhone(data.telefone);
+        setRequestDate(dayjs(data.data).format('DD/MM/YYYY'));
+        setCardData(data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData().then();
+
+  }, [id]);
 
   // Funções para controlar as alterações de valor
   const handleSocialReasonChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSocialReason(e.target.value);
   };
-  
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(e.target.value);
   };
@@ -23,7 +48,6 @@ const RgiDetailsPage: React.FC = () => {
     setRequestDate(e.target.value);
   };
 
-  console.log(socialReason, phone, requestDate);  // Verificar os dados no console
 
   return (
     <div className={styles.appContainer}>
@@ -31,9 +55,9 @@ const RgiDetailsPage: React.FC = () => {
         <Button
           type="link"
           className={styles.backButton}
-          onClick={() => console.log("Voltar para o início")}
+          onClick={() => navigate("/garantias")}
         >
-          <LeftOutlined /> VOLTAR PARA O INÍCIO
+          <LeftOutlined/> VOLTAR PARA O INÍCIO
         </Button>
         <span className={styles.headerRgi}>RGI N° 000666-0001</span>
       </div>
@@ -53,30 +77,39 @@ const RgiDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      <hr className={styles.divider} />
+      <hr className={styles.divider}/>
 
       <div className={styles.infoContainer}>
         <h3 className={styles.infoTitle}>Informações Gerais</h3>
         <div className={styles.inputsContainer}>
-          <div className={styles.inputGroup} style={{ flex: 15 }}>
+          <div className={styles.inputGroup} style={{flex: 15}}>
             {/* Usando o state para gerenciar o valor */}
             <OutlinedInputWithLabel
+              InputProps={{
+                readOnly: true,
+              }}
               label="Razão social"
               value={socialReason}  // Usando value em vez de defaultValue
               onChange={handleSocialReasonChange}  // Atualizando o valor
               fullWidth
             />
           </div>
-          <div className={styles.inputGroup} style={{ flex: 5 }}>
+          <div className={styles.inputGroup} style={{flex: 5}}>
             <OutlinedInputWithLabel
+              InputProps={{
+                readOnly: true,
+              }}
               label="Telefone"
               value={phone}  // Usando value em vez de defaultValue
               onChange={handlePhoneChange}  // Atualizando o valor
               fullWidth
             />
           </div>
-          <div className={styles.inputGroup} style={{ flex: 5 }}>
+          <div className={styles.inputGroup} style={{flex: 5}}>
             <OutlinedInputWithLabel
+              InputProps={{
+                readOnly: true,
+              }}
               label="Data da solicitação"
               value={requestDate}  // Usando value em vez de defaultValue
               onChange={handleRequestDateChange}  // Atualizando o valor
@@ -85,19 +118,19 @@ const RgiDetailsPage: React.FC = () => {
           </div>
         </div>
         <div className={styles.checkboxContainer}>
-          <ColorCheckboxes /> {/* Usando o novo checkbox */}
+          <ColorCheckboxes/> {/* Usando o novo checkbox */}
           <label className={styles.checkboxDanger}>Solicitar ressarcimento</label> {/* A frase do checkbox */}
         </div>
       </div>
 
       <div className={styles.nfsContainer}>
         <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-        <div className={styles.nfsItem}>
-          <FileDoneOutlined style={{ marginRight: "8px" }} />
-          <span className={styles.nfsCode}>000666-00147.A</span>
+        <div className={styles.nfsItem}> {/* Adicionando a key */}
+          <FileDoneOutlined style={{marginRight: "8px"}}/>
+          <span className={styles.nfsCode}>{cardData?.nf}</span>
           <span className={styles.nfsDivider}>|</span>
-          <span className={styles.nfsQuantity}>2 ITENS</span>
-          <Button type="text" className={styles.nextButton}>
+          <span className={styles.nfsQuantity}>{cardData?.itens.length} ITENS</span>
+          <Button type="text" className={styles.nextButton} onClick={() => navigate(`/garantias/rgi/details-itens-nf/${id}`)}>
             &gt;
           </Button>
         </div>

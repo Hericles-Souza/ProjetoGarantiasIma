@@ -1,19 +1,41 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Button, Tag} from 'antd';
 import Header from '@shared/components/header/header.tsx';
 import CardCategorias from '@shared/components/card_garantia/card_garantias.tsx';
 import SearchField from '@shared/components/input_search/input_search.tsx';
-import {GarantiasStatusEnum} from '@shared/enums/GarantiasStatusEnum';
-import {cardData} from "@app/views/private/garantias/mock/cardData.ts";
 import styled from './screenGarantia.module.css';
 import './carouselAnimations.css';
 import './tabGarantia.css';
+import {getAllGarantiasAsync} from "@shared/services/GarantiasService.ts";
+import {GarantiasModel} from "@shared/models/GarantiasModel.ts";
+import {
+  converterStatusGarantiaInverso,
+  converterStringParaStatusGarantia,
+  GarantiasStatusEnum
+} from "@shared/enums/GarantiasStatusEnum.ts";
+import {useNavigate} from "react-router-dom";
 
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('garantias');
-  const [filterStatus, setFilterStatus] = useState<string>('todos');
+  const [filterStatus, setFilterStatus] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState<string>('');
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [cardData, setCardData] = useState<GarantiasModel[]>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCardData = async () => {
+      try {
+        const response = await getAllGarantiasAsync();
+        const data = await response.data.data;
+        setCardData(data);
+      } catch (error) {
+        console.error('Error fetching card data:', error);
+      }
+    };
+
+    fetchCardData();
+  }, []);
 
   const statuses = Object.values(GarantiasStatusEnum);
 
@@ -31,12 +53,19 @@ const Garantias: React.FC = () => {
     }
   };
 
-  const filteredCards = cardData
-    .filter((card) => {
-      const searchText = `${card.status} ${card.code} ${card.pieceCode} ${card.defectValue} ${card.person} ${card.date}`;
-      return searchText.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredItems = cardData?.flatMap((card) =>
+    card.itens.filter((item) => {
+
+      const matchesStatus = filterStatus === 'todos' || item.codigoStatus === converterStatusGarantiaInverso(converterStringParaStatusGarantia(filterStatus));
+      const matchesSearch = searchTerm === '' ||
+        item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.codigoItem.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesStatus && matchesSearch;
     })
-    .filter((card) => filterStatus === 'todos' || card.status === filterStatus);
+  ) || [];
+
 
   return (
     <>
@@ -69,14 +98,22 @@ const Garantias: React.FC = () => {
             </div>
           </div>
           <div className={styled.containerGrid}>
-            {filteredCards.map((card) => (
-              <CardCategorias
-                key={card.id}
-                {...card}
-                onClick={() => console.log('Card clicked!')}
-              />
-            ))}
+            {filteredItems.map((item) => {
+              // Encontrar o cardData que corresponde a esse item
+              const associatedCardData = cardData?.find(card => card.rgi === item.rgi);
+
+              return (
+                <CardCategorias
+                  key={item.id}
+                  data={new Date(associatedCardData.data)}
+                  GarantiaItem={item}
+                  onClick={() => navigate(`/garantias/rgi/${associatedCardData.id}`)}
+                />
+              );
+            })}
           </div>
+
+
         </div>
       )}
     </>
