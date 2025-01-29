@@ -114,7 +114,7 @@ const RgiDetailsPage: React.FC = () => {
         </div>
         
         {nfs.map((nf, index) => (
-          <div key={index} className={styles.nfsItem} onClick={() => navigate(`/garantias/rgi/details-itens-nf/${id}`)}>
+          <div key={index} className={styles.nfsItem} >
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined style={{ marginRight: "10px", marginLeft: "20px", fontSize: "20px", color: "red" }} />
               <span className={styles.nfsCode}>{nf.nf}</span>

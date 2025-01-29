@@ -146,7 +146,7 @@ const DetailsItensNF: React.FC = () => {
             EXCLUIR
           </Button>
           <Button type="primary" className={styles.ButonToSend}>
-            ENVIAR
+            SALVAR
           </Button>
         </div>
       </div>
