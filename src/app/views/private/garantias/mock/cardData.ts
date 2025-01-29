@@ -1,6 +1,5 @@
 import { GarantiasStatusEnum } from "@shared/enums/GarantiasStatusEnum.ts";
 
-// Gerar os dados automaticamente
 export const cardData = Object.values(GarantiasStatusEnum).map((status, index) => {
   return {
     id: index + 1,
