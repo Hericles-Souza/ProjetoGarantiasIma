@@ -92,7 +92,7 @@ const DetailsItensNF: React.FC = () => {
   const addNewItem = () => {
     const newItemId = items.length + 1;
     const newItemTitle = `000666-00147.A.${newItemId.toString().padStart(2, "0")}`;
-    setItems([...items, { id: newItemId, title: newItemTitle, status: "autorizado" }]);
+    setItems([...items, { id: newItemId, title: newItemTitle, status: "Autorizado" }]);
     setVisibleSectionId(newItemId); 
   };
 
