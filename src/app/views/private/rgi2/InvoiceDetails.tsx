@@ -8,19 +8,12 @@ import OutlinedInputWithLabel from "../../../shared/components/input-outlined-wi
 import OutlinedSelectWithLabel from "../../../shared/components/select/OutlinedSelectWithLabel";
 import MultilineTextFields from "../../../shared/components/multline/multLine";
 
-const InvoiceDetails: React.FC = () => {
-  const [isContentVisible, setIsContentVisible] = useState(false);
-  const editorRef = useRef(null);
+const QuillEditor = ({ editorRef }: { editorRef: React.RefObject<HTMLDivElement> }) => {
   const quillInstance = useRef(null);
 
-  const toggleContentVisibility = () => {
-    setIsContentVisible(!isContentVisible);
-  };
-
   useEffect(() => {
-    if (!quillInstance.current && editorRef.current) {
-      editorRef.current.innerHTML = "";
-
+    if (editorRef.current && !quillInstance.current) {
+      // Inicializa o Quill apenas uma vez
       quillInstance.current = new Quill(editorRef.current, {
         theme: "snow",
         modules: {
@@ -38,20 +31,78 @@ const InvoiceDetails: React.FC = () => {
       });
     }
 
+    // Cleanup da instância Quill ao desmontar o componente
     return () => {
       if (quillInstance.current) {
         quillInstance.current = null;
       }
     };
-  }, [isContentVisible]);  
+  }, [editorRef]);
 
+  return <div ref={editorRef} style={{ height: "300px" }} />;
+};
 
+const CollapsibleSection = ({
+  title,
+  isVisible,
+  toggleVisibility,
+  children,
+}: {
+  title: string;
+  isVisible: boolean;
+  toggleVisibility: () => void;
+  children: React.ReactNode;
+}) => (
+  <div>
+    <div className={styles.tituloSecaoContainer}>
+      <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
+      <Button
+        type="text"
+        icon={isVisible ? <DownOutlined /> : <RightOutlined />}
+        onClick={toggleVisibility}
+        className={styles.toggleButton}
+      />
+    </div>
+
+    {isVisible && <div className={styles.hiddenContent}>{children}</div>}
+  </div>
+);
+
+const FileAttachmentSection = ({
+  label,
+  fileOptions,
+}: {
+  label: string;
+  fileOptions: { label: string; onClick: () => void }[];
+}) => (
+  <div className={styles.containerAnexo}>
+    <span className={styles.labelAnexo}>{label}</span>
+    <div className={styles.botoesAnexo}>
+      {fileOptions.map((option, index) => (
+        <Button
+          key={index}
+          type={option.type || "default"}
+          onClick={option.onClick}
+          danger={option.danger || false}
+        >
+          {option.label}
+        </Button>
+      ))}
+    </div>
+  </div>
+);
+
+const InvoiceDetails: React.FC = () => {
+  const [isContentVisible, setIsContentVisible] = useState(false);
+  const editorRef = useRef(null);
+
+  const toggleContentVisibility = () => {
+    setIsContentVisible(!isContentVisible);
+  };
 
   return (
     <div className={styles.containerApp}>
       <hr className={styles.divisor} />
-
-      {/* Botão Voltar e RGI */}
       <div className={styles.containerBotaoVoltar}>
         <Button
           type="link"
@@ -75,218 +126,113 @@ const InvoiceDetails: React.FC = () => {
       </h3>
 
       <div className={styles.containerInformacoes}>
-        <div className={styles.tituloSecaoContainer}>
-          <h3 className={styles.tituloSecaoVermelho}>000666-00147.A.01</h3>
-          <Button
-            type="text"
-            icon={isContentVisible ? <DownOutlined /> : <RightOutlined />}
-            onClick={toggleContentVisibility}
-            className={styles.toggleButton}
+        <CollapsibleSection
+          title="000666-00147.A.01"
+          isVisible={isContentVisible}
+          toggleVisibility={toggleContentVisibility}
+        >
+          <FileAttachmentSection
+            label="Anexo da NF de venda"
+            fileOptions={[
+              { label: "VISUALIZAR", onClick: () => console.log("Visualizar") },
+              { label: "BAIXAR ARQUIVO", onClick: () => console.log("Baixar") },
+            ]}
           />
-        </div>
 
-        {isContentVisible && (
-          <div className={styles.hiddenContent}>
-            {/* Anexo da NF de Vendas */}
-            <div className={styles.containerAnexo}>
-              <span className={styles.labelAnexo}>Anexo da NF de venda</span>
-              <div className={styles.botoesAnexo}>
-                <Button type="default" danger>
-                  VISUALIZAR
-                </Button>
-                <Button type="primary" danger>
-                  BAIXAR ARQUIVO
-                </Button>
-              </div>
-            </div>
-            {/* Informações Gerais */}
-            <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+          <h3 className={styles.tituloSecao}>Informações Gerais</h3>
 
-            <div className={styles.inputsContainer}>
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Código da peça"
-                    required
-                    value="ALR-84888"
-                    placeholder="Código da Peça"
-                  />
-                </div>
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Lote da peça "
-                    required
-                    value="2547A"
-                    placeholder="Lote da Peça"
-                  />
-                </div>
+          <div className={styles.inputsContainer}>
+            {/* Repeating input groups can be modularized into their own component */}
+            <div className={styles.inputsConjun}>
+              <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                <OutlinedInputWithLabel label="Código da peça" required value="ALR-84888" placeholder="Código da Peça" />
               </div>
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 0.4 }}>
-                  <OutlinedSelectWithLabel
-                    label="Possível defeito"
-                    required
-                    options={[
-                      { value: "Opção 1", label: "Opção 1" },
-                      { value: "Opção 2", label: "Opção 2" },
-                      { value: "Opção 3", label: "Opção 3" },
-                    ]}
-                    defaultValue={undefined}
-                  />
-                </div>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel
-                    label="Modelo do veículo que aplicou "
-                    required
-                    value="Modelo X"
-                    placeholder="Modelo do veículo que aplicou"
-                  />
-                </div>
-                <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                  <OutlinedInputWithLabel
-                    label="Ano do veículo "
-                    required
-                    value="2020"
-                    placeholder="Ano do Veículo"
-                  />
-                </div>
-              </div>
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel
-                    label="Torque aplicado à peça"
-                    value="XXXXXXXXXX"
-                    placeholder="Valor do Torque"
-                  />
-                </div>
+              <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                <OutlinedInputWithLabel label="Lote da peça" required value="2547A" placeholder="Lote da Peça" />
               </div>
             </div>
 
-            {/* Anexos */}
-            <div className={styles.containerAnexo}>
-              <span className={styles.labelAnexo}>
-                Anexo da NF de Referência
-              </span>
-              <div className={styles.botoesAnexo}>
-                <Button type="default" danger>
-                  VISUALIZAR
-                </Button>
-                <Button type="primary" danger>
-                  BAIXAR ARQUIVO
-                </Button>
-              </div>
-            </div>
-
-            <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-            <div className={styles.itemAnexo}>
-              <span className={styles.itemLabelAnexo}>
-                1. Foto do lado onde está a gravação IMA:
-              </span>
-              <div className={styles.botoesAnexo}>
-                <Button type="default" danger>
-                  VISUALIZAR
-                </Button>
-                <Button type="primary" danger>
-                  BAIXAR ARQUIVO
-                </Button>
-              </div>
-            </div>
-
-            <div className={styles.itemAnexo}>
-              <span className={styles.itemLabelAnexo}>
-                2. Foto da parte danificada/amassada/quebrada:
-              </span>
-              <div className={styles.botoesAnexo}>
-                <Button type="default" danger>
-                  VISUALIZAR
-                </Button>
-                <Button type="primary" danger>
-                  BAIXAR ARQUIVO
-                </Button>
-              </div>
-            </div>
-
-            <div className={styles.itemAnexo}>
-              <span className={styles.itemLabelAnexo}>
-                3. Foto de marcas suspeitas na peça:
-              </span>
-              <div className={styles.botoesAnexo}>
-                <Button type="default" danger>
-                  VISUALIZAR
-                </Button>
-                <Button type="primary" danger>
-                  BAIXAR ARQUIVO
-                </Button>
-              </div>
-            </div>
-
-            <div className={styles.itemAnexo}>
-              <span className={styles.itemLabelAnexo}>
-                4. Foto da peça completa:
-              </span>
-              <div className={styles.botoesAnexo}>
-                <Button type="default" danger>
-                  VISUALIZAR
-                </Button>
-                <Button type="primary" danger>
-                  BAIXAR ARQUIVO
-                </Button>
-              </div>
-            </div>
-
-            <div className={styles.itemAnexo}>
-              <span className={styles.itemLabelAnexo}>
-                5. Outras fotos relevantes:
-              </span>
-              <div className={styles.botoesAnexo}>
-                <Button type="default" danger>
-                  VISUALIZAR
-                </Button>
-                <Button type="primary" danger>
-                  BAIXAR ARQUIVO
-                </Button>
-              </div>
-            </div>
-
-            <hr className={styles.divisor} />
-            {/* Envio Autorizado */}
-            <div className={styles.containerSelect}>
-              <div className={styles.containerSelected}>
-                <label className={styles.labelInput}></label>
+            <div className={styles.inputsConjun}>
+              <div className={styles.inputGroup} style={{ flex: 0.4 }}>
                 <OutlinedSelectWithLabel
-                  label="Envio Autorizado"
+                  label="Possível defeito"
+                  required
                   options={[
-                    {
-                      value: "Garantia procedent",
-                      label: "Garantia procedente",
-                    },
-                    {
-                      value: "Garantia improcedente",
-                      label: "Garantia improcedente",
-                    },
+                    { value: "Opção 1", label: "Opção 1" },
+                    { value: "Opção 2", label: "Opção 2" },
+                    { value: "Opção 3", label: "Opção 3" },
                   ]}
                   defaultValue={undefined}
-                  style={{
-                    width: "300px",
-                    height: "40px",
-                    borderRadius: "4px 4px 0 0",
-                    transform: "scale(0.8)",
-                    transformOrigin: "top left",
-                    
-                  }}
+                />
+              </div>
+              <div className={styles.inputGroup} style={{ flex: 1 }}>
+                <OutlinedInputWithLabel
+                  label="Modelo do veículo que aplicou"
+                  required
+                  value="Modelo X"
+                  placeholder="Modelo do veículo que aplicou"
+                />
+              </div>
+              <div className={styles.inputGroup} style={{ flex: 0.3 }}>
+                <OutlinedInputWithLabel
+                  label="Ano do veículo"
+                  required
+                  value="2020"
+                  placeholder="Ano do Veículo"
                 />
               </div>
             </div>
-
-            <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
-            <div>
-              <div ref={editorRef} style={{ height: "300px" }} />
+            <div className={styles.inputsConjun}>
+              <div className={styles.inputGroup} style={{ flex: 1 }}>
+                <OutlinedInputWithLabel
+                  label="Torque aplicado à peça"
+                  value="XXXXXXXXXX"
+                  placeholder="Valor do Torque"
+                />
+              </div>
             </div>
-
-            <h3 className={styles.tituloA}>Conclusão</h3>
-            <MultilineTextFields />
           </div>
-        )}
+
+          <FileAttachmentSection
+            label="Anexo da NF de Referência"
+            fileOptions={[
+              { label: "VISUALIZAR", onClick: () => console.log("Visualizar") },
+              { label: "BAIXAR ARQUIVO", onClick: () => console.log("Baixar") },
+            ]}
+          />
+
+          <h3 className={styles.tituloA}>Anexos de Imagens</h3>
+          {["1. Foto do lado onde está a gravação IMA", "2. Foto da parte danificada/amassada/quebrada"].map((item, index) => (
+            <div className={styles.itemAnexo} key={index}>
+              <span className={styles.itemLabelAnexo}>{item}:</span>
+              <div className={styles.botoesAnexo}>
+                <Button type="default" danger>
+                  VISUALIZAR
+                </Button>
+                <Button type="primary" danger>
+                  BAIXAR ARQUIVO
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <hr className={styles.divisor} />
+          <div className={styles.containerSelect}>
+            <OutlinedSelectWithLabel
+              label="Envio Autorizado"
+              options={[
+                { value: "Garantia procedente", label: "Garantia procedente" },
+                { value: "Garantia improcedente", label: "Garantia improcedente" },
+              ]}
+            />
+          </div>
+
+          <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
+          <QuillEditor editorRef={editorRef} />
+
+          <h3 className={styles.tituloA}>Conclusão</h3>
+          <MultilineTextFields />
+        </CollapsibleSection>
       </div>
     </div>
   );

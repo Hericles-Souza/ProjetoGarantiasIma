@@ -5,7 +5,6 @@
   max-height: 100vh;
 }
 
-
 .divisor {
   margin-bottom: 16px;
   border: none;
@@ -16,7 +15,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: auto;
   gap: 16px;
   margin-top: 30px;
 }
@@ -29,10 +27,9 @@
   font-weight: 500;
   font-size: 10px;
   line-height: 13.02px;
-  color: #000000;
+  color: #000;
   width: 175px;
   height: 13px;
-  margin-bottom: 16px;
 }
 
 .rgiPreto {
@@ -40,7 +37,7 @@
   font-weight: 500;
   font-size: 10px;
   line-height: 13.02px;
-  color: #000000;
+  color: #000;
   text-align: right;
   width: 217px;
   height: 13px;
@@ -67,6 +64,14 @@
   font-weight: 280;
 }
 
+.nfsTitle {
+  color: #555;
+  font-size: 24px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  font-weight: 400;
+}
+
 .subtitulo {
   font-size: 16px;
   color: #555;
@@ -74,12 +79,9 @@
 
 .containerInformacoes {
   padding: 20px;
-  background-color: #F9F9F9;
+  background-color: #f9f9f9;
   border-radius: 12px;
   margin-bottom: 1px;
-  max-height: none;
-  min-height: 10%;
-
 }
 
 .tituloSecao {
@@ -87,9 +89,16 @@
   font-weight: 500;
   font-size: 16px;
   line-height: 20.83px;
-  color: #5F5A56;
+  color: #5f5a56;
   margin-top: 20px;
-  margin-bottom: 20PX;;
+  margin-bottom: 20px;
+}
+
+.tituloSecaoVermelho {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: #ff0000;
 }
 
 .tituloA {
@@ -97,28 +106,13 @@
   font-weight: 500;
   font-size: 16px;
   line-height: 20.83px;
-  color: #000000;
+  color: #000;
   margin-top: 30px;
   margin-bottom: 20px;
 }
 
-.tituloSecaoContainer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.grupoInput {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  margin-bottom: 16px;
-  min-width: 200px;
-}
-
-.labelInput {
-  font-size: 12px;
+.containerSelect .labelInput {
+  font-size: 14px;
   color: #555;
 }
 
@@ -127,7 +121,6 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 16px;
-  align-items: flex-start;
 }
 
 .inputsConjun {
@@ -146,27 +139,6 @@
   min-width: 200px;
 }
 
-.inputsConjun .inputGroup {
-  flex: 1;
-}
-
-
-.customSelect {
-  width: 246px;
-  height: 40px;
-  border-radius: 4px 4px 0 0;
-}
-
-
-.inputsConjun > .inputGroup:nth-child(1),
-.inputsConjun > .inputGroup:nth-child(2) {
-  flex: 1;
-}
-
-.inputsConjun > .inputGroup:nth-child(3) {
-  flex: 0.5;
-}
-
 .inputLabel {
   font-size: 12px;
   color: #555;
@@ -180,12 +152,7 @@
   border: 1px solid #d9d9d9;
   padding: 8px 12px;
   font-size: 14px;
-}
-
-.inputLarge, .inputMedium {
   background-color: #f5f5f5;
-  border-color: #d9d9d9;
-  color: #000;
 }
 
 .inputLarge:focus, .inputMedium:focus {
@@ -193,11 +160,17 @@
   box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
 }
 
+.customSelect {
+  width: 246px;
+  height: 40px;
+  border-radius: 4px;
+}
+
 .containerAnexo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #fff;
+  background-color: #f9f9f9;
   padding: 10px;
   border-radius: 12px;
   margin-top: 10px;
@@ -211,7 +184,6 @@
 
 .itemAnexo {
   display: flex;
-  
   align-items: center;
   justify-content: space-between;
   background-color: #fff;
@@ -223,38 +195,47 @@
 
 .itemLabelAnexo {
   font-size: 16.5px;
-  color: #000000;
+  color: #000;
 }
 
-
-.botoesAnexo {
+.botoesCabecalho {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.botoesAnexo button {
+/* .botoesCabecalho button {
   font-size: 10px;
-  width: auto;
-  height: auto;
-  border-radius: 10px;
   height: 35px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+} */
+
+.enviar {
+  background-color: #ff4d4f;
+  color: white; 
+  border: none;
 }
 
-.botoesAnexo button:focus {
-  outline: none;
+ .enviar:hover {
+  background-color: #d92a2e; 
+  border-color: #ff4d4f; 
 }
 
-button:hover {
-  background-color: #752525;
-  color: #fff;
-  border-color: #752525;
+
+.botoesCabecalho .excluir {
+  background-color: transparent; 
+  color: #5f5a56; 
+  border: 1px solid #dadada;
 }
 
+.botoesCabecalho .excluir:hover {
+  background-color: #f0f0f0; 
+  color: #5f5a56;
+  border-color: #dadada; 
+}
 
 .topButtonsContainer {
   display: flex;
@@ -263,12 +244,17 @@ button:hover {
   margin-bottom: 16px;
 }
 
-
 .listaAnexosImagens {
   list-style-type: none;
   padding-left: 0;
   font-size: 16px;
 }
+.tituloSecaoContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 
 .itemAnexoImagem {
   display: flex;
@@ -278,23 +264,8 @@ button:hover {
 }
 
 .itemAnexoImagem span {
-  flex: 1;
-  color: #555;
+  color: #000;
 }
-
-.containerSelect {
-  margin-top: 20px;
-}
-
-.containerSelect .labelInput {
-  font-size: 14px;
-  color: #555;
-}
-
-.containerSelect .ant-select-selector {
-  border-radius: 16px;
-}
-
 
 .visualAnalysis {
   margin-top: 16px;
@@ -306,23 +277,29 @@ button:hover {
   font-size: 14px;
 }
 
-.itemAnexoImagem span {
-  color: #000;
+
+.dialoginfo{
+  display: flex;
+  flex-direction: row;
+  background-color: rgba(1, 161, 214, 0.174);
+  border-radius: 10px;
+  padding: 5px 10px;
+  margin-bottom: 20px;
+  height: 30px;
+  gap: 10px;
 }
 
-
-.tituloSecaoVermelho {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 400;
-  font-size: 20px;
-  line-height: 26.04px;
-  color: #FF0000;
+.buttonRed{
+  display: flex;
+  align-items: center;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  height: 35px;
+  cursor: pointer;
 }
 
-.nfsTitle {
-  color: #555;
-  font-size: 24px;
-  margin-top: 15px;
-  margin-bottom: 15px;
-  font-weight: 400;
+.buttonRed:hover{
+  background-color: #d92a2e;
 }

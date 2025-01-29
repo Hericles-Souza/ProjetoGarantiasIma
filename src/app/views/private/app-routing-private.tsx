@@ -7,6 +7,7 @@ import RgiDetailsPage from "./rgi/RgiDetailsPage";
 import InvoiceDetails from "./rgi2/InvoiceDetails";
 import {UserRoleEnum} from "@shared/enums/UserRoleEnum.ts";
 import UserRegistration from "@app/views/private/userRegistration";
+import DetailsItensNF from "./rgi/processRGI/DetailsItensNF";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -37,6 +38,11 @@ export const appRoutingPrivate: RouteConfig[] = [
       {
         path: "InvoiceDetails",
         element: <InvoiceDetails/>,
+        private: true,
+      },
+      {
+        path: "details-itens-nf",
+        element: <DetailsItensNF/>,
         private: true,
       },
       {
