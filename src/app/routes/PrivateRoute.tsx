@@ -5,7 +5,7 @@ import { UserRoleEnum } from '@shared/enums/UserRoleEnum.ts';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
-  allowedRoles?: UserRoleEnum[]; // Permissões necessárias
+  allowedRoles?: UserRoleEnum[]; 
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) => {

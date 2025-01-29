@@ -10,7 +10,7 @@ interface DataType {
   key: string;
   id: string;
   age: string;
-  telefone: string;  // Alteração aqui para string
+  telefone: string;  
   status: boolean;
   email: string;
   user: string;
@@ -38,10 +38,10 @@ const UserRegistration: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataSource, setDataSource] = useState<DataType[]>([]);
-  const [loading, setLoading] = useState(false); // Para mostrar o carregamento durante a requisição
+  const [loading, setLoading] = useState(false);
 
-  const [page, setPage] = useState(1); // Página inicial
-  const [limit, setLimit] = useState(10); // Limite de itens por página
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10); 
 
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
@@ -61,7 +61,7 @@ const UserRegistration: React.FC = () => {
   };
 
   const fetchData = async () => {
-    setLoading(true); // Começa o carregamento
+    setLoading(true);
     try {
       const response: GetAllUsersResponse = await getAllUsers(page, limit);
       const usersData = response.data.data.data.map((user) => ({
@@ -79,13 +79,13 @@ const UserRegistration: React.FC = () => {
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false); 
     }
   };
 
   useEffect(() => {
-    fetchData(); // Chama a função de busca quando o componente é montado
-  }, [page, limit]); // Recarrega a lista sempre que a página ou limite mudarem
+    fetchData(); 
+  }, [page, limit]); 
 
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
@@ -131,14 +131,14 @@ const UserRegistration: React.FC = () => {
           rowSelection={rowSelection}
           columns={columns}
           dataSource={dataSource}
-          loading={loading} // Mostra o carregamento durante a requisição
+          loading={loading}
           pagination={{
             current: page,
             pageSize: limit,
-            total: dataSource.length, // Ajuste isso conforme o total de registros recebido da API
+            total: dataSource.length, 
             onChange: (newPage, newPageSize) => {
-              setPage(newPage); // Muda a página ao clicar no paginador
-              setLimit(newPageSize); // Ajusta o limite por página
+              setPage(newPage);
+              setLimit(newPageSize);
             },
           }}
         />
