@@ -55,6 +55,22 @@ const RGIDetailsInitial: React.FC = () => {
     setModalDeleteOpen(true); 
   };
 
+  const save = () => {
+    nfs.forEach((element) => {
+      console.log("itens: " + element.itens);
+      console.log("nf: " + element.nf);
+
+    });
+  }
+
+  const send = () => {
+    nfs.forEach((element) => {
+      console.log("itens: " + element.itens);
+      console.log("nf: " + element.nf);
+
+    });
+  }
+
   return (
     <div className={styles.appContainer} style={{ backgroundColor: "#fffff" }}>
       <div className={styles.ContainerButtonBack}>
@@ -73,10 +89,10 @@ const RGIDetailsInitial: React.FC = () => {
           <Button type="default" danger className={styles.buttonDeleteRgi}>
             Excluir
           </Button>
-          <Button type="default" danger className={styles.buttonSaveRgi}>
+          <Button onClick={save} type="default" danger className={styles.buttonSaveRgi}>
             Salvar
           </Button>
-          <Button type="primary" danger  style={{ backgroundColor: "red" }} className={styles.buttonSendRgi}>
+          <Button onClick={send} type="primary" danger  style={{ backgroundColor: "red" }} className={styles.buttonSendRgi}>
             Enviar
           </Button>
         </div>
