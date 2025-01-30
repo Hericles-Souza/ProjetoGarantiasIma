@@ -1,10 +1,10 @@
+import React, { useEffect, useState } from 'react';
+import { Button, Input, Modal, Space, Table, TableColumnsType, TableProps } from 'antd';
+import { getAllUsers, GetAllUsersResponse } from "@shared/services/UserService.ts";
 import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
-import {Button, Input, Modal, Space, Table, TableColumnsType, TableProps,} from 'antd';
-import React, {useEffect, useState} from 'react';
-import {getAllUsers, GetAllUsersResponse} from "@shared/services/UserService.ts";
+import styles from './UserRegistration.module.css'; // Importando os estilos
 
-type TableRowSelection<T extends object = object> =
-  TableProps<T>["rowSelection"];
+type TableRowSelection<T extends object = object> = TableProps<T>["rowSelection"];
 
 interface DataType {
   key: string;
@@ -18,28 +18,24 @@ interface DataType {
   lastAlteration: string;
 }
 
-
 const columns: TableColumnsType<DataType> = [
-  {title: 'ID', dataIndex: 'id'},
-  {title: 'Razão Social', dataIndex: 'age'},
-  {title: 'Telefone', dataIndex: 'telefone'},
-  {title: 'Status', dataIndex: 'status'},
-  {title: 'E-mail', dataIndex: 'email'},
-  {title: 'Perfil do Usuário', dataIndex: 'user'},
-  {title: 'Criado', dataIndex: 'create'},
-  {title: 'Última Alteração', dataIndex: 'lastAlteration'},
+  { title: 'ID', dataIndex: 'id' },
+  { title: 'Razão Social', dataIndex: 'age' },
+  { title: 'Telefone', dataIndex: 'telefone' },
+  { title: 'Status', dataIndex: 'status' },
+  { title: 'E-mail', dataIndex: 'email' },
+  { title: 'Perfil do Usuário', dataIndex: 'user' },
+  { title: 'Criado', dataIndex: 'create' },
+  { title: 'Última Alteração', dataIndex: 'lastAlteration' },
 ];
 
-
-const {Search} = Input;
-
+const { Search } = Input;
 
 const UserRegistration: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(false);
-
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -93,22 +89,17 @@ const UserRegistration: React.FC = () => {
   };
 
   return (
-    <div style={{padding: '1rem', display: 'flex', flexDirection: 'column', gap: '2rem'}}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '10px',
-        }}
-      >
+    <div className={styles.container}>
+      <div className={styles.header}>
         <Space direction="horizontal">
           <Search
+          className={styles.inputSearch}
+          height={'45px'}
             placeholder="Pesquisar"
             onSearch={(value) => console.log(value)}
-            style={{width: 200}}
           />
-          <Button type="default">Editar</Button>
-          <Button type="primary" danger onClick={openModal}>
+          <Button type="default" className={styles.buttonEdite} >Editar</Button>
+          <Button type="primary" className={styles.buttonCreate} danger onClick={openModal}>
             Criar Usuário
           </Button>
         </Space>
@@ -119,11 +110,10 @@ const UserRegistration: React.FC = () => {
         footer={null}
         onCancel={closeModal}
       >
-        <div style={{top: '20px'}}>
-          <DialogUserRegistration closeModal={closeModal} onSearch={onSearch}/>
+        <div className={styles.modalContent}>
+          <DialogUserRegistration closeModal={closeModal} onSearch={onSearch} />
         </div>
       </Modal>
-
 
       <div>
         <Table

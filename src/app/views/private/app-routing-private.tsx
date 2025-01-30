@@ -3,7 +3,7 @@ import Garantias from "@app/views/private/garantias/screenGarantia.tsx";
 import LayoutPrivate from "@shared/layouts/layout-private/index.tsx";
 import InvoiceDetails from "./technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum.ts";
-import UserRegistration from "@app/views/private/userRegistration";
+import UserRegistration from "@app/views/private/userRegistration/UserRegistration";
 import InvoicePage from "@shared/ViewPreInvoice/ViewPreInvoice";
 import DetailsItensNF from "./clientProcessRGI/processItemRGI/DetailsItensNF";
 import RgiDetailsPage from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
