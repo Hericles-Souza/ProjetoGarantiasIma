@@ -199,9 +199,12 @@ const InvoiceDetails: React.FC = () => {
           {isReimbursementChecked && (
             <div className={styles.contentReimbursement}>
               <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
-              {["1. Documento de identificação (RG ou CNH):", "2. Documentação do veículo:", "3. NF do guincho:", "4. NF de outras despesa/produtos pertinentes:"].map(
-                (item) => (
-                  <FileAttachment label={item} backgroundColor="#f5f5f5" />
+              {["1. Documento de identificação (RG ou CNH):",
+                "2. Documentação do veículo:",
+                "3. NF do guincho:",
+                "4. NF de outras despesa/produtos pertinentes:"]
+                .map((item, index) => (
+                  <FileAttachment key={index} label={item} backgroundColor="#f5f5f5" />
                 )
               )}
             </div>
@@ -209,8 +212,11 @@ const InvoiceDetails: React.FC = () => {
           <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />
 
           <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-          {["1. Foto do lado onde está a gravação IMA:", "2. Foto da parte danificada/amassada/quebrada:", "3. Foto marcações suspeitas na peça:", "4. Foto da peça completa:", "5. Outras fotos pertinentes:"].map((item) => (
-            <FileAttachment label={item} backgroundColor="white" />
+          {["1. Foto do lado onde está a gravação IMA:",
+            "2. Foto da parte danificada/amassada/quebrada:",
+            "3. Foto marcações suspeitas na peça:",
+            "4. Foto da peça completa:", "5. Outras fotos pertinentes:"].map((item, index) => (
+            <FileAttachment key={index} label={item} backgroundColor="white" />
           ))}
 
           <hr className={styles.divisor} />

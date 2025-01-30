@@ -1,9 +1,15 @@
 import {Checkbox, InputAdornment, TextField} from '@mui/material';
-import {Button, Form, message, Space, Typography,} from 'antd';
+import {Button, message, Typography,} from 'antd';
 import React, {useEffect, useState} from 'react';
 import './dialog.style.css'
+import style from "./style.module.css";
 import {RuleModel} from "@shared/models/RuleModel.ts";
 import {getRules} from "@shared/services/RuleService.ts";
+import {useFormik} from "formik";
+import * as Yup from 'yup';
+import {PiCopySimpleLight} from "react-icons/pi";
+import {TfiReload} from "react-icons/tfi";
+import InputMask from 'react-input-mask';
 
 interface DialogUserRegistrationProps {
   closeModal: () => void;
@@ -11,64 +17,71 @@ interface DialogUserRegistrationProps {
 }
 
 const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeModal, onSearch}) => {
-  const [value, setValue] = useState('');
-  const [form] = Form.useForm();
   const [rule, setRule] = useState<RuleModel[] | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState('');
+  const typeRule = "Técnico";
+  const generatePassword = () => Math.random().toString(36).slice(-8);
 
-  const handleGeneratePassword = () => {
-    const randomPassword = Math.random().toString(36).slice(-8);
-    form.setFieldsValue({password: randomPassword});
-  };
+  const formik = useFormik({
+    initialValues: {
+      profile: '',
+      cnpj: '',
+      cigamCode: '',
+      companyName: '',
+      phone: '',
+      email: '',
+      password: generatePassword(),
+      isActive: true,
+    },
+    validationSchema: Yup.object({
+      cnpj: Yup.string().required('CNPJ obrigatório'),
+      cigamCode: Yup.string().required('Código Cigam obrigatório'),
+      companyName: Yup.string().required('Razão Social obrigatória'),
+      phone: Yup.string().required('Telefone obrigatório'),
+      email: Yup.string().email('E-mail inválido').required('E-mail obrigatório'),
+    }),
+    onSubmit: (values) => {
+      console.log('Form Values:', values);
+      onSearch();
+    },
+  });
 
   useEffect(() => {
-    getRules().then((response) => {
-      console.log('Fetched rules:', response.data.data);  // Log to verify the structure
-      setRule(response.data.data);
-    }).catch((error) => {
-      console.error("Error fetching rules", error);
-    });
+    getRules()
+      .then((response) => {
+        setRule(response.data.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching rules', error);
+      });
   }, []);
 
-
+  useEffect(() => {
+    formik.resetForm();
+    formik.setFieldValue('password', generatePassword());
+  }, [closeModal]);
 
   const handleCopyPassword = () => {
-    const password = form.getFieldValue('password');
-    if (password) {
-      navigator.clipboard.writeText(password)
+    if (formik.values.password) {
+      navigator.clipboard.writeText(formik.values.password)
         .then(() => message.success('Senha copiada para a área de transferência!'))
         .catch(() => message.error('Falha ao copiar a senha.'));
     } else {
-      message.warning('Nenhuma senha para copiar.');
+      message.warning('Nenhuma senha para copiar.').then();
     }
   };
 
-  const handleSubmit = () => {
-    form.validateFields()
-      .then((values) => {
-        console.log("Form Values:", values);
-        onSearch();
-      })
-      .catch((info) => {
-        console.log("Validate Failed:", info);
-      });
-  };
-
-  const handleChange = (e) => {
-    setValue(e.target.value);
-  };
-
   return (
-
-    <div>
+    <form>
       <div
         style={{
-          justifyContent: 'space-between',
+          justifyContent: 'div-between',
           left: '32px',
           borderBottom: '1px solid #ddd',
           marginBottom: '25px',
           width: '100%'
         }}>
-        <Space>
+        <div>
           <Typography
             style={{
               fontWeight: 'bold',
@@ -82,15 +95,14 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
             }}>
             CRIAR NOVO USUÁRIO
           </Typography>
-        </Space>
+        </div>
       </div>
-
-
-      <Space direction="horizontal" style={{width: "100%"}}>
+      <div className={style.row}>
         <TextField
           id="input-container-select"
           select
           label="Perfil"
+          onChange={(e) => setSelectedProfile(e.target.value)}
           defaultValue="EUR"
           focused
           className="outlined-input-select"
@@ -100,18 +112,22 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
               native: true,
             },
           }}
-          style={{width: '265px',}}
+          sx={{
+            flex: 1,
+            '& fieldset': {
+              width: '100%',
+            },
+          }}
         >
           {rule && rule?.map((option) => (
-            <option key={option.id} value={option.id}>
+            <option style={{}} key={option.id} value={option.id}>
               {option.name}
             </option>
           ))}
         </TextField>
-        <div style={{display: 'flex', alignItems: 'center'}}>
+        <div style={{display: 'flex', alignItems: 'center', flex: 1}}>
           <Checkbox
             defaultChecked
-            //className='outlined-input-select'
             sx={{
               color: '#FF0000',
               '&.Mui-checked': {
@@ -122,129 +138,150 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           />
           <span style={{marginTop: '-22px'}}>Usuário Ativo</span>
         </div>
-      </Space>
-      <Space direction="horizontal" style={{width: "100%"}}>
-        <TextField
-          label="CNPJ"
-          variant="outlined"
-          value={value}
-          onChange={handleChange}
-          fullWidth
-          focused
-          required
-          className="outlined-input-cnpj"
-          placeholder="000.000.000/0001-00"
-          style={{width: '220px',}}
-        />
+      </div>
+      {!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && (
+        <div className={style.row}>
+          <InputMask
+            mask="99.999.999/9999-99"
+            value={formik.values.cnpj}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          >
+            {() => (
+              <TextField
+                label="CNPJ"
+                variant="outlined"
+                {...formik.getFieldProps('cnpj')}
+                fullWidth
+                focused
+                required
+                className="outlined-input-cnpj"
+                placeholder="000.000.000/0001-00"
+                sx={{
+                  '& fieldset': {
+                    width: '100%',
+                  },
+                }}
+              />
+            )}
+          </InputMask>
 
+          <TextField
+            label="Código Cigam"
+            variant="outlined"
+            {...formik.getFieldProps('cigamCode')}
+            fullWidth
+            focused
+            required
+            className="outlined-input-cnpj"
+            placeholder="65465465465465"
+            sx={{
+              '& fieldset': {
+                width: '100%',
+              },
+            }}
+          />
 
+        </div>
+      )}
+      <div className={style.row}>
         <TextField
-          label="Código Cigam"
+          label={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && "Razão Social" || "Nome"}
           variant="outlined"
-          value={value}
-          onChange={handleChange}
-          fullWidth
-          focused
-          required
-          className="outlined-input-cnpj"
-          placeholder="65465465465465"
-          style={{width: '220px',}}
-        />
-
-      </Space>
-      <Space style={{width: '100%'}}>
-        <TextField
-          label="Razão social"
-          variant="outlined"
-          value={value}
-          onChange={handleChange}
+          {...formik.getFieldProps('companyName')}
           fullWidth
           required
           focused
-          placeholder="Razão Social"
-          className="outlined-input-razao"
-          style={{width: '100%',}}
-        />
-      </Space>
-
-      <Space direction="horizontal" style={{width: "100%",}}>
-        <TextField
-          label="Telefone"
-          variant="outlined"
-          value={value}
-          onChange={handleChange}
-          fullWidth
-          focused
-          required
-          placeholder="00 0000 0000"
+          placeholder={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && "Razão Social" || "Nome"}
           className="outlined-input-contact"
-          style={{width: '220px',}}
+          sx={{
+            '& fieldset': {
+              width: '100%',
+            },
+          }}
         />
+      </div>
+      <div className={style.row}>
 
+        {!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && (
+          <InputMask
+            mask="(99) 99999-9999"
+            value={formik.values.phone}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          >
+            {() => (
+              <TextField
+                label="Telefone"
+                variant="outlined"
+                {...formik.getFieldProps('phone')}
+                fullWidth
+                focused
+                required
+                placeholder="00 0000 0000"
+                className="outlined-input-contact"
+                sx={{
+                  '& fieldset': {
+                    width: '100%',
+                  },
+                }}
+              />
+            )}
+          </InputMask>
+        )}
 
         <TextField
           label="E-mail"
           variant="outlined"
-          value={value}
-          onChange={handleChange}
+          {...formik.getFieldProps('email')}
           fullWidth
           focused
           required
           placeholder="00 0000 0000"
           className="outlined-input-contact"
-          style={{width: '220px',}}
+          sx={{
+            '& fieldset': {
+              width: '100%',
+            },
+          }}
         />
-      </Space>
-
-      <TextField
-        label="Senha Provisória"
-        variant="outlined"
-        value={form.getFieldValue("password")}
-        onChange={(e) => form.setFieldsValue({password: e.target.value})}
-        fullWidth
-        focused
-        required
-        placeholder="Senha Provisória"
-        className="outlined-input-password"
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <Button
-                type="link"
-                onClick={handleGeneratePassword}
-                style={{
-                  minWidth: "auto",
-                  padding: 0,
-                  left: '235px',
-                }}
-              >
-                🔄
-              </Button>
-              <Button
-                type="link"
-                onClick={handleCopyPassword}
-                style={{
-                  minWidth: "auto",
-                  padding: 0,
-                  left: '240px'
-                }}
-              >
-                📋
-              </Button>
-            </InputAdornment>
-          ),
-        }}
-        style={{width: "220px"}}
-      />
-      <div style={{display: "flex", justifyContent: "space-between"}}>
+      </div>
+      <div className={style.row}>
+        <TextField
+          label="Senha Provisória"
+          variant="outlined"
+          {...formik.getFieldProps('password')}
+          fullWidth
+          focused
+          required
+          placeholder="Senha Provisória"
+          className="outlined-input-contact"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end"
+                              style={{display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem'}}>
+                <TfiReload style={{cursor: 'pointer', color: "#FF0000"}}
+                           onClick={() => formik.setFieldValue('password', generatePassword())}/>
+                <PiCopySimpleLight style={{cursor: 'pointer'}} onClick={handleCopyPassword}/>
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            '& fieldset': {
+              width: '100%',
+            },
+          }}
+        />
+      </div>
+      <div style={{display: "flex", justifyContent: "end", gap: "1rem"}}>
         <Button onClick={closeModal} style={{backgroundColor: "white", color: "red"}}>
           CANCELAR
         </Button>
-        <Button type="primary" onClick={handleSubmit} style={{backgroundColor: "red"}}>
+        <Button type="primary" htmlType="submit" style={{backgroundColor: "red"}}>
           CRIAR
         </Button>
       </div>
-    </div>
+    </form>
 
   );
 };

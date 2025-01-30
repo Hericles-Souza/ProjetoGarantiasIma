@@ -10,7 +10,7 @@ interface DataType {
   key: string;
   id: string;
   age: string;
-  telefone: string;  
+  telefone: string;
   status: boolean;
   email: string;
   user: string;
@@ -41,7 +41,7 @@ const UserRegistration: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10); 
+  const [limit, setLimit] = useState(10);
 
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
@@ -79,13 +79,13 @@ const UserRegistration: React.FC = () => {
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData(); 
-  }, [page, limit]); 
+    fetchData();
+  }, [page, limit]);
 
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
@@ -118,10 +118,9 @@ const UserRegistration: React.FC = () => {
         open={isModalOpen}
         footer={null}
         onCancel={closeModal}
-        style={{ width: '601px', alignItems: 'center' }}
       >
-        <div style={{ top: '20px' }}>
-          <DialogUserRegistration closeModal={closeModal} onSearch={onSearch} />
+        <div style={{top: '20px'}}>
+          <DialogUserRegistration closeModal={closeModal} onSearch={onSearch}/>
         </div>
       </Modal>
 
@@ -135,7 +134,7 @@ const UserRegistration: React.FC = () => {
           pagination={{
             current: page,
             pageSize: limit,
-            total: dataSource.length, 
+            total: dataSource.length,
             onChange: (newPage, newPageSize) => {
               setPage(newPage);
               setLimit(newPageSize);
