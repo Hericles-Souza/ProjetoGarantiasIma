@@ -237,7 +237,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           fullWidth
           focused
           required
-          placeholder="00 0000 0000"
+          placeholder="E-mail"
           className="outlined-input-contact"
           sx={{
             '& fieldset': {
