@@ -1,0 +1,77 @@
+
+.ContainerButtonBack {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+  }
+  
+  .ButtonBack {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #a7a7a7;
+    outline: none !important;
+  
+  }
+
+  .ButtonBack:hover{
+    outline: none;
+    border-color: transparent;
+    color: red !important;
+  }
+
+
+  .headerContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  
+  .headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .RgiCode {
+    font-weight: 500;
+    font-size: 14px;
+    color: #5F5A56 !important;
+    text-align: right;
+  }
+  .rgiTitle {
+    font-family: 'DM Sans', sans-serif;  
+    font-weight: 400;  
+    font-size: 30px;  
+    line-height: 39.06px;  
+    color: #FF0000;  
+    width: 262px;  
+    height: 40px;  
+    margin: 0;  
+  }
+  
+  .statusTag {
+    background-color: #f5f5f5;  
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-family: 'DM Sans', sans-serif;  
+    font-weight: 400;  
+    font-size: 14px;  
+    line-height: 18.23px;  
+    color: #5F5A56;
+  }
+  
+  .titleNF{
+    font-weight: 500;  
+    font-size: 24px;  
+    line-height: 26px;  
+    color: #5F5A56;  
+    margin-top: 20px;  
+  }

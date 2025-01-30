@@ -4,10 +4,11 @@ import Garantias from "@app/views/private/garantias/screenGarantia.tsx";
 import LayoutPrivate from "@shared/layouts/layout-private/index.tsx";
 import ScreenAcordoComercial from "./acordo-comercial/ScreenAcordoComercial";
 import RgiDetailsPage from "./rgi/RgiDetailsPage";
-import InvoiceDetails from "./technicalAndSupervisorRGI/technicalAndSupervisorRGI";
+import InvoiceDetails from "./technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
 import {UserRoleEnum} from "@shared/enums/UserRoleEnum.ts";
 import UserRegistration from "@app/views/private/userRegistration";
 import DetailsItensNF from "./rgi/processItemRGI/DetailsItensNF";
+import InvoicePage from "@shared/ViewPreInvoice/ViewPreInvoice";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -50,6 +51,12 @@ export const appRoutingPrivate: RouteConfig[] = [
         element: <UserRegistration/>,
         private: true,
         allowedRoles: [UserRoleEnum.Admin]
+      },
+      {
+        path: "view-pre-invoice",
+        element: <InvoicePage/>,
+        private: true,
+        allowedRoles: [UserRoleEnum.Supervisor]
       }
     ]
   }

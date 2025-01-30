@@ -3,10 +3,10 @@ import { Button } from "antd";
 import { RightOutlined, DownOutlined, LeftOutlined } from "@ant-design/icons";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
-import styles from "./technicalAndSupervisorRGI.module.css";
-import OutlinedInputWithLabel from "../../../shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import OutlinedSelectWithLabel from "../../../shared/components/select/OutlinedSelectWithLabel";
-import MultilineTextFields from "../../../shared/components/multline/multLine";
+import styles from "./technicalAndSupervisorDetailsItens.module.css";
+import OutlinedInputWithLabel from "../../../../shared/components/input-outlined-with-label/OutlinedInputWithLabel";
+import OutlinedSelectWithLabel from "../../../../shared/components/select/OutlinedSelectWithLabel";
+import MultilineTextFields from "../../../../shared/components/multline/multLine";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 
 const QuillEditor = ({ editorRef }: { editorRef: React.RefObject<HTMLDivElement> }) => {
@@ -112,15 +112,29 @@ const InvoiceDetails: React.FC = () => {
         <Button
           type="link"
           className={styles.ButtonBack}
-          // onClick={() => navigate(`/garantias/rgi/${id}`)}
+        // onClick={() => navigate(`/garantias/rgi/${id}`)}
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
-        <span className={styles.RgiCode}>RGI N° 000666-0001 / NF 000666-00147.A</span> 
+        <span className={styles.RgiCode}>RGI N° 000666-0001 / NF 000666-00147.A</span>
       </div>
 
       <div className={styles.containerCabecalho}>
         <h1 className={styles.tituloRgi}>000666-00147.A</h1>
+
+        {/* para o supervisor aqui é oculto */}
+
+        <div className={styles.buttonsContainer}>
+          <Button type="default" danger className={styles.buttonCancelRgi}>
+            Cancelar
+          </Button>
+          <Button type="primary" danger style={{ backgroundColor: "red" }} className={styles.buttonSaveRgi}>
+            Salvar
+          </Button>
+        </div>
+
+        {/* ------------------------------- */}
+
       </div>
       <hr className={styles.divisor} />
       <h3 className={styles.nfsTitle}>
@@ -134,8 +148,11 @@ const InvoiceDetails: React.FC = () => {
 
           toggleVisibility={toggleContentVisibility}
         >
+          {/* -----------------------para o supervisor aqui é oculto--------------------------- */}
 
           <div style={{ marginTop: "20px" }}><FileAttachment label="Anexo da NF de venda" backgroundColor="white" /></div>
+          
+          {/* --------------------------------------------------------------------------------- */}
 
           <h3 className={styles.tituloSecao}>Informações Gerais</h3>
 
@@ -192,6 +209,8 @@ const InvoiceDetails: React.FC = () => {
               </div>
             </div>
           </div>
+          {/* ------------------------para o supervisor aqui é oculto------------------------- */}
+
           <div className={styles.checkboxContainer}>
             <ColorCheckboxes onChange={handleCheckboxChange} checked={isReimbursementChecked} />
             <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
@@ -206,8 +225,14 @@ const InvoiceDetails: React.FC = () => {
               )}
             </div>
           )}
-          <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />
 
+          {/* ----------------------------------------------------------------------------------- */}
+
+
+           <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />{/* permanesse para o supervisor */}
+
+
+          {/* ------------------------para o supervisor aqui é oculto---------------------------- */}
           <h3 className={styles.tituloA}>Anexos de Imagens</h3>
           {["1. Foto do lado onde está a gravação IMA:", "2. Foto da parte danificada/amassada/quebrada:", "3. Foto marcações suspeitas na peça:", "4. Foto da peça completa:", "5. Outras fotos pertinentes:"].map((item) => (
             <FileAttachment label={item} backgroundColor="white" />
@@ -228,6 +253,9 @@ const InvoiceDetails: React.FC = () => {
           <QuillEditor editorRef={editorRef} />
           <h3 className={styles.tituloA}>Conclusão</h3>
           <MultilineTextFields />
+
+
+          {/* ----------------------------------------------------------------------------------- */}
         </CollapsibleSection>
       </div>
     </div>
