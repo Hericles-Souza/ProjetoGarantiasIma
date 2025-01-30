@@ -3,7 +3,7 @@ import { DeleteOutlined, LeftOutlined } from '@ant-design/icons';
 import OutlinedInputWithLabel from '@shared/components/input-outlined-with-label/OutlinedInputWithLabel';
 import { Button, Modal } from 'antd';
 import { useState } from 'react';
-import NFModal from '../../rgi/addNewNF/modalAddNewNF';
+import NFModal from "../../ClientProcessRGI/addNewNF/modalAddNewNF";
 
 const ScreenAcordoComercial = () => {
   const [razaoSocial, setRazaoSocial] = useState('Magnetis Consultoria de Investimentos Ltda.');
