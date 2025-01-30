@@ -13,11 +13,17 @@ interface NFModalProps {
 const NFModal = ({ open, onOpenChange, onAddNF }: NFModalProps) => {
   const [inputValue, setInputValue] = useState("");
   const [fileName, setFileName] = useState<string>("");
+  const [file, setFile] = useState(null);
+
+  var numNota :String = '';
+
 
   const handleFileChange = (info: any) => {
     if (info.file.status !== "uploading") {
       setFileName(info.file.name);
+      setFile(info.file);
     }
+    console.log(file);
   };
 
   const handleRemoveFile = () => {
@@ -32,6 +38,8 @@ const NFModal = ({ open, onOpenChange, onAddNF }: NFModalProps) => {
       onAddNF(inputValue);
       setInputValue("");
       onOpenChange(false);
+      console.log(inputValue);
+      console.log(file);
     }
   };
 
@@ -47,7 +55,7 @@ const NFModal = ({ open, onOpenChange, onAddNF }: NFModalProps) => {
           <div className="nf-upload-container">
             {fileName && (
               <span className="file-name">
-                <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />
+                <FileOutlined onChange={handleFileChange} style={{ color: "red", paddingLeft: "5px" }} />
                 {fileName}
                 <button className="button-remove-upload" onClick={handleRemoveFile}>
                   x

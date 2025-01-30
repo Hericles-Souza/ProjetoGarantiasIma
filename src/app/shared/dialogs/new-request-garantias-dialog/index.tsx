@@ -18,6 +18,8 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   const garantiaButtonRef = useRef<HTMLButtonElement>(null);
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+  var numNota :String = '';
+  let file :File;
 
   const handleSubmit = async (values: unknown) => {
     setIsSubmitting(true);
@@ -44,6 +46,20 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
       const isFilled = !!allValues['N° NF de origem'] && !!allValues['garantiaAnexo'];
       setGarantiasFieldsFilled(isFilled);
     }
+  };
+
+  const onClickCreate = (allValues: unknown) => {
+    console.log("teste");
+    console.log(numNota);
+    console.log(file);
+  };
+
+  const onChangeValueNumNota = (evt) => {
+    numNota = evt.target.value;
+  };
+
+  const onChangeValueFile = (evt) => {
+    file = evt.target.files[0];
   };
 
   useEffect(() => {
@@ -112,6 +128,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
                 rules={[{required: true, message: 'Este campo é obrigatório'}]}
               >
                 <Input
+                  onChange={onChangeValueNumNota}
                   size="large"
                   placeholder="N° NF de origem"
                   style={{
@@ -139,6 +156,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
                     ANEXAR
                   </Button>
                   <input
+                    onChange={onChangeValueFile}
                     id="garantiaFileInput"
                     type="file"
                     style={{display: 'none'}}
@@ -187,6 +205,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
           htmlType="submit"
           loading={isSubmitting}
           disabled={isSubmitting}
+          onClick={onClickCreate}
         >
           {isSubmitting ? 'Enviando...' : 'Criar'}
         </Button>
