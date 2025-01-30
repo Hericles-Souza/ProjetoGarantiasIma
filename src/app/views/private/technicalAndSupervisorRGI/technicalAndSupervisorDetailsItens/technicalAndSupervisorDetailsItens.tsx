@@ -89,7 +89,7 @@ const CollapsibleSection = ({
 );
 
 
-const InvoiceDetails: React.FC = () => {
+const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const editorRef = useRef(null);
 
@@ -268,4 +268,4 @@ const InvoiceDetails: React.FC = () => {
   );
 };
 
-export default InvoiceDetails;
+export default TechnicalAndSupervisorDetailsItens;
