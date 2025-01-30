@@ -36,7 +36,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
       },
       {
-        path: "garantias/rgi/details-itens-nf/:id",
+        path: "garantias/rgi/details-itens-nf/${id}`",
         element: <DetailsItensNF />,
         private: true,
       },

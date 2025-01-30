@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Button, Modal } from "antd";
 import { DeleteOutlined, FileOutlined, LeftOutlined } from "@ant-design/icons";
-import styles from "./GeneralInfo.module.css";
+import styles from "./RGIDetailsInitial.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
 import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from "dayjs";
-import NFModal from "./addNewNF/modalAddNewNF";
+import NFModal from "../addNewNF/modalAddNewNF";
 
-const RgiDetailsPage: React.FC = () => {
+const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
   const [requestDate, setRequestDate] = useState("");
@@ -152,4 +152,4 @@ const RgiDetailsPage: React.FC = () => {
   );
 };
 
-export default RgiDetailsPage;
+export default RGIDetailsInitial;
