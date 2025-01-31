@@ -1,0 +1,35 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+.graphicPizza{
+  border: 1px solid #dadada;
+  border-radius: 15px;
+  padding: 20px 30px;
+  background-color: #ffffff;
+  width: 50%;
+}
+
+.containerChart{
+    border: 1px solid #dadada;
+    border-radius: 15px;
+    padding: 20px 30px;
+    background-color: #ffffff;
+    margin-top: 20px;
+}
+.containerDashboard{
+    display: flex;
+    flex-direction: row;
+    border-bottom: solid 1px #dadada;
+    align-items: center;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    padding: 10px 15px;
+    justify-content: space-between;
+
+    gap: 20px;
+}

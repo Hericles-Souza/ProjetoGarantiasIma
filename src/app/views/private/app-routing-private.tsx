@@ -8,6 +8,7 @@ import InvoicePage from "@shared/ViewPreInvoice/ViewPreInvoice";
 import DetailsItensNF from "./clientProcessRGI/processItemRGI/DetailsItensNF";
 import RgiDetailsPage from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import ScreenAcordoComercial from "./acordo-comercial/ScreenInitialTradeAgreement/ScreenInitialTradeAgreement";
+import Dashboard from "./dashboard/dashboard";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -49,6 +50,12 @@ export const appRoutingPrivate: RouteConfig[] = [
       {
         path: "view-pre-invoice",
         element: <InvoicePage />,
+        private: true,
+        allowedRoles: [UserRoleEnum.Supervisor]
+      },
+      {
+        path: "dashboard",
+        element: <Dashboard />,
         private: true,
         allowedRoles: [UserRoleEnum.Supervisor]
       }

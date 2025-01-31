@@ -36,13 +36,20 @@ const menuData: MenuItem[] = [
     path: '/users',
     allowedRoles: [UserRoleEnum.Admin]
   },
+  {
+    key: '3',
+    label: 'Dashboard',
+    icon: <img src={IconUser} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
+    path: '/dashboard',
+    allowedRoles: [UserRoleEnum.Admin]
+  },
 ];
 
 const LayoutPrivate: React.FC = () => {
   const [collapsed, setCollapsed] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string>();
   const location = useLocation();
-  const {user, logout} = useContext(AuthContext); // Adicionei a função de logout no contexto
+  const {user, logout} = useContext(AuthContext); 
 
   useEffect(() => {
     const currentItem = menuData.find(item => location.pathname.startsWith(item.path));
@@ -53,14 +60,12 @@ const LayoutPrivate: React.FC = () => {
 
   const toggleSidebar = () => setCollapsed(prev => !prev);
 
-  // Função para lidar com o logout
   const handleLogout = () => {
     if (logout) {
-      logout(); // Chame a função de logout
+      logout();
     }
   };
 
-  // Menu do Dropdown
   const menu = (
     <Menu>
       <Menu.Item onClick={handleLogout}>Logout</Menu.Item>
