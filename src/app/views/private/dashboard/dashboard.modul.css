@@ -21,6 +21,7 @@
     background-color: #ffffff;
     margin-top: 20px;
 }
+
 .containerDashboard{
     display: flex;
     flex-direction: row;
@@ -30,6 +31,21 @@
     margin-top: 20px;
     padding: 10px 15px;
     justify-content: space-between;
-
     gap: 20px;
+}
+
+.inputSearch {
+  color: #5F5A56;
+  background-color: white;              
+  border: 1px solid #dadada;
+  border-radius: 10px;
+  padding: 12px 15px;
+  font-size: 16px;
+  appearance: none;
+  outline: none;
+}
+
+.inputSearch::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  color: #5F5A56;
 }

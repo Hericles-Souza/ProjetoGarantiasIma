@@ -32,7 +32,7 @@ const Dashboard = () => {
                 horizontal: false 
             }
         },
-        colors: ['#FF0000', '#FF7F7F'],  // Cor vermelha para a primeira barra e vermelho 50% para a segunda
+        colors: ['#FF0000', '#FF7F7F'],  
     };
     const barSeries = [
         { 
@@ -50,7 +50,7 @@ const Dashboard = () => {
             chart: { type: "bar" },
             plotOptions: { bar: { horizontal: true } },
             xaxis: { categories: ["SP", "RJ", "MG", "RS", "SC", "PR", "BA", "PE", "CE"] },
-            colors: ['#FF0000', '#FF7F7F'],  // Cor vermelha para a primeira barra e vermelho 50% para a segunda
+            colors: ['#FF0000', '#FF7F7F'], 
         },
     };
 
@@ -72,8 +72,7 @@ const Dashboard = () => {
             <div className="containerDashboard">
                 <h2>Dashboard Inicial</h2>
                 <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-                    <label for="dateFilter">Data:</label>
-                    <input type="date" id="dateFilter" />
+                    <input type="date" id="dateFilter" className="inputSearch" />
                 </div>
             </div>
 
@@ -89,15 +88,15 @@ const Dashboard = () => {
             </div>
             <div className="containerChart">
                 <h3>Top 10 produtos mais devolvidos</h3>
-                <Chart options={barOptions} series={barSeries} type="bar" height={350} />
+                <Chart optionsptions={barOptions} series={barSeries} type="bar" height={350} />
             </div>
             <div className="containerChart">
                 <h3>Top 5 Motivos de Devolução</h3>
-                <Chart options={motivosDevolucaoData.options} series={motivosDevolucaoData.series} type="bar" height={300} />
+                <Chart optionsions={motivosDevolucaoData.options} series={motivosDevolucaoData.series} type="bar" height={300} />
             </div>
             <div className="containerChart">
                 <h3>Total de itens devolvidos por estado</h3>
-                <Chart options={estadosData.options} series={estadosData.series} type="bar" height={400} />
+                <Chart optionsions={estadosData.options} series={estadosData.series} type="bar" height={400} />
             </div>
         </div>
     );

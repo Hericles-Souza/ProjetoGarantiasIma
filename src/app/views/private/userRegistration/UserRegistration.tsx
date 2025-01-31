@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, Modal, Space, Table, TableColumnsType, TableProps } from 'antd';
 import { getAllUsers, GetAllUsersResponse } from "@shared/services/UserService.ts";
 import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
-import styles from './UserRegistration.module.css'; // Importando os estilos
+import styles from './UserRegistration.module.css'; 
 
 type TableRowSelection<T extends object = object> = TableProps<T>["rowSelection"];
 
@@ -20,13 +20,13 @@ interface DataType {
 
 const columns: TableColumnsType<DataType> = [
   { title: 'ID', dataIndex: 'id' },
-  { title: 'Razão Social', dataIndex: 'age' },
-  { title: 'Telefone', dataIndex: 'telefone' },
-  { title: 'Status', dataIndex: 'status' },
-  { title: 'E-mail', dataIndex: 'email' },
-  { title: 'Perfil do Usuário', dataIndex: 'user' },
+  { title: 'Razão Social', dataIndex: 'age'},
+  { title: 'Telefone', dataIndex: 'telefone'},
+  { title: 'Status', dataIndex: 'status'},
+  { title: 'E-mail', dataIndex: 'email'},
+  { title: 'Perfil do Usuário', dataIndex: 'user'},
   { title: 'Criado', dataIndex: 'create' },
-  { title: 'Última Alteração', dataIndex: 'lastAlteration' },
+  { title: 'Última Alteração', dataIndex: 'lastAlteration'},
 ];
 
 const { Search } = Input;
@@ -38,7 +38,6 @@ const UserRegistration: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
