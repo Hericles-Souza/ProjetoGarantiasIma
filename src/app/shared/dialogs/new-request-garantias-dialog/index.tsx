@@ -72,6 +72,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
       rgi: context.user.codigoCigam,
       codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
       itens: garantiaItens,
+      telefone: context.user.phone,
       fornecedor: "asdasdsa",
       observacao: "adasdasd"
     };
