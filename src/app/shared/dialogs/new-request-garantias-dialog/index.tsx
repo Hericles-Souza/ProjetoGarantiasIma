@@ -238,5 +238,5 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
     </div>
   );
 };
-
+}
 export default NewRequestGarantiasDialog;
