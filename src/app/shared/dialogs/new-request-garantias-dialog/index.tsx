@@ -50,6 +50,25 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
 
   const onClickCreate = (allValues: unknown) => {
     console.log("teste");
+    var dateNow :Date = new Date();
+    var dateFormatted :string = dateNow.getDay() +"/"+ dateNow.getMonth() + "/" + dateNow.getFullYear();
+    console.log(dateFormatted);
+    const garantiaModel :GarantiasModel ={
+      email: context.user.email,
+      nf: numNota,
+      razaoSocial: context.user.username,
+      createdAt: dateFormatted,
+      dataAtualizacao: dateFormatted,
+      data: dateFormatted,
+      updatedAt: dateFormatted,
+      usuarioAtualizacao: context.user.fullname,
+      usuarioInsercao: context.user.fullname,
+      rgi: context.user.codigoCigam,
+      codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+      itens: garantiaItens,
+      fornecedor: "asdasdsa",
+      observacao: "adasdasd"
+    console.log("garantia: " + JSON.stringify(garantiaModel));
     console.log(numNota);
     console.log(file);
   };
