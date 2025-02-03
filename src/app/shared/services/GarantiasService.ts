@@ -7,6 +7,7 @@ export const createGarantiaAsync = (data: GarantiasModel) => {
   return api.post('/garantias', data);
 }
 
+
 export const getAllGarantiasAsync = () => {
   return api.get('/garantias');
 }
@@ -19,8 +20,8 @@ export const deleteGarantiaByIdAsync = (id: string) => {
   return api.delete(`/garantias/garantias/${id}`);
 }
 
-export const updateGarantiasHeaderByIdAsync = (id: string, data: GarantiasDto) => {
-  return api.put(`garantias/garantiasHeader/${id}/UpdateHeader`, data);
+export const updateGarantiasHeaderByIdAsync = (data: GarantiasModel) => {
+  return api.put(`garantias/garantiasHeader/${data.id}/UpdateHeader`, data);
 }
 
 export const updateGarantiaItemByIdAsync = (id: string, data: GarantiaItem) => {

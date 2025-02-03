@@ -2,8 +2,11 @@ import "./ScreenInitiaTradeAgreement.style.css"
 import { DeleteOutlined, LeftOutlined } from '@ant-design/icons';
 import OutlinedInputWithLabel from '@shared/components/input-outlined-with-label/OutlinedInputWithLabel';
 import { Button, Modal } from 'antd';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import NFModal from "../../clientProcessRGI/addNewNF/modalAddNewNF";
+import { updateGarantiasHeaderByIdAsync } from "@shared/services/GarantiasService";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
 const ScreenAcordoComercial = () => {
   const [razaoSocial, setRazaoSocial] = useState('Magnetis Consultoria de Investimentos Ltda.');
@@ -13,6 +16,7 @@ const ScreenAcordoComercial = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [nfToDelete, setNfToDelete] = useState<string>("");
+  const context = useContext(AuthContext);
 
   const handleAddNF = (nfNumber: string) => {
     setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, itens: 0 }]);
@@ -27,6 +31,27 @@ const ScreenAcordoComercial = () => {
   const showDeleteConfirm = (nfNumber: string) => {
     setNfToDelete(nfNumber);
     setModalDeleteOpen(true);
+  };
+
+  const handleSave = () => {
+    var dateNow :Date = new Date();
+    var dateFormatted :string = dateNow.getDay() +"/"+ dateNow.getMonth() + "/" + dateNow.getFullYear();
+    console.log(dateFormatted);
+
+    const garantiaModel :GarantiasModel ={
+      email: context.user.email,
+      razaoSocial: razaoSocial,
+      createdAt: dateFormatted,
+      // nf: nfs,
+      dataAtualizacao: dataSolicitacao,
+      data: dateFormatted,
+      updatedAt: dataSolicitacao,
+      usuarioAtualizacao: context.user.fullname,
+      usuarioInsercao: context.user.fullname,
+      telefone: telefone
+    };
+
+    updateGarantiasHeaderByIdAsync(garantiaModel).then((value) => console.log(value));
   };
 
   return (
@@ -48,7 +73,7 @@ const ScreenAcordoComercial = () => {
           <Button type="default" className="ButtonDelete">
             EXCLUIR
           </Button>
-          <Button type="primary" className="ButonToSend">
+          <Button onClick={handleSave} type="primary" className="ButonToSend">
             SALVAR
           </Button>
         </div>
