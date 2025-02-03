@@ -1,8 +1,11 @@
-import {useEffect, useRef, useState} from 'react';
+import {useContext, useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Button, Divider, Form} from 'antd';
 import {Input} from "@shared/components/input/index.tsx";
 import styles from './new-request-garantias.module.css';
+import { GarantiasStatusEnum2 } from '@shared/enums/GarantiasStatusEnum';
+import { AuthContext } from '@shared/contexts/Auth/AuthContext';
+import { GarantiaItem, GarantiasModel } from '@shared/models/GarantiasModel';
 
 enum FilterStatus {
   GARANTIAS = 'garantias',
@@ -18,7 +21,8 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   const garantiaButtonRef = useRef<HTMLButtonElement>(null);
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
-  var numNota :String = '';
+  const context = useContext(AuthContext);
+  var numNota :string = '';
   let file :File;
 
   const handleSubmit = async (values: unknown) => {
@@ -49,10 +53,12 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   };
 
   const onClickCreate = (allValues: unknown) => {
+    const garantiaItens :GarantiaItem[] = [];
     console.log("teste");
     var dateNow :Date = new Date();
     var dateFormatted :string = dateNow.getDay() +"/"+ dateNow.getMonth() + "/" + dateNow.getFullYear();
     console.log(dateFormatted);
+
     const garantiaModel :GarantiasModel ={
       email: context.user.email,
       nf: numNota,
@@ -68,10 +74,10 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
       itens: garantiaItens,
       fornecedor: "asdasdsa",
       observacao: "adasdasd"
+    };
     console.log("garantia: " + JSON.stringify(garantiaModel));
     console.log(numNota);
     console.log(file);
-  };
 
   const onChangeValueNumNota = (evt) => {
     numNota = evt.target.value;
