@@ -1,15 +1,16 @@
-import {useEffect, useRef, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {Button, Divider, Form} from 'antd';
-import {Input} from "@shared/components/input/index.tsx";
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Divider, Form } from 'antd';
+import { Input } from "@shared/components/input/index.tsx";
 import styles from './new-request-garantias.module.css';
+import api from '@shared/Interceptors/index.ts';
 
 enum FilterStatus {
   GARANTIAS = 'garantias',
   ACORDO = 'acordo',
 }
 
-const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
+const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTab, setCurrentTab] = useState(FilterStatus.GARANTIAS);
@@ -19,12 +20,13 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = async (values: unknown) => {
+  const handleSubmit = async (values: Record<string, any>) => {
     setIsSubmitting(true);
     try {
       console.log('Criando solicitação:', values);
       if (currentTab === FilterStatus.ACORDO) {
-        navigate('/acordo-comercial'); //aqui quero chamar e navegar para a tela de acordo comercial
+        // Recupera o valor digitado no input "N° NF de origem" e envia para a tela de Acordo Comercial
+        navigate('/acordo-comercial', { state: { 'N° NF de origem': values['N° NF de origem'] } });
       } else {
         onClose();
       }
@@ -57,7 +59,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
 
   return (
     <div className={styles.container}>
-      <header style={{display: 'flex', flexDirection: 'column'}}>
+      <header style={{ display: 'flex', flexDirection: 'column' }}>
         <div className={styles.header}>
           <h2>NOVA SOLICITAÇÃO</h2>
           <div className={styles.tabsContainer}>
@@ -86,10 +88,11 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
             </div>
           </div>
         </div>
-        <Divider style={{margin: '0'}}/>
+        <Divider style={{ margin: '0' }} />
       </header>
       <main className={styles.main}>
         <Form
+          id="new-request-form" // adicionado id para vinculação do botão submit
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
@@ -107,9 +110,9 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
               )}
               <h3>RGI N° 000666-00147</h3>
               <Form.Item
-                style={{margin: 0}}
+                style={{ margin: 0 }}
                 name="N° NF de origem"
-                rules={[{required: true, message: 'Este campo é obrigatório'}]}
+                rules={[{ required: true, message: 'Este campo é obrigatório' }]}
               >
                 <Input
                   size="large"
@@ -123,11 +126,11 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
                 />
               </Form.Item>
               <Form.Item
-                style={{margin: 0}}
+                style={{ margin: 0 }}
                 name="garantiaAnexo"
                 valuePropName="fileList"
                 getValueFromEvent={(e) => e?.fileList}
-                rules={[{required: true, message: 'Anexo é obrigatório'}]}
+                rules={[{ required: true, message: 'Anexo é obrigatório' }]}
               >
                 <div className={styles.anexoVenda}>
                   <p>Anexo da NF de venda</p>
@@ -141,7 +144,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
                   <input
                     id="garantiaFileInput"
                     type="file"
-                    style={{display: 'none'}}
+                    style={{ display: 'none' }}
                     accept=".pdf,.png,.jpg"
                   />
                 </div>
@@ -153,9 +156,9 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
             <div className={styles.requiredFieldsContainer}>
               <h3>ACI N° 000666-00150</h3>
               <Form.Item
-                style={{margin: 0}}
+                style={{ margin: 0 }}
                 name="N° NF de origem"
-                rules={[{required: true, message: 'Este campo é obrigatório'}]}
+                rules={[{ required: true, message: 'Este campo é obrigatório' }]}
               >
                 <Input
                   size="large"
@@ -185,6 +188,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
           className={`${styles.button} ${styles.primary}`}
           type="primary"
           htmlType="submit"
+          form="new-request-form" // vincula o botão ao formulário pelo id
           loading={isSubmitting}
           disabled={isSubmitting}
         >
