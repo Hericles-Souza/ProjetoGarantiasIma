@@ -22,9 +22,10 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true
       },
       {
-        path: "acordo-comercial",
+        path: "garantias/aci/:id",
         element: <ScreenAcordoComercial />,
-        private: true
+        private: true,
+        allowedRoles: [UserRoleEnum.Admin]
       },
       {
         path: "garantias/rgi/:id",
@@ -37,7 +38,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
       },
       {
-        path: "garantias/rgi/details-itens-nf/${id}`",
+        path: "/garantias/rgi/details-itens-nf/:nf",
         element: <DetailsItensNF />,
         private: true,
       },
