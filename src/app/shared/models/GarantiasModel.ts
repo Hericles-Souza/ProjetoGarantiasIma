@@ -1,8 +1,8 @@
 import {GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
 
 export interface GarantiaItem {
-  id: string; // Adicionado para corresponder ao campo `id` do item
-  rgi: string;
+  id?: string; // Adicionado para corresponder ao campo `id` do item
+  rgi?: string;
   codigoItem: string;
   tipoDefeito: string;
   modeloVeiculoAplicado: string;
@@ -10,8 +10,9 @@ export interface GarantiaItem {
   nfReferencia: string;
   loteItemOficial: string;
   loteItem: string;
-  status: string; // Adicionado para corresponder ao campo `status` do item
+  status?: string; // Adicionado para corresponder ao campo `status` do item
   codigoStatus: GarantiasStatusEnum2;
+  solicitarRessarcimento: boolean;
 }
 
 export interface GarantiasModel {

@@ -4,10 +4,11 @@ import { DeleteOutlined, FileOutlined, LeftOutlined } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
-import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
-import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
+import { getGarantiaByIdAsync, updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService.ts";
+import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from "dayjs";
 import NFModal from "../addNewNF/modalAddNewNF";
+import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
@@ -67,8 +68,20 @@ const RGIDetailsInitial: React.FC = () => {
     nfs.forEach((element) => {
       console.log("itens: " + element.itens);
       console.log("nf: " + element.nf);
-
+      var item: GarantiaItem = {
+        codigoItem: element.itens.toString(),
+        codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+        nfReferencia: element.nf,
+        tipoDefeito: "",
+        modeloVeiculoAplicado: "",
+        torqueAplicado: 0,
+        loteItemOficial: "",
+        loteItem: "",
+        solicitarRessarcimento: false
+      }
+      updateGarantiaItemByIdAsync(cardData.id, item);
     });
+    
   }
 
   return (

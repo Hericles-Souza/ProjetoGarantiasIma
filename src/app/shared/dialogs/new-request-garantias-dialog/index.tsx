@@ -6,6 +6,7 @@ import styles from './new-request-garantias.module.css';
 import { GarantiasStatusEnum2 } from '@shared/enums/GarantiasStatusEnum';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 import { GarantiaItem, GarantiasModel } from '@shared/models/GarantiasModel';
+import { createGarantiaAsync } from '@shared/services/GarantiasService';
 
 enum FilterStatus {
   GARANTIAS = 'garantias',
@@ -52,8 +53,20 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
     }
   };
 
-  const onClickCreate = (allValues: unknown) => {
+  const onClickCreate = async (allValues: unknown) => {
+    const garantiaItem: GarantiaItem ={
+      codigoItem: "000920000090",
+      tipoDefeito: "Defeito mecânico",
+      modeloVeiculoAplicado: "veiculo XYZ",
+      torqueAplicado: 100,
+      nfReferencia: "12345",
+      loteItemOficial: "LOTE123",
+      loteItem: "LOTE456",
+      codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+      solicitarRessarcimento: false
+    };
     const garantiaItens :GarantiaItem[] = [];
+    garantiaItens.push(garantiaItem);
     console.log("teste");
     var dateNow :Date = new Date();
     var dateFormatted :string = dateNow.getDay() +"/"+ dateNow.getMonth() + "/" + dateNow.getFullYear();
@@ -69,7 +82,6 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
       updatedAt: dateFormatted,
       usuarioAtualizacao: context.user.fullname,
       usuarioInsercao: context.user.fullname,
-      rgi: context.user.codigoCigam,
       codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
       itens: garantiaItens,
       telefone: context.user.phone,
@@ -77,9 +89,13 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
       observacao: "adasdasd"
     };
     console.log("garantia: " + JSON.stringify(garantiaModel));
-    console.log(numNota);
-    console.log(file);
 
+    await createGarantiaAsync(garantiaModel).then((value) => console.log(value));
+
+    console.log(numNota);
+
+    console.log(file);
+  }
   const onChangeValueNumNota = (evt) => {
     numNota = evt.target.value;
   };
@@ -239,5 +255,5 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
     </div>
   );
 };
-}
+
 export default NewRequestGarantiasDialog;

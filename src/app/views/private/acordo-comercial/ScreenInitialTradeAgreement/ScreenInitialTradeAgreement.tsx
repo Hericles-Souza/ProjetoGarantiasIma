@@ -127,7 +127,7 @@ const ScreenAcordoComercial = () => {
                 style={{ color: "#555", fontSize: "22px" }}
                 onClick={() => showDeleteConfirm(nf.nf)}
               />
-              <Button type="text" className="nextButton">
+              <Button type="text" className="nextButton" >
                 &gt;
               </Button>
             </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Button, Modal } from "antd";
 import { DownOutlined, DeleteOutlined, LeftOutlined, InfoCircleOutlined, FileOutlined, RightOutlined } from "@ant-design/icons";
 import styles from "./DetailsItensNF.module.css";
@@ -6,6 +6,7 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
 import { useNavigate, useParams } from "react-router-dom";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
 const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundColor?: string }) => {
   const [fileName, setFileName] = useState<string | null>(null);
@@ -88,10 +89,11 @@ const DetailsItensNF: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<number | null>(null); 
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const context = useContext(AuthContext);
 
   const addNewItem = () => {
     const newItemId = items.length + 1;
-    const newItemTitle = `000666-00147.A.${newItemId.toString().padStart(2, "0")}`;
+    const newItemTitle = context.user.codigoCigam +  `.A.${newItemId.toString().padStart(2, "0")}`;
     setItems([...items, { id: newItemId, title: newItemTitle, status: "Autorizado" }]);
     setVisibleSectionId(newItemId); 
   };
@@ -235,7 +237,7 @@ const DetailsItensNF: React.FC = () => {
             <h3 className={styles.tituloA}>Anexos de Imagens</h3>
             {["1. Foto do lado onde está a gravação IMA:", "2. Foto da parte danificada/amassada/quebrada:", "3. Foto marcações suspeitas na peça:", "4. Foto da peça completa:", "5. Outras fotos pertinentes:"].map(
               (item) => (
-                <FileAttachment label={item} backgroundColor="white" />
+                <FileAttachment  label={item} backgroundColor="white" />
               )
             )}
           </CollapsibleSection>
