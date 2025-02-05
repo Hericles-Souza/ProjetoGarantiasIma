@@ -43,6 +43,8 @@ const NFModal = ({ open, onOpenChange, onAddNF }: NFModalProps) => {
       console.log(inputValue);
       console.log(file);
     }
+    
+    
   };
 
   return (
