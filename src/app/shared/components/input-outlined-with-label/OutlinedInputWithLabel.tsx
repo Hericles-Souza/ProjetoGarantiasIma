@@ -1,26 +1,48 @@
-import React, { useState } from 'react';
-import { TextField } from '@mui/material';
-import './OutlinedInputWithLabel.style.css';
+import React from "react";
+import { TextField } from "@mui/material";
+import "./OutlinedInputWithLabel.style.css";
 
-const OutlinedInputWithLabel = ({ ...props }) => {
-  const [value, setValue] = useState('');
+interface OutlinedInputWithLabelProps {
+  label?: string;
+  value: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: "text" | "number" | "password";
+  disabled?: boolean;
+  InputProps?: object;
+  fullWidth?: boolean;
+}
 
-  const handleChange = (e) => {
-    setValue(e.target.value);
-  };
-
+const OutlinedInputWithLabel: React.FC<OutlinedInputWithLabelProps> = ({
+  label = "Razão social",
+  value,
+  onChange,
+  type = "text",
+  disabled = false,
+  InputProps,
+  fullWidth = false,
+  ...props
+}) => {
   return (
     <div className="input-container">
       <TextField
-        label="Razão social"
+        label={label}
         variant="outlined"
         value={value}
-        onChange={handleChange}
-        fullWidth
-        focused
+        onChange={onChange}
         className="outlined-input"
-        {...props} 
+        type={type}
+        disabled={disabled}
+        InputProps={{
+          ...InputProps,
+          sx: {
+            "& .MuiInputLabel-root": { backgroundColor: "transparent" },
+            "& .MuiInputLabel-root.Mui-focused": { backgroundColor: "transparent" }
+          }
+        }}
+        fullWidth={fullWidth}
+        {...props}
       />
+
     </div>
   );
 };

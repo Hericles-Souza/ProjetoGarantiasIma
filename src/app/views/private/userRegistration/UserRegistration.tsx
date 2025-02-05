@@ -1,16 +1,16 @@
+import React, { useEffect, useState } from 'react';
+import { Button, Input, Modal, Space, Table, TableColumnsType, TableProps } from 'antd';
+import { getAllUsers, GetAllUsersResponse } from "@shared/services/UserService.ts";
 import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
-import {Button, Input, Modal, Space, Table, TableColumnsType, TableProps,} from 'antd';
-import React, {useEffect, useState} from 'react';
-import {getAllUsers, GetAllUsersResponse} from "@shared/services/UserService.ts";
+import styles from './UserRegistration.module.css'; 
 
-type TableRowSelection<T extends object = object> =
-  TableProps<T>["rowSelection"];
+type TableRowSelection<T extends object = object> = TableProps<T>["rowSelection"];
 
 interface DataType {
   key: string;
   id: string;
   age: string;
-  telefone: string;  // Alteração aqui para string
+  telefone: string;
   status: boolean;
   email: string;
   user: string;
@@ -18,31 +18,26 @@ interface DataType {
   lastAlteration: string;
 }
 
-
 const columns: TableColumnsType<DataType> = [
-  {title: 'ID', dataIndex: 'id'},
-  {title: 'Razão Social', dataIndex: 'age'},
-  {title: 'Telefone', dataIndex: 'telefone'},
-  {title: 'Status', dataIndex: 'status'},
-  {title: 'E-mail', dataIndex: 'email'},
-  {title: 'Perfil do Usuário', dataIndex: 'user'},
-  {title: 'Criado', dataIndex: 'create'},
-  {title: 'Última Alteração', dataIndex: 'lastAlteration'},
+  { title: 'ID', dataIndex: 'id' },
+  { title: 'Razão Social', dataIndex: 'age'},
+  { title: 'Telefone', dataIndex: 'telefone'},
+  { title: 'Status', dataIndex: 'status'},
+  { title: 'E-mail', dataIndex: 'email'},
+  { title: 'Perfil do Usuário', dataIndex: 'user'},
+  { title: 'Criado', dataIndex: 'create' },
+  { title: 'Última Alteração', dataIndex: 'lastAlteration'},
 ];
 
-
-const {Search} = Input;
-
+const { Search } = Input;
 
 const UserRegistration: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataSource, setDataSource] = useState<DataType[]>([]);
-  const [loading, setLoading] = useState(false); // Para mostrar o carregamento durante a requisição
-
-  const [page, setPage] = useState(1); // Página inicial
-  const [limit, setLimit] = useState(10); // Limite de itens por página
-
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
@@ -61,7 +56,7 @@ const UserRegistration: React.FC = () => {
   };
 
   const fetchData = async () => {
-    setLoading(true); // Começa o carregamento
+    setLoading(true);
     try {
       const response: GetAllUsersResponse = await getAllUsers(page, limit);
       const usersData = response.data.data.data.map((user) => ({
@@ -79,13 +74,13 @@ const UserRegistration: React.FC = () => {
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData(); // Chama a função de busca quando o componente é montado
-  }, [page, limit]); // Recarrega a lista sempre que a página ou limite mudarem
+    fetchData();
+  }, [page, limit]);
 
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
@@ -93,28 +88,17 @@ const UserRegistration: React.FC = () => {
   };
 
   return (
-    <div>
-      <div
-        style={{
-          position: 'fixed',
-          top: 80,
-          right: 0,
-          left: 0,
-          padding: '10px 20px',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '10px',
-          borderBottom: '1px #ddd',
-        }}
-      >
+    <div className={styles.container}>
+      <div className={styles.header}>
         <Space direction="horizontal">
           <Search
+          className={styles.inputSearch}
+          height={'45px'}
             placeholder="Pesquisar"
             onSearch={(value) => console.log(value)}
-            style={{width: 200}}
           />
-          <Button type="default">Editar</Button>
-          <Button type="primary" danger onClick={openModal}>
+          <Button type="default" className={styles.buttonEdite} >Editar</Button>
+          <Button type="primary" className={styles.buttonCreate} danger onClick={openModal}>
             Criar Usuário
           </Button>
         </Space>
@@ -124,27 +108,25 @@ const UserRegistration: React.FC = () => {
         open={isModalOpen}
         footer={null}
         onCancel={closeModal}
-        style={{ width: '601px', alignItems: 'center' }}
       >
-        <div style={{ top: '20px' }}>
+        <div className={styles.modalContent}>
           <DialogUserRegistration closeModal={closeModal} onSearch={onSearch} />
         </div>
       </Modal>
 
-
-      <div style={{marginTop: '60px'}}>
+      <div>
         <Table
           rowSelection={rowSelection}
           columns={columns}
           dataSource={dataSource}
-          loading={loading} // Mostra o carregamento durante a requisição
+          loading={loading}
           pagination={{
             current: page,
             pageSize: limit,
-            total: dataSource.length, // Ajuste isso conforme o total de registros recebido da API
+            total: dataSource.length,
             onChange: (newPage, newPageSize) => {
-              setPage(newPage); // Muda a página ao clicar no paginador
-              setLimit(newPageSize); // Ajusta o limite por página
+              setPage(newPage);
+              setLimit(newPageSize);
             },
           }}
         />

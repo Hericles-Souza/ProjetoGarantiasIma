@@ -1,0 +1,303 @@
+.acordo-container {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: white;
+}
+
+.RgiCode {
+  font-weight: 500;
+  font-size: 14px;
+  color: #555;
+  text-align: right;
+}
+
+.headerActions { 
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.back-link {
+  color: black;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: red;
+}
+
+.aci-info {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.aci-info h1 {
+  color: red;
+}
+
+.status {
+  font-weight: bold;
+  color: gray;
+}
+
+.actions button {
+  margin-left: 10px;
+  padding: 10px;
+}
+
+.delete-btn {
+  background-color: #ffffff;
+  border: solid 1px #dadada;
+  color: #5F5A56;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.delete-btn:hover {
+  border: solid 1px red;
+  color: red;
+}
+
+.save-btn {
+  background-color: #ffffff;
+  border: solid 1px #dadada;
+  color: #5F5A56;
+  padding-left: 10px;
+  padding-right: 10px;
+  outline: none;
+}
+
+.save-btn:hover {
+  border: solid 1px red;
+  color: red;
+}
+
+.send-btn {
+  background-color: red;
+  color: white;
+}
+
+.general-info {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  background-color: #F9F9F9;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.inputs-general {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.info-row {
+  flex: 1;
+  min-width: 200px;
+}
+
+.info-row:first-child {
+  flex: 1 1 50%;
+}
+
+.info-row:nth-child(2),
+.info-row:nth-child(3) {
+  flex: 1 1 20%;
+}
+
+.nf-section {
+  margin-top: 20px;
+}
+
+.nf-item {
+  display: flex;
+  border-radius: 15px;
+  height: 70px;
+  align-items: center;
+  background-color: white;
+  justify-content: space-between;
+  padding: 10px;
+  margin-top: 20px;
+  border: 1px solid #ccc;
+}
+
+.add-nf-btn {
+  margin-top: 10px;
+  background-color: red;
+  color: white;
+  padding: 10px;
+}
+
+
+.code-aci {
+  color: red;
+  font-size: 28px;
+}
+
+.back-arrow {
+  margin-right: 8px;
+  font-size: 16px;
+
+}
+
+.outlined-input {
+  margin-bottom: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.info-row {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.title-infos-general{
+  font-size: 20px;
+  font-weight: 700;
+  color: #5F5A56;
+  margin-bottom: 15px;
+}
+
+.headerNF {
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+.title-nf {
+  font-size: 20px;
+  font-weight: 700;
+  color: #5F5A56;
+
+}
+
+.nf-number {
+  color: #5F5A56;
+  font-size: 18px;
+  margin-left: 10px;
+  margin-right: 5px;
+}
+
+.nf-divider {
+  color: #5F5A56;
+  font-size: 18px;
+}
+
+.nf-details {
+  color: #5F5A56;
+  margin-left: 5px;
+  font-size: 18px;
+}
+
+.nextButton {
+  margin-left: auto;
+  font-size: 25px;
+  outline: none !important;
+  height: 45px !important;
+  color: #555;
+}
+
+
+.divisor {
+  margin-bottom: 16px;
+  border: none;
+  border-top: 1px solid #d9d9d9;
+}
+
+.ContainerButtonBack {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.ButtonBack {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #a7a7a7;
+  outline: none !important;
+
+}
+
+.ButtonBack:hover{
+  outline: none;
+  border-color: transparent;
+  color: red !important;
+}
+
+.RgiCode {
+  font-weight: 500;
+  font-size: 14px;
+  color: #555;
+  text-align: right;
+}
+
+
+
+.ContainerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  margin-bottom: 20px;
+}
+
+.tituloRgi {
+  font-size: 32px;
+  color: red;
+  margin: 0;
+  font-weight: 280;
+}
+
+.nfsTitle {
+  color: #555;
+  font-size: 24px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  font-weight: 400;
+}
+
+.ButtonHeader{
+  display: flex;
+  gap: 10px;
+}
+
+.ButtonDelete{
+  background-color: white !important;
+  border-radius: 10px !important;
+  height: 45px !important;
+  padding: 0 25px !important;
+  outline: none !important;
+}
+
+.ButtonDelete:hover{
+  border: solid 1px red !important;
+  color: red !important;
+}
+
+.ButonToSend {
+  background-color: red !important;
+  border-radius: 10px !important;
+  height: 45px !important;
+  padding: 0 25px !important;
+  outline: none !important;
+  border: none;
+}

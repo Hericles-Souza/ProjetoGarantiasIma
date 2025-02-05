@@ -37,6 +37,7 @@ const styles = {
   arrowButtonMenu: (collapsed: boolean) => ({
     position: 'absolute' as const,
     left: collapsed ? '64px' : '264px',
+    zIndex: 99,
     height: 30,
     width: 30,
     borderRadius: 10,

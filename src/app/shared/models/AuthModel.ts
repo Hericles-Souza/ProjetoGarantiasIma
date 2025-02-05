@@ -14,4 +14,5 @@ export interface AuthModel {
   cnpj: string;
   rule?: RuleModel;
   token: string;
+  phone: string;
 }
