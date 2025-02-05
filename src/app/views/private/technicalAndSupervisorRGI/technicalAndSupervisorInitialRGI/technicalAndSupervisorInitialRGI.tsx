@@ -6,7 +6,9 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 const TechnicalAndSupervisorInitialRGI: React.FC = () => {
   // Informações gerais fictícias
@@ -15,7 +17,8 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
   const [requestDate, setRequestDate] = useState(dayjs("2025-01-01").format("DD/MM/YYYY"));
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [setCardData] = useState<GarantiasModel>();
+  const [cardData, setCardData] = useState<GarantiasModel>();
+  const context = useContext(AuthContext);
 
   // NF fictícia
   const [nfs, setNfs] = useState<{ nf: string; itens: number }[]>([
@@ -63,25 +66,28 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
         </div>
         <div className={styles.buttonsContainer}>
           {/* ---------------------------para o TÉCNICO aqui é oculto-------------------------------------- */}
+          {context.user.rule.name != UserRoleEnum.Técnico && (<>
+            <Button type="default" danger className={styles.buttonSaveRgi} onClick={() => navigate("view-pre-invoice")}>
+              Visualizar Pré-Nota
+            </Button>
+            <Button type="primary" danger style={{ backgroundColor: "red" }} className={styles.buttonSendRgi}>
+              Autorizar envio de NFD
+            </Button></>)}
 
-          <Button type="default" danger className={styles.buttonSaveRgi} onClick={() => navigate("view-pre-invoice")}>
-            Visualizar Pré-Nota
-          </Button>
-          <Button type="primary" danger style={{ backgroundColor: "red" }} className={styles.buttonSendRgi}>
-            Autorizar envio de NFD
-          </Button>
 
           {/* ------------------------------------------------------------------------------------------------ */}
 
 
           {/* ---------------------------para o SUPERVISOR aqui é oculto-------------------------------------- */}
+          {context.user.rule.name != UserRoleEnum.Supervisor && (<>
+            <Button type="default" danger className={styles.buttonSaveRgi}>
+              Salvar
+            </Button>
+            <Button type="primary" danger style={{ backgroundColor: "red" }} className={styles.buttonSendRgi}>
+              Enviar
+            </Button>
+          </>)}
 
-          <Button type="default" danger className={styles.buttonSaveRgi}>
-            Salvar
-          </Button>
-          <Button type="primary" danger style={{ backgroundColor: "red" }} className={styles.buttonSendRgi}>
-            Enviar
-          </Button>
 
           {/* ------------------------------------------------------------------------------------------------ */}
         </div>

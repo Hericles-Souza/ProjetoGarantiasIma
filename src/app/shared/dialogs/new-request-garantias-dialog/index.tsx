@@ -63,7 +63,10 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
       loteItemOficial: "LOTE123",
       loteItem: "LOTE456",
       codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
-      solicitarRessarcimento: false
+      solicitarRessarcimento: false,
+      id: '',
+      rgi: '',
+      status: ''
     };
     const garantiaItens :GarantiaItem[] = [];
     garantiaItens.push(garantiaItem);

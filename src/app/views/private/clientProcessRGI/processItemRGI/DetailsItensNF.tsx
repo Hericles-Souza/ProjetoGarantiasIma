@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Button, Modal } from "antd";
 import { DownOutlined, DeleteOutlined, LeftOutlined, InfoCircleOutlined, FileOutlined, RightOutlined } from "@ant-design/icons";
 import styles from "./DetailsItensNF.module.css";
@@ -6,6 +6,10 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
 import { useNavigate, useParams } from "react-router-dom";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
+import { GarantiaItem } from "@shared/models/GarantiasModel";
+import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
 
 const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundColor?: string }) => {
   const [fileName, setFileName] = useState<string | null>(null);
@@ -50,7 +54,7 @@ const CollapsibleSection = ({
   toggleVisibility: () => void;
   showDeleteConfirm: () => void;
   children: React.ReactNode;
-  status: "Autorizado" | "Recusado";
+  status: string;
 }) => (
   <div>
     <div className={styles.tituloSecaoContainer}>
@@ -80,20 +84,58 @@ const CollapsibleSection = ({
 );
 
 const DetailsItensNF: React.FC = () => {
-  const [items, setItems] = useState<{ id: number; title: string; status: "Autorizado" | "Recusado" }[]>([
-    { id: 1, title: "000666-00147.A.01", status: "Autorizado" },
+  const [items, setItems] = useState([
+    {
+      id: 1,
+      title: 'Peça 1',
+      codigoPeca: '',
+      lotePeca: '',
+      status: 'Autorizado',
+      defeito: undefined,
+      modeloVeiculo: '',
+      anoVeiculo: '',
+      torquePeca: '',
+      isReimbursementChecked: false,
+      anexos: []
+    }
   ]);
   const [visibleSectionId, setVisibleSectionId] = useState<number | null>(1); 
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null); 
+  const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+
+  const handleInputChange = (itemId, field, value) => {
+    setItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId
+          ? { ...item, [field]: value }
+          : item
+      )
+    );
+  };
+  
 
   const addNewItem = () => {
     const newItemId = items.length + 1;
     const newItemTitle = `000666-00147.A.${newItemId.toString().padStart(2, "0")}`;
-    setItems([...items, { id: newItemId, title: newItemTitle, status: "Autorizado" }]);
-    setVisibleSectionId(newItemId); 
+    setItems([
+      ...items,
+      {
+        id: newItemId,
+        title: newItemTitle,
+        status: "Autorizado",
+        codigoPeca: "",          // Inicializa com um valor vazio
+        lotePeca: "",            // Inicializa com um valor vazio
+        defeito: undefined,      // Inicializa com undefined ou o valor que preferir
+        modeloVeiculo: "",       // Inicializa com um valor vazio
+        anoVeiculo: "",          // Inicializa com um valor vazio
+        torquePeca: "",         // Inicializa com um valor vazio
+        isReimbursementChecked: false,  // Inicializa com o valor padrão do checkbox
+        anexos: []               // Inicializa com um array vazio para anexos
+      }
+    ]);    setVisibleSectionId(newItemId); 
   };
 
   const handleDeleteItem = (itemId: number) => {
@@ -112,7 +154,6 @@ const DetailsItensNF: React.FC = () => {
     }
   };
 
-  const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsReimbursementChecked(e.target.checked);
@@ -125,6 +166,27 @@ const DetailsItensNF: React.FC = () => {
       setVisibleSectionId(id);
     }
   };
+
+  const send = () => {
+    items.forEach((element) => {
+      var item: GarantiaItem = {
+        codigoItem: element.codigoPeca,
+        codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+        nfReferencia: element.anoVeiculo,
+        tipoDefeito: "",
+        modeloVeiculoAplicado: "",
+        torqueAplicado: 0,
+        loteItemOficial: "",
+        loteItem: "",
+        solicitarRessarcimento: false,
+        id: "",
+        rgi: "",
+        status: ""
+      }
+      updateGarantiaItemByIdAsync(id, item);
+    });
+    
+  }
 
   return (
     <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
@@ -144,7 +206,7 @@ const DetailsItensNF: React.FC = () => {
           <Button type="default" className={styles.ButtonDelete}>
             EXCLUIR
           </Button>
-          <Button type="primary" className={styles.ButonToSend}>
+          <Button type="primary" className={styles.ButonToSend} onClick={send}>
             SALVAR
           </Button>
         </div>
@@ -183,10 +245,11 @@ const DetailsItensNF: React.FC = () => {
             <div className={styles.inputsContainer}>
               <div className={styles.inputsConjun}>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Código da peça" value="" fullWidth />
+                  <OutlinedInputWithLabel label="Código da peça" fullWidth value={item.codigoPeca} onChange={(e) => handleInputChange(item.id, 'codigoPeca', e.target.value)}
+/>
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Lote da peça" value="" fullWidth />
+                  <OutlinedInputWithLabel label="Lote da peça" fullWidth value={item.lotePeca} onChange={(e) => handleInputChange(item.id, 'lotePeca', e.target.value)} />
                 </div>
               </div>
 
@@ -200,23 +263,25 @@ const DetailsItensNF: React.FC = () => {
                       { value: "Opção 2", label: "Opção 2" },
                       { value: "Opção 3", label: "Opção 3" },
                     ]}
+                    value={item.defeito}
+                    onChange={(e) => handleInputChange(item.id, 'defeito', e.target.value)}
                     defaultValue={undefined}
                   />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel label="Modelo do veículo que aplicou" fullWidth value="" />
+                  <OutlinedInputWithLabel label="Modelo do veículo que aplicou" fullWidth value={item.modeloVeiculo} onChange={(e) => handleInputChange(item.id, 'modeloVeiculo', e.target.value)} />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                  <OutlinedInputWithLabel label="Ano do veículo" fullWidth value="" />
+                  <OutlinedInputWithLabel label="Ano do veículo" fullWidth value={item.anoVeiculo} onChange={(e) => handleInputChange(item.id, 'anoVeiculo', e.target.value)} />
                 </div>
               </div>
               <div className={styles.inputsConjun}>
                 <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel label="Torque aplicado à peça" value="" fullWidth />
+                  <OutlinedInputWithLabel label="Torque aplicado à peça" fullWidth value={item.torquePeca} onChange={(e) => handleInputChange(item.id, 'torquePeca', e.target.value)} />
                 </div>
               </div>
               <div className={styles.checkboxContainer}>
-                <ColorCheckboxes onChange={handleCheckboxChange} checked={isReimbursementChecked} />
+                <ColorCheckboxes onChange={(e) => handleInputChange(item.id, 'isReimbursementChecked', e.target.checked)} checked={item.isReimbursementChecked} />
                 <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
               </div>
             </div>
@@ -263,3 +328,4 @@ const DetailsItensNF: React.FC = () => {
 };
 
 export default DetailsItensNF;
+

@@ -12,6 +12,7 @@ export interface GarantiaItem {
   loteItem: string;
   status: string; 
   codigoStatus: GarantiasStatusEnum2;
+  solicitarRessarcimento: boolean;
 }
 
 export interface GarantiasModel {
