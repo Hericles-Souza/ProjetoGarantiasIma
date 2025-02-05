@@ -1,7 +1,7 @@
 import {GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
 
 export interface GarantiaItem {
-  id: string; // Adicionado para corresponder ao campo `id` do item
+  id: string;
   rgi: string;
   codigoItem: string;
   tipoDefeito: string;
@@ -10,24 +10,24 @@ export interface GarantiaItem {
   nfReferencia: string;
   loteItemOficial: string;
   loteItem: string;
-  status: string; // Adicionado para corresponder ao campo `status` do item
+  status: string; 
   codigoStatus: GarantiasStatusEnum2;
 }
 
 export interface GarantiasModel {
-  id?: string; // Adicionado para corresponder ao campo `id` da garantia
-  createdAt?: string; // Adicionado para corresponder ao campo `createdAt`
-  updatedAt?: string; // Adicionado para corresponder ao campo `updatedAt`
+  id?: string; 
+  createdAt?: string;
+  updatedAt?: string; 
   rgi?: string;
   razaoSocial?: string;
   telefone?: string;
   email?: string;
   nf?: string;
   fornecedor?: string;
-  status?: string; // Adicionado para corresponder ao campo `status`
+  status?: string;
   codigoStatus?: GarantiasStatusEnum2;
   observacao?: string;
-  data?: string; // Adicionado para corresponder ao campo `data`
+  data?: string; 
   usuarioInsercao?: string;
   dataAtualizacao?: string;
   usuarioAtualizacao?: string;

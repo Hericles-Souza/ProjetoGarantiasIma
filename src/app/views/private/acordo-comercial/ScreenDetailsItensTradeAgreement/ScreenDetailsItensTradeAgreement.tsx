@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Modal } from "antd";
-import { DownOutlined, DeleteOutlined, LeftOutlined, InfoCircleOutlined, FileOutlined, RightOutlined } from "@ant-design/icons";
+import { DownOutlined, DeleteOutlined, LeftOutlined, FileOutlined, RightOutlined } from "@ant-design/icons";
 import styles from "./ScreenDetailsItensTradeAgreement.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { useNavigate, useParams } from "react-router-dom";
@@ -181,10 +181,10 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             <div className={styles.inputsContainer}>
               <div className={styles.inputsConjun}>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Código da peça *" fullWidth />
+                  <OutlinedInputWithLabel label="Código da peça *" fullWidth  />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Quantidade *"  fullWidth />
+                  <OutlinedInputWithLabel label="Quantidade *"  fullWidth  />
                 </div>
               </div>
               

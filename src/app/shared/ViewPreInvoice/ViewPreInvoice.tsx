@@ -16,8 +16,8 @@ const InvoicePage = () => {
         valorIPI: "250,00",
         valorNota: "5250,00",
         aliquotaInterna: "18%",
-        numeroNFOrigem: "", // Novo campo para o número da NF de origem
-        dataNFOrigem: "", // Novo campo para a data da NF de origem
+        numeroNFOrigem: "",
+        dataNFOrigem: "", 
     });
 
     const columns = [

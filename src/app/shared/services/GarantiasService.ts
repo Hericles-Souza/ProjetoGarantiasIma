@@ -1,6 +1,5 @@
 import api from "@shared/Interceptors";
 import {GarantiaItem, GarantiasModel} from "@shared/models/GarantiasModel.ts";
-import {GarantiasDto} from "@shared/dtos/GarantiasDto.ts";
 
 
 export const createGarantiaAsync = (data: GarantiasModel) => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button, Modal } from "antd";
 import { DeleteOutlined, FileOutlined, LeftOutlined } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
@@ -8,6 +8,7 @@ import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from "dayjs";
 import NFModal from "../addNewNF/modalAddNewNF";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
@@ -21,6 +22,7 @@ const RGIDetailsInitial: React.FC = () => {
   const [nfs, setNfs] = useState<{ nf: string; itens: number }[]>([]);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false); 
   const [nfToDelete, setNfToDelete] = useState<string>(""); 
+  const context = useContext(AuthContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,7 +79,7 @@ const RGIDetailsInitial: React.FC = () => {
         <Button type="link" className={styles.ButtonBack} onClick={() => navigate("/garantias")}>
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.RgiCode}>RGI N° 000666-0001</span>
+        <span className={styles.RgiCode}>RGI N° {context.user.codigoCigam}-</span>
       </div>
 
       <div className={styles.headerContainer}>

@@ -152,12 +152,11 @@ const LayoutPrivate: React.FC = () => {
                   )}
                   <span style={{fontWeight: "500"}}>
                     {user && (
-                      user?.rule?.name === UserRoleEnum.Cliente || user?.rule?.name === UserRoleEnum.Admin ? user.shortname : user.cnpj
+                      user?.rule?.name === UserRoleEnum.Cliente || user?.rule?.name === UserRoleEnum.Admin ? user.username : user.cnpj
                     )}
                   </span>
                 </div>
               </div>
-              <FaRegBell style={{color: "#5f5a56", fontSize: "18px"}}/>
               <Dropdown overlay={menu} trigger={['click']}>
                 <FaCog style={{color: "#5f5a56", fontSize: "18px", cursor: "pointer"}}/>
               </Dropdown>
