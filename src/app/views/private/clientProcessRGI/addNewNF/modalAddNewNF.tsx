@@ -1,8 +1,9 @@
 import { Modal, Button, Upload } from "antd";
 import { FileOutlined, UploadOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import "./modalAddNewNF.style.css";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
 interface NFModalProps {
   open: boolean;
@@ -14,6 +15,7 @@ const NFModal = ({ open, onOpenChange, onAddNF }: NFModalProps) => {
   const [inputValue, setInputValue] = useState("");
   const [fileName, setFileName] = useState<string>("");
   const [file, setFile] = useState(null);
+  const context = useContext(AuthContext);
 
   var numNota :String = '';
 
@@ -46,7 +48,7 @@ const NFModal = ({ open, onOpenChange, onAddNF }: NFModalProps) => {
   return (
     <Modal title="NOVA NF ASSOCIADA" open={open} onCancel={() => onOpenChange(false)} footer={null} className="nf-modal" width={600}>
       <div className="nf-content">
-      <div className="nf-rgi">RGI N° 000666-00147</div>
+      <div className="nf-rgi">RGI N° {context.user.codigoCigam}</div>
         <div className="nf-field">
           <OutlinedInputWithLabel label="N° NF de origem *" value={inputValue} onChange={(e) => setInputValue(e.target.value)} fullWidth />
         </div>

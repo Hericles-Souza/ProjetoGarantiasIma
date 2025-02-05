@@ -1,8 +1,11 @@
-import {useEffect, useRef, useState} from 'react';
+import {useContext, useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Button, Divider, Form} from 'antd';
 import {Input} from "@shared/components/input/index.tsx";
 import styles from './new-request-garantias.module.css';
+import { GarantiasStatusEnum2 } from '@shared/enums/GarantiasStatusEnum';
+import { AuthContext } from '@shared/contexts/Auth/AuthContext';
+import { GarantiaItem, GarantiasModel } from '@shared/models/GarantiasModel';
 
 enum FilterStatus {
   GARANTIAS = 'garantias',
@@ -18,7 +21,8 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   const garantiaButtonRef = useRef<HTMLButtonElement>(null);
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
-  var numNota :String = '';
+  const context = useContext(AuthContext);
+  var numNota :string = '';
   let file :File;
 
   const handleSubmit = async (values: unknown) => {
@@ -49,10 +53,32 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
   };
 
   const onClickCreate = (allValues: unknown) => {
+    const garantiaItens :GarantiaItem[] = [];
     console.log("teste");
+    var dateNow :Date = new Date();
+    var dateFormatted :string = dateNow.getDay() +"/"+ dateNow.getMonth() + "/" + dateNow.getFullYear();
+    console.log(dateFormatted);
+
+    const garantiaModel :GarantiasModel ={
+      email: context.user.email,
+      nf: numNota,
+      razaoSocial: context.user.username,
+      createdAt: dateFormatted,
+      dataAtualizacao: dateFormatted,
+      data: dateFormatted,
+      updatedAt: dateFormatted,
+      usuarioAtualizacao: context.user.fullname,
+      usuarioInsercao: context.user.fullname,
+      rgi: context.user.codigoCigam,
+      codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+      itens: garantiaItens,
+      telefone: context.user.phone,
+      fornecedor: "asdasdsa",
+      observacao: "adasdasd"
+    };
+    console.log("garantia: " + JSON.stringify(garantiaModel));
     console.log(numNota);
     console.log(file);
-  };
 
   const onChangeValueNumNota = (evt) => {
     numNota = evt.target.value;
@@ -121,7 +147,7 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
                   Preencha todos os campos obrigatórios para salvar
                 </p>
               )}
-              <h3>RGI N° 000666-00147</h3>
+              <h3>RGI N° {context.user.codigoCigam}</h3>
               <Form.Item
                 style={{margin: 0}}
                 name="N° NF de origem"
@@ -213,5 +239,5 @@ const NewRequestGarantiasDialog = ({onClose}: { onClose: () => void }) => {
     </div>
   );
 };
-
+}
 export default NewRequestGarantiasDialog;

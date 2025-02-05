@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import {BrowserRouter as Router} from 'react-router-dom';
 import './index.css';
 import './App.css';
-// import Dashboard from "@app/views/private/dashboard/dashboard";
+// import TechnicalAndSupervisorDetailsItens from "@app/views/private/technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
 
 import App from './App.tsx';
 
