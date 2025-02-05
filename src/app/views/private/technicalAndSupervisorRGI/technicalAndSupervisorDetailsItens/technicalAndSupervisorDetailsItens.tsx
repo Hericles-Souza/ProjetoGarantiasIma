@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "antd";
 import { RightOutlined, DownOutlined, LeftOutlined } from "@ant-design/icons";
 import Quill from "quill";
@@ -8,6 +8,8 @@ import OutlinedInputWithLabel from "../../../../shared/components/input-outlined
 import OutlinedSelectWithLabel from "../../../../shared/components/select/OutlinedSelectWithLabel";
 import MultilineTextFields from "../../../../shared/components/multline/multLine";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
 const QuillEditor = ({ editorRef }: { editorRef: React.RefObject<HTMLDivElement> }) => {
   const quillInstance = useRef(null);
@@ -92,6 +94,7 @@ const CollapsibleSection = ({
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const editorRef = useRef(null);
+  const context = useContext(AuthContext);
 
   const toggleContentVisibility = () => {
     setIsContentVisible(!isContentVisible);
@@ -123,15 +126,19 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         <h1 className={styles.tituloRgi}>000666-00147.A</h1>
 
         {/* para o supervisor aqui é oculto */}
+        {context.user.rule.name != UserRoleEnum.Supervisor && (<>
+          <div className={styles.buttonsContainer}>
+            <Button type="default" danger className={styles.buttonCancelRgi}>
+              Cancelar
+            </Button>
+            <Button type="primary" danger style={{ backgroundColor: "red" }} className={styles.buttonSaveRgi}>
+              Salvar
+            </Button>
+          </div>
 
-        <div className={styles.buttonsContainer}>
-          <Button type="default" danger className={styles.buttonCancelRgi}>
-            Cancelar
-          </Button>
-          <Button type="primary" danger style={{ backgroundColor: "red" }} className={styles.buttonSaveRgi}>
-            Salvar
-          </Button>
-        </div>
+        </>)}
+
+
 
         {/* ------------------------------- */}
 
@@ -149,9 +156,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           toggleVisibility={toggleContentVisibility}
         >
           {/* -----------------------para o supervisor aqui é oculto--------------------------- */}
+          {context.user.rule.name != UserRoleEnum.Supervisor && (<>
+            <div style={{ marginTop: "20px" }}><FileAttachment label="Anexo da NF de venda" backgroundColor="white" /></div>
 
-          <div style={{ marginTop: "20px" }}><FileAttachment label="Anexo da NF de venda" backgroundColor="white" /></div>
-          
+          </>)}
+
           {/* --------------------------------------------------------------------------------- */}
 
           <h3 className={styles.tituloSecao}>Informações Gerais</h3>
@@ -211,54 +220,62 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           </div>
           {/* ------------------------para o supervisor aqui é oculto------------------------- */}
 
-          <div className={styles.checkboxContainer}>
-            <ColorCheckboxes onChange={handleCheckboxChange} checked={isReimbursementChecked} />
-            <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
-          </div>
-          {isReimbursementChecked && (
-            <div className={styles.contentReimbursement}>
-              <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
-              {["1. Documento de identificação (RG ou CNH):",
-                "2. Documentação do veículo:",
-                "3. NF do guincho:",
-                "4. NF de outras despesa/produtos pertinentes:"]
-                .map((item, index) => (
-                  <FileAttachment key={index} label={item} backgroundColor="#f5f5f5" />
-                )
-              )}
+          {context.user.rule.name != UserRoleEnum.Supervisor && (<>
+            <div className={styles.checkboxContainer}>
+              <ColorCheckboxes onChange={handleCheckboxChange} checked={isReimbursementChecked} />
+              <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
             </div>
-          )}
+            {isReimbursementChecked && (
+              <div className={styles.contentReimbursement}>
+                <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
+                {["1. Documento de identificação (RG ou CNH):",
+                  "2. Documentação do veículo:",
+                  "3. NF do guincho:",
+                  "4. NF de outras despesa/produtos pertinentes:"]
+                  .map((item, index) => (
+                    <FileAttachment key={index} label={item} backgroundColor="#f5f5f5" />
+                  )
+                  )}
+              </div>
+            )}
+
+          </>)}
+
 
           {/* ----------------------------------------------------------------------------------- */}
 
 
-           <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />{/* permanesse para o supervisor */}
+          <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />{/* permanesse para o supervisor */}
 
 
           {/* ------------------------para o supervisor aqui é oculto---------------------------- */}
-          <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-          {["1. Foto do lado onde está a gravação IMA:",
-            "2. Foto da parte danificada/amassada/quebrada:",
-            "3. Foto marcações suspeitas na peça:",
-            "4. Foto da peça completa:", "5. Outras fotos pertinentes:"].map((item, index) => (
-            <FileAttachment key={index} label={item} backgroundColor="white" />
-          ))}
 
-          <hr className={styles.divisor} />
-          <div className={styles.containerSelect}>
-            <OutlinedSelectWithLabel
-              label="Envio Autorizado"
-              options={[
-                { value: "Procedente", label: "Procedente" },
-                { value: "Improcedente", label: "Improcedente" },
-              ]}
-            />
-          </div>
+          {context.user.rule.name != UserRoleEnum.Supervisor && (<>
+            <h3 className={styles.tituloA}>Anexos de Imagens</h3>
+            {["1. Foto do lado onde está a gravação IMA:",
+              "2. Foto da parte danificada/amassada/quebrada:",
+              "3. Foto marcações suspeitas na peça:",
+              "4. Foto da peça completa:", "5. Outras fotos pertinentes:"].map((item, index) => (
+                <FileAttachment key={index} label={item} backgroundColor="white" />
+              ))}
 
-          <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
-          <QuillEditor editorRef={editorRef} />
-          <h3 className={styles.tituloA}>Conclusão</h3>
-          <MultilineTextFields />
+            <hr className={styles.divisor} />
+            <div className={styles.containerSelect}>
+              <OutlinedSelectWithLabel
+                label="Envio Autorizado"
+                options={[
+                  { value: "Procedente", label: "Procedente" },
+                  { value: "Improcedente", label: "Improcedente" },
+                ]}
+              />
+            </div>
+
+            <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
+            <QuillEditor editorRef={editorRef} />
+            <h3 className={styles.tituloA}>Conclusão</h3>
+            <MultilineTextFields />
+
+          </>)}
 
 
           {/* ----------------------------------------------------------------------------------- */}
