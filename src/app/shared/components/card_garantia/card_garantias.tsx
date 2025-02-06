@@ -133,7 +133,7 @@ const statusStyles = {
 
 
 const CardCategorias: React.FC<CardCategoriasProps> = ({data, GarantiaItem, onClick}) => {
-
+  console.log('Garantia', GarantiaItem);
   const statusStyle = statusStyles[GarantiaItem.codigoStatus];
 
   return (

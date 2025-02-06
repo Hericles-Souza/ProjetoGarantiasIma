@@ -7,8 +7,10 @@ export const createGarantiaAsync = (data: GarantiasModel) => {
 }
 
 
-export const getAllGarantiasAsync = () => {
+export const getAllGarantiasAsync = async () => {
+  console.log('api', await api.get('/garantias'))
   return api.get('/garantias');
+
 }
 
 export const getGarantiaByIdAsync = (id: string) => {

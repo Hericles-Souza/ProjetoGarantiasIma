@@ -116,6 +116,53 @@ const Garantias: React.FC = () => {
 
         </div>
       )}
+
+      {activeTab === 'rgi' && (
+        <div className={styled.container}>
+          <div className={styled.content}>
+            <div ref={carouselRef} className="carousel-container">
+              <div className="carousel-content">
+                {statuses.map((status) => (
+                  <Tag
+                    key={status}
+                    className={`carousel-tag ${styled.tab}`}
+                    color={filterStatus === status ? 'red' : 'default'}
+                    onClick={() => setFilterStatus((prevStatus) => (prevStatus === status ? 'todos' : status))}
+                  >
+                    {status}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+            <div style={{display: 'flex', alignItems: 'center', gap: "1rem", padding: "1rem", paddingLeft: "0"}}>
+              <Button className={styled.button} type="default" onClick={handlePrevious}>
+                &lt;
+              </Button>
+              <Button className={styled.button} type="default" onClick={handleNext}>
+                &gt;
+              </Button>
+              <SearchField onSearchChange={setSearchTerm}/>
+            </div>
+          </div>
+          <div className={styled.containerGrid}>
+            {filteredItems.map((item) => {
+              // Encontrar o cardData que corresponde a esse item
+              const associatedCardData = cardData?.find(card => card.rgi === item.rgi);
+
+              return (
+                <CardCategorias
+                  key={item.id}
+                  data={new Date(associatedCardData.data)}
+                  GarantiaItem={item}
+                  onClick={() => navigate(`/garantias/rgi/${associatedCardData.id}`)}
+                />
+              );
+            })}
+          </div>
+
+
+        </div>
+      )}
     </>
   );
 };

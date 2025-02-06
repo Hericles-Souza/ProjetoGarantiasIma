@@ -20,6 +20,7 @@ export interface GarantiasModel {
   createdAt?: string;
   updatedAt?: string; 
   rgi?: string;
+  aci?: string;
   razaoSocial?: string;
   telefone?: string;
   email?: string;
