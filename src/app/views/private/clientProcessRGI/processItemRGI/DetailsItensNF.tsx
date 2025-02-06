@@ -180,7 +180,7 @@ const DetailsItensNF: React.FC = () => {
         loteItem: "",
         solicitarRessarcimento: false,
         id: "",
-        rgi: "",
+        rgi: id || "",
         status: ""
       }
       updateGarantiaItemByIdAsync(id, item);
