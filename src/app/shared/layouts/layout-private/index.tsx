@@ -8,7 +8,6 @@ import IconGarantia from '@assets/image/svg/icon_garantia.svg';
 import IconUser from '@assets/image/svg/user.svg';
 import {FaCog, FaUser} from "react-icons/fa";
 import {PiBuildingApartment} from "react-icons/pi";
-import {FaRegBell} from "react-icons/fa6";
 import {AuthContext} from "@shared/contexts/Auth/AuthContext.tsx";
 import {UserRoleEnum} from "@shared/enums/UserRoleEnum.ts";
 
@@ -91,28 +90,32 @@ const LayoutPrivate: React.FC = () => {
             defaultSelectedKeys={['1']}
             selectedKeys={[selectedKey]}
           >
+            
             {menuData.filter(item =>
-              !item.allowedRoles || item.allowedRoles.includes(user?.rule?.name)).map(item => (
-              <Menu.Item
-                key={item.key}
-                style={{
-                  ...styles.menuItem,
-                  height: '55px',
-                  borderRadius: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  backgroundColor: item.key === selectedKey ? "rgba(255, 0, 0, 0.14)" : "transparent",
-                  color: item.key === selectedKey ? '#FF0000' : '',
-                  border: item.key === selectedKey ? '0.25px solid rgba(255, 0, 0, 0.35)' : 'none',
-                }}
-              >
-                <Link to={item.path} style={{color: "inherit", display: "flex", alignItems: "center"}}>
-                  {item.icon}
-                  {!collapsed && <span style={{marginLeft: "15px", fontSize: "16px"}}>{item.label}</span>}
-                </Link>
-              </Menu.Item>
-            ))}
+              !item.allowedRoles || item.allowedRoles.includes(user?.rule?.name)).map(item => {
+                console.log("allowedRoles: " + JSON.stringify(item));
+                return (
+                  <Menu.Item
+                    key={item.key}
+                    style={{
+                      ...styles.menuItem,
+                      height: '55px',
+                      borderRadius: '15px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: collapsed ? "center" : "flex-start",
+                      backgroundColor: item.key === selectedKey ? "rgba(255, 0, 0, 0.14)" : "transparent",
+                      color: item.key === selectedKey ? '#FF0000' : '',
+                      border: item.key === selectedKey ? '0.25px solid rgba(255, 0, 0, 0.35)' : 'none',
+                    }}
+                  >
+                    <Link to={item.path} style={{color: "inherit", display: "flex", alignItems: "center"}}>
+                      {item.icon}
+                      {!collapsed && <span style={{marginLeft: "15px", fontSize: "16px"}}>{item.label}</span>}
+                    </Link>
+                  </Menu.Item>
+                )})
+              } 
           </Menu>
         </Sider>
         <Layout>
