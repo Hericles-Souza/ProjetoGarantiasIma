@@ -78,7 +78,9 @@ const UserRegistration: React.FC = () => {
         cigamCode: user.codigoCigam,
         companyName: user.fullname,
         phone: user.phone,
-        cnpj: user.cnpj
+        cnpj: user.cnpj,
+        isActive: user.isActive,
+        isAdmin: user.isAdmin
       }));
       setDataSource(usersData);
     } catch (error) {

@@ -10,7 +10,7 @@ import * as Yup from 'yup';
 import {PiCopySimpleLight} from "react-icons/pi";
 import {TfiReload} from "react-icons/tfi";
 import InputMask from 'react-input-mask';
-import { createUser, CreateUserRequest } from '@shared/services/UserService';
+import { updateUser, UpdateUserRequest } from '@shared/services/UserService';
 import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 
@@ -94,7 +94,8 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
   };
 
   const createNewUser = async () => {
-    const userRequest: CreateUserRequest = {
+    const userRequest: UpdateUserRequest = {
+      id: selectedUser ? selectedUser.id : '',
       username: formik.values.cigamCode,
       email: formik.values.email,
       fullname: formik.values.companyName,
@@ -103,12 +104,12 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       CNPJ: formik.values.cnpj,
       codigoCigam: formik.values.cigamCode,
       ruleId: selectedProfile,
-      isActive: false,
-      isAdmin: true,
-      phone: formik.values.phone
+      isActive: formik.values.isActive,
+      isAdmin: selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id ? true : false,
+      phone: formik.values.phone,
     };
     console.log("userdata: " + JSON.stringify(userRequest));
-    await createUser(userRequest, context.user.token).then((value) => console.log(value));
+    await updateUser(userRequest, context.user.token).then((value) => console.log(value));
   };
 
   return (

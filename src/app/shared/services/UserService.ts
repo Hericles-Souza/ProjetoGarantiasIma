@@ -26,6 +26,23 @@ export interface CreateUserResponse {
   };
 }
 
+
+export interface UpdateUserRequest {
+  id: string;
+  username: string;
+  email: string;
+  fullname: string;
+  shortname: string;
+  password: string;
+  CNPJ: string;
+  codigoCigam: string;
+  ruleId: string;
+  isActive: boolean;
+  isAdmin: boolean;
+  phone:string;
+}
+
+
 export interface GetAllUsersResponse {
   data: {
     data: {
@@ -48,6 +65,15 @@ export function getAllUsers(page: number, limit: number): Promise<GetAllUsersRes
 
 export function createUser(user: CreateUserRequest, token: string) {
   return api.post('/user', JSON.stringify(user), {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  }).then((value) => console.log("request: " + value.request));
+}
+
+export function updateUser(user: UpdateUserRequest, token: string) {
+  return api.patch('/user/users', JSON.stringify(user), {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
