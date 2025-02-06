@@ -7,10 +7,13 @@ import styles from './UserRegistration.module.css';
 type TableRowSelection<T extends object = object> = TableProps<T>["rowSelection"];
 
 interface DataType {
+  cigamCode: string;
+  companyName: string;
+  phone: string;
+  cnpj: string;
   key: string;
   id: string;
   age: string;
-  telefone: string;
   status: boolean;
   email: string;
   user: string;
@@ -21,7 +24,7 @@ interface DataType {
 const columns: TableColumnsType<DataType> = [
   { title: 'ID', dataIndex: 'id' },
   { title: 'Razão Social', dataIndex: 'age'},
-  { title: 'Telefone', dataIndex: 'telefone'},
+  { title: 'Telefone', dataIndex: 'phone'},
   { title: 'Status', dataIndex: 'status'},
   { title: 'E-mail', dataIndex: 'email'},
   { title: 'Perfil do Usuário', dataIndex: 'user'},
@@ -38,8 +41,12 @@ const UserRegistration: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
+  const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
+  const onSelectChange = (newSelectedRowKeys: React.Key[],  selectedRows: DataType[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
+    if (selectedRows.length > 0) {
+      setSelectedUser(selectedRows[0]); // Armazena o usuário selecionado
+    }
   };
 
   const openModal = () => {
@@ -63,12 +70,17 @@ const UserRegistration: React.FC = () => {
         key: user.id,
         id: user.id,
         age: user.fullname,
-        telefone: "(31) 99847-5278",
         status: user.isActive,
         email: user.email,
         user: user.rule?.name,
         create: user.createdAt,
         lastAlteration: user.updatedAt,
+        cigamCode: user.codigoCigam,
+        companyName: user.fullname,
+        phone: user.phone,
+        cnpj: user.cnpj,
+        isActive: user.isActive,
+        isAdmin: user.isAdmin
       }));
       setDataSource(usersData);
     } catch (error) {
@@ -97,7 +109,7 @@ const UserRegistration: React.FC = () => {
             placeholder="Pesquisar"
             onSearch={(value) => console.log(value)}
           />
-          <Button type="default" className={styles.buttonEdite} >Editar</Button>
+          <Button type="default" className={styles.buttonEdite} onClick={openModal} >Editar</Button>
           <Button type="primary" className={styles.buttonCreate} danger onClick={openModal}>
             Criar Usuário
           </Button>
@@ -110,7 +122,7 @@ const UserRegistration: React.FC = () => {
         onCancel={closeModal}
       >
         <div className={styles.modalContent}>
-          <DialogUserRegistration closeModal={closeModal} onSearch={onSearch} />
+          <DialogUserRegistration closeModal={closeModal} onSearch={onSearch} selectedUser={selectedUser}/>
         </div>
       </Modal>
 

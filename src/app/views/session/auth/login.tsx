@@ -37,6 +37,7 @@ export const LoginPage = () => {
         if (login) {
           login(user);
         }
+        console.log(user);
       });
       navigate("/garantias");
     } catch {

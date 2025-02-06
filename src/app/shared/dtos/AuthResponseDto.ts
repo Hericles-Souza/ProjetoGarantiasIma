@@ -12,5 +12,6 @@ export interface AuthResponseDto {
   isAdmin: boolean;
   codigoCigam: string;
   cnpj: string;
+  phone: string;
   rule?: RuleModel;
 }

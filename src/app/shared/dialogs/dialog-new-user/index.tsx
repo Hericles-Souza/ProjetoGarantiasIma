@@ -1,6 +1,6 @@
 import {Checkbox, InputAdornment, TextField} from '@mui/material';
 import {Button, message, Typography,} from 'antd';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import './dialog.style.css'
 import style from "./style.module.css";
 import {RuleModel} from "@shared/models/RuleModel.ts";
@@ -10,28 +10,49 @@ import * as Yup from 'yup';
 import {PiCopySimpleLight} from "react-icons/pi";
 import {TfiReload} from "react-icons/tfi";
 import InputMask from 'react-input-mask';
+import { updateUser, UpdateUserRequest } from '@shared/services/UserService';
+import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
+import { AuthContext } from '@shared/contexts/Auth/AuthContext';
+
+interface DataType {
+  cigamCode: string;
+  companyName: string;
+  phone: string;
+  cnpj: string;
+  key: string;
+  id: string;
+  age: string;
+  status: boolean;
+  email: string;
+  user: string;
+  create: string;
+  lastAlteration: string;
+}
 
 interface DialogUserRegistrationProps {
   closeModal: () => void;
   onSearch: () => void;
+  selectedUser: DataType | null;
 }
 
-const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeModal, onSearch}) => {
+const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeModal, onSearch, selectedUser}) => {
   const [rule, setRule] = useState<RuleModel[] | null>(null);
   const [selectedProfile, setSelectedProfile] = useState('');
   const typeRule = "Técnico";
   const generatePassword = () => Math.random().toString(36).slice(-8);
+  const context = useContext(AuthContext);
+    
 
   const formik = useFormik({
     initialValues: {
-      profile: '',
-      cnpj: '',
-      cigamCode: '',
-      companyName: '',
-      phone: '',
-      email: '',
+      profile: selectedUser ? selectedUser.user : '', // Preenchendo com os dados do usuário se estiver em edição
+      cnpj: selectedUser ? selectedUser.cnpj : '',
+      cigamCode: selectedUser ? selectedUser.cigamCode : '',
+      companyName: selectedUser ? selectedUser.companyName : '',
+      phone: selectedUser ? selectedUser.phone : '',
+      email: selectedUser ? selectedUser.email : '',
       password: generatePassword(),
-      isActive: true,
+      isActive: selectedUser ? selectedUser.status : true
     },
     validationSchema: Yup.object({
       cnpj: Yup.string().required('CNPJ obrigatório'),
@@ -50,6 +71,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
     getRules()
       .then((response) => {
         setRule(response.data.data);
+        setSelectedProfile(response.data.data[0].id);
       })
       .catch((error) => {
         console.error('Error fetching rules', error);
@@ -69,6 +91,25 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
     } else {
       message.warning('Nenhuma senha para copiar.').then();
     }
+  };
+
+  const createNewUser = async () => {
+    const userRequest: UpdateUserRequest = {
+      id: selectedUser ? selectedUser.id : '',
+      username: formik.values.cigamCode,
+      email: formik.values.email,
+      fullname: formik.values.companyName,
+      shortname: formik.values.companyName.trim()[0],
+      password: formik.values.password,
+      CNPJ: formik.values.cnpj,
+      codigoCigam: formik.values.cigamCode,
+      ruleId: selectedProfile,
+      isActive: formik.values.isActive,
+      isAdmin: selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id ? true : false,
+      phone: formik.values.phone,
+    };
+    console.log("userdata: " + JSON.stringify(userRequest));
+    await updateUser(userRequest, context.user.token).then((value) => console.log(value));
   };
 
   return (
@@ -102,7 +143,16 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           id="input-container-select"
           select
           label="Perfil"
-          onChange={(e) => setSelectedProfile(e.target.value)}
+          value={selectedProfile}
+
+          onChange={(e) => {
+            const value = e.target.value;
+            const valueProfile = rule.find((ruleSelected) => ruleSelected.name == value);
+            console.log("perfil: " + valueProfile);
+            setSelectedProfile(valueProfile.name);
+            formik.setFieldValue('profile', valueProfile);
+            
+          } }
           defaultValue="EUR"
           focused
           className="outlined-input-select"
@@ -119,9 +169,9 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
             },
           }}
         >
-          {rule && rule?.map((option) => (
-            <option style={{}} key={option.id} value={option.id}>
-              {option.name}
+          {Object.values(UserRoleEnum).map((perfil) => (
+            <option key={perfil} value={perfil}>
+              {perfil}
             </option>
           ))}
         </TextField>
@@ -277,7 +327,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
         <Button onClick={closeModal} style={{backgroundColor: "white", color: "red"}}>
           CANCELAR
         </Button>
-        <Button type="primary" htmlType="submit" style={{backgroundColor: "red"}}>
+        <Button onClick={createNewUser} type="primary" style={{backgroundColor: "red"}}>
           CRIAR
         </Button>
       </div>
