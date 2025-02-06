@@ -7,7 +7,7 @@ import { GarantiasStatusEnum2 } from '@shared/enums/GarantiasStatusEnum';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 import { GarantiaItem, GarantiasModel } from '@shared/models/GarantiasModel';
 import { createGarantiaAsync } from '@shared/services/GarantiasService';
-
+import api from '@shared/Interceptors/index.ts';
 enum FilterStatus {
   GARANTIAS = 'garantias',
   ACORDO = 'acordo',
@@ -31,8 +31,8 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
     try {
       console.log('Criando solicitação:', values);
       if (currentTab === FilterStatus.ACORDO) {
-        // Recupera o valor digitado no input "N° NF de origem" e envia para a tela de Acordo Comercial
-        navigate('/acordo-comercial', { state: { 'N° NF de origem': values['N° NF de origem'] } });
+        // Se o cadastro for na aba Acordo, apenas navega para a próxima tela
+        navigate('/acordo-commercial', { state: { "N° NF de origem": values["N° NF de origem"] } });
       } else {
         onClose();
       }
@@ -55,7 +55,10 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   };
 
   const onClickCreate = async (allValues: unknown) => {
-    const garantiaItem: GarantiaItem ={
+    // Se a aba atual for Acordo, não envia para o endpoint Garantias.
+    if (currentTab !== FilterStatus.GARANTIAS) return;
+
+    const garantiaItem: GarantiaItem = {
       codigoItem: "000920000090",
       tipoDefeito: "Defeito mecânico",
       modeloVeiculoAplicado: "veiculo XYZ",
@@ -69,14 +72,14 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
       rgi: '',
       status: ''
     };
-    const garantiaItens :GarantiaItem[] = [];
+    const garantiaItens: GarantiaItem[] = [];
     garantiaItens.push(garantiaItem);
     console.log("teste");
-    var dateNow :Date = new Date();
-    var dateFormatted :string = dateNow.getDay() +"/"+ dateNow.getMonth() + "/" + dateNow.getFullYear();
+    var dateNow: Date = new Date();
+    var dateFormatted: string = dateNow.getDay() + "/" + dateNow.getMonth() + "/" + dateNow.getFullYear();
     console.log(dateFormatted);
 
-    const garantiaModel :GarantiasModel ={
+    const garantiaModel: GarantiasModel = {
       email: context.user.email,
       nf: numNota,
       razaoSocial: context.user.username,
@@ -97,9 +100,9 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
     await createGarantiaAsync(garantiaModel).then((value) => console.log(value));
 
     console.log(numNota);
-
     console.log(file);
-  }
+  };
+
   const onChangeValueNumNota = (evt) => {
     numNota = evt.target.value;
   };
@@ -152,13 +155,11 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
       </header>
       <main className={styles.main}>
         <Form
-          id="new-request-form" // adicionado id para vinculação do botão submit
+          id="new-request-form" // vincula o botão submit
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{
-            garantiaTipo: 'rgi',
-          }}
+          initialValues={{ garantiaTipo: 'rgi' }}
           onValuesChange={handleFieldChange}
         >
           {currentTab === FilterStatus.GARANTIAS && (
@@ -250,7 +251,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
           className={`${styles.button} ${styles.primary}`}
           type="primary"
           htmlType="submit"
-          form="new-request-form" // vincula o botão ao formulário pelo id
+          form="new-request-form"
           loading={isSubmitting}
           disabled={isSubmitting}
           onClick={onClickCreate}
@@ -262,4 +263,4 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-export default NewRequestGarantiasDialog;
+export default NewRequestGarantiasDialog; 

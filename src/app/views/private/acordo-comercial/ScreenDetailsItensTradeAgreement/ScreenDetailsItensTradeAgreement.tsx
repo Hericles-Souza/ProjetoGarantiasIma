@@ -110,8 +110,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
     }
   };
 
-
-
   const toggleSectionVisibility = (id: number) => {
     if (visibleSectionId === id) {
       setVisibleSectionId(null);
@@ -181,10 +179,10 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             <div className={styles.inputsContainer}>
               <div className={styles.inputsConjun}>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Código da peça *" fullWidth  />
+                  <OutlinedInputWithLabel label="Código da peça *" fullWidth value={""}  />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Quantidade *"  fullWidth  />
+                  <OutlinedInputWithLabel label="Quantidade *" fullWidth value={""}  />
                 </div>
               </div>
               

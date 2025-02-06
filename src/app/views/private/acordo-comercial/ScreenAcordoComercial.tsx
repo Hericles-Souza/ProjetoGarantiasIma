@@ -93,7 +93,6 @@ const ScreenAcordoComercial = () => {
               onChange={(e) =>
                 setUserData({ ...userData, fullname: e.target.value })
               }
-              readOnly={!isEditing}
             />
           </div>
           <div className="info-row">
@@ -103,14 +102,12 @@ const ScreenAcordoComercial = () => {
               onChange={(e) =>
                 setUserData({ ...userData, phone: e.target.value })
               }
-              readOnly={!isEditing}
             />
           </div>
           <div className="info-row">
             <OutlinedInputWithLabel
               label="Data da Solicitação"
               value={dataSolicitacao}
-              readOnly
             />
           </div>
           {isEditing && (

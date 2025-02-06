@@ -9,6 +9,7 @@ import DetailsItensNF from "./clientProcessRGI/processItemRGI/DetailsItensNF";
 import RgiDetailsPage from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import ScreenAcordoComercial from "./acordo-comercial/ScreenInitialTradeAgreement/ScreenInitialTradeAgreement";
 import Dashboard from "./dashboard/dashboard";
+import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -59,7 +60,17 @@ export const appRoutingPrivate: RouteConfig[] = [
         element: <Dashboard />,
         private: true,
         allowedRoles: [UserRoleEnum.Supervisor]
-      }
+      }, 
+      {
+        path: "acordo-commercial",
+        element: <ScreenAcordoComercial />, 
+        private: true, 
+      },
+      {
+        path: "technical-and-supervisor/details-itens",
+        element: <ScreenDetailsItensTradeAgreement />,
+        private: true,
+      },
     ]
   }
 ]
