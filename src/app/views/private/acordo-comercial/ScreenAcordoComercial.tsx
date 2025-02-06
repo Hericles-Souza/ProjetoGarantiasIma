@@ -8,6 +8,7 @@ import api from '@shared/Interceptors/index.ts';
 const ScreenAcordoComercial = () => {
   const { state } = useLocation();
   const nfOrigem = state?.['N° NF de origem'];
+  const userDataFromState = state?.userData;
 
   // Guarda os dados completos do usuário.
   const [userData, setUserData] = useState({
@@ -56,8 +57,10 @@ const ScreenAcordoComercial = () => {
         console.error('Erro ao buscar dados do usuário:', error);
       }
     };
-
-    fetchUserData();
+    if (!userDataFromState) {
+      // Só busca dados da API se não vieram do state
+      fetchUserData();
+    }
   }, []);
 
   const handleUpdateUserData = async () => {

@@ -41,7 +41,9 @@ const Header: React.FC<HeaderProps> = ({ filterStatus, handleFilterChange }) => 
       </div>
 
       <div style={{ display: 'flex', padding: "1rem", alignItems: 'center' }}>
-        <Button style={{ margin: "0" }} onClick={handleDialogOpen}>NOVA SOLICITAÇÃO</Button>
+        <Button style={{ margin: "0" }} onClick={handleDialogOpen}>
+          NOVA SOLICITAÇÃO
+        </Button>
       </div>
 
       <Modal
@@ -53,8 +55,6 @@ const Header: React.FC<HeaderProps> = ({ filterStatus, handleFilterChange }) => 
       >
         <NewRequestGarantiasDialog onClose={handleDialogClose} />
       </Modal>
-
-
     </HeaderContainer>
   );
 };

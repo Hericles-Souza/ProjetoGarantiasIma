@@ -13,6 +13,7 @@ export interface GarantiaItem {
   status: string; 
   codigoStatus: GarantiasStatusEnum2;
   solicitarRessarcimento: boolean;
+  anexos?: string;
 }
 
 export interface GarantiasModel {

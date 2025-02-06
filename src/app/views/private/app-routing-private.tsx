@@ -17,16 +17,11 @@ export const appRoutingPrivate: RouteConfig[] = [
     element: <LayoutPrivate />,
     private: true,
     children: [
+      //Tela geral de garantias
       {
         path: "garantias",
         element: <Garantias />,
         private: true
-      },
-      {
-        path: "garantias/aci/:id",
-        element: <ScreenAcordoComercial />,
-        private: true,
-        allowedRoles: [UserRoleEnum.Admin]
       },
       {
         path: "garantias/rgi/:id",
@@ -34,14 +29,26 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
       },
       {
+        path: "/garantias/rgi/details-itens-nf/:nf",
+        element: <DetailsItensNF />,
+        private: true,
+      },
+      {
         path: "InvoiceDetails",
         element: <InvoiceDetails />,
         private: true,
       },
+      //Tela de acordo comercial
       {
-        path: "/garantias/rgi/details-itens-nf/:nf",
-        element: <DetailsItensNF />,
+        path: "garantias/aci/:id",
+        element: <ScreenAcordoComercial />,
         private: true,
+        allowedRoles: [UserRoleEnum.Admin]
+      },
+      {
+        path: "acordo-commercial",
+        element: <ScreenAcordoComercial />, 
+        private: true, 
       },
       {
         path: "users",
@@ -62,15 +69,11 @@ export const appRoutingPrivate: RouteConfig[] = [
         allowedRoles: [UserRoleEnum.Supervisor]
       }, 
       {
-        path: "acordo-commercial",
-        element: <ScreenAcordoComercial />, 
-        private: true, 
-      },
-      {
         path: "technical-and-supervisor/details-itens",
         element: <ScreenDetailsItensTradeAgreement />,
         private: true,
       },
+
     ]
   }
 ]

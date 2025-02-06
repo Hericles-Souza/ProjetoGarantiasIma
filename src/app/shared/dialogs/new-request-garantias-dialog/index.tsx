@@ -1,17 +1,68 @@
-import {useContext, useEffect, useRef, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {Button, Divider, Form} from 'antd';
-import {Input} from "@shared/components/input/index.tsx";
+import React, { useContext, useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Divider, Form, Upload } from 'antd';
+import { Input } from "@shared/components/input/index.tsx";
 import styles from './new-request-garantias.module.css';
 import { GarantiasStatusEnum2 } from '@shared/enums/GarantiasStatusEnum';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 import { GarantiaItem, GarantiasModel } from '@shared/models/GarantiasModel';
 import { createGarantiaAsync } from '@shared/services/GarantiasService';
-import api from '@shared/Interceptors/index.ts';
+import api from '@shared/Interceptors';
+import { FileOutlined, InboxOutlined } from '@ant-design/icons';
+
+// Enum para controlar as abas
 enum FilterStatus {
   GARANTIAS = 'garantias',
   ACORDO = 'acordo',
 }
+
+// Componente FileAttachment – dispara a callback onFileSelect com o arquivo escolhido
+interface FileAttachmentProps {
+  label: string;
+  backgroundColor?: string;
+  onFileSelect?: (file: File) => void;
+  required?: boolean;
+}
+const FileAttachment: React.FC<FileAttachmentProps> = ({ label, backgroundColor, onFileSelect }) => {
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      setFileName(file.name);
+      if (onFileSelect) {
+        onFileSelect(file);
+      }
+    }
+  };
+
+  return (
+    <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
+      <span className={styles.labelAnexo}>{label}</span>
+      <div className={styles.fileUpdateContent}>
+        {fileName && (
+          <span className={styles.fileName}>
+            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} /> {fileName}
+            <button
+              className={styles.buttonRemoveUpload}
+              onClick={() => setFileName(null)}
+            >
+              x
+            </button>
+          </span>
+        )}
+        <label className={styles.buttonUpdateNfSale}>
+          <input
+            type="file"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+          Adicionar Anexo
+        </label>
+      </div>
+    </div>
+  );
+};
 
 const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   const [form] = Form.useForm();
@@ -19,102 +70,113 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   const [currentTab, setCurrentTab] = useState(FilterStatus.GARANTIAS);
   const [indicatorWidth, setIndicatorWidth] = useState(0);
   const [garantiasFieldsFilled, setGarantiasFieldsFilled] = useState(false);
+  const [fileList, setFileList] = useState<any[]>([]);
   const garantiaButtonRef = useRef<HTMLButtonElement>(null);
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const context = useContext(AuthContext);
-  var numNota :string = '';
-  let file :File;
+
+
+  // Estado para armazenar o arquivo selecionado
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // Variável para capturar o valor digitado em "N° NF de origem"
+  let numNota: string = '';
 
   const handleSubmit = async (values: Record<string, any>) => {
     setIsSubmitting(true);
     try {
-      console.log('Criando solicitação:', values);
       if (currentTab === FilterStatus.ACORDO) {
-        // Se o cadastro for na aba Acordo, apenas navega para a próxima tela
-        navigate('/acordo-commercial', { state: { "N° NF de origem": values["N° NF de origem"] } });
-      } else {
-        onClose();
+        navigate('/acordo-commercial', {
+          state: { "N° NF de origem": values["N° NF de origem"] }
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Erro ao criar solicitação:', error);
+
+      // 1. Gere o ID do item de garantia para ser usado em ambos os fluxos
+      const garantiaItemId = crypto.randomUUID();
+
+      // 2. Construa o item de garantia usando o ID gerado
+      const garantiaItem: GarantiaItem = {
+        codigoItem: "000920000090",
+        tipoDefeito: "Defeito mecânico",
+        modeloVeiculoAplicado: "veiculo XYZ",
+        torqueAplicado: 100,
+        nfReferencia: values["N° NF de origem"],
+        loteItemOficial: "LOTE123",
+        loteItem: "LOTE456",
+        codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+        solicitarRessarcimento: false,
+        id: garantiaItemId,
+        rgi: context.user.codigoCigam,
+        status: GarantiasStatusEnum2.NAO_ENVIADO.toString(),
+      };
+
+      // 3. Construa o objeto garantiaModel conforme o formato esperado
+      const garantiaPayload: GarantiasModel = {
+        razaoSocial: "Empresa XYZ",
+        telefone: "+55 11 98765-4321",
+        email: "cliente@empresa.com",
+        nf: values["N° NF de origem"],
+        fornecedor: "Fornecedor ABC",
+        codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+        observacao: "Garantia válida por 12 meses",
+        usuarioInsercao: "66001",
+        itens: [garantiaItem],
+      };
+
+      console.log('Enviando garantiaModel:', JSON.stringify(garantiaPayload, null, 2));
+
+      // 4. Crie a garantia (isso insere o item de garantia com o ID gerado)
+      const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
+      console.log('Garantia criada com sucesso:', guaranteeResponse.data);
+
+      // 5. Se houver arquivo selecionado, faça o upload agora, enviando o ID do item de garantia
+      if (selectedFile) {
+        const fileData = new FormData();
+        fileData.append("file", selectedFile);
+        fileData.append("userId", String(context.user.id));
+        // Envia o ID do item de garantia para satisfazer a restrição de chave estrangeira
+        fileData.append("garantia_item_id", garantiaItemId);
+
+        const uploadResponse = await api.post("/files/upload-private-file", fileData);
+        const uploadedFileName = uploadResponse.data.fileName;
+        console.log("Arquivo enviado com sucesso:", uploadedFileName);
+      }
+
+      // 6. Navegue para a próxima página (pode usar um identificador opcional para navegação)
+      const garantiaId = `${context.user.codigoCigam}-${Date.now()}`;
+      navigate(`/garantias/rgi/${garantiaId}`, {
+        state: {
+          garantiaData: garantiaPayload,
+          nf: values["N° NF de origem"],
+        },
+      });
+    } catch (error: any) {
+      console.error('Erro ao criar garantia:', error.response?.data || error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+
   const handleTabChange = (tab: FilterStatus) => {
     setCurrentTab(tab);
   };
 
-  const handleFieldChange = (changedValues: unknown, allValues: unknown) => {
+  const handleFieldChange = (changedValues: unknown, allValues: any) => {
     if (currentTab === FilterStatus.GARANTIAS) {
-      const isFilled = !!allValues['N° NF de origem'] && !!allValues['garantiaAnexo'];
+      const isFilled = !!allValues['N° NF de origem'];
       setGarantiasFieldsFilled(isFilled);
     }
   };
 
-  const onClickCreate = async (allValues: unknown) => {
-    // Se a aba atual for Acordo, não envia para o endpoint Garantias.
-    if (currentTab !== FilterStatus.GARANTIAS) return;
-
-    const garantiaItem: GarantiaItem = {
-      codigoItem: "000920000090",
-      tipoDefeito: "Defeito mecânico",
-      modeloVeiculoAplicado: "veiculo XYZ",
-      torqueAplicado: 100,
-      nfReferencia: "12345",
-      loteItemOficial: "LOTE123",
-      loteItem: "LOTE456",
-      codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
-      solicitarRessarcimento: false,
-      id: '',
-      rgi: '',
-      status: ''
-    };
-    const garantiaItens: GarantiaItem[] = [];
-    garantiaItens.push(garantiaItem);
-    console.log("teste");
-    var dateNow: Date = new Date();
-    var dateFormatted: string = dateNow.getDay() + "/" + dateNow.getMonth() + "/" + dateNow.getFullYear();
-    console.log(dateFormatted);
-
-    const garantiaModel: GarantiasModel = {
-      email: context.user.email,
-      nf: numNota,
-      razaoSocial: context.user.username,
-      createdAt: dateFormatted,
-      dataAtualizacao: dateFormatted,
-      data: dateFormatted,
-      updatedAt: dateFormatted,
-      usuarioAtualizacao: context.user.fullname,
-      usuarioInsercao: context.user.fullname,
-      codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
-      itens: garantiaItens,
-      telefone: context.user.phone,
-      fornecedor: "asdasdsa",
-      observacao: "adasdasd"
-    };
-    console.log("garantia: " + JSON.stringify(garantiaModel));
-
-    await createGarantiaAsync(garantiaModel).then((value) => console.log(value));
-
-    console.log(numNota);
-    console.log(file);
-  };
-
-  const onChangeValueNumNota = (evt) => {
+  const onChangeValueNumNota = (evt: React.ChangeEvent<HTMLInputElement>) => {
     numNota = evt.target.value;
   };
 
-  const onChangeValueFile = (evt) => {
-    file = evt.target.files[0];
-  };
-
   useEffect(() => {
-    const activeButtonRef =
-      currentTab === FilterStatus.GARANTIAS ? garantiaButtonRef : acordoButtonRef;
-
+    const activeButtonRef = currentTab === FilterStatus.GARANTIAS ? garantiaButtonRef : acordoButtonRef;
     if (activeButtonRef.current) {
       setIndicatorWidth(activeButtonRef.current.offsetWidth);
     }
@@ -144,7 +206,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
               className={styles.tabsIndicator}
               style={{
                 left: currentTab === FilterStatus.GARANTIAS ? '1.4%' : '54%',
-                width: `${indicatorWidth + 4}px`,
+                width: `${indicatorWidth + 4}px`
               }}
             >
               <div className={styles.tabsIndicatorInner}></div>
@@ -155,7 +217,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
       </header>
       <main className={styles.main}>
         <Form
-          id="new-request-form" // vincula o botão submit
+          id="new-request-form"
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
@@ -164,7 +226,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
         >
           {currentTab === FilterStatus.GARANTIAS && (
             <div className={styles.requiredFieldsContainer}>
-              {currentTab === FilterStatus.GARANTIAS && !garantiasFieldsFilled && (
+              {!garantiasFieldsFilled && (
                 <p className={styles.requiredFields}>
                   Preencha todos os campos obrigatórios para salvar
                 </p>
@@ -182,39 +244,58 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
                   style={{
                     height: '55px',
                     fontSize: '18px',
-                    borderRadius: '15px',
+                    borderRadius: '15px'
                   }}
                   className={styles.input}
                 />
               </Form.Item>
-              <Form.Item
-                style={{ margin: 0 }}
-                name="garantiaAnexo"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => e?.fileList}
-                rules={[{ required: true, message: 'Anexo é obrigatório' }]}
+              <Upload.Dragger
+                name="file"
+                multiple={false}
+                fileList={fileList}
+                showUploadList={{
+                  showRemoveIcon: true,
+                  showDownloadIcon: false
+                }}
+                onRemove={() => {
+                  setFileList([]);
+                  setSelectedFile(null);
+                }}
+                beforeUpload={(file) => {
+                  setSelectedFile(file);
+                  setFileList([{
+                    uid: '-1',
+                    name: file.name,
+                    status: 'done',
+                    url: URL.createObjectURL(file)
+                  }]);
+                  return false;
+                }}
+                style={{
+                  background: '#f5f5f5',
+                  border: '2px dashed #d9d9d9',
+                  borderRadius: '8px',
+                  padding: '20px',
+                  transition: 'all 0.3s',
+                  cursor: 'pointer',
+                }}
               >
-                <div className={styles.anexoVenda}>
-                  <p>Anexo da NF de venda</p>
-                  <Button
-                    className={`${styles.button} ${styles.secondary}`}
-                    type="default"
-                    onClick={() => document.getElementById('garantiaFileInput')?.click()}
-                  >
-                    ANEXAR
-                  </Button>
-                  <input
-                    onChange={onChangeValueFile}
-                    id="garantiaFileInput"
-                    type="file"
-                    style={{ display: 'none' }}
-                    accept=".pdf,.png,.jpg"
-                  />
-                </div>
-              </Form.Item>
+                {fileList.length === 0 && (
+                  <>
+                    <p className="ant-upload-drag-icon">
+                      <InboxOutlined style={{ color: '#ff0000', fontSize: '32px' }} />
+                    </p>
+                    <p className="ant-upload-text" style={{ color: '#595959' }}>
+                      Anexo da NF de venda *
+                    </p>
+                    <p className="ant-upload-hint" style={{ color: '#8c8c8c' }}>
+                      Clique ou arraste o arquivo para esta área
+                    </p>
+                  </>
+                )}
+              </Upload.Dragger>
             </div>
           )}
-
           {currentTab === FilterStatus.ACORDO && (
             <div className={styles.requiredFieldsContainer}>
               <h3>ACI N° 000666-00150</h3>
@@ -229,7 +310,7 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
                   style={{
                     height: '55px',
                     fontSize: '18px',
-                    borderRadius: '15px',
+                    borderRadius: '15px'
                   }}
                   className={styles.input}
                 />
@@ -254,7 +335,6 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
           form="new-request-form"
           loading={isSubmitting}
           disabled={isSubmitting}
-          onClick={onClickCreate}
         >
           {isSubmitting ? 'Enviando...' : 'Criar'}
         </Button>
@@ -263,4 +343,4 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-export default NewRequestGarantiasDialog; 
+export default NewRequestGarantiasDialog;

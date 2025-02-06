@@ -23,9 +23,12 @@ export const updateGarantiasHeaderByIdAsync = (data: GarantiasModel) => {
   return api.put(`garantias/garantiasHeader/${data.id}/UpdateHeader`, data);
 }
 
-export const updateGarantiaItemByIdAsync = (id: string, data: GarantiaItem) => {
-  return api.put(`garantias/garantiasHeader/${id}/UpdateItem`, data);
-}
+export const updateGarantiaItemByIdAsync = (garantiaId: string, data: GarantiaItem) => {
+  if (!garantiaId) {
+    throw new Error('ID da garantia é obrigatório');
+  }
+  return api.put(`/garantias/garantiasItem/${garantiaId}/UpdateItem`, data);
+};
 
 export const getGarantiasPaginationAsync = (page: number, limit: number, search?: string) => {
 
