@@ -151,17 +151,35 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("ID da garantia não encontrado");
       return;
     }
-  
+
     try {
-      // Usar o endpoint correto para atualizar a garantia
-      const response = await api.put(`/garantias/${cardData.id}`, {
-        ...cardData,
+      console.log("Garantia ID:", cardData.id); // Debug log
+
+      const updatePayload = {
+        codigoItem: cardData.itens?.[0].codigoItem || "",
+        tipoDefeito: cardData.itens?.[0].tipoDefeito || "",
+        modeloVeiculoAplicado: cardData.itens?.[0].modeloVeiculoAplicado || "",
+        torqueAplicado: cardData.itens?.[0].torqueAplicado || 0,
+        nfReferencia: cardData.nf || "",
+        loteItemOficial: cardData.itens?.[0].loteItemOficial || "",
+        loteItem: cardData.itens?.[0].loteItem || "",
         codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
-        status: GarantiasStatusEnum2.EM_ANALISE.toString()
-      });
-  
+        solicitarRessarcimento: cardData.itens?.[0].solicitarRessarcimento || false
+      };
+
+      // Corrigindo o endpoint para usar o ID do item ao invés do ID da garantia
+      const itemId = cardData.itens?.[0]?.id;
+      if (!itemId) {
+        message.error("ID do item não encontrado");
+        return;
+      }
+
+      const response = await api.put(
+        `/garantias/garantiasItem/${itemId}/UpdateItem`,
+        updatePayload
+      );
+
       if (response.status === 200) {
-        // Atualiza o estado local
         setCardData({
           ...cardData,
           codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
