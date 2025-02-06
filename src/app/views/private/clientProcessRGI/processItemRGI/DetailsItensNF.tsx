@@ -11,12 +11,16 @@ import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { GarantiaItem } from "@shared/models/GarantiasModel";
 import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
 
-const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundColor?: string }) => {
+const FileAttachment = ({ label, itemCount, backgroundColor }: { label: string; itemCount:number, backgroundColor?: string }) => {
   const [fileName, setFileName] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFileName(event.target.files[0].name);
+      console.log(event.target.files, 'numero de uploads')
+      console.log(itemCount+1, 'numero maximo')
+      console.log(label, 'label')
+      
+      return setFileName(event.target.files[0].name);
     }
   };
 
@@ -96,7 +100,9 @@ const DetailsItensNF: React.FC = () => {
       anoVeiculo: '',
       torquePeca: '',
       isReimbursementChecked: false,
-      anexos: []
+      anexos: [],
+      anexoNfVenda: [],
+      anexoNfReferencia: [],
     }
   ]);
   const [visibleSectionId, setVisibleSectionId] = useState<number | null>(1); 
@@ -133,7 +139,9 @@ const DetailsItensNF: React.FC = () => {
         anoVeiculo: "",          // Inicializa com um valor vazio
         torquePeca: "",         // Inicializa com um valor vazio
         isReimbursementChecked: false,  // Inicializa com o valor padrão do checkbox
-        anexos: []               // Inicializa com um array vazio para anexos
+        anexos: [],               // Inicializa com um array vazio para anexos
+        anexoNfVenda: [],         
+        anexoNfReferencia: [],
       }
     ]);    setVisibleSectionId(newItemId); 
   };
@@ -300,7 +308,7 @@ const DetailsItensNF: React.FC = () => {
             <h3 className={styles.tituloA}>Anexos de Imagens</h3>
             {["1. Foto do lado onde está a gravação IMA:", "2. Foto da parte danificada/amassada/quebrada:", "3. Foto marcações suspeitas na peça:", "4. Foto da peça completa:", "5. Outras fotos pertinentes:"].map(
               (item) => (
-                <FileAttachment label={item} backgroundColor="white" />
+                <FileAttachment label={item} itemCount={1} backgroundColor="white" />
               )
             )}
           </CollapsibleSection>
