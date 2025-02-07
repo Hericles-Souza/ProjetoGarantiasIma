@@ -41,6 +41,7 @@ interface FileAttachmentProps {
   backgroundColor: string;
   garantiaItemId?: string;
   initialFileData?: FileData;
+  onFileSelect?: (file: File) => void;
 }
 
 const FileAttachment: React.FC<FileAttachmentProps> = ({
@@ -48,44 +49,55 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   backgroundColor,
   garantiaItemId,
   initialFileData,
+  onFileSelect,
 }) => {
-  const [fileData, setFileData] = useState<FileData | null>(
-    initialFileData || null
-  );
-  const [isLoading, setIsLoading] = useState(false);
+  // Estado que guarda os dados do arquivo (ID e nome)
+  const [fileData, setFileData] = useState<FileData | null>(initialFileData || null);
+  // Estado para armazenar o nome do arquivo selecionado
+  const [fileName, setFileName] = useState<string | null>(initialFileData ? initialFileData.fileName : null);
   const authContext = useContext(AuthContext);
 
   useEffect(() => {
     setFileData(initialFileData || null);
+    setFileName(initialFileData ? initialFileData.fileName : null);
   }, [initialFileData]);
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // Função para capturar o nome do arquivo assim que ele for selecionado
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
+      setFileName(file.name);
+      if (onFileSelect) {
+        onFileSelect(file);
+      }
+    }
+  };
+
+  // Função que realiza o upload do arquivo para o backend
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      // Define temporariamente o estado com o nome do arquivo
+      setFileData({ id: "", fileName: file.name });
       const formData = new FormData();
       formData.append("file", file);
-      if (authContext.user && authContext.user.id) {
-        formData.append("userId", String(authContext.user.id));
-      }
+      formData.append("userId", String(authContext.user?.id));
       if (garantiaItemId) {
         formData.append("garantia_item_id", garantiaItemId);
       }
       try {
-        const response = await api.post(
-          "/files/upload-private-file",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        const response = await api.post("/files/upload-private-file", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         if (response.status === 201) {
+          // Mesmo que o backend não retorne o fileName, usa-se o file.name
           const uploadedFileData: FileData = {
-            id: response.data.id, // O backend deve retornar o ID do arquivo
+            id: response.data.id,
             fileName: response.data.fileName || file.name,
           };
           setFileData(uploadedFileData);
+          setFileName(uploadedFileData.fileName);
           message.success("Arquivo enviado com sucesso!");
-          // Opcional: atualizar o registro da garantia com esses dados
         } else {
           message.error("Erro ao enviar arquivo.");
         }
@@ -96,16 +108,14 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
+  // Função para baixar o arquivo já enviado
   const handleDownload = async () => {
     if (!fileData) {
       message.error("Nenhum arquivo para download.");
       return;
     }
     try {
-      const response = await api.get(
-        `/files-ById/download-private-byId/${fileData.id}`,
-        { responseType: "blob" }
-      );
+      const response = await api.get(`/files-ById/download-private-byId/${fileData.id}`, { responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -119,21 +129,20 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
+  // Função para remover o arquivo da interface (opcionalmente você pode chamar um endpoint para remover o arquivo no backend)
   const handleRemoveFile = () => {
     setFileData(null);
-    // Opcional: chamar endpoint para remover a referência do arquivo no backend
+    setFileName(null);
   };
 
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
-        {isLoading ? (
-          <span>Verificando arquivo...</span>
-        ) : fileData ? (
+        {fileData ? (
+          // Se já houver arquivo (upload concluído), exibe o nome e os botões de download e remoção
           <span className={styles.fileName}>
-            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-            {fileData.fileName}
+            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} /> {fileData.fileName}
             <Button
               type="link"
               onClick={handleDownload}
@@ -148,11 +157,15 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             />
           </span>
         ) : (
+          // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
           <label className={styles.buttonUpdateNfSale}>
             <input
               type="file"
               style={{ display: "none" }}
-              onChange={handleFileUpload}
+              onChange={(e) => {
+                handleFileChange(e);
+                handleFileUpload(e);
+              }}
             />
             Adicionar Anexo
           </label>
@@ -161,6 +174,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     </div>
   );
 };
+
 
 const CollapsibleSection = ({
   title,
@@ -432,7 +446,7 @@ const DetailsItensNF: React.FC = () => {
           <Button
             type="default"
             className={styles.ButtonDelete}
-            onClick={handleDeleteGuarantee} 
+            onClick={handleDeleteGuarantee}
           >
             EXCLUIR
           </Button>
