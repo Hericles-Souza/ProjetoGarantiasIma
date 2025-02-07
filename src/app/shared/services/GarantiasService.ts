@@ -23,7 +23,7 @@ export const updateGarantiasHeaderByIdAsync = (data: GarantiasModel) => {
   return api.put(`garantias/garantiasHeader/${data.id}/UpdateHeader`, data);
 }
 
-export const updateGarantiaItemByIdAsync = (garantiaId: string, data: GarantiaItem) => {
+export const updateGarantiaItemByIdAsync = (garantiaId: string, id: string, data: GarantiaItem) => {
   if (!garantiaId) {
     throw new Error('ID da garantia é obrigatório');
   }

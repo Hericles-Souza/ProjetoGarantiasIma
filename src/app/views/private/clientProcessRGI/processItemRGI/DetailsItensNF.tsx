@@ -1,17 +1,30 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Modal } from "antd";
-import { DownOutlined, DeleteOutlined, LeftOutlined, InfoCircleOutlined, FileOutlined, RightOutlined } from "@ant-design/icons";
+import { Button, message, Modal } from "antd";
+import {
+  DownOutlined,
+  DeleteOutlined,
+  LeftOutlined,
+  InfoCircleOutlined,
+  FileOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
 import styles from "./DetailsItensNF.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
-import { AuthContext } from "@shared/contexts/Auth/AuthContext";
-import { GarantiasStatusEnum2, converterStringParaStatusGarantia } from "@shared/enums/GarantiasStatusEnum";
+import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
 import { updateGarantiaItemByIdAsync, getGarantiaByIdAsync } from "@shared/services/GarantiasService";
+import api from "@shared/Interceptors";
 
-const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundColor?: string }) => {
+const FileAttachment = ({
+  label,
+  backgroundColor,
+}: {
+  label: string;
+  backgroundColor?: string;
+}) => {
   const [fileName, setFileName] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,13 +40,20 @@ const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundC
         {fileName && (
           <span className={styles.fileName}>
             <FileOutlined style={{ color: "red", paddingLeft: "5px" }} /> {fileName}
-            <button className={styles.buttonRemoveUpload} onClick={() => setFileName(null)}>
+            <button
+              className={styles.buttonRemoveUpload}
+              onClick={() => setFileName(null)}
+            >
               x
             </button>
           </span>
         )}
         <label className={styles.buttonUpdateNfSale}>
-          <input type="file" style={{ display: "none" }} onChange={handleFileChange} />
+          <input
+            type="file"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
           Adicionar Anexo
         </label>
       </div>
@@ -42,9 +62,8 @@ const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundC
 };
 
 const formatRgiWithSequence = (rgi: string, letter: string, sequence: number) => {
-  return `${rgi}.${letter}.${sequence.toString().padStart(2, '0')}`;
+  return `${rgi}.${letter}.${sequence.toString().padStart(2, "0")}`;
 };
-
 
 const CollapsibleSection = ({
   title,
@@ -65,14 +84,25 @@ const CollapsibleSection = ({
     <div className={styles.tituloSecaoContainer}>
       <h3 className={styles.tituloSecaoVermelho}>
         {title}{" "}
-        <span className={status === "Autorizado" ? styles.statusAuthorized : styles.statusRejected}>
+        <span
+          className={
+            status === "Autorizado"
+              ? styles.statusAuthorized
+              : styles.statusRejected
+          }
+        >
           {status}
         </span>
       </h3>
       <div className={styles.iconAndArrow}>
         <DeleteOutlined
           className={styles.DeleteOutlined}
-          style={{ color: "#555", fontSize: "22px", cursor: "pointer", marginRight: "15px" }}
+          style={{
+            color: "#555",
+            fontSize: "22px",
+            cursor: "pointer",
+            marginRight: "15px",
+          }}
           onClick={showDeleteConfirm}
         />
         <Button
@@ -88,38 +118,36 @@ const CollapsibleSection = ({
 );
 
 const DetailsItensNF: React.FC = () => {
-  // Estado local para os itens da NF (dados oriundos do backend)
-  const [items, setItems] = useState<{
-    id: string;
-    title: string;
-    codigoPeca: string;
-    lotePeca: string;
-    status: string;
-    tipoDefeito: string; // Changed from defeito to match backend
-    modeloVeiculo: string;
-    anoVeiculo: string;
-    torquePeca: string;
-    isReimbursementChecked: boolean;
-    anexos: string;
-    rgi: string;
-  }[]>([]);
+  // Extraímos o ID da garantia da URL
+  const { id: guaranteeId } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
 
+  // Estado para os itens da garantia
+  const [items, setItems] = useState<
+    Array<{
+      id: string;
+      title: string;
+      codigoPeca: string;
+      lotePeca: string;
+      status: string;
+      tipoDefeito: string;
+      modeloVeiculo: string;
+      anoVeiculo: string;
+      torquePeca: string;
+      isReimbursementChecked: boolean;
+      anexos: string;
+      rgi: string;
+    }>
+  >([]);
   const [visibleSectionId, setVisibleSectionId] = useState<string | null>(null);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
-  const [formattedRgi, setFormattedRgi] = useState('');
-
-  const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const location = useLocation();
-
-  // Obter o ID da garantia a partir do location.state ou da URL
-  const garantiaIdFromState = location.state?.garantiaId || id;
-  // Estado para armazenar os dados completos da garantia (incluindo RGI, NF, etc.)
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
 
-  // Declaração de handleInputChange para atualizar os itens localmente
+  // Obtém a letra do RGI do state ou define "A" como padrão
+  const rgiLetter = (location.state as any)?.rgiLetter || "A";
+
   const handleInputChange = (itemId: string, field: string, value: any) => {
     setItems((prevItems) =>
       prevItems.map((item) =>
@@ -129,39 +157,31 @@ const DetailsItensNF: React.FC = () => {
   };
 
   useEffect(() => {
-    if (location.state?.rgiLetter && garantia?.rgi) {
-      const sequence = (items.length + 1).toString().padStart(2, '0');
-      setFormattedRgi(`${garantia.rgi}.${location.state.rgiLetter}.${sequence}`);
-    }
-  }, [location.state?.rgiLetter, garantia?.rgi, items.length]);
-
-  // Carrega os dados da garantia: se os dados vierem via location.state, utiliza-os; caso contrário, busca do backend
-  useEffect(() => {
     const loadGarantiaData = async () => {
       try {
         let data: GarantiasModel | null = null;
         if (location.state && "garantiaData" in location.state) {
           data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
-        } else if (garantiaIdFromState) {
-          const response = await getGarantiaByIdAsync(garantiaIdFromState);
+        } else if (guaranteeId) {
+          const response = await getGarantiaByIdAsync(guaranteeId);
           data = response.data;
         }
         if (data) {
           setGarantia(data);
-          // Transformação dos itens vindo do backend; usamos os campos "id" e "rgi" conforme retornados
-          const transformedItems = data.itens.map((item) => ({
+          const transformedItems = data.itens.map((item, idx) => ({
             id: item.id,
             title: item.codigoItem || "",
             codigoPeca: item.codigoItem || "",
             lotePeca: item.loteItem || "",
             status: item.codigoStatus ? item.codigoStatus.toString() : "",
-            tipoDefeito: item.tipoDefeito || "", // Ensure default value
+            tipoDefeito: item.tipoDefeito || "",
             modeloVeiculo: item.modeloVeiculoAplicado || "",
             anoVeiculo: item.nfReferencia || "",
             torquePeca: item.torqueAplicado?.toString() || "",
             isReimbursementChecked: item.solicitarRessarcimento === false,
             anexos: item.anexos || "",
-            rgi: item.rgi,
+            // Caso o item não tenha rgi, define-o com base na sequência (index + 1)
+            rgi: item.rgi || formatRgiWithSequence(data.rgi, rgiLetter, idx + 1),
           }));
           setItems(transformedItems);
           if (transformedItems.length > 0) {
@@ -174,11 +194,12 @@ const DetailsItensNF: React.FC = () => {
     };
 
     loadGarantiaData();
-  }, [location.state, garantiaIdFromState]);
+  }, [location.state, guaranteeId, rgiLetter]);
 
   const addNewItem = () => {
-    // Permite a adição local (para criação manual, se necessário)
     const newItemId = crypto.randomUUID();
+    const sequence = items.length + 1;
+    const newItemRgi = garantia ? formatRgiWithSequence(garantia.rgi, rgiLetter, sequence) : "";
     setItems([
       ...items,
       {
@@ -187,13 +208,13 @@ const DetailsItensNF: React.FC = () => {
         codigoPeca: "",
         lotePeca: "",
         status: "Autorizado",
-        tipoDefeito: undefined,
+        tipoDefeito: "",
         modeloVeiculo: "",
         anoVeiculo: "",
         torquePeca: "",
         isReimbursementChecked: false,
         anexos: "",
-        rgi: "",
+        rgi: newItemRgi,
       },
     ]);
     setVisibleSectionId(newItemId);
@@ -219,46 +240,50 @@ const DetailsItensNF: React.FC = () => {
     setVisibleSectionId(visibleSectionId === id ? null : id);
   };
 
-  const rgiLetter = location.state?.rgiLetter || 'A';
-
-
-  // Função para atualizar os itens da garantia (envio para o backend)
   const send = async () => {
-    if (!garantiaIdFromState) {
-      console.error("ID da garantia não encontrado");
+    if (!garantia?.id) {
+      message.error("ID da garantia não encontrado");
       return;
     }
-
+  
+    // Utiliza o ID do primeiro item da garantia para atualizar
+    const itemId = garantia?.itens?.[0]?.id;
+    if (!itemId) {
+      message.error("ID do item não encontrado");
+      return;
+    }
+  
+    // Payload com os campos conforme o exemplo (apenas os campos, sem os valores reais)
+    const payload = {
+      codigoItem: items[0].codigoPeca,
+      tipoDefeito: items[0].tipoDefeito,
+      modeloVeiculoAplicado: items[0].modeloVeiculo,
+      torqueAplicado: Number(items[0].torquePeca) || 0,
+      nfReferencia: items[0].anoVeiculo,
+      loteItemOficial: items[0].lotePeca,
+      loteItem: items[0].lotePeca,
+      codigoStatus: items[0].status === "Autorizado" ? GarantiasStatusEnum2.NAO_ENVIADO : GarantiasStatusEnum2.EM_ANALISE,
+      solicitarRessarcimento: items[0].isReimbursementChecked ? 1 : 0,
+    };
+  
     try {
-      const promises = items.map(async (element) => {
-        const item: GarantiaItem = {
-          codigoItem: element.codigoPeca,
-          tipoDefeito: element.tipoDefeito || "",
-          modeloVeiculoAplicado: element.modeloVeiculo,
-          torqueAplicado: Number(element.torquePeca) || 0,
-          nfReferencia: element.anoVeiculo,
-          loteItemOficial: element.lotePeca,
-          loteItem: element.lotePeca,
-          codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
-          solicitarRessarcimento: element.isReimbursementChecked,
-          id: element.id,
-          rgi: element.rgi,
-          status: GarantiasStatusEnum2[GarantiasStatusEnum2.NAO_ENVIADO],
-        };
-
-        const response = await updateGarantiaItemByIdAsync(element.id, item);
-        if (response.data && response.data.success === false) {
-          throw new Error(response.data.error || "Erro ao atualizar o item");
-        }
-        return response;
-      });
-
-      await Promise.all(promises);
-      console.log("Todos os itens foram atualizados com sucesso");
+      const response = await api.put(
+        `/garantias/garantiasItem/${itemId}/UpdateItem`,
+        payload
+      );
+  
+      if (response.status === 200) {
+        message.success("Garantia atualizada com sucesso!");
+        navigate("/garantias");
+      } else {
+        message.error("Erro ao atualizar a garantia.");
+      }
     } catch (error) {
-      console.error("Erro ao atualizar itens:", error);
+      console.error("Erro ao atualizar a garantia:", error);
+      message.error("Erro ao atualizar a garantia.");
     }
   };
+  
 
   return (
     <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
@@ -266,12 +291,14 @@ const DetailsItensNF: React.FC = () => {
         <Button
           type="link"
           className={styles.ButtonBack}
-          onClick={() => navigate(`/garantias/rgi/${garantiaIdFromState}`, {
-            state: {
-              garantiaData: garantia,
-              nf: garantia?.nf
-            }
-          })}
+          onClick={() =>
+            navigate(`/garantias/rgi/${guaranteeId}`, {
+              state: {
+                garantiaData: garantia,
+                nf: garantia?.nf,
+              },
+            })
+          }
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
@@ -280,7 +307,9 @@ const DetailsItensNF: React.FC = () => {
         </span>
       </div>
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>RGI {garantia?.rgi}.{rgiLetter}</h1>
+        <h1 className={styles.tituloRgi}>
+          RGI {garantia?.rgi}.{rgiLetter}
+        </h1>
         <div className={styles.botoesCabecalho}>
           <Button type="default" className={styles.ButtonDelete}>
             EXCLUIR
@@ -293,10 +322,18 @@ const DetailsItensNF: React.FC = () => {
       <hr className={styles.divisor} />
       <FileAttachment label="Anexo da NF de venda" backgroundColor="#f5f5f5" />
       <div className={styles.TitleItens}>
-        <h3 className={styles.nfsTitle}>Itens desta NF associados a esta garantia</h3>
+        <h3 className={styles.nfsTitle}>
+          Itens desta NF associados a esta garantia
+        </h3>
         <Button
           className={styles.buttonRed}
-          style={{ backgroundColor: "red", borderRadius: "10px", height: "45px", padding: "0px 25px", outline: "none" }}
+          style={{
+            backgroundColor: "red",
+            borderRadius: "10px",
+            height: "45px",
+            padding: "0px 25px",
+            outline: "none",
+          }}
           type="primary"
           onClick={addNewItem}
         >
@@ -312,7 +349,7 @@ const DetailsItensNF: React.FC = () => {
       {items.map((item, index) => (
         <div className={styles.containerInformacoes} key={item.id}>
           <CollapsibleSection
-            title={formatRgiWithSequence(garantia?.rgi || '', rgiLetter, index + 1)}
+            title={formatRgiWithSequence(garantia?.rgi || "", rgiLetter, index + 1)}
             isVisible={visibleSectionId === item.id}
             toggleVisibility={() => toggleSectionVisibility(item.id)}
             showDeleteConfirm={() => showDeleteConfirm(item.id)}
@@ -326,7 +363,9 @@ const DetailsItensNF: React.FC = () => {
                     label="Código da peça"
                     fullWidth
                     value={item.codigoPeca}
-                    onChange={(e) => handleInputChange(item.id, "codigoPeca", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(item.id, "codigoPeca", e.target.value)
+                    }
                   />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
@@ -334,7 +373,9 @@ const DetailsItensNF: React.FC = () => {
                     label="Lote da peça"
                     fullWidth
                     value={item.lotePeca}
-                    onChange={(e) => handleInputChange(item.id, "lotePeca", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(item.id, "lotePeca", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -349,7 +390,9 @@ const DetailsItensNF: React.FC = () => {
                       { value: "Opção 3", label: "Opção 3" },
                     ]}
                     value={item.tipoDefeito}
-                    onChange={(e) => handleInputChange(item.id, "tipoDefeito", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(item.id, "tipoDefeito", e.target.value)
+                    }
                   />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 1 }}>
@@ -357,7 +400,9 @@ const DetailsItensNF: React.FC = () => {
                     label="Modelo do veículo que aplicou"
                     fullWidth
                     value={item.modeloVeiculo}
-                    onChange={(e) => handleInputChange(item.id, "modeloVeiculo", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(item.id, "modeloVeiculo", e.target.value)
+                    }
                   />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.3 }}>
@@ -365,7 +410,9 @@ const DetailsItensNF: React.FC = () => {
                     label="Ano do veículo"
                     fullWidth
                     value={item.anoVeiculo}
-                    onChange={(e) => handleInputChange(item.id, "anoVeiculo", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(item.id, "anoVeiculo", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -375,16 +422,22 @@ const DetailsItensNF: React.FC = () => {
                     label="Torque aplicado à peça"
                     fullWidth
                     value={item.torquePeca}
-                    onChange={(e) => handleInputChange(item.id, "torquePeca", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(item.id, "torquePeca", e.target.value)
+                    }
                   />
                 </div>
               </div>
               <div className={styles.checkboxContainer}>
                 <ColorCheckboxes
-                  onChange={(e) => handleInputChange(item.id, "isReimbursementChecked", e.target.checked)}
+                  onChange={(e) =>
+                    handleInputChange(item.id, "isReimbursementChecked", e.target.checked)
+                  }
                   checked={item.isReimbursementChecked}
                 />
-                <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
+                <label className={styles.checkboxDanger}>
+                  Solicitar ressarcimento
+                </label>
               </div>
             </div>
             <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />
@@ -403,13 +456,18 @@ const DetailsItensNF: React.FC = () => {
       ))}
       <Modal
         title="Confirmar Exclusão"
-        visible={modalDeleteOpen}
+        visible={modalDeleteOpen} 
         onOk={handleDeleteNF}
         onCancel={() => setModalDeleteOpen(false)}
         okText="Excluir"
         cancelText="Cancelar"
         okButtonProps={{
-          style: { backgroundColor: "red", borderColor: "red", color: "white", outline: "none" },
+          style: {
+            backgroundColor: "red",
+            borderColor: "red",
+            color: "white",
+            outline: "none",
+          },
         }}
         cancelButtonProps={{
           style: { borderColor: "#dadada", color: "#5F5A56", outline: "none" },

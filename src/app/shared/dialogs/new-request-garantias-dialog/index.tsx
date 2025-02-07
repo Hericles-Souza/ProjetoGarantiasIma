@@ -1,12 +1,12 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Divider, Form, Upload } from 'antd';
 import { Input } from "@shared/components/input/index.tsx";
 import styles from './new-request-garantias.module.css';
 import { GarantiasStatusEnum2 } from '@shared/enums/GarantiasStatusEnum';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 import { GarantiaItem, GarantiasModel } from '@shared/models/GarantiasModel';
-import { createGarantiaAsync } from '@shared/services/GarantiasService';
+import { createGarantiaAsync, getGarantiaByIdAsync } from '@shared/services/GarantiasService';
 import api from '@shared/Interceptors';
 import { FileOutlined, InboxOutlined } from '@ant-design/icons';
 
@@ -16,7 +16,7 @@ enum FilterStatus {
   ACORDO = 'acordo',
 }
 
-// Componente FileAttachment – dispara a callback onFileSelect com o arquivo escolhido
+// Componente FileAttachment – permite selecionar um arquivo
 interface FileAttachmentProps {
   label: string;
   backgroundColor?: string;
@@ -43,20 +43,13 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ label, backgroundColor,
         {fileName && (
           <span className={styles.fileName}>
             <FileOutlined style={{ color: "red", paddingLeft: "5px" }} /> {fileName}
-            <button
-              className={styles.buttonRemoveUpload}
-              onClick={() => setFileName(null)}
-            >
+            <button className={styles.buttonRemoveUpload} onClick={() => setFileName(null)}>
               x
             </button>
           </span>
         )}
         <label className={styles.buttonUpdateNfSale}>
-          <input
-            type="file"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
+          <input type="file" style={{ display: "none" }} onChange={handleFileChange} />
           Adicionar Anexo
         </label>
       </div>
@@ -64,7 +57,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ label, backgroundColor,
   );
 };
 
-const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
+const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTab, setCurrentTab] = useState(FilterStatus.GARANTIAS);
@@ -75,12 +68,32 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const context = useContext(AuthContext);
+  const location = useLocation();
+  const garantiaIdFromState =
+    location.state && "garantiaId" in location.state
+      ? (location.state as { garantiaId: string }).garantiaId
+      : null;
 
+  // Gera o próximo RGI baseado nas garantias existentes
+  const generateNextRGI = async () => {
+    try {
+      const response = await api.get("/garantias");
+      const allGarantias = response.data.data || [];
+      const existingRGIs = allGarantias
+        .map((g: any) => g.rgi)
+        .filter((rgi: string) => rgi?.startsWith(context.user.codigoCigam))
+        .map((rgi: string) => parseInt(rgi.split('-')[1]));
+      const lastNumber = Math.max(0, ...existingRGIs);
+      const nextNumber = (lastNumber + 1).toString().padStart(4, '0');
+      return `${context.user.codigoCigam}-${nextNumber}`;
+    } catch (error) {
+      console.error('Erro ao gerar RGI:', error);
+      return `${context.user.codigoCigam}-0001`;
+    }
+  };
 
   // Estado para armazenar o arquivo selecionado
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Variável para capturar o valor digitado em "N° NF de origem"
   let numNota: string = '';
 
   const handleSubmit = async (values: Record<string, any>) => {
@@ -93,10 +106,12 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
         return;
       }
 
-      // 1. Gere o ID do item de garantia para ser usado em ambos os fluxos
+      const newRGI = await generateNextRGI();
+
+      // 1. Gere o ID do item de garantia
       const garantiaItemId = crypto.randomUUID();
 
-      // 2. Construa o item de garantia usando o ID gerado
+      // 2. Construa o item de garantia
       const garantiaItem: GarantiaItem = {
         codigoItem: "000920000090",
         tipoDefeito: "Defeito mecânico",
@@ -110,10 +125,12 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
         id: garantiaItemId,
         rgi: context.user.codigoCigam,
         status: GarantiasStatusEnum2.NAO_ENVIADO.toString(),
+        codigoPeca: ''
       };
 
-      // 3. Construa o objeto garantiaModel conforme o formato esperado
+      // 3. Construa o objeto garantiaModel
       const garantiaPayload: GarantiasModel = {
+        rgi: newRGI,
         razaoSocial: "Empresa XYZ",
         telefone: "+55 11 98765-4321",
         email: "cliente@empresa.com",
@@ -127,30 +144,49 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
 
       console.log('Enviando garantiaModel:', JSON.stringify(garantiaPayload, null, 2));
 
-      // 4. Crie a garantia (isso insere o item de garantia com o ID gerado)
+      // 4. Cria a garantia via API
       const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
       console.log('Garantia criada com sucesso:', guaranteeResponse.data);
 
-      // 5. Se houver arquivo selecionado, faça o upload agora, enviando o ID do item de garantia
+      let createdGarantia: any = guaranteeResponse.data.data;
+      // Se a resposta for uma string, extraia o id
+      if (typeof createdGarantia === 'string') {
+        const match = createdGarantia.match(/id:([^\s]+)/);
+        if (match && match[1]) {
+          createdGarantia = { id: match[1] };
+        } else {
+          console.error('Invalid response format:', guaranteeResponse);
+          throw new Error('Resposta inválida da API ao criar garantia');
+        }
+      }
+
+      if (!createdGarantia || !createdGarantia.id) {
+        console.error('Invalid response:', guaranteeResponse);
+        throw new Error('Resposta inválida da API ao criar garantia');
+      }
+
+      // 5. Se houver arquivo selecionado, faça o upload
       if (selectedFile) {
         const fileData = new FormData();
         fileData.append("file", selectedFile);
         fileData.append("userId", String(context.user.id));
-        // Envia o ID do item de garantia para satisfazer a restrição de chave estrangeira
         fileData.append("garantia_item_id", garantiaItemId);
-
         const uploadResponse = await api.post("/files/upload-private-file", fileData);
-        const uploadedFileName = uploadResponse.data.fileName;
-        console.log("Arquivo enviado com sucesso:", uploadedFileName);
+        console.log("Arquivo enviado com sucesso:", uploadResponse.data.fileName);
       }
 
-      // 6. Navegue para a próxima página (pode usar um identificador opcional para navegação)
-      const garantiaId = `${context.user.codigoCigam}-${Date.now()}`;
-      navigate(`/garantias/rgi/${garantiaId}`, {
+      // Redireciona para a tela de detalhes, passando os dados via state
+      navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
         state: {
-          garantiaData: garantiaPayload,
-          nf: values["N° NF de origem"],
-        },
+          garantiaData: { ...garantiaPayload, id: createdGarantia.id },
+          garantiaId: createdGarantia.id,
+          currentNf: {
+            nf: values["N° NF de origem"],
+            itens: garantiaPayload.itens?.length || 0,
+            sequence: 1,
+          },
+          rgiLetter: 'A',
+        }
       });
     } catch (error: any) {
       console.error('Erro ao criar garantia:', error.response?.data || error);
@@ -158,7 +194,6 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
       setIsSubmitting(false);
     }
   };
-
 
   const handleTabChange = (tab: FilterStatus) => {
     setCurrentTab(tab);
@@ -181,6 +216,28 @@ const NewRequestGarantiasDialog = ({ onClose }: { onClose: () => void }) => {
       setIndicatorWidth(activeButtonRef.current.offsetWidth);
     }
   }, [currentTab]);
+
+  // Se necessário, carregue dados previamente salvos (opcional)
+  useEffect(() => {
+    const loadGarantiaData = async () => {
+      try {
+        let data: GarantiasModel | null = null;
+        if (location.state && "garantiaData" in location.state) {
+          data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
+        } else if (garantiaIdFromState) {
+          const response = await getGarantiaByIdAsync(garantiaIdFromState);
+          data = response.data;
+        }
+        if (data) {
+          // Se quiser atualizar algum estado com esses dados, faça-o aqui.
+        }
+      } catch (error) {
+        console.error("Error loading garantia data:", error);
+      }
+    };
+
+    loadGarantiaData();
+  }, [location.state, garantiaIdFromState]);
 
   return (
     <div className={styles.container}>

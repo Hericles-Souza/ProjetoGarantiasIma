@@ -1,6 +1,7 @@
 import {GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
 
 export interface GarantiaItem {
+  codigoPeca: string;
   id: string;
   rgi: string;
   codigoItem: string;
