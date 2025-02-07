@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, message, Modal } from "antd";
 import {
@@ -8,6 +8,7 @@ import {
   InfoCircleOutlined,
   FileOutlined,
   RightOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import styles from "./DetailsItensNF.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
@@ -17,52 +18,148 @@ import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
 import { updateGarantiaItemByIdAsync, getGarantiaByIdAsync } from "@shared/services/GarantiasService";
 import api from "@shared/Interceptors";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
-const FileAttachment = ({
+// Funções para formatação do RGI
+const formatMainRgi = (rgi: string, letter: string): string => {
+  const cleanRgi = rgi.split('.')[0];
+  return `${cleanRgi}.${letter}`;
+};
+
+const formatItemRgi = (rgi: string, letter: string, sequence: number): string => {
+  const cleanRgi = rgi.split('.')[0];
+  return `${cleanRgi}.${letter}.${sequence.toString().padStart(2, "0")}`;
+};
+
+interface FileData {
+  id: string;
+  fileName: string;
+}
+
+interface FileAttachmentProps {
+  label: string;
+  backgroundColor: string;
+  garantiaItemId?: string;
+  initialFileData?: FileData;
+}
+
+const FileAttachment: React.FC<FileAttachmentProps> = ({
   label,
   backgroundColor,
-}: {
-  label: string;
-  backgroundColor?: string;
+  garantiaItemId,
+  initialFileData,
 }) => {
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileData, setFileData] = useState<FileData | null>(
+    initialFileData || null
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const authContext = useContext(AuthContext);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    setFileData(initialFileData || null);
+  }, [initialFileData]);
+
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFileName(event.target.files[0].name);
+      const file = event.target.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
+      if (authContext.user && authContext.user.id) {
+        formData.append("userId", String(authContext.user.id));
+      }
+      if (garantiaItemId) {
+        formData.append("garantia_item_id", garantiaItemId);
+      }
+      try {
+        const response = await api.post(
+          "/files/upload-private-file",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        if (response.status === 201) {
+          const uploadedFileData: FileData = {
+            id: response.data.id, // O backend deve retornar o ID do arquivo
+            fileName: response.data.fileName || file.name,
+          };
+          setFileData(uploadedFileData);
+          message.success("Arquivo enviado com sucesso!");
+          // Opcional: atualizar o registro da garantia com esses dados
+        } else {
+          message.error("Erro ao enviar arquivo.");
+        }
+      } catch (error) {
+        console.error("Erro no upload do arquivo:", error);
+        message.error("Erro ao enviar arquivo.");
+      }
     }
+  };
+
+  const handleDownload = async () => {
+    if (!fileData) {
+      message.error("Nenhum arquivo para download.");
+      return;
+    }
+    try {
+      const response = await api.get(
+        `/files-ById/download-private-byId/${fileData.id}`,
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileData.fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      console.error("Erro no download do arquivo:", error);
+      message.error("Erro ao baixar o arquivo.");
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFileData(null);
+    // Opcional: chamar endpoint para remover a referência do arquivo no backend
   };
 
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
-        {fileName && (
+        {isLoading ? (
+          <span>Verificando arquivo...</span>
+        ) : fileData ? (
           <span className={styles.fileName}>
-            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} /> {fileName}
-            <button
-              className={styles.buttonRemoveUpload}
-              onClick={() => setFileName(null)}
-            >
-              x
-            </button>
+            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
+            {fileData.fileName}
+            <Button
+              type="link"
+              onClick={handleDownload}
+              icon={<DownloadOutlined />}
+              title="Baixar arquivo"
+            />
+            <Button
+              type="link"
+              onClick={handleRemoveFile}
+              icon={<DeleteOutlined />}
+              title="Remover arquivo"
+            />
           </span>
+        ) : (
+          <label className={styles.buttonUpdateNfSale}>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onChange={handleFileUpload}
+            />
+            Adicionar Anexo
+          </label>
         )}
-        <label className={styles.buttonUpdateNfSale}>
-          <input
-            type="file"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-          Adicionar Anexo
-        </label>
       </div>
     </div>
   );
-};
-
-const formatRgiWithSequence = (rgi: string, letter: string, sequence: number) => {
-  return `${rgi}.${letter}.${sequence.toString().padStart(2, "0")}`;
 };
 
 const CollapsibleSection = ({
@@ -72,6 +169,7 @@ const CollapsibleSection = ({
   showDeleteConfirm,
   children,
   status,
+  rgi,
 }: {
   title: string;
   isVisible: boolean;
@@ -79,11 +177,12 @@ const CollapsibleSection = ({
   showDeleteConfirm: () => void;
   children: React.ReactNode;
   status: string;
+  rgi: string;
 }) => (
   <div>
     <div className={styles.tituloSecaoContainer}>
       <h3 className={styles.tituloSecaoVermelho}>
-        {title}{" "}
+        {rgi}{" "}
         <span
           className={
             status === "Autorizado"
@@ -118,12 +217,10 @@ const CollapsibleSection = ({
 );
 
 const DetailsItensNF: React.FC = () => {
-  // Extraímos o ID da garantia da URL
   const { id: guaranteeId } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Estado para os itens da garantia
   const [items, setItems] = useState<
     Array<{
       id: string;
@@ -145,7 +242,6 @@ const DetailsItensNF: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
 
-  // Obtém a letra do RGI do state ou define "A" como padrão
   const rgiLetter = (location.state as any)?.rgiLetter || "A";
 
   const handleInputChange = (itemId: string, field: string, value: any) => {
@@ -156,17 +252,44 @@ const DetailsItensNF: React.FC = () => {
     );
   };
 
+  // Função para excluir a garantia
+  const handleDeleteGuarantee = async () => {
+    Modal.confirm({
+      title: "Confirmar Exclusão",
+      content: "Você tem certeza de que deseja excluir esta garantia?",
+      okText: "Excluir",
+      cancelText: "Cancelar",
+      onOk: async () => {
+        try {
+          const response = await api.delete(`/garantias/garantias/${garantia?.id}`);
+          if (response.status === 200) {
+            message.success("Garantia excluída com sucesso!");
+            navigate("/garantias");
+          } else {
+            message.error("Erro ao excluir a garantia.");
+          }
+        } catch (error) {
+          console.error("Erro ao excluir a garantia:", error);
+          message.error("Erro ao excluir a garantia.");
+        }
+      },
+    });
+  };
+
   useEffect(() => {
     const loadGarantiaData = async () => {
       try {
         let data: GarantiasModel | null = null;
         if (location.state && "garantiaData" in location.state) {
           data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
+          console.log("Dados recebidos via state:", data);
         } else if (guaranteeId) {
           const response = await getGarantiaByIdAsync(guaranteeId);
           data = response.data;
+          console.log("Dados recebidos via API:", data);
         }
         if (data) {
+          console.log("Anexos da garantia:", data.anexos);
           setGarantia(data);
           const transformedItems = data.itens.map((item, idx) => ({
             id: item.id,
@@ -180,8 +303,7 @@ const DetailsItensNF: React.FC = () => {
             torquePeca: item.torqueAplicado?.toString() || "",
             isReimbursementChecked: item.solicitarRessarcimento === false,
             anexos: item.anexos || "",
-            // Caso o item não tenha rgi, define-o com base na sequência (index + 1)
-            rgi: item.rgi || formatRgiWithSequence(data.rgi, rgiLetter, idx + 1),
+            rgi: item.rgi || formatItemRgi(data.rgi, rgiLetter, idx + 1),
           }));
           setItems(transformedItems);
           if (transformedItems.length > 0) {
@@ -199,7 +321,7 @@ const DetailsItensNF: React.FC = () => {
   const addNewItem = () => {
     const newItemId = crypto.randomUUID();
     const sequence = items.length + 1;
-    const newItemRgi = garantia ? formatRgiWithSequence(garantia.rgi, rgiLetter, sequence) : "";
+    const newItemRgi = garantia ? formatItemRgi(garantia.rgi, rgiLetter, sequence) : "";
     setItems([
       ...items,
       {
@@ -245,15 +367,11 @@ const DetailsItensNF: React.FC = () => {
       message.error("ID da garantia não encontrado");
       return;
     }
-  
-    // Utiliza o ID do primeiro item da garantia para atualizar
     const itemId = garantia?.itens?.[0]?.id;
     if (!itemId) {
       message.error("ID do item não encontrado");
       return;
     }
-  
-    // Payload com os campos conforme o exemplo (apenas os campos, sem os valores reais)
     const payload = {
       codigoItem: items[0].codigoPeca,
       tipoDefeito: items[0].tipoDefeito,
@@ -262,16 +380,17 @@ const DetailsItensNF: React.FC = () => {
       nfReferencia: items[0].anoVeiculo,
       loteItemOficial: items[0].lotePeca,
       loteItem: items[0].lotePeca,
-      codigoStatus: items[0].status === "Autorizado" ? GarantiasStatusEnum2.NAO_ENVIADO : GarantiasStatusEnum2.EM_ANALISE,
+      codigoStatus:
+        items[0].status === "Autorizado"
+          ? GarantiasStatusEnum2.NAO_ENVIADO
+          : GarantiasStatusEnum2.EM_ANALISE,
       solicitarRessarcimento: items[0].isReimbursementChecked ? 1 : 0,
     };
-  
     try {
       const response = await api.put(
         `/garantias/garantiasItem/${itemId}/UpdateItem`,
         payload
       );
-  
       if (response.status === 200) {
         message.success("Garantia atualizada com sucesso!");
         navigate("/garantias");
@@ -283,7 +402,6 @@ const DetailsItensNF: React.FC = () => {
       message.error("Erro ao atualizar a garantia.");
     }
   };
-  
 
   return (
     <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
@@ -303,15 +421,19 @@ const DetailsItensNF: React.FC = () => {
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
         <span className={styles.RgiCode}>
-          RGI N° {garantia?.rgi} / NF {garantia?.nf || "----"}
+          RGI {garantia?.rgi ? formatMainRgi(garantia.rgi, rgiLetter) : "----"} / NF {garantia?.nf || "----"}
         </span>
       </div>
       <div className={styles.ContainerHeader}>
         <h1 className={styles.tituloRgi}>
-          RGI {garantia?.rgi}.{rgiLetter}
+          RGI {garantia?.rgi ? formatMainRgi(garantia.rgi, rgiLetter) : ""}
         </h1>
         <div className={styles.botoesCabecalho}>
-          <Button type="default" className={styles.ButtonDelete}>
+          <Button
+            type="default"
+            className={styles.ButtonDelete}
+            onClick={handleDeleteGuarantee} 
+          >
             EXCLUIR
           </Button>
           <Button type="primary" className={styles.ButonToSend} onClick={send}>
@@ -320,7 +442,11 @@ const DetailsItensNF: React.FC = () => {
         </div>
       </div>
       <hr className={styles.divisor} />
-      <FileAttachment label="Anexo da NF de venda" backgroundColor="#f5f5f5" />
+      <FileAttachment
+        label="Anexo da NF de venda"
+        backgroundColor="#f5f5f5"
+        initialFileData={garantia?.anexos ? { id: garantia.anexos, fileName: garantia.anexos } : undefined}
+      />
       <div className={styles.TitleItens}>
         <h3 className={styles.nfsTitle}>
           Itens desta NF associados a esta garantia
@@ -349,11 +475,12 @@ const DetailsItensNF: React.FC = () => {
       {items.map((item, index) => (
         <div className={styles.containerInformacoes} key={item.id}>
           <CollapsibleSection
-            title={formatRgiWithSequence(garantia?.rgi || "", rgiLetter, index + 1)}
+            title={`${index + 1}`}
             isVisible={visibleSectionId === item.id}
             toggleVisibility={() => toggleSectionVisibility(item.id)}
             showDeleteConfirm={() => showDeleteConfirm(item.id)}
             status={item.status}
+            rgi={formatItemRgi(garantia?.rgi || "", rgiLetter, index + 1)}
           >
             <h3 className={styles.tituloSecao}>Informações Gerais</h3>
             <div className={styles.inputsContainer}>
@@ -456,7 +583,7 @@ const DetailsItensNF: React.FC = () => {
       ))}
       <Modal
         title="Confirmar Exclusão"
-        visible={modalDeleteOpen} 
+        visible={modalDeleteOpen}
         onOk={handleDeleteNF}
         onCancel={() => setModalDeleteOpen(false)}
         okText="Excluir"

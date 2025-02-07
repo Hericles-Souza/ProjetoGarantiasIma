@@ -1,19 +1,26 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Button, message, Modal } from "antd";
-import { DeleteOutlined, FileOutlined, LeftOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  DeleteOutlined,
+  LeftOutlined,
+  InfoCircleOutlined,
+  FileOutlined,
+  RightOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
-import { getGarantiaByIdAsync, updateGarantiaItemByIdAsync, getAllGarantiasAsync } from "@shared/services/GarantiasService.ts";
-import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
+import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
+import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from "dayjs";
 import NFModal from "../addNewNF/modalAddNewNF";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import api from "@shared/Interceptors";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 // Função auxiliar para extrair o array de garantias da resposta da API.
-// Se o objeto tiver uma propriedade "data", usaremos ela.
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
   if (data && data.data) {
     return Array.isArray(data.data) ? data.data : [data.data];
@@ -42,12 +49,11 @@ const RGIDetailsInitial: React.FC = () => {
   const [nfs, setNfs] = useState<{ nf: string; itens: number; sequence: number }[]>([]);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [nfToDelete, setNfToDelete] = useState<string>("");
-  const [nfCounter, setNfCounter] = useState(0);
+  const [rgi, setRgi] = useState("");
   const location = useLocation();
   const context = useContext(AuthContext);
-  const [rgi, setRgi] = useState("");
 
-  // Gera o sufixo para exibição – utiliza o rgi da garantia (ou fallback)
+  // Função para gerar o sufixo do RGI
   const getRgiWithSuffix = (index: number) => {
     const base = rgi || cardData?.rgi || "RGI";
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -62,7 +68,6 @@ const RGIDetailsInitial: React.FC = () => {
           const data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
-          // Aqui usamos o campo "data" vindo da API e formatamos a data
           setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
           setCardData(data);
           setNfs([
@@ -75,11 +80,9 @@ const RGIDetailsInitial: React.FC = () => {
           setRgi(data.rgi);
           return;
         }
-
         // Se houver um ID na URL, busca os dados da garantia pela API
         if (id) {
           const response = await getGarantiaByIdAsync(id);
-          // Considerando que a resposta tenha o formato { success, data, statusCode }
           const data = response.data.data;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
@@ -101,6 +104,35 @@ const RGIDetailsInitial: React.FC = () => {
 
     fetchData();
   }, [id, location.state]);
+
+  // Função para excluir a garantia
+  const handleDeleteGuarantee = async () => {
+    if (!cardData?.id) {
+      message.error("Garantia não encontrada.");
+      return;
+    }
+    Modal.confirm({
+      title: "Confirmar Exclusão",
+      content: "Você tem certeza de que deseja excluir esta garantia?",
+      okText: "Excluir",
+      cancelText: "Cancelar",
+      onOk: async () => {
+        try {
+          // Supondo que o endpoint para excluir seja DELETE /garantias/{id}
+          const response = await api.delete(`/garantias/garantias/${cardData.id}`);
+          if (response.status === 200) {
+            message.success("Garantia excluída com sucesso!");
+            navigate("/garantias");
+          } else {
+            message.error("Erro ao excluir a garantia.");
+          }
+        } catch (error) {
+          console.error("Erro ao excluir a garantia:", error);
+          message.error("Erro ao excluir a garantia.");
+        }
+      },
+    });
+  };
 
   const handleDetailsNavigation = (nf: { nf: string; itens: number; sequence: number }) => {
     if (!cardData?.id) {
@@ -145,40 +177,33 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-  //essa função vai disparar uma atualização no endpoint para mudar o codigoStatus e o status da garantia
+  // Essa função dispara a atualização da garantia
   const send = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
       return;
     }
-
+    const itemId = cardData.itens?.[0]?.id;
+    if (!itemId) {
+      message.error("ID do item não encontrado");
+      return;
+    }
+    const updatePayload = {
+      codigoItem: cardData.itens?.[0].codigoItem || "",
+      tipoDefeito: cardData.itens?.[0].tipoDefeito || "",
+      modeloVeiculoAplicado: cardData.itens?.[0].modeloVeiculoAplicado || "",
+      torqueAplicado: cardData.itens?.[0].torqueAplicado || 0,
+      nfReferencia: cardData.nf || "",
+      loteItemOficial: cardData.itens?.[0].loteItemOficial || "",
+      loteItem: cardData.itens?.[0].loteItem || "",
+      codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
+      solicitarRessarcimento: cardData.itens?.[0].solicitarRessarcimento || false,
+    };
     try {
-      console.log("Garantia ID:", cardData.id); // Debug log
-
-      const updatePayload = {
-        codigoItem: cardData.itens?.[0].codigoItem || "",
-        tipoDefeito: cardData.itens?.[0].tipoDefeito || "",
-        modeloVeiculoAplicado: cardData.itens?.[0].modeloVeiculoAplicado || "",
-        torqueAplicado: cardData.itens?.[0].torqueAplicado || 0,
-        nfReferencia: cardData.nf || "",
-        loteItemOficial: cardData.itens?.[0].loteItemOficial || "",
-        loteItem: cardData.itens?.[0].loteItem || "",
-        codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
-        solicitarRessarcimento: cardData.itens?.[0].solicitarRessarcimento || false
-      };
-
-      // Corrigindo o endpoint para usar o ID do item ao invés do ID da garantia
-      const itemId = cardData.itens?.[0]?.id;
-      if (!itemId) {
-        message.error("ID do item não encontrado");
-        return;
-      }
-
       const response = await api.put(
         `/garantias/garantiasItem/${itemId}/UpdateItem`,
         updatePayload
       );
-
       if (response.status === 200) {
         setCardData({
           ...cardData,
@@ -193,35 +218,6 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("Erro ao atualizar a garantia");
     }
   };
-
-  // Busca o RGI para o usuário logado (garantia com status "NAO_ENVIADO")
-  useEffect(() => {
-    const fetchRGI = async () => {
-      try {
-        if (context.user?.id) {
-          const garantia = await getRGIByUserAsync(context.user.id);
-          if (garantia) {
-            setRgi(garantia.rgi);
-            setSocialReason(garantia.razaoSocial);
-            setPhone(garantia.telefone);
-            setRequestDate(dayjs(garantia.data).format("DD/MM/YYYY"));
-            setCardData(garantia);
-            setNfs([
-              {
-                nf: garantia.nf,
-                itens: garantia.itens ? garantia.itens.length : 0,
-                sequence: 1,
-              },
-            ]);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching RGI:", error);
-      }
-    };
-
-    fetchRGI();
-  }, [context.user]);
 
   return (
     <div className={styles.appContainer} style={{ backgroundColor: "#ffffff" }}>
@@ -242,7 +238,13 @@ const RGIDetailsInitial: React.FC = () => {
           </div>
         </div>
         <div className={styles.buttonsContainer}>
-          <Button type="default" danger className={styles.buttonDeleteRgi}>
+          {/* Botão para excluir a garantia */}
+          <Button
+            type="default"
+            danger
+            className={styles.buttonDeleteRgi}
+            onClick={handleDeleteGuarantee}
+          >
             Excluir
           </Button>
           <Button onClick={save} type="default" danger className={styles.buttonSaveRgi}>

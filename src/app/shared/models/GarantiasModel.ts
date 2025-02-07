@@ -35,4 +35,5 @@ export interface GarantiasModel {
   dataAtualizacao?: string;
   usuarioAtualizacao?: string;
   itens?: GarantiaItem[];
+  anexos?: string;
 }
