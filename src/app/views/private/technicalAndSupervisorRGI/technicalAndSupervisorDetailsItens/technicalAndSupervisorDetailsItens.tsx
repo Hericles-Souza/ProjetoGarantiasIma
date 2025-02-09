@@ -98,7 +98,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const [envioAutorizado, setEnvioAutorizado] = useState(false);
   // const [analiseTecnica, setAnaliseTecnica] = useState(false);
-  const [conclusao, setConclusao] = useState(false);
+  const [conclusao, setConclusao] = useState(""); 
   const context = useContext(AuthContext);
 
   const toggleContentVisibility = () => {
@@ -279,7 +279,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               <QuillEditor editorRef={editorRef} setEditorContent={setEditorContent} />
 
               <h3 className={styles.tituloA}>Conclusão</h3>
-              <MultilineTextFields value={conclusao} onChange={(e) => setConclusao(e.target.value)} />
+              <MultilineTextFields
+                value={conclusao}
+                onChange={(e) => setConclusao(e.target.value)}
+                label="Conclusão"
+                placeholder="Digite a conclusão aqui..."
+              />
             </>
           )}
         </CollapsibleSection>
