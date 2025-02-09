@@ -6,7 +6,7 @@ import SearchField from '@shared/components/input_search/input_search.tsx';
 import styled from './screenGarantia.module.css';
 import './carouselAnimations.css';
 import './tabGarantia.css';
-import {getAllGarantiasAsync} from "@shared/services/GarantiasService.ts";
+import {getGarantiasByStatusAsync} from "@shared/services/GarantiasService.ts";
 import {GarantiasModel} from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
@@ -26,7 +26,7 @@ const Garantias: React.FC = () => {
   useEffect(() => {
     const fetchCardData = async () => {
       try {
-        const response = await getAllGarantiasAsync();
+        const response = await getGarantiasByStatusAsync(1, 10, 2);
         const data = await response.data.data;
         setCardData(data);
       } catch (error) {

@@ -70,6 +70,15 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
   useEffect(() => {
     getRules()
       .then((response) => {
+        console.log(JSON.stringify(response.data.data))
+        setRule([{
+          id:"78c5126c-c211-4a2f-8109-222020dfbc4e",
+          createdAt:"2025-02-03T22:57:21.336Z",
+          updatedAt:"2025-02-03T22:57:21.336Z",
+          name: UserRoleEnum.Técnico,
+          code:"10",
+          description:"tecnico rule"
+       }]);
         setRule(response.data.data);
         setSelectedProfile(response.data.data[0].id);
       })
@@ -81,7 +90,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
   useEffect(() => {
     formik.resetForm();
     formik.setFieldValue('password', generatePassword());
-  }, [closeModal]);
+  }, [closeModal, formik]);
 
   const handleCopyPassword = () => {
     if (formik.values.password) {
@@ -147,6 +156,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
 
           onChange={(e) => {
             const value = e.target.value;
+            console.log("RULE: " + JSON.stringify(rule));
             const valueProfile = rule.find((ruleSelected) => ruleSelected.name == value);
             console.log("perfil: " + valueProfile);
             setSelectedProfile(valueProfile.name);

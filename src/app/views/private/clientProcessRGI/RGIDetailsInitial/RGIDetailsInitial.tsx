@@ -1,13 +1,9 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, message, Modal } from "antd";
 import {
-  DownOutlined,
   DeleteOutlined,
   LeftOutlined,
-  InfoCircleOutlined,
   FileOutlined,
-  RightOutlined,
-  DownloadOutlined,
 } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
@@ -16,11 +12,11 @@ import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from "dayjs";
 import NFModal from "../addNewNF/modalAddNewNF";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
-import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 // Função auxiliar para extrair o array de garantias da resposta da API.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
   if (data && data.data) {
     return Array.isArray(data.data) ? data.data : [data.data];
@@ -51,7 +47,6 @@ const RGIDetailsInitial: React.FC = () => {
   const [nfToDelete, setNfToDelete] = useState<string>("");
   const [rgi, setRgi] = useState("");
   const location = useLocation();
-  const context = useContext(AuthContext);
 
   // Função para gerar o sufixo do RGI
   const getRgiWithSuffix = (index: number) => {
@@ -210,6 +205,7 @@ const RGIDetailsInitial: React.FC = () => {
           codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
           status: GarantiasStatusEnum2.EM_ANALISE.toString(),
         });
+        console.log(response);
         message.success("Garantia atualizada com sucesso!");
         navigate("/garantias");
       }

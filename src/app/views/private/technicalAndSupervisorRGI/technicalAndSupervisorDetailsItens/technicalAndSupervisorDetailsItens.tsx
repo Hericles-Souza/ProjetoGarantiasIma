@@ -43,6 +43,8 @@ const QuillEditor = ({ editorRef }: { editorRef: React.RefObject<HTMLDivElement>
   return <div ref={editorRef} style={{ height: "300px" }} />;
 };
 
+
+
 const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundColor?: string }) => {
 
 
@@ -91,9 +93,13 @@ const CollapsibleSection = ({
 );
 
 
+
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
-  const editorRef = useRef(null);
+  const [envioAutorizado, setEnvioAutorizado] = useState(false);
+  const [analiseTecnica, setAnaliseTecnica] = useState(false);
+  const [conclusao, setConclusao] = useState(false);
+  const editorRef = useRef();
   const context = useContext(AuthContext);
 
   const toggleContentVisibility = () => {
@@ -223,7 +229,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           {context.user.rule.name != UserRoleEnum.Supervisor && (<>
             <div className={styles.checkboxContainer}>
               <ColorCheckboxes onChange={handleCheckboxChange} checked={isReimbursementChecked} />
-              <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
+              <label className={styles.checkboxDanger}>Solicitar r  essarcimento</label>
             </div>
             {isReimbursementChecked && (
               <div className={styles.contentReimbursement}>
@@ -267,13 +273,20 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   { value: "Procedente", label: "Procedente" },
                   { value: "Improcedente", label: "Improcedente" },
                 ]}
+                value={envioAutorizado} // O valor selecionado será armazenado nesse estado
+                onChange={(e) => setEnvioAutorizado(e.target.value)} // Atualiza o estado ao selecionar
               />
             </div>
 
             <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
-            <QuillEditor editorRef={editorRef} />
+            <QuillEditor 
+              editorRef={editorRef}
+              value={analiseTecnica} 
+              onChange={(value) => setAnaliseTecnica(value)}/>
             <h3 className={styles.tituloA}>Conclusão</h3>
-            <MultilineTextFields />
+            <MultilineTextFields
+            value={conclusao} 
+            onChange={(e) => setConclusao(e.target.value)} />
 
           </>)}
 

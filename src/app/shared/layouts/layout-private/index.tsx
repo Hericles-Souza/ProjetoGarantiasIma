@@ -93,7 +93,6 @@ const LayoutPrivate: React.FC = () => {
             
             {menuData.filter(item =>
               !item.allowedRoles || item.allowedRoles.includes(user?.rule?.name)).map(item => {
-                console.log("allowedRoles: " + JSON.stringify(item));
                 return (
                   <Menu.Item
                     key={item.key}
