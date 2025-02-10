@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Input, Typography, Row, Col, Card, Button } from "antd";
+import { Table, Typography, Row, Col, Card, Button } from "antd";
 import styles from "./ViewPreInvoice.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
@@ -56,7 +56,9 @@ const InvoicePage = () => {
     return (
         <div style={{ padding: 24, backgroundColor: "#fff" }}>
             <div className={styles.ContainerButtonBack}>
-                <Button type="link" className={styles.ButtonBack} onClick={() => navigate("/garantias")}>
+                <Button type="link" className={styles.ButtonBack} 
+                // onClick={() => navigate("/garantias")}
+                >
                     <LeftOutlined /> VOLTAR PARA O INÍCIO
                 </Button>
                 <span className={styles.RgiCode}>RGI N° 000666-0001</span>
