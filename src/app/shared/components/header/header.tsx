@@ -33,7 +33,6 @@ const Header: React.FC<HeaderProps> = ({ filterStatus, handleFilterChange }) => 
           }}
           className="custom-tabs"
           items={[
-            { label: <span>TODOS</span>, key: 'garantias' },
             { label: <span>REQUISIÇÕES DE GARANTIA (RGI)</span>, key: 'rgi' },
             { label: <span>ACORDOS COMERCIAIS (ACI)</span>, key: 'aci' },
           ]}
