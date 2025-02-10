@@ -66,7 +66,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         path: "dashboard",
         element: <Dashboard />,
         private: true,
-        allowedRoles: [UserRoleEnum.Supervisor]
+        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Técnico, UserRoleEnum.Admin]
       }, 
       {
         path: "technical-and-supervisor/details-itens",

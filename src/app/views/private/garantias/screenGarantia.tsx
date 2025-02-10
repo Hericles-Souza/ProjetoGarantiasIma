@@ -1,22 +1,22 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Button, Tag} from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Tag } from 'antd';
 import Header from '@shared/components/header/header.tsx';
 import CardCategorias from '@shared/components/card_garantia/card_garantias.tsx';
 import SearchField from '@shared/components/input_search/input_search.tsx';
 import styled from './screenGarantia.module.css';
 import './carouselAnimations.css';
 import './tabGarantia.css';
-import {getGarantiasByStatusAsync} from "@shared/services/GarantiasService.ts";
-import {GarantiasModel} from "@shared/models/GarantiasModel.ts";
+import { getGarantiasByStatusAsync } from "@shared/services/GarantiasService.ts";
+import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
   converterStringParaStatusGarantia,
   GarantiasStatusEnum
 } from "@shared/enums/GarantiasStatusEnum.ts";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Garantias: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('garantias');
+  const [activeTab, setActiveTab] = useState<string>('rgi');
   const [filterStatus, setFilterStatus] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState<string>('');
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -42,14 +42,14 @@ const Garantias: React.FC = () => {
   const handleNext = () => {
     if (carouselRef.current) {
       const container = carouselRef.current;
-      container.scrollBy({left: 150, behavior: 'smooth'});
+      container.scrollBy({ left: 150, behavior: 'smooth' });
     }
   };
 
   const handlePrevious = () => {
     if (carouselRef.current) {
       const container = carouselRef.current;
-      container.scrollBy({left: -150, behavior: 'smooth'});
+      container.scrollBy({ left: -150, behavior: 'smooth' });
     }
   };
 
@@ -69,8 +69,9 @@ const Garantias: React.FC = () => {
 
   return (
     <>
-      <Header filterStatus={activeTab} handleFilterChange={setActiveTab}/>
-      {activeTab === 'garantias' && (
+      <Header filterStatus={activeTab} handleFilterChange={setActiveTab} />
+
+      {activeTab === 'rgi' && (
         <div className={styled.container}>
           <div className={styled.content}>
             <div ref={carouselRef} className="carousel-container">
@@ -87,28 +88,74 @@ const Garantias: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div style={{display: 'flex', alignItems: 'center', gap: "1rem", padding: "1rem", paddingLeft: "0"}}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: "1rem", padding: "1rem", paddingLeft: "0" }}>
               <Button className={styled.button} type="default" onClick={handlePrevious}>
                 &lt;
               </Button>
               <Button className={styled.button} type="default" onClick={handleNext}>
                 &gt;
               </Button>
-              <SearchField onSearchChange={setSearchTerm}/>
+              <SearchField onSearchChange={setSearchTerm} />
             </div>
           </div>
           <div className={styled.containerGrid}>
             {filteredItems.map((item) => {
-              // Encontrar o cardData que corresponde a esse item
               const associatedCardData = cardData?.find(card => card.rgi === item.rgi);
 
               return (
                 <CardCategorias
-                  key={item.id}
-                  data={new Date(associatedCardData.data)}
-                  GarantiaItem={item}
-                  onClick={() => navigate(`/garantias/rgi/${associatedCardData.id}`)}
-                />
+                key={item.id}
+                data={new Date(associatedCardData.data)}
+                GarantiaItem={item}
+                codigoFormatado={`RGI ${item.rgi}`}
+                onClick={() => navigate(`/garantias/rgi/${associatedCardData.id}`)}
+              />
+              );
+            })}
+          </div>
+
+
+        </div>
+      )}
+      {activeTab === 'aci' && (
+        <div className={styled.container}>
+          <div className={styled.content}>
+            <div ref={carouselRef} className="carousel-container">
+              <div className="carousel-content">
+                {statuses.map((status) => (
+                  <Tag
+                    key={status}
+                    className={`carousel-tag ${styled.tab}`}
+                    color={filterStatus === status ? 'red' : 'default'}
+                    onClick={() => setFilterStatus((prevStatus) => (prevStatus === status ? 'todos' : status))}
+                  >
+                    {status}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: "1rem", padding: "1rem", paddingLeft: "0" }}>
+              <Button className={styled.button} type="default" onClick={handlePrevious}>
+                &lt;
+              </Button>
+              <Button className={styled.button} type="default" onClick={handleNext}>
+                &gt;
+              </Button>
+              <SearchField onSearchChange={setSearchTerm} />
+            </div>
+          </div>
+          <div className={styled.containerGrid}>
+            {filteredItems.map((item) => {
+              const associatedCardData = cardData?.find(card => card.rgi === item.rgi);
+
+              return (
+                <CardCategorias
+                key={item.id}
+                data={new Date(associatedCardData.data)}
+                GarantiaItem={item}
+                codigoFormatado={`RGI ${item.codigoItem}`}
+                onClick={() => navigate(`/garantias/rgi/${associatedCardData.id}`)}
+              />
               );
             })}
           </div>

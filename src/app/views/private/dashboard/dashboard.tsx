@@ -8,25 +8,27 @@ const Dashboard = () => {
             "Aguardando Validação da NF de Devolução", "Aguardando NF de Devolução", 
             "NF de Devolução Recusada", "Confirmado"
         ],
-        responsive: [
-            {
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        width: "100%"
-                    },
-                    legend: {
-                        position: "bottom"
-                    }
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {
+                    width: "100%"
+                },
+                legend: {
+                    position: "bottom"
                 }
             }
-        ]
+        }]
     };
     const pieSeries = [10, 15, 20, 25, 10, 10, 10];
 
     const barOptions = {
-        chart: { type: "bar" },
-        xaxis: { categories: ["00004", "000001", "000001", "000001", "000001", "000001", "000001", "000001"] },
+        chart: { 
+            type: "bar" as const, // Corrigido aqui
+        },
+        xaxis: { 
+            categories: ["00004", "000001", "000001", "000001", "000001", "000001", "000001", "000001"] 
+        },
         plotOptions: { 
             bar: { 
                 horizontal: false 
@@ -47,9 +49,17 @@ const Dashboard = () => {
             data: [320, 210, 280, 150, 100, 190, 220, 180, 160],
         }],
         options: {
-            chart: { type: "bar" },
-            plotOptions: { bar: { horizontal: true } },
-            xaxis: { categories: ["SP", "RJ", "MG", "RS", "SC", "PR", "BA", "PE", "CE"] },
+            chart: { 
+                type: "bar" as const, // Corrigido aqui
+            },
+            plotOptions: { 
+                bar: { 
+                    horizontal: true 
+                }
+            },
+            xaxis: { 
+                categories: ["SP", "RJ", "MG", "RS", "SC", "PR", "BA", "PE", "CE"] 
+            },
             colors: ['#FF0000', '#FF7F7F'], 
         },
     };
@@ -60,9 +70,17 @@ const Dashboard = () => {
             data: [120, 64, 23, 50, 23],
         }],
         options: {
-            chart: { type: "bar" },
-            plotOptions: { bar: { horizontal: true } },
-            xaxis: { categories: ["Pino quente", "Limpar vidro", "Pino Frio", "Limpar vidro", "Pino Frio"] },
+            chart: { 
+                type: "bar" as const, // Corrigido aqui
+            },
+            plotOptions: { 
+                bar: { 
+                    horizontal: true 
+                }
+            },
+            xaxis: { 
+                categories: ["Pino quente", "Limpar vidro", "Pino Frio", "Limpar vidro", "Pino Frio"] 
+            },
             colors: ['#FF0000', '#FF7F7F'], 
         },
     };
@@ -70,7 +88,7 @@ const Dashboard = () => {
     return (
         <div style={{ padding: "20px", backgroundColor: "#fff", height: "100vh", overflowY: "scroll", color: "black" }}>
             <div className="containerDashboard">
-                <h2>Dashboard Inicial</h2>
+                {/* <h2>Dashboard Inicial</h2> */}
                 <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
                     <input type="date" id="dateFilter" className="inputSearch" />
                 </div>
@@ -88,15 +106,15 @@ const Dashboard = () => {
             </div>
             <div className="containerChart">
                 <h3>Top 10 produtos mais devolvidos</h3>
-                <Chart optionsptions={barOptions} series={barSeries} type="bar" height={350} />
+                <Chart options={barOptions} series={barSeries} type="bar" height={350} />
             </div>
             <div className="containerChart">
                 <h3>Top 5 Motivos de Devolução</h3>
-                <Chart optionsions={motivosDevolucaoData.options} series={motivosDevolucaoData.series} type="bar" height={300} />
+                <Chart options={motivosDevolucaoData.options} series={motivosDevolucaoData.series} type="bar" height={300} />
             </div>
             <div className="containerChart">
                 <h3>Total de itens devolvidos por estado</h3>
-                <Chart optionsions={estadosData.options} series={estadosData.series} type="bar" height={400} />
+                <Chart options={estadosData.options} series={estadosData.series} type="bar" height={400} />
             </div>
         </div>
     );

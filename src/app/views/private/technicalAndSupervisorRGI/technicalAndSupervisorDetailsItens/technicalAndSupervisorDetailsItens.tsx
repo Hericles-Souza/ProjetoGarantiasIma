@@ -98,7 +98,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const [envioAutorizado, setEnvioAutorizado] = useState(false);
   // const [analiseTecnica, setAnaliseTecnica] = useState(false);
-  const [conclusao, setConclusao] = useState(""); 
+  const [conclusao, setConclusao] = useState(false); 
   const context = useContext(AuthContext);
 
   const toggleContentVisibility = () => {

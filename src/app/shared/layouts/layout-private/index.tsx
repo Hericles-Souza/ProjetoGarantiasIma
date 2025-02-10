@@ -6,6 +6,7 @@ import styles from './styles.ts';
 import LogoIma from '@assets/image/png/logo-ima.png';
 import IconGarantia from '@assets/image/svg/icon_garantia.svg';
 import IconUser from '@assets/image/svg/user.svg';
+import IconInitial from '@assets/image/svg/initial.svg';
 import {FaCog, FaUser} from "react-icons/fa";
 import {PiBuildingApartment} from "react-icons/pi";
 import {AuthContext} from "@shared/contexts/Auth/AuthContext.tsx";
@@ -23,6 +24,13 @@ interface MenuItem {
 
 const menuData: MenuItem[] = [
   {
+    key: '3',
+    label: 'Dashboard Inicial',
+    icon: <img src={IconInitial} alt="Dashboard" style={{width: "25px", height: "25px"}}/>,
+    path: '/dashboard',
+    allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Técnico, UserRoleEnum.Supervisor],
+  },
+  {
     key: '1',
     label: 'Garantias',
     icon: <img src={IconGarantia} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
@@ -33,15 +41,9 @@ const menuData: MenuItem[] = [
     label: 'Cadastro de Usuários',
     icon: <img src={IconUser} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
     path: '/users',
-    allowedRoles: [UserRoleEnum.Admin]
+    allowedRoles: [UserRoleEnum.Admin,],
   },
-  {
-    key: '3',
-    label: 'Dashboard',
-    icon: <img src={IconUser} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
-    path: '/dashboard',
-    allowedRoles: [UserRoleEnum.Admin]
-  },
+
 ];
 
 const LayoutPrivate: React.FC = () => {
@@ -149,12 +151,12 @@ const LayoutPrivate: React.FC = () => {
                 }}>
                   {user && (
                     user?.rule?.name === UserRoleEnum.Cliente || user?.rule?.name === UserRoleEnum.Admin ?
-                      <FaUser style={{color: '#FF0000', fontSize: '1.2rem',}}/> :
-                      <PiBuildingApartment style={{color: '#FF0000', fontSize: '1.2rem',}}/>
+                    <PiBuildingApartment style={{color: '#FF0000', fontSize: '1.2rem',}}/>
+                    : <FaUser style={{color: '#FF0000', fontSize: '1.2rem',}}/> 
                   )}
                   <span style={{fontWeight: "500"}}>
                     {user && (
-                      user?.rule?.name === UserRoleEnum.Cliente || user?.rule?.name === UserRoleEnum.Admin ? user.username : user.cnpj
+                      user?.rule?.name === UserRoleEnum.Cliente || user?.rule?.name === UserRoleEnum.Admin ? user.cnpj : user.username
                     )}
                   </span>
                 </div>

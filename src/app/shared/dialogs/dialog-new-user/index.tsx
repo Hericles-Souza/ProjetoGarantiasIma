@@ -1,18 +1,17 @@
-import {Checkbox, InputAdornment, TextField} from '@mui/material';
-import {Button, message, Typography,} from 'antd';
-import React, {useContext, useEffect, useState} from 'react';
-import './dialog.style.css'
-import style from "./style.module.css";
-import {RuleModel} from "@shared/models/RuleModel.ts";
-import {getRules} from "@shared/services/RuleService.ts";
-import {useFormik} from "formik";
+import { Checkbox, InputAdornment, TextField } from '@mui/material';
+import { Button, message, Typography } from 'antd';
+import React, { useContext, useEffect, useState } from 'react';
+import { getRules } from "@shared/services/RuleService.ts";
+import { useFormik } from "formik";
 import * as Yup from 'yup';
-import {PiCopySimpleLight} from "react-icons/pi";
-import {TfiReload} from "react-icons/tfi";
+import { CopyOutlined, SyncOutlined } from '@ant-design/icons'; // Ícones do Ant Design
 import InputMask from 'react-input-mask';
 import { updateUser, UpdateUserRequest } from '@shared/services/UserService';
 import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
+import './dialog.style.css';
+import style from "./style.module.css";
+import { RuleModel } from '@shared/models/RuleModel';
 
 interface DataType {
   cigamCode: string;
@@ -35,24 +34,23 @@ interface DialogUserRegistrationProps {
   selectedUser: DataType | null;
 }
 
-const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeModal, onSearch, selectedUser}) => {
+const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeModal, onSearch, selectedUser }) => {
   const [rule, setRule] = useState<RuleModel[] | null>(null);
   const [selectedProfile, setSelectedProfile] = useState('');
   const typeRule = "Técnico";
   const generatePassword = () => Math.random().toString(36).slice(-8);
   const context = useContext(AuthContext);
-    
 
   const formik = useFormik({
     initialValues: {
-      profile: selectedUser ? selectedUser.user : '', // Preenchendo com os dados do usuário se estiver em edição
+      profile: selectedUser ? selectedUser.user : '',
       cnpj: selectedUser ? selectedUser.cnpj : '',
       cigamCode: selectedUser ? selectedUser.cigamCode : '',
       companyName: selectedUser ? selectedUser.companyName : '',
       phone: selectedUser ? selectedUser.phone : '',
       email: selectedUser ? selectedUser.email : '',
       password: generatePassword(),
-      isActive: selectedUser ? selectedUser.status : true
+      isActive: selectedUser ? selectedUser.status : true,
     },
     validationSchema: Yup.object({
       cnpj: Yup.string().required('CNPJ obrigatório'),
@@ -61,24 +59,16 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       phone: Yup.string().required('Telefone obrigatório'),
       email: Yup.string().email('E-mail inválido').required('E-mail obrigatório'),
     }),
-    onSubmit: (values) => {
-      console.log('Form Values:', values);
+    onSubmit: async () => {
+      await createNewUser();
       onSearch();
+      closeModal();
     },
   });
 
   useEffect(() => {
     getRules()
       .then((response) => {
-        console.log(JSON.stringify(response.data.data))
-        setRule([{
-          id:"78c5126c-c211-4a2f-8109-222020dfbc4e",
-          createdAt:"2025-02-03T22:57:21.336Z",
-          updatedAt:"2025-02-03T22:57:21.336Z",
-          name: UserRoleEnum.Técnico,
-          code:"10",
-          description:"tecnico rule"
-       }]);
         setRule(response.data.data);
         setSelectedProfile(response.data.data[0].id);
       })
@@ -114,117 +104,90 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       codigoCigam: formik.values.cigamCode,
       ruleId: selectedProfile,
       isActive: formik.values.isActive,
-      isAdmin: selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id ? true : false,
+      isAdmin: selectedProfile === rule?.find((value) => value.name === UserRoleEnum.Admin)?.id,
       phone: formik.values.phone,
     };
     console.log("userdata: " + JSON.stringify(userRequest));
-    await updateUser(userRequest, context.user.token).then((value) => console.log(value));
+    await updateUser(userRequest, context.user.token)
+      .then((response) => {
+        console.log(response);
+        message.success('Usuário criado/atualizado com sucesso!');
+      })
+      .catch((error) => {
+        console.error('Erro ao criar/atualizar usuário:', error);
+        message.error('Erro ao criar/atualizar usuário.');
+      });
   };
 
+  const handleProfileChange = (e) => {
+    const value = e.target.value;
+    const selectedRule = rule?.find((r) => r.id === value);
+    if (selectedRule) {
+      setSelectedProfile(selectedRule.id);
+      formik.setFieldValue('profile', selectedRule.name);
+    }
+  };
+
+  // Componente personalizado para integrar InputMask com TextField
+  const MaskedInput = (props) => (
+    <InputMask
+      mask={props.mask}
+      value={props.value}
+      onChange={props.onChange}
+      onBlur={props.onBlur}
+    >
+      {(inputProps) => <TextField {...inputProps} {...props} />}
+    </InputMask>
+  );
+
   return (
-    <form>
-      <div
-        style={{
-          justifyContent: 'div-between',
-          left: '32px',
-          borderBottom: '1px solid #ddd',
-          marginBottom: '25px',
-          width: '100%'
-        }}>
-        <div>
-          <Typography
-            style={{
-              fontWeight: 'bold',
-              fontSize: '16px',
-              color: '#FF0000',
-              height: '40px',
-              width: '200px',
-              marginLeft: '140px',
-              marginBottom: '0px',
-              paddingBottom: '0px'
-            }}>
-            CRIAR NOVO USUÁRIO
-          </Typography>
-        </div>
+    <form onSubmit={formik.handleSubmit}>
+      <div style={{ justifyContent: 'space-between', borderBottom: '1px solid #ddd', marginBottom: '25px', width: '100%' }}>
+        <Typography style={{ fontWeight: 'bold', fontSize: '16px', color: '#FF0000', textAlign: 'center' }}>
+          {selectedUser ? 'EDITAR USUÁRIO' : 'CRIAR NOVO USUÁRIO'}
+        </Typography>
       </div>
+
       <div className={style.row}>
         <TextField
           id="input-container-select"
           select
           label="Perfil"
           value={selectedProfile}
-
-          onChange={(e) => {
-            const value = e.target.value;
-            console.log("RULE: " + JSON.stringify(rule));
-            const valueProfile = rule.find((ruleSelected) => ruleSelected.name == value);
-            console.log("perfil: " + valueProfile);
-            setSelectedProfile(valueProfile.name);
-            formik.setFieldValue('profile', valueProfile);
-            
-          } }
-          defaultValue="EUR"
-          focused
-          className="outlined-input-select"
+          onChange={handleProfileChange}
+          fullWidth
           required
-          slotProps={{
-            select: {
-              native: true,
-            },
-          }}
-          sx={{
-            flex: 1,
-            '& fieldset': {
-              width: '100%',
-            },
-          }}
+          sx={{ flex: 1 }}
         >
-          {Object.values(UserRoleEnum).map((perfil) => (
-            <option key={perfil} value={perfil}>
-              {perfil}
+          {rule?.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
             </option>
           ))}
         </TextField>
-        <div style={{display: 'flex', alignItems: 'center', flex: 1}}>
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
           <Checkbox
-            defaultChecked
-            sx={{
-              color: '#FF0000',
-              '&.Mui-checked': {
-                color: '#FF0000',
-              },
-              marginTop: '-22px',
-            }}
+            checked={formik.values.isActive}
+            onChange={(e) => formik.setFieldValue('isActive', e.target.checked)}
+            sx={{ color: '#FF0000', '&.Mui-checked': { color: '#FF0000' }, marginTop: '-22px' }}
           />
-          <span style={{marginTop: '-22px'}}>Usuário Ativo</span>
+          <span style={{ marginTop: '-22px' }}>Usuário Ativo</span>
         </div>
       </div>
+
       {!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && (
         <div className={style.row}>
-          <InputMask
+          <MaskedInput
             mask="99.999.999/9999-99"
-            value={formik.values.cnpj}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          >
-            {() => (
-              <TextField
-                label="CNPJ"
-                variant="outlined"
-                {...formik.getFieldProps('cnpj')}
-                fullWidth
-                focused
-                required
-                className="outlined-input-cnpj"
-                placeholder="000.000.000/0001-00"
-                sx={{
-                  '& fieldset': {
-                    width: '100%',
-                  },
-                }}
-              />
-            )}
-          </InputMask>
+            label="CNPJ"
+            variant="outlined"
+            {...formik.getFieldProps('cnpj')}
+            fullWidth
+            focused
+            required
+            placeholder="00.000.000/0001-00"
+            sx={{ flex: 1 }}
+          />
 
           <TextField
             label="Código Cigam"
@@ -233,61 +196,38 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
             fullWidth
             focused
             required
-            className="outlined-input-cnpj"
             placeholder="65465465465465"
-            sx={{
-              '& fieldset': {
-                width: '100%',
-              },
-            }}
+            sx={{ flex: 1 }}
           />
-
         </div>
       )}
+
       <div className={style.row}>
         <TextField
-          label={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && "Razão Social" || "Nome"}
+          label={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) ? "Razão Social" : "Nome"}
           variant="outlined"
           {...formik.getFieldProps('companyName')}
           fullWidth
           required
           focused
-          placeholder={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && "Razão Social" || "Nome"}
-          className="outlined-input-contact"
-          sx={{
-            '& fieldset': {
-              width: '100%',
-            },
-          }}
+          placeholder={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) ? "Razão Social" : "Nome"}
+          sx={{ flex: 1 }}
         />
       </div>
-      <div className={style.row}>
 
+      <div className={style.row}>
         {!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && (
-          <InputMask
+          <MaskedInput
             mask="(99) 99999-9999"
-            value={formik.values.phone}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          >
-            {() => (
-              <TextField
-                label="Telefone"
-                variant="outlined"
-                {...formik.getFieldProps('phone')}
-                fullWidth
-                focused
-                required
-                placeholder="00 0000 0000"
-                className="outlined-input-contact"
-                sx={{
-                  '& fieldset': {
-                    width: '100%',
-                  },
-                }}
-              />
-            )}
-          </InputMask>
+            label="Telefone"
+            variant="outlined"
+            {...formik.getFieldProps('phone')}
+            fullWidth
+            focused
+            required
+            placeholder="(00) 00000-0000"
+            sx={{ flex: 1 }}
+          />
         )}
 
         <TextField
@@ -298,14 +238,10 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           focused
           required
           placeholder="E-mail"
-          className="outlined-input-contact"
-          sx={{
-            '& fieldset': {
-              width: '100%',
-            },
-          }}
+          sx={{ flex: 1 }}
         />
       </div>
+
       <div className={style.row}>
         <TextField
           label="Senha Provisória"
@@ -315,34 +251,33 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           focused
           required
           placeholder="Senha Provisória"
-          className="outlined-input-contact"
           InputProps={{
             endAdornment: (
-              <InputAdornment position="end"
-                              style={{display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem'}}>
-                <TfiReload style={{cursor: 'pointer', color: "#FF0000"}}
-                           onClick={() => formik.setFieldValue('password', generatePassword())}/>
-                <PiCopySimpleLight style={{cursor: 'pointer'}} onClick={handleCopyPassword}/>
+              <InputAdornment position="end" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <SyncOutlined
+                  style={{ cursor: 'pointer', color: "#FF0000" }}
+                  onClick={() => formik.setFieldValue('password', generatePassword())}
+                />
+                <CopyOutlined
+                  style={{ cursor: 'pointer' }}
+                  onClick={handleCopyPassword}
+                />
               </InputAdornment>
             ),
           }}
-          sx={{
-            '& fieldset': {
-              width: '100%',
-            },
-          }}
+          sx={{ flex: 1 }}
         />
       </div>
-      <div style={{display: "flex", justifyContent: "end", gap: "1rem"}}>
-        <Button onClick={closeModal} style={{backgroundColor: "white", color: "red"}}>
+
+      <div style={{ display: "flex", justifyContent: "end", gap: "1rem" }}>
+        <Button onClick={closeModal} style={{ backgroundColor: "white", color: "red" }}>
           CANCELAR
         </Button>
-        <Button onClick={createNewUser} type="primary" style={{backgroundColor: "red"}}>
-          CRIAR
+        <Button type="primary" htmlType="submit" style={{ backgroundColor: "red" }}>
+          {selectedUser ? 'ATUALIZAR' : 'CRIAR'}
         </Button>
       </div>
     </form>
-
   );
 };
 
