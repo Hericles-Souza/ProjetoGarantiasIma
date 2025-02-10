@@ -1,6 +1,6 @@
 export enum UserRoleEnum {
   Admin = "admin",
   Supervisor = "supervisor",
-  Técnico = "técnico",
+  Técnico = "tecnico",
   Cliente = "cliente",
 }

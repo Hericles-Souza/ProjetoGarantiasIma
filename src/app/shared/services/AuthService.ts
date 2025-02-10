@@ -1,10 +1,12 @@
-import {AuthModel} from "@shared/models/AuthModel.ts";
-import {mapMeResponseToAuthModel} from "@shared/mappers/mapAuthResponseDtoToAuthModel.ts";
-import {AuthResponseDto} from "@shared/dtos/AuthResponseDto.ts";
+import { AuthModel } from "@shared/models/AuthModel.ts";
+import { mapMeResponseToAuthModel } from "@shared/mappers/mapAuthResponseDtoToAuthModel.ts";
+import { AuthResponseDto } from "@shared/dtos/AuthResponseDto.ts";
 import api from "@shared/Interceptors";
 import environment from "@env/environment.ts";
-import {from} from "rxjs";
-import {take} from "rxjs/operators";
+import { from } from "rxjs";
+import { take } from "rxjs/operators";
+import { RuleModel } from "@shared/models/RuleModel";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 let isLoggingIn = false;
 
@@ -49,6 +51,15 @@ const getUserFromToken = (token: string, loginContext: (user: AuthModel) => void
         next: (response) => {
           const authResponse: AuthResponseDto = response.data;
           const user = mapMeResponseToAuthModel(authResponse, token);
+          const ruleModel: RuleModel = {
+            id: "1333da82-5a09-4e1b-916a-eda2537ab597",
+            createdAt: "2025-02-09T17:29:55.911Z",
+            updatedAt: "2025-02-09T17:29:55.911Z",
+            name: UserRoleEnum.Supervisor,
+            code: "30",
+            description: "supervisor top"
+          }
+          user.rule = ruleModel;
           loginContext(user);
         },
         error: (error) => {

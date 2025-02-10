@@ -8,15 +8,14 @@ import {
   InfoCircleOutlined,
   FileOutlined,
   RightOutlined,
-  DownloadOutlined,
 } from "@ant-design/icons";
 import styles from "./DetailsItensNF.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
-import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
-import { updateGarantiaItemByIdAsync, getGarantiaByIdAsync } from "@shared/services/GarantiasService";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { getGarantiaByIdAsync } from "@shared/services/GarantiasService";
 import api from "@shared/Interceptors";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
@@ -54,7 +53,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   // Estado que guarda os dados do arquivo (ID e nome)
   const [fileData, setFileData] = useState<FileData | null>(initialFileData || null);
   // Estado para armazenar o nome do arquivo selecionado
-  const [fileName, setFileName] = useState<string | null>(initialFileData ? initialFileData.fileName : null);
+  const [, setFileName] = useState<string | null>(initialFileData ? initialFileData.fileName : null);
   const authContext = useContext(AuthContext);
 
   useEffect(() => {
@@ -108,27 +107,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
-  // Função para baixar o arquivo já enviado
-  const handleDownload = async () => {
-    if (!fileData) {
-      message.error("Nenhum arquivo para download.");
-      return;
-    }
-    try {
-      const response = await api.get(`/files-ById/download-private-byId/${fileData.id}`, { responseType: "blob" });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileData.fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-    } catch (error) {
-      console.error("Erro no download do arquivo:", error);
-      message.error("Erro ao baixar o arquivo.");
-    }
-  };
-
   // Função para remover o arquivo da interface (opcionalmente você pode chamar um endpoint para remover o arquivo no backend)
   const handleRemoveFile = () => {
     setFileData(null);
@@ -143,12 +121,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           // Se já houver arquivo (upload concluído), exibe o nome e os botões de download e remoção
           <span className={styles.fileName}>
             <FileOutlined style={{ color: "red", paddingLeft: "5px" }} /> {fileData.fileName}
-            <Button
-              type="link"
-              onClick={handleDownload}
-              icon={<DownloadOutlined />}
-              title="Baixar arquivo"
-            />
             <Button
               type="link"
               onClick={handleRemoveFile}
@@ -177,7 +149,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
 
 
 const CollapsibleSection = ({
-  title,
   isVisible,
   toggleVisibility,
   showDeleteConfirm,

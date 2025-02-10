@@ -18,6 +18,12 @@ export enum GarantiasStatusEnum2 {
   CONFIRMADO = 7,
 }
 
+export enum GarantiasItemStatusEnum2 {
+  NAO_ANALISADO = 1,
+  AUTORIZADO = 2,
+  NAO_AUTORIZADO = 3
+}
+
 export function converterStatusGarantia(status: GarantiasStatusEnum2): GarantiasStatusEnum {
   const mapping: Record<GarantiasStatusEnum2, GarantiasStatusEnum> = {
     [GarantiasStatusEnum2.NAO_ENVIADO]: GarantiasStatusEnum.NAO_ENVIADO,

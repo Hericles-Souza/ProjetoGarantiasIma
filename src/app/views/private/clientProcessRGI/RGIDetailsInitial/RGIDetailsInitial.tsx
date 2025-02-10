@@ -1,10 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button, message, Modal } from "antd";
-import {
-  DeleteOutlined,
-  LeftOutlined,
-  FileOutlined,
-} from "@ant-design/icons";
+import { DeleteOutlined, LeftOutlined, FileOutlined } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
 import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
@@ -14,6 +10,8 @@ import NFModal from "../addNewNF/modalAddNewNF";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { isNull } from "lodash";
 
 // Função auxiliar para extrair o array de garantias da resposta da API.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,9 +26,10 @@ export const getRGIByUserAsync = async (userId: string) => {
   const response = await api.get("/garantias");
   const allGarantias = extractGarantiasArray(response.data);
   // Retorna a primeira garantia do usuário com status "NAO_ENVIADO"
-  return allGarantias.find((g: GarantiasModel) =>
-    g.usuarioInsercao === userId &&
-    g.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
+  return allGarantias.find(
+    (g: GarantiasModel) =>
+      g.usuarioInsercao === userId &&
+      g.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
   );
 };
 
@@ -42,42 +41,64 @@ const RGIDetailsInitial: React.FC = () => {
   const navigate = useNavigate();
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [modalOpen, setModalOpen] = useState(false);
-  const [nfs, setNfs] = useState<{ nf: string; itens: number; sequence: number }[]>([]);
+  const [nfs, setNfs] = useState<
+    { nf: string; itens: number; sequence: number }[]
+  >([]);
+  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
+
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [nfToDelete, setNfToDelete] = useState<string>("");
   const [rgi, setRgi] = useState("");
   const location = useLocation();
+  const context = useContext(AuthContext);
 
   // Função para gerar o sufixo do RGI
   const getRgiWithSuffix = (index: number) => {
     const base = rgi || cardData?.rgi || "RGI";
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    return `${base}.${letters[index]}`;
+    return `${base}.${letters[index]}.${index + 1}`;
   };
 
   useEffect(() => {
     const fetchData = async () => {
+      let data: GarantiasModel = null;
       try {
-        // Se os dados vieram via location.state (por navegação interna)
-        if (location.state && "garantiaData" in location.state) {
-          const data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
-          setSocialReason(data.razaoSocial);
-          setPhone(data.telefone);
-          setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
-          setCardData(data);
-          setNfs([
-            {
-              nf: data.nf,
-              itens: data.itens ? data.itens.length : 0,
-              sequence: 1,
-            },
-          ]);
-          setRgi(data.rgi);
-          return;
+        if(!id){
+          await getGarantiaByIdAsync(location.pathname.split("/")[3]).then(
+            (dataReturned) => {
+              data = dataReturned.data;
+            }
+          );
+          // Se os dados vieram via location.state (por navegação interna)
+          console.log(location.pathname.split("/")[3]);
+          if (!isNull(data)) {
+            setSocialReason(data.razaoSocial);
+            setPhone(data.telefone);
+            setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
+            setCardData(data);
+            setRgi(data.rgi);
+            setNfs([
+              {
+                nf: data.nf,
+                itens: data.itens ? data.itens.length : 0,
+                sequence: 1,
+              },
+            ]);
+            return;
+          }
         }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    
+
+      try {
+        console.log("id existe: " + id);
+        
         // Se houver um ID na URL, busca os dados da garantia pela API
         if (id) {
           const response = await getGarantiaByIdAsync(id);
+          console.log("aqui: " + JSON.stringify(response));
           const data = response.data.data;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
@@ -94,6 +115,9 @@ const RGIDetailsInitial: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally{
+        console.log("finalizou");
+        setLoading(false);
       }
     };
 
@@ -114,7 +138,9 @@ const RGIDetailsInitial: React.FC = () => {
       onOk: async () => {
         try {
           // Supondo que o endpoint para excluir seja DELETE /garantias/{id}
-          const response = await api.delete(`/garantias/garantias/${cardData.id}`);
+          const response = await api.delete(
+            `/garantias/garantias/${cardData.id}`
+          );
           if (response.status === 200) {
             message.success("Garantia excluída com sucesso!");
             navigate("/garantias");
@@ -129,7 +155,11 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-  const handleDetailsNavigation = (nf: { nf: string; itens: number; sequence: number }) => {
+  const handleDetailsNavigation = (nf: {
+    nf: string;
+    itens: number;
+    sequence: number;
+  }) => {
     if (!cardData?.id) {
       console.error("Dados da garantia ainda não carregados.");
       return;
@@ -183,6 +213,15 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("ID do item não encontrado");
       return;
     }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0"); // Mês começa do 0
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
     const updatePayload = {
       codigoItem: cardData.itens?.[0].codigoItem || "",
       tipoDefeito: cardData.itens?.[0].tipoDefeito || "",
@@ -192,14 +231,34 @@ const RGIDetailsInitial: React.FC = () => {
       loteItemOficial: cardData.itens?.[0].loteItemOficial || "",
       loteItem: cardData.itens?.[0].loteItem || "",
       codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
-      solicitarRessarcimento: cardData.itens?.[0].solicitarRessarcimento || false,
+      solicitarRessarcimento:
+        cardData.itens?.[0].solicitarRessarcimento || false,
+    };
+
+    const garantia: GarantiasModel = {
+      razaoSocial: socialReason,
+      telefone: phone,
+      email: context.user.email,
+      nf: cardData.nf,
+      fornecedor: context.user.fullname,
+      codigoStatus: 2,
+      observacao: "teste",
+      usuarioAtualizacao: context.user.fullname,
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
     };
     try {
+      console.log("TESTE: " + id);
       const response = await api.put(
         `/garantias/garantiasItem/${itemId}/UpdateItem`,
         updatePayload
       );
-      if (response.status === 200) {
+
+      const responseHeader = await api.put(
+        `/garantias/garantiasHeader/${id}/UpdateHeader`,
+        garantia
+      );
+
+      if (response.status === 200 && responseHeader.status === 200) {
         setCardData({
           ...cardData,
           codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
@@ -215,10 +274,18 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
   return (
     <div className={styles.appContainer} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
-        <Button type="link" className={styles.ButtonBack} onClick={() => navigate("/garantias")}>
+        <Button
+          type="link"
+          className={styles.ButtonBack}
+          onClick={() => navigate("/garantias")}
+        >
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
         <span className={styles.RgiCode}>RGI N° {rgi}</span>
@@ -243,7 +310,12 @@ const RGIDetailsInitial: React.FC = () => {
           >
             Excluir
           </Button>
-          <Button onClick={save} type="default" danger className={styles.buttonSaveRgi}>
+          <Button
+            onClick={save}
+            type="default"
+            danger
+            className={styles.buttonSaveRgi}
+          >
             Salvar
           </Button>
           <Button
@@ -299,7 +371,11 @@ const RGIDetailsInitial: React.FC = () => {
           <Button
             type="primary"
             danger
-            style={{ height: "45px", borderRadius: "10px", backgroundColor: "red" }}
+            style={{
+              height: "45px",
+              borderRadius: "10px",
+              backgroundColor: "red",
+            }}
             onClick={() => setModalOpen(true)}
           >
             Adicionar NF de Origem
@@ -339,7 +415,11 @@ const RGIDetailsInitial: React.FC = () => {
         ))}
       </div>
 
-      <NFModal open={modalOpen} onOpenChange={setModalOpen} onAddNF={handleAddNF} />
+      <NFModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onAddNF={handleAddNF}
+      />
 
       <Modal
         title="Confirmar Exclusão"
@@ -348,8 +428,12 @@ const RGIDetailsInitial: React.FC = () => {
         onCancel={() => setModalDeleteOpen(false)}
         okText="Excluir"
         cancelText="Cancelar"
-        okButtonProps={{ style: { backgroundColor: "red", borderColor: "red", color: "white" } }}
-        cancelButtonProps={{ style: { borderColor: "#dadada", color: "#5F5A56" } }}
+        okButtonProps={{
+          style: { backgroundColor: "red", borderColor: "red", color: "white" },
+        }}
+        cancelButtonProps={{
+          style: { borderColor: "#dadada", color: "#5F5A56" },
+        }}
       >
         <p>Você tem certeza de que deseja excluir esta NF?</p>
       </Modal>

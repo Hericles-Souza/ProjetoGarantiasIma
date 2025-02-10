@@ -10,6 +10,7 @@ import RgiDetailsPage from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsIniti
 import ScreenAcordoComercial from "./acordo-comercial/ScreenInitialTradeAgreement/ScreenInitialTradeAgreement";
 import Dashboard from "./dashboard/dashboard";
 import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
+import TechnicalAndSupervisorDetailsItens from "./technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -73,6 +74,17 @@ export const appRoutingPrivate: RouteConfig[] = [
         element: <ScreenDetailsItensTradeAgreement />,
         private: true,
       },
+      {
+        path: "garantias/technical-and-supervisor/visor-inital/:id",
+        element: <TechnicalAndSupervisorDetailsItens />,
+        private: true,
+      },
+      {
+        path: "garantias/technical-and-supervisor/visor-item-details",
+        element: <ScreenDetailsItensTradeAgreement />,
+        private: true,
+      },
+
 
     ]
   }

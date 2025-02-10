@@ -14,6 +14,8 @@ import { AuthService } from "@shared/services/AuthService.ts";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext.tsx";
+import { RuleModel } from "@shared/models/RuleModel";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 export const LoginPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -35,6 +37,16 @@ export const LoginPage = () => {
     try {
       await AuthService.login(username, password, (user) => {
         if (login) {
+          const ruleModel: RuleModel = {
+            id: "1333da82-5a09-4e1b-916a-eda2537ab597",
+            createdAt: "2025-02-09T17:29:55.911Z",
+            updatedAt: "2025-02-09T17:29:55.911Z",
+            name: UserRoleEnum.Supervisor,
+            code: "30",
+            description: "supervisor top"
+          }
+          user.rule = ruleModel;
+          console.log(JSON.stringify(user));
           login(user);
         }
         console.log(user);

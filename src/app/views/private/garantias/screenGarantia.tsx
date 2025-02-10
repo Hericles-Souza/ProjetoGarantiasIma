@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import {Button, Tag} from 'antd';
 import Header from '@shared/components/header/header.tsx';
 import CardCategorias from '@shared/components/card_garantia/card_garantias.tsx';
@@ -11,9 +11,11 @@ import {GarantiasModel} from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
   converterStringParaStatusGarantia,
-  GarantiasStatusEnum
+  GarantiasStatusEnum,
+  GarantiasStatusEnum2
 } from "@shared/enums/GarantiasStatusEnum.ts";
 import {useNavigate} from "react-router-dom";
+import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('garantias');
@@ -22,18 +24,20 @@ const Garantias: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [cardData, setCardData] = useState<GarantiasModel[]>();
   const navigate = useNavigate();
+  const context = useContext(AuthContext);
 
   useEffect(() => {
     const fetchCardData = async () => {
+      
       try {
-        const response = await getGarantiasByStatusAsync(1, 10, 2);
+        const response = await getGarantiasByStatusAsync(1, 10, GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO);
         const data = await response.data.data;
+        console.log(JSON.stringify(data));
         setCardData(data);
       } catch (error) {
         console.error('Error fetching card data:', error);
       }
     };
-
     fetchCardData();
   }, []);
 
@@ -55,7 +59,6 @@ const Garantias: React.FC = () => {
 
   const filteredItems = cardData?.flatMap((card) =>
     card.itens.filter((item) => {
-
       const matchesStatus = filterStatus === 'todos' || item.codigoStatus === converterStatusGarantiaInverso(converterStringParaStatusGarantia(filterStatus));
       const matchesSearch = searchTerm === '' ||
         item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -107,7 +110,13 @@ const Garantias: React.FC = () => {
                   key={item.id}
                   data={new Date(associatedCardData.data)}
                   GarantiaItem={item}
-                  onClick={() => navigate(`/garantias/rgi/${associatedCardData.id}`)}
+                  onClick={() => {
+                    console.log("teste user role: " + context.user.rule.name);
+                    if(context.user.rule.name.includes("admin") || context.user.rule.name.includes("cliente"))
+                      navigate(`/garantias/rgi/${associatedCardData.id}`);
+                    else if(context.user.rule.name.includes("tecnico") || context.user.rule.name.includes("supervisor"))
+                      navigate(`/garantias/technical-and-supervisor/visor-inital/${associatedCardData.id}`);
+                   }}
                 />
               );
             })}
