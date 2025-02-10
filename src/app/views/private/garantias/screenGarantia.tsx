@@ -112,12 +112,11 @@ const Garantias: React.FC = () => {
                   GarantiaItem={item}
                   onClick={() => {
                     console.log("teste user role: " + context.user.rule.name);
-                    if(context.user.rule.name.includes("admin") || context.user.rule.name.includes("cliente"))
+                    if (context.user.rule.name.includes("admin") || context.user.rule.name.includes("cliente"))
                       navigate(`/garantias/rgi/${associatedCardData.id}`);
-                    else if(context.user.rule.name.includes("tecnico") || context.user.rule.name.includes("supervisor"))
+                    else if (context.user.rule.name.includes("tecnico") || context.user.rule.name.includes("supervisor"))
                       navigate(`/garantias/technical-and-supervisor/visor-inital/${associatedCardData.id}`);
-                   }}
-                />
+                  } } codigoFormatado={''}                />
               );
             })}
           </div>
