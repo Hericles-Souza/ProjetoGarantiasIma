@@ -27,7 +27,9 @@
   justify-content: space-between;
   gap: 1rem;
 }
-
+.custom-spin .ant-spin-dot i {
+  background-color: red !important;
+}
 .containerGrid {
   padding: 1rem;
   padding-bottom: 4rem;

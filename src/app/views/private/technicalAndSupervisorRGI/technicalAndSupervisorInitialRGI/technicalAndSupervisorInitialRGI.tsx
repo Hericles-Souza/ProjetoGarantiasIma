@@ -1,4 +1,4 @@
-import { Button } from "antd";
+import { Button, Spin } from "antd";
 import { FileOutlined, LeftOutlined } from "@ant-design/icons";
 import styles from "./technicalAndSupervisorInitialRGI.module.css";
 import { useNavigate, useParams } from "react-router-dom";
@@ -93,7 +93,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
   }, [id]); // Executa a requisição apenas uma vez, quando o `id` mudar
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}><Spin size="large" className="custom-spin" /></div>;
   }
 
   return (

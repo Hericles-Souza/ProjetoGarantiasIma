@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Button, message, Modal } from "antd";
+import { Button, message, Modal, Spin } from "antd";
 import { DeleteOutlined, LeftOutlined, FileOutlined } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
@@ -13,7 +13,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { isNull } from "lodash";
 
-// Função auxiliar para extrair o array de garantias da resposta da API.
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
   if (data && data.data) {
@@ -63,13 +63,12 @@ const RGIDetailsInitial: React.FC = () => {
     const fetchData = async () => {
       let data: GarantiasModel = null;
       try {
-        if(!id){
+        if (!id) {
           await getGarantiaByIdAsync(location.pathname.split("/")[3]).then(
             (dataReturned) => {
               data = dataReturned.data;
             }
           );
-          // Se os dados vieram via location.state (por navegação interna)
           console.log(location.pathname.split("/")[3]);
           if (!isNull(data)) {
             setSocialReason(data.razaoSocial);
@@ -90,18 +89,18 @@ const RGIDetailsInitial: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-    
+
 
       try {
         console.log("id existe: " + id);
-        
-        // Se houver um ID na URL, busca os dados da garantia pela API
+
         if (id) {
           const response = await getGarantiaByIdAsync(id);
           console.log("aqui: " + JSON.stringify(response));
           const data = response.data.data;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
+          
           setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
           setCardData(data);
           setNfs([
@@ -115,7 +114,7 @@ const RGIDetailsInitial: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally{
+      } finally {
         console.log("finalizou");
         setLoading(false);
       }
@@ -202,7 +201,6 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-  // Essa função dispara a atualização da garantia
   const send = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
@@ -215,7 +213,7 @@ const RGIDetailsInitial: React.FC = () => {
     }
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0"); // Mês começa do 0
+    const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
@@ -241,9 +239,10 @@ const RGIDetailsInitial: React.FC = () => {
       email: context.user.email,
       nf: cardData.nf,
       fornecedor: context.user.fullname,
-      codigoStatus: 2,
+      codigoStatus: cardData.codigoStatus,
       observacao: "teste",
       usuarioAtualizacao: context.user.fullname,
+      status:cardData.status,
       dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
     };
     try {
@@ -275,7 +274,9 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+    <Spin size="large" style={{ color: "red", filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)" }} />
+  </div>;
   }
 
   return (
@@ -295,21 +296,20 @@ const RGIDetailsInitial: React.FC = () => {
         <div className={styles.headerLeft}>
           <h1 className={styles.rgiTitle}>RGI {rgi}</h1>
           <div className={styles.statusTag}>
-            {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
-              ? "Aguardando envio"
-              : "Aguardando avaliação"}
+            {cardData?.status}
           </div>
         </div>
         <div className={styles.buttonsContainer}>
-          {/* Botão para excluir a garantia */}
-          <Button
-            type="default"
-            danger
-            className={styles.buttonDeleteRgi}
-            onClick={handleDeleteGuarantee}
-          >
-            Excluir
-          </Button>
+          {cardData?.codigoStatus !== 2 && (
+            <Button
+              type="default"
+              danger
+              className={styles.buttonDeleteRgi}
+              onClick={handleDeleteGuarantee}
+            >
+              Excluir
+            </Button>
+          )}
           <Button
             onClick={save}
             type="default"

@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Button, Tag } from 'antd';
+import { Button, Spin, Tag } from 'antd';
 import Header from '@shared/components/header/header.tsx';
 import CardCategorias from '@shared/components/card_garantia/card_garantias.tsx';
 import SearchField from '@shared/components/input_search/input_search.tsx';
 import styled from './screenGarantia.module.css';
 import './carouselAnimations.css';
 import './tabGarantia.css';
-import { getGarantiasByStatusAsync } from "@shared/services/GarantiasService.ts";
+import { getGarantiasByStatusAsync, getGarantiasPaginationAsync } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
@@ -16,63 +16,62 @@ import {
 } from "@shared/enums/GarantiasStatusEnum.ts";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('rgi');
   const [filterStatus, setFilterStatus] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState<string>('');
   const carouselRef = useRef<HTMLDivElement>(null);
-  const [cardData, setCardData] = useState<GarantiasModel[]>();
+  const [cardData, setCardData] = useState<GarantiasModel[]>([]);
   const navigate = useNavigate();
   const context = useContext(AuthContext);
-
-  let status: number[];
-
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCardData = async () => {
+      let status: number[] = [];
+
       if (context.user.rule.name === 'tecnico') {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.CONFIRMADO]
+        status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.CONFIRMADO];
+      } else if (context.user.rule.name === 'supervisor') {
+        status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO, GarantiasStatusEnum2.CONFIRMADO];
+      } else if (context.user.rule.name === 'cliente') {
+        status = [
+          GarantiasStatusEnum2.NAO_ENVIADO,
+          GarantiasStatusEnum2.EM_ANALISE,
+          GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE,
+          GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
+          GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+          GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA,
+          GarantiasStatusEnum2.CONFIRMADO
+        ];
       }
-      else if (context.user.rule.name === 'supervisor') {
-        status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO, GarantiasStatusEnum2.CONFIRMADO]
-      }
-      else if (context.user.rule.name === 'cliente') {
-        status = [GarantiasStatusEnum2.NAO_ENVIADO,
-        GarantiasStatusEnum2.EM_ANALISE,
-        GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE,
-        GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
-        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-        GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA,
-        GarantiasStatusEnum2.CONFIRMADO
-        ]
-      }
-      let dataArray = [];
+
       try {
-        console.log("status: " + JSON.stringify(status));
-        status.forEach(async element => {
-          console.log(element);
-          const response = await getGarantiasByStatusAsync(1, 10, element);
-          const data = await response.data.data as GarantiasModel;
-          console.log("objeto: " + JSON.stringify(data));
-          
-          console.log("objetoarray: " + JSON.stringify(dataArray))
-          dataArray.push(data);
-          console.log("objeto: " + JSON.stringify(data));
-          console.log("objetoarray: " + JSON.stringify(dataArray))
-        });
+        if (context.user.rule.name === 'cliente') {
+          const response = await getGarantiasPaginationAsync(1, 10);
+          const data = response.data.data.data;
+          setCardData(data);
+        } else {
+          const promises = status.map(async (element) => {
+            const response = await getGarantiasByStatusAsync(1, 10, element);
+            return response.data.data.data;
+          });
+
+          const results = await Promise.all(promises);
+          const dataArray = results.flat(); // Concatena todos os arrays em um único array
+          setCardData(dataArray);
+        }
       } catch (error) {
         console.error('Error fetching card data:', error);
-      } finally{
-        setCardData(dataArray);
-
+      } finally {
+        setLoading(false);
       }
-
-
     };
 
     fetchCardData();
-  }, []);
+  }, [context.user.rule.name]);
+
   const statuses = Object.values(GarantiasStatusEnum);
 
   const handleNext = () => {
@@ -89,9 +88,8 @@ const Garantias: React.FC = () => {
     }
   };
 
-  const filteredItems = cardData?.flatMap((card) =>
+  const filteredItems = cardData.flatMap((card) =>
     card.itens.filter((item) => {
-
       const matchesStatus = filterStatus === 'todos' || item.codigoStatus === converterStatusGarantiaInverso(converterStringParaStatusGarantia(filterStatus));
       const matchesSearch = searchTerm === '' ||
         item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,8 +98,13 @@ const Garantias: React.FC = () => {
 
       return matchesStatus && matchesSearch;
     })
-  ) || [];
+  );
 
+  if (loading || !cardData) {
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+    <Spin size="large" style={{ color: "red", filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)" }} />
+  </div>;
+  }
 
   return (
     <>
@@ -135,24 +138,28 @@ const Garantias: React.FC = () => {
             </div>
           </div>
           <div className={styled.containerGrid}>
-            {filteredItems.map((item) => {
-              const associatedCardData = cardData?.find(card => card.rgi === item.rgi);
-
-              return (
-                <CardCategorias
-                  key={item.id}
-                  data={new Date(associatedCardData.data)}
-                  GarantiaItem={item}
-                  codigoFormatado={`RGI ${item.rgi}`}
-                  onClick={() => navigate(`/garantias/rgi/${associatedCardData.id}`)}
-                />
-              );
-            })}
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => {
+                const associatedCardData = cardData.find(card => card.rgi === item.rgi);
+                return (
+                  <CardCategorias
+                    key={item.id}
+                    data={new Date(associatedCardData.data)}
+                    GarantiaItem={item}
+                    codigoFormatado={`RGI ${item.rgi}`}
+                    onClick={() => {
+                      navigate(`/garantias/rgi/${associatedCardData.id}`, { state: { item, associatedCardData } });
+                    }}
+                  />
+                );
+              })
+            ) : (
+              <div>Nenhum item encontrado</div>
+            )}
           </div>
-
-
         </div>
       )}
+
       {activeTab === 'aci' && (
         <div className={styled.container}>
           <div className={styled.content}>
@@ -181,27 +188,28 @@ const Garantias: React.FC = () => {
             </div>
           </div>
           <div className={styled.containerGrid}>
-            {filteredItems.map((item) => {
-              // Encontrar o cardData que corresponde a esse item
-              const associatedCardData = cardData?.find(card => card.rgi === item.rgi);
-
-              return (
-                <CardCategorias
-                  key={item.id}
-                  data={new Date(associatedCardData.data)}
-                  GarantiaItem={item}
-                  onClick={() => {
-                    console.log("teste user role: " + context.user.rule.name);
-                    if (context.user.rule.name.includes("admin") || context.user.rule.name.includes("cliente"))
-                      navigate(`/garantias/rgi/${associatedCardData.id}`);
-                    else if (context.user.rule.name.includes("tecnico") || context.user.rule.name.includes("supervisor"))
-                      navigate(`/garantias/technical-and-supervisor/visor-inital/${associatedCardData.id}`);
-                  }} codigoFormatado={''} />
-              );
-            })}
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => {
+                const associatedCardData = cardData.find(card => card.rgi === item.rgi);
+                return (
+                  <CardCategorias
+                    key={item.id}
+                    data={new Date(associatedCardData.data)}
+                    GarantiaItem={item}
+                    onClick={() => {
+                      if (context.user.rule.name.includes("admin") || context.user.rule.name.includes("cliente"))
+                        navigate(`/garantias/rgi/${associatedCardData.id}`);
+                      else if (context.user.rule.name.includes("tecnico") || context.user.rule.name.includes("supervisor"))
+                        navigate(`/garantias/technical-and-supervisor/visor-inital/${associatedCardData.id}`);
+                    }}
+                    codigoFormatado={''}
+                  />
+                );
+              })
+            ) : (
+              <div>Nenhum item encontrado</div>
+            )}
           </div>
-
-
         </div>
       )}
     </>
