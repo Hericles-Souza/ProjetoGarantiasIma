@@ -31,6 +31,7 @@ const Garantias: React.FC = () => {
   useEffect(() => {
     const fetchCardData = async () => {
       if (context.user.rule.name === 'tecnico') {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.CONFIRMADO]
       }
       else if (context.user.rule.name === 'supervisor') {
@@ -53,13 +54,21 @@ const Garantias: React.FC = () => {
           console.log(element);
           const response = await getGarantiasByStatusAsync(1, 10, element);
           const data = await response.data.data as GarantiasModel;
-          dataArray.push(data);
+          console.log("objeto: " + JSON.stringify(data));
+          
           console.log("objetoarray: " + JSON.stringify(dataArray))
-          setCardData(dataArray);
+          dataArray.push(data);
+          console.log("objeto: " + JSON.stringify(data));
+          console.log("objetoarray: " + JSON.stringify(dataArray))
         });
       } catch (error) {
         console.error('Error fetching card data:', error);
+      } finally{
+        setCardData(dataArray);
+
       }
+
+
     };
 
     fetchCardData();
