@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ filterStatus, handleFilterChange }) => 
         onCancel={handleDialogClose}
         footer={null}
         width={600}
-        closeIcon={null} // Remove o "X" de fechar
+        closeIcon={null}
       >
         <NewRequestGarantiasDialog onClose={handleDialogClose} />
       </Modal>

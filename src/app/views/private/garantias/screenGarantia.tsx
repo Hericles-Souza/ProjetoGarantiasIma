@@ -11,7 +11,8 @@ import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
   converterStringParaStatusGarantia,
-  GarantiasStatusEnum
+  GarantiasStatusEnum,
+  GarantiasStatusEnum2
 } from "@shared/enums/GarantiasStatusEnum.ts";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
@@ -22,22 +23,56 @@ const Garantias: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [cardData, setCardData] = useState<GarantiasModel[]>();
   const navigate = useNavigate();
- 
+  const context = useContext(AuthContext);
+
+  let status: number[];
+
 
   useEffect(() => {
     const fetchCardData = async () => {
+      if (context.user.rule.name === 'tecnico') {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.CONFIRMADO]
+      }
+      else if (context.user.rule.name === 'supervisor') {
+        status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO, GarantiasStatusEnum2.CONFIRMADO]
+      }
+      else if (context.user.rule.name === 'cliente') {
+        status = [GarantiasStatusEnum2.NAO_ENVIADO,
+        GarantiasStatusEnum2.EM_ANALISE,
+        GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE,
+        GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
+        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+        GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA,
+        GarantiasStatusEnum2.CONFIRMADO
+        ]
+      }
+      let dataArray = [];
       try {
-        const response = await getGarantiasByStatusAsync(1, 10, 2);
-        const data = await response.data.data;
-        setCardData(data);
+        console.log("status: " + JSON.stringify(status));
+        status.forEach(async element => {
+          console.log(element);
+          const response = await getGarantiasByStatusAsync(1, 10, element);
+          const data = await response.data.data as GarantiasModel;
+          console.log("objeto: " + JSON.stringify(data));
+          
+          console.log("objetoarray: " + JSON.stringify(dataArray))
+          dataArray.push(data);
+          console.log("objeto: " + JSON.stringify(data));
+          console.log("objetoarray: " + JSON.stringify(dataArray))
+        });
       } catch (error) {
         console.error('Error fetching card data:', error);
+      } finally{
+        setCardData(dataArray);
+
       }
+
+
     };
 
     fetchCardData();
   }, []);
-  const context = useContext(AuthContext);
   const statuses = Object.values(GarantiasStatusEnum);
 
   const handleNext = () => {
