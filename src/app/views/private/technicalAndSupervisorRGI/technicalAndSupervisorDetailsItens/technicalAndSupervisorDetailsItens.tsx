@@ -130,12 +130,16 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState("");
 
+
   const handleSave = async () => {
+
     const dataToSend = {
       itemId: itemId,
       analiseTecnica: editorContent,
       conclusao: conclusao
+
     };
+    console.log("aqui: " + JSON.stringify(itemId));
     console.log("data to send: " + JSON.stringify(dataToSend));
     try {
       const response = await api.put(

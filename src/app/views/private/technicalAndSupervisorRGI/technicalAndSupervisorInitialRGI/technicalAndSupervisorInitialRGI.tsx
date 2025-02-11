@@ -91,28 +91,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
 
     fetchData();
   }, [id]); // Executa a requisição apenas uma vez, quando o `id` mudar
-  const handleSave = async () => {
-    const dataToSend = {
-      itemId: itemId,
-      analiseTecnica: editorContent,
-      conclusao: conclusao,
-    };
-    console.log("data to send: " + JSON.stringify(dataToSend));
-    try {
-      const response = await api.put(`/garantias/analiseTecnica/`, dataToSend);
 
-      if (response.status === 200) {
-        // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
-        alert("Dados salvos com sucesso!");
-      } else {
-        // Handle error
-        alert("Falha ao salvar os dados.");
-      }
-    } catch (error) {
-      console.error("Erro ao tentar salvar:", error);
-      alert("Erro ao tentar salvar.");
-    }
-  };
   if (loading) {
     return <div>Carregando...</div>;
   }
@@ -163,7 +142,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
           {/* ---------------------------para o SUPERVISOR aqui é oculto-------------------------------------- */}
           {context.user.rule.name != UserRoleEnum.Supervisor && (
             <>
-              <Button onClick={handleSave} type="default" danger className={styles.buttonSaveRgi}>
+              <Button type="default" danger className={styles.buttonSaveRgi}>
                 Salvar
               </Button>
               <Button
