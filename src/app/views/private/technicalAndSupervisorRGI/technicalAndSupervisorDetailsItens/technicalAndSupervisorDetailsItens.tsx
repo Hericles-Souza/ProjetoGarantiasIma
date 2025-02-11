@@ -11,6 +11,9 @@ import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import api from "@shared/Interceptors";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { getGarantiaByIdAsync } from "@shared/services/GarantiasService";
+import { useParams } from "react-router-dom";
 
 // Componente QuillEditor
 interface QuillEditorProps {
@@ -22,6 +25,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ editorRef, setEditorContent }
   const quillInstance = useRef<Quill | null>(null);
     
   useEffect(() => {
+
     if (editorRef.current && !quillInstance.current) {
       quillInstance.current = new Quill(editorRef.current, {
         theme: "snow",
@@ -100,6 +104,18 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [envioAutorizado, setEnvioAutorizado] = useState(false);
   const [conclusao, setConclusao] = useState(""); 
   const context = useContext(AuthContext);
+  const { id, itemId } = useParams<{ id: string, itemId: string }>();
+
+  useEffect( ()  =>   {
+    
+    let garantiasModel: GarantiasModel;
+    console.log(JSON.stringify("id: " + id));
+
+    getGarantiaByIdAsync(id).then((value) => {
+      garantiasModel = value.data;
+      console.log(JSON.stringify(garantiasModel));
+    });
+  });
 
   const toggleContentVisibility = () => {
     setIsContentVisible(!isContentVisible);
@@ -116,7 +132,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
   const handleSave = async () => {
     const dataToSend = {
-      itemId: '',
+      itemId: itemId,
       analiseTecnica: editorContent,
       conclusao: conclusao
     };
@@ -147,7 +163,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         <Button type="link" className={styles.ButtonBack}>
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
-        <span className={styles.RgiCode}>RGI N° 000666-0001 / NF 000666-00147.A</span>
+        <span className={styles.RgiCode}>RGI {context.user.codigoCigam}</span>
       </div>
 
       <div className={styles.containerCabecalho}>
@@ -172,6 +188,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       <h3 className={styles.nfsTitle}>Itens desta NF associados a esta garantia</h3>
 
       <div className={styles.containerInformacoes}>
+
+        
         <CollapsibleSection
           title="000666-00147.A.01"
           isVisible={isContentVisible}

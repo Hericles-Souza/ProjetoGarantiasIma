@@ -80,7 +80,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
       },
       {
-        path: "garantias/technical-and-supervisor/visor-item-details",
+        path: "garantias/technical-and-supervisor/visor-item-details/:id/:idItem",
         element: <ScreenDetailsItensTradeAgreement />,
         private: true,
       },

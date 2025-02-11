@@ -23,13 +23,13 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
   const [, setCardData] = useState<GarantiasModel>();
   const context = useContext(AuthContext);
   const [nfs, setNfs] = useState<
-    { nf: string; itens: number; sequence: number }[]
+    { itemId: string; nf: string; itens: number; sequence: number }[]
   >([]);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
   useEffect(() => {
     console.log("id existe: " + id);
-    const fetchData = async () => { 
+    const fetchData = async () => {
       let data: GarantiasModel = null;
       try {
         if (!id) {
@@ -47,6 +47,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
             setCardData(data);
             setNfs([
               {
+                itemId: data.id,
                 nf: data.nf,
                 itens: data.itens ? data.itens.length : 0,
                 sequence: 1,
@@ -73,6 +74,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
           setCardData(data);
           setNfs([
             {
+              itemId: data.id,
               nf: data.nf,
               itens: data.itens ? data.itens.length : 0,
               sequence: 1,
@@ -89,7 +91,28 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
 
     fetchData();
   }, [id]); // Executa a requisição apenas uma vez, quando o `id` mudar
+  const handleSave = async () => {
+    const dataToSend = {
+      itemId: itemId,
+      analiseTecnica: editorContent,
+      conclusao: conclusao,
+    };
+    console.log("data to send: " + JSON.stringify(dataToSend));
+    try {
+      const response = await api.put(`/garantias/analiseTecnica/`, dataToSend);
 
+      if (response.status === 200) {
+        // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
+        alert("Dados salvos com sucesso!");
+      } else {
+        // Handle error
+        alert("Falha ao salvar os dados.");
+      }
+    } catch (error) {
+      console.error("Erro ao tentar salvar:", error);
+      alert("Erro ao tentar salvar.");
+    }
+  };
   if (loading) {
     return <div>Carregando...</div>;
   }
@@ -140,11 +163,11 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
           {/* ---------------------------para o SUPERVISOR aqui é oculto-------------------------------------- */}
           {context.user.rule.name != UserRoleEnum.Supervisor && (
             <>
-              <Button type="default" danger className={styles.buttonSaveRgi}>
+              <Button onClick={handleSave} type="default" danger className={styles.buttonSaveRgi}>
                 Salvar
               </Button>
               <Button
-                type="primary" 
+                type="primary"
                 danger
                 style={{ backgroundColor: "red" }}
                 className={styles.buttonSendRgi}
@@ -217,9 +240,14 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
               <Button
                 type="text"
                 className={styles.nextButton}
-                onClick={() =>
-                  navigate(`/garantias/rgi/details-itens-nf/${id}`)
-                }
+                onClick={() => {
+                  console.log("teste");
+                  const itemId: string = nf.itemId;
+                  console.log("itemID: " + itemId);
+                  navigate(
+                    `/garantias/technical-and-supervisor/visor-item-details/${id}/${itemId}`
+                  );
+                }}
               >
                 &gt;
               </Button>
