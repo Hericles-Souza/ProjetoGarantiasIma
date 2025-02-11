@@ -84,7 +84,7 @@ const ScreenAcordoComercial = () => {
           <Button
             type="link"
             className="ButtonBack"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate()}
           >
             <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
           </Button>
