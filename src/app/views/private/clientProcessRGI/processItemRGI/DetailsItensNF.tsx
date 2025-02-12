@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, message, Modal } from "antd";
+import { Button, message, Modal, Spin } from "antd";
 import {
   DownOutlined,
   DeleteOutlined,
@@ -15,19 +16,18 @@ import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWit
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
-import { getGarantiaByIdAsync } from "@shared/services/GarantiasService";
 import api from "@shared/Interceptors";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 
 // Funções para formatação do RGI
-const formatMainRgi = (rgi: string, letter: string): string => {
+const formatMainRgi = (rgi: string): string => {
   const cleanRgi = rgi.split('.')[0];
-  return `${cleanRgi}.${letter}`;
+  return `${cleanRgi}`;
 };
 
 const formatItemRgi = (rgi: string, letter: string, sequence: number): string => {
-  const cleanRgi = rgi.split('.')[0];
-  return `${cleanRgi}.${letter}.${sequence.toString().padStart(2, "0")}`;
+
+  return `${letter}.${sequence.toString().padStart(2, "0")}`;
 };
 
 interface FileData {
@@ -226,7 +226,9 @@ const DetailsItensNF: React.FC = () => {
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
+  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rgiLetter = (location.state as any)?.rgiLetter || "A";
 
   const handleInputChange = (itemId: string, field: string, value: any) => {
@@ -268,12 +270,8 @@ const DetailsItensNF: React.FC = () => {
         if (location.state && "garantiaData" in location.state) {
           data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
           console.log("Dados recebidos via state:", data);
-        } else if (guaranteeId) {
-          const response = await getGarantiaByIdAsync(guaranteeId);
-          data = response.data;
-          console.log("Dados recebidos via API:", data);
         }
-        if (data) {
+        if (data && location.state) {
           console.log("Anexos da garantia:", data.anexos);
           setGarantia(data);
           const transformedItems = data.itens.map((item, idx) => ({
@@ -297,6 +295,9 @@ const DetailsItensNF: React.FC = () => {
         }
       } catch (error) {
         console.error("Error loading garantia data:", error);
+      } finally{
+        
+        setLoading(false);
       }
     };
 
@@ -305,7 +306,7 @@ const DetailsItensNF: React.FC = () => {
 
   const addNewItem = () => {
     const newItemId = crypto.randomUUID();
-    const sequence = items.length + 1;
+    const sequence = garantia.itens.length + 1;
     const newItemRgi = garantia ? formatItemRgi(garantia.rgi, rgiLetter, sequence) : "";
     setItems([
       ...items,
@@ -366,7 +367,7 @@ const DetailsItensNF: React.FC = () => {
       loteItemOficial: items[0].lotePeca,
       loteItem: items[0].lotePeca,
       codigoStatus:
-        items[0].status === "Autorizado"
+      items[0].status === "Autorizado"
           ? GarantiasStatusEnum2.NAO_ENVIADO
           : GarantiasStatusEnum2.EM_ANALISE,
       solicitarRessarcimento: items[0].isReimbursementChecked ? 1 : 0,
@@ -388,6 +389,27 @@ const DetailsItensNF: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spin
+          size="large"
+          style={{
+            color: "red",
+            filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)",
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
@@ -397,8 +419,8 @@ const DetailsItensNF: React.FC = () => {
           onClick={() =>
             navigate(`/garantias/rgi/${guaranteeId}`, {
               state: {
-                garantiaData: garantia,
-                nf: garantia?.nf,
+                garantia: garantia,
+                item: garantia?.nf,
               },
             })
           }
@@ -406,12 +428,12 @@ const DetailsItensNF: React.FC = () => {
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
         <span className={styles.RgiCode}>
-          RGI {garantia?.rgi ? formatMainRgi(garantia.rgi, rgiLetter) : "----"} / NF {garantia?.nf || "----"}
+          RGI {garantia?.rgi ? formatMainRgi(rgiLetter) : "----"} / NF {garantia?.nf || "----"}
         </span>
       </div>
       <div className={styles.ContainerHeader}>
         <h1 className={styles.tituloRgi}>
-          RGI {garantia?.rgi ? formatMainRgi(garantia.rgi, rgiLetter) : ""}
+          RGI {garantia?.rgi ? formatMainRgi(rgiLetter) : ""}
         </h1>
         <div className={styles.botoesCabecalho}>
           <Button
@@ -457,125 +479,127 @@ const DetailsItensNF: React.FC = () => {
           Caso a peça não possua um lote, o campo Lote da peça deve ser preenchido com “Não contém”
         </span>
       </div>
-      {items.map((item, index) => (
-        <div className={styles.containerInformacoes} key={item.id}>
-          <CollapsibleSection
-            title={`${index + 1}`}
-            isVisible={visibleSectionId === item.id}
-            toggleVisibility={() => toggleSectionVisibility(item.id)}
-            showDeleteConfirm={() => showDeleteConfirm(item.id)}
-            status={item.status}
-            rgi={formatItemRgi(garantia?.rgi || "", rgiLetter, index + 1)}
-          >
-            <h3 className={styles.tituloSecao}>Informações Gerais</h3>
-            <div className={styles.inputsContainer}>
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Código da peça"
-                    fullWidth
-                    value={item.codigoPeca}
-                    onChange={(e) =>
-                      handleInputChange(item.id, "codigoPeca", e.target.value)
-                    }
-                  />
+      {garantia.itens.map((item, index) => {        
+        return (
+          <div className={styles.containerInformacoes} key={item.id}>
+            <CollapsibleSection
+              title={`${index + 1}`}
+              isVisible={visibleSectionId === item.id}
+              toggleVisibility={() => toggleSectionVisibility(item.id)}
+              showDeleteConfirm={() => showDeleteConfirm(item.id)}
+              status={item.status}
+              rgi={formatItemRgi(garantia?.rgi || "", rgiLetter, index + 1)}
+            >
+              <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+              <div className={styles.inputsContainer}>
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      label="Código da peça"
+                      fullWidth
+                      value={item.codigoItem}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "codigoPeca", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      label="Lote da peça"
+                      fullWidth
+                      value={item.loteItem}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "lotePeca", e.target.value)
+                      }
+                    />
+                  </div>
                 </div>
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Lote da peça"
-                    fullWidth
-                    value={item.lotePeca}
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 0.4 }}>
+                    <OutlinedSelectWithLabel
+                      label="Possível defeito"
+                      fullWidth
+                      options={[
+                        { value: "Opção 1", label: "Opção 1" },
+                        { value: "Opção 2", label: "Opção 2" },
+                        { value: "Opção 3", label: "Opção 3" },
+                      ]}
+                      value={item.tipoDefeito}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "tipoDefeito", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 1 }}>
+                    <OutlinedInputWithLabel
+                      label="Modelo do veículo que aplicou"
+                      fullWidth
+                      value={item.modeloVeiculoAplicado}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "modeloVeiculo", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 0.3 }}>
+                    <OutlinedInputWithLabel
+                      label="Ano do veículo"
+                      fullWidth
+                      value={item.modeloVeiculoAplicado}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "anoVeiculo", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 1 }}>
+                    <OutlinedInputWithLabel
+                      label="Torque aplicado à peça"
+                      fullWidth
+                      value={item.torqueAplicado.toString()}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "torquePeca", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+                <div className={styles.checkboxContainer}>
+                  <ColorCheckboxes
                     onChange={(e) =>
-                      handleInputChange(item.id, "lotePeca", e.target.value)
+                      handleInputChange(item.id, "isReimbursementChecked", e.target.checked)
                     }
+                    checked={item.solicitarRessarcimento}
                   />
+                  <label className={styles.checkboxDanger}>
+                    Solicitar ressarcimento
+                  </label>
                 </div>
               </div>
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 0.4 }}>
-                  <OutlinedSelectWithLabel
-                    label="Possível defeito"
-                    fullWidth
-                    options={[
-                      { value: "Opção 1", label: "Opção 1" },
-                      { value: "Opção 2", label: "Opção 2" },
-                      { value: "Opção 3", label: "Opção 3" },
-                    ]}
-                    value={item.tipoDefeito}
-                    onChange={(e) =>
-                      handleInputChange(item.id, "tipoDefeito", e.target.value)
-                    }
-                  />
+              {item.solicitarRessarcimento && (
+                <div className={styles.contentReimbursement}>
+                  <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
+                  {["1. Documento de identificação (RG ou CNH):", "2. Documentação do veículo:", "3. NF do guincho:", "4. NF de outras despesa/produtos pertinentes:"].map(
+                    (item) => (
+                      <FileAttachment label={item} backgroundColor="#f5f5f5" />
+                    )
+                  )}
                 </div>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel
-                    label="Modelo do veículo que aplicou"
-                    fullWidth
-                    value={item.modeloVeiculo}
-                    onChange={(e) =>
-                      handleInputChange(item.id, "modeloVeiculo", e.target.value)
-                    }
-                  />
-                </div>
-                <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                  <OutlinedInputWithLabel
-                    label="Ano do veículo"
-                    fullWidth
-                    value={item.anoVeiculo}
-                    onChange={(e) =>
-                      handleInputChange(item.id, "anoVeiculo", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel
-                    label="Torque aplicado à peça"
-                    fullWidth
-                    value={item.torquePeca}
-                    onChange={(e) =>
-                      handleInputChange(item.id, "torquePeca", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-              <div className={styles.checkboxContainer}>
-                <ColorCheckboxes
-                  onChange={(e) =>
-                    handleInputChange(item.id, "isReimbursementChecked", e.target.checked)
-                  }
-                  checked={item.isReimbursementChecked}
-                />
-                <label className={styles.checkboxDanger}>
-                  Solicitar ressarcimento
-                </label>
-              </div>
-            </div>
-            {item.isReimbursementChecked && (
-              <div className={styles.contentReimbursement}>
-                <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
-                {["1. Documento de identificação (RG ou CNH):", "2. Documentação do veículo:", "3. NF do guincho:", "4. NF de outras despesa/produtos pertinentes:"].map(
-                  (item) => (
-                    <FileAttachment label={item} backgroundColor="#f5f5f5" />
-                  )
-                )}
-              </div>
-            )}
-            <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />
-            <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-            {[
-              "1. Foto do lado onde está a gravação IMA:",
-              "2. Foto da parte danificada/amassada-quebrada:",
-              "3. Foto marcações suspeitas na peça:",
-              "4. Foto da peça completa:",
-              "5. Outras fotos pertinentes:",
-            ].map((label, idx) => (
-              <FileAttachment key={idx} label={label} backgroundColor="white" />
-            ))}
-          </CollapsibleSection>
-        </div>
-      ))}
+              )}
+              <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />
+              <h3 className={styles.tituloA}>Anexos de Imagens</h3>
+              {[
+                "1. Foto do lado onde está a gravação IMA:",
+                "2. Foto da parte danificada/amassada-quebrada:",
+                "3. Foto marcações suspeitas na peça:",
+                "4. Foto da peça completa:",
+                "5. Outras fotos pertinentes:",
+              ].map((label, idx) => (
+                <FileAttachment key={idx} label={label} backgroundColor="white" />
+              ))}
+            </CollapsibleSection>
+          </div>
+        )
+      })}
       <Modal
         title="Confirmar Exclusão"
         visible={modalDeleteOpen}

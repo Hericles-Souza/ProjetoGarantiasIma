@@ -3,16 +3,12 @@ import { Button, message, Modal, Spin } from "antd";
 import { DeleteOutlined, LeftOutlined, FileOutlined } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
-import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
-import dayjs from "dayjs";
 import NFModal from "../addNewNF/modalAddNewNF";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
-import { isNull } from "lodash";
-
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -36,7 +32,6 @@ export const getRGIByUserAsync = async (userId: string) => {
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
-  const [requestDate, setRequestDate] = useState("");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [cardData, setCardData] = useState<GarantiasModel>();
@@ -60,49 +55,15 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = () => {
       let data: GarantiasModel = null;
       try {
-        if (!id) {
-          await getGarantiaByIdAsync(location.pathname.split("/")[3]).then(
-            (dataReturned) => {
-              data = dataReturned.data;
-            }
-          );
-          console.log(location.pathname.split("/")[3]);
-          if (!isNull(data)) {
-            setSocialReason(data.razaoSocial);
-            setPhone(data.telefone);
-            setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
-            setCardData(data);
-            setRgi(data.rgi);
-            setNfs([
-              {
-                nf: data.nf,
-                itens: data.itens ? data.itens.length : 0,
-                sequence: 1,
-              },
-            ]);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-
-
-      try {
-        console.log("id existe: " + id);
-
-        if (id) {
-          const response = await getGarantiaByIdAsync(id);
-          console.log("aqui: " + JSON.stringify(response));
-          const data = response.data.data;
+        if (location.state) {
+          data = location.state.garantia;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
-          
-          setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
           setCardData(data);
+          setRgi(data.rgi);
           setNfs([
             {
               nf: data.nf,
@@ -110,18 +71,26 @@ const RGIDetailsInitial: React.FC = () => {
               sequence: 1,
             },
           ]);
-          setRgi(data.rgi);
+          console.log("garantia: " + JSON.stringify(data));
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
+
         console.log("finalizou");
+
+        console.log("razaoSocial: " + data.razaoSocial);
+        console.log("telefone: " + data.telefone);
+        console.log("data: " + data.data);
+        console.log("cardData: " + JSON.stringify(data));
+        console.log("rgi: " + data.rgi);
+        console.log("rgi: " + data.itens);
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id, location.state]);
+  }, [location.state]);
 
   // Função para excluir a garantia
   const handleDeleteGuarantee = async () => {
@@ -242,7 +211,7 @@ const RGIDetailsInitial: React.FC = () => {
       codigoStatus: cardData.codigoStatus,
       observacao: "teste",
       usuarioAtualizacao: context.user.fullname,
-      status:cardData.status,
+      status: cardData.status,
       dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
     };
     try {
@@ -274,9 +243,24 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   if (loading) {
-    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-    <Spin size="large" style={{ color: "red", filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)" }} />
-  </div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spin
+          size="large"
+          style={{
+            color: "red",
+            filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)",
+          }}
+        />
+      </div>
+    );
   }
 
   return (
@@ -295,9 +279,7 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
           <h1 className={styles.rgiTitle}>RGI {rgi}</h1>
-          <div className={styles.statusTag}>
-            {cardData?.status}
-          </div>
+          <div className={styles.statusTag}>{cardData?.status}</div>
         </div>
         <div className={styles.buttonsContainer}>
           {cardData?.codigoStatus !== 2 && (
@@ -339,7 +321,7 @@ const RGIDetailsInitial: React.FC = () => {
             <OutlinedInputWithLabel
               InputProps={{ readOnly: true }}
               label="Razão social"
-              value={socialReason}
+              value={cardData.razaoSocial}
               fullWidth
               disabled
             />
@@ -348,7 +330,7 @@ const RGIDetailsInitial: React.FC = () => {
             <OutlinedInputWithLabel
               InputProps={{ readOnly: true }}
               label="Telefone"
-              value={phone}
+              value={cardData.telefone}
               fullWidth
               disabled
             />
@@ -357,7 +339,7 @@ const RGIDetailsInitial: React.FC = () => {
             <OutlinedInputWithLabel
               InputProps={{ readOnly: true }}
               label="Data da solicitação"
-              value={requestDate}
+              value={cardData.data}
               fullWidth
               disabled
             />
@@ -382,7 +364,7 @@ const RGIDetailsInitial: React.FC = () => {
           </Button>
         </div>
 
-        {nfs.map((nf, index) => (
+        {cardData.itens.map((nf, index) => (
           <div key={index} className={styles.nfsItem}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined
@@ -395,18 +377,22 @@ const RGIDetailsInitial: React.FC = () => {
               />
               <span className={styles.nfsCode}>{getRgiWithSuffix(index)}</span>
               <span className={styles.nfsDivider}> | </span>
-              <span className={styles.nfsQuantity}> {nf.itens} ITENS</span>
+              <span className={styles.nfsQuantity}> {cardData.itens.length.toString()} ITENS</span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
               <DeleteOutlined
                 style={{ color: "#555", fontSize: "22px" }}
                 className={styles.DeleteOutlined}
-                onClick={() => showDeleteConfirm(nf.nf)}
+                onClick={() => showDeleteConfirm(nf.codigoItem)}
               />
               <Button
                 type="text"
                 className={styles.nextButton}
-                onClick={() => handleDetailsNavigation(nf)}
+                onClick={() => handleDetailsNavigation({
+                  itens: cardData.itens.length,
+                  nf: nf.codigoItem,
+                  sequence: nfs[index].sequence
+                })}
               >
                 &gt;
               </Button>

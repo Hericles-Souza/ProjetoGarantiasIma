@@ -41,11 +41,13 @@ export const LoginPage = () => {
         }
         console.log(user);
       });
-      navigate("/garantias");
     } catch {
       toast.error(
         "Falha no login. Verifique suas credenciais e tente novamente."
       );
+    }finally{
+
+      navigate("/garantias");
     }
   };
 
@@ -211,6 +213,7 @@ export const LoginPage = () => {
                 </div>
                 <div style={{ marginBottom: "16px" }}>
                   <Button
+                  onClick={handleLogin}
                     size="large"
                     type="primary"
                     htmlType="submit"
