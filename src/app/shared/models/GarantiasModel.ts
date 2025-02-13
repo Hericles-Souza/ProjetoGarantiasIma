@@ -14,6 +14,8 @@ export interface GarantiaItem {
   status: string; 
   codigoStatus: GarantiasStatusEnum2;
   solicitarRessarcimento: boolean;
+  analiseTecnica?:string;
+  conclusao?:string;
   anexos?: string;
 }
 

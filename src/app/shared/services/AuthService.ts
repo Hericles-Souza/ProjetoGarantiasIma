@@ -26,12 +26,14 @@ const login = async (
       password,
     });
 
-    const token = response.data.token;
-  } catch (error) {
+    const token = await response.data.token;
     localStorage.setItem(environment.TOKEN, token);
-
-    const data: AuthModel = response.data;
+    const data: AuthModel = await response.data;
+    console.log("loginContext: " + JSON.stringify(data));
     loginContext(data);
+
+  } catch (error) {
+
     console.error("Erro ao fazer login:", error);
     throw error;
   } finally {

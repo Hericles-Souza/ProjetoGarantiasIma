@@ -398,7 +398,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
                     <h3 className={styles.tituloA}>Conclusão</h3>
                     <MultilineTextFields
-                      value={conclusao}
+                      value={item.conclusao}
                       onChange={(e) => setConclusao(e.target.value)}
                       label="Conclusão"
                       placeholder="Digite a conclusão aqui..."
