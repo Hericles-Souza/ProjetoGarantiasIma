@@ -10,7 +10,7 @@ import {
   getGarantiasByStatusAsync,
   getGarantiasPaginationAsync,
 } from "@shared/services/GarantiasService.ts";
-import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
+import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
   converterStringParaStatusGarantia,
@@ -29,9 +29,10 @@ const Garantias: React.FC = () => {
   const navigate = useNavigate();
   const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
+  const [filteredItems, setFilteredItems] = useState<GarantiaItem[]>([]);
+
 
   useEffect(() => {
-    console.log("teste user: " + context.user.rule.name);
     const fetchCardData = async () => {
       try {
         if (context.user.rule.name === "cliente") {
@@ -67,13 +68,32 @@ const Garantias: React.FC = () => {
       } catch (error) {
         console.error("Error fetching card data:", error);
       } finally {
-        console.log("cardDAta: " + JSON.stringify(cardData));
+        setFilteredItems(cardData.flatMap((card) => {
+          // console.log("TESTE CARDDATA: " + JSON.stringify(cardData));
+          // console.log("TESTE CARD: " + JSON.stringify(card));
+          return card.itens.filter((item) => {
+            const matchesStatus =
+              filterStatus === "todos" ||
+              item.codigoStatus ===
+                converterStatusGarantiaInverso(
+                  converterStringParaStatusGarantia(filterStatus)
+                );
+            const matchesSearch =
+              searchTerm === "" ||
+              item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              item.codigoItem.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              item.tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
+                 
+            return matchesStatus && matchesSearch;
+          });
+        }));
+        console.log("filteredItems finally: " + JSON.stringify(filteredItems));
         setLoading(false);
       }
     };
 
     fetchCardData();
-  }, [context]);
+  }, [context, filteredItems]);
 
   const statuses = Object.values(GarantiasStatusEnum);
 
@@ -91,25 +111,7 @@ const Garantias: React.FC = () => {
     }
   };
 
-  const filteredItems = cardData.flatMap((card) => {
-    // console.log("TESTE CARDDATA: " + JSON.stringify(cardData));
-    // console.log("TESTE CARD: " + JSON.stringify(card));
-    return card.itens.filter((item) => {
-      const matchesStatus =
-        filterStatus === "todos" ||
-        item.codigoStatus ===
-          converterStatusGarantiaInverso(
-            converterStringParaStatusGarantia(filterStatus)
-          );
-      const matchesSearch =
-        searchTerm === "" ||
-        item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.codigoItem.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
-          return 
-      return matchesStatus && matchesSearch;
-    });
-  });
+
 
   if (loading || !cardData) {
     return (
