@@ -46,7 +46,7 @@ export const LoginPage = () => {
         "Falha no login. Verifique suas credenciais e tente novamente."
       );
     }finally{
-
+      while(!login){ /* empty */ }
       navigate("/garantias");
     }
   };

@@ -71,7 +71,7 @@ const RGIDetailsInitial: React.FC = () => {
               sequence: 1,
             },
           ]);
-          console.log("garantia: " + JSON.stringify(data));
+          // console.log("garantia: " + JSON.stringify(data));
         }
       } catch (error) {
         console.error("Error fetching data:", error);

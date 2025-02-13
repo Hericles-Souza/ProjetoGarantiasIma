@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, Spin } from "antd";
 import { RightOutlined, DownOutlined, LeftOutlined } from "@ant-design/icons";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
@@ -12,8 +13,7 @@ import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import api from "@shared/Interceptors";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
-import { getGarantiaByIdAsync } from "@shared/services/GarantiasService";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 // Componente QuillEditor
 interface QuillEditorProps {
@@ -21,11 +21,13 @@ interface QuillEditorProps {
   setEditorContent: (value: string) => void;
 }
 
-const QuillEditor: React.FC<QuillEditorProps> = ({ editorRef, setEditorContent }) => {
+const QuillEditor: React.FC<QuillEditorProps> = ({
+  editorRef,
+  setEditorContent,
+}) => {
   const quillInstance = useRef<Quill | null>(null);
-    
-  useEffect(() => {
 
+  useEffect(() => {
     if (editorRef.current && !quillInstance.current) {
       quillInstance.current = new Quill(editorRef.current, {
         theme: "snow",
@@ -60,7 +62,13 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ editorRef, setEditorContent }
 };
 
 // Componente FileAttachment
-const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundColor?: string }) => {
+const FileAttachment = ({
+  label,
+  backgroundColor,
+}: {
+  label: string;
+  backgroundColor?: string;
+}) => {
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelUpdate}>{label}</span>
@@ -102,19 +110,23 @@ const CollapsibleSection = ({
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const [envioAutorizado, setEnvioAutorizado] = useState(false);
-  const [conclusao, setConclusao] = useState(""); 
+  const [conclusao, setConclusao] = useState("");
+  const [garantiasModel, setGarantiasModel] = useState<GarantiasModel>();
   const context = useContext(AuthContext);
-  const { id, itemId } = useParams<{ id: string, itemId: string }>();
+  const location = useLocation();
+  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
-  useEffect( ()  =>   {
-    
-    let garantiasModel: GarantiasModel;
-    console.log(JSON.stringify("id: " + id));
-
-    getGarantiaByIdAsync(id).then((value) => {
-      garantiasModel = value.data;
-      console.log(JSON.stringify(garantiasModel));
-    });
+  useEffect(() => {
+    try {
+      if (location.state) {
+        setGarantiasModel(location.state.garantia);
+        console.log("garantia: " + JSON.stringify(garantiasModel.itens));
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
   });
 
   const toggleContentVisibility = () => {
@@ -130,206 +142,275 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState("");
 
-
   const handleSave = async () => {
+    
+      garantiasModel!.itens.map(async (item, index) => {
+        const dataToSend = {
+          itemId: item.id,
+          analiseTecnica: editorContent,
+          conclusao: conclusao,
+        };
+        console.log("aqui: " + JSON.stringify(item.id));
+        console.log("data to send: " + JSON.stringify(dataToSend));
+        try {
+          const response = await api.put(
+            `/garantias/analiseTecnica/`,
+            dataToSend
+          );
 
-    const dataToSend = {
-      itemId: itemId,
-      analiseTecnica: editorContent,
-      conclusao: conclusao
-
-    };
-    console.log("aqui: " + JSON.stringify(itemId));
-    console.log("data to send: " + JSON.stringify(dataToSend));
-    try {
-      const response = await api.put(
-        `/garantias/analiseTecnica/`,
-        dataToSend
-      );
-  
-      if (response.status === 200) {
-        // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
-        alert('Dados salvos com sucesso!');
-      } else {
-        // Handle error
-        alert('Falha ao salvar os dados.');
-      }
-    } catch (error) {
-      console.error('Erro ao tentar salvar:', error);
-      alert('Erro ao tentar salvar.');
+          if (response.status === 200) {
+            // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
+            alert("Dados salvos com sucesso!");
+          } else {
+            // Handle error
+            alert("Falha ao salvar os dados.");
+          }
+        } catch (error) {
+          console.error("Erro ao tentar salvar:", error);
+          alert("Erro ao tentar salvar.");
+        }
+      });
+      
     }
-  };
-
-  return (
-    <div className={styles.containerApp}>
-      <hr className={styles.divisor} />
-      <div className={styles.ContainerButtonBack}>
-        <Button type="link" className={styles.ButtonBack}>
-          <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
-        </Button>
-        <span className={styles.RgiCode}>RGI {context.user.codigoCigam}</span>
-      </div>
-
-      <div className={styles.containerCabecalho}>
-        <h1 className={styles.tituloRgi}>000666-00147.A</h1>
-
-        {/* Botões visíveis apenas para não supervisores */}
-        {context.user.rule.name !== UserRoleEnum.Supervisor && (
-          <>
-            <div className={styles.buttonsContainer}>
-              <Button type="default" danger className={styles.buttonCancelRgi}>
-                Cancelar
-              </Button>
-              <Button type="primary" onClick={handleSave} danger style={{ backgroundColor: "red" }} className={styles.buttonSaveRgi}>
-                Salvar
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-
-      <hr className={styles.divisor} />
-      <h3 className={styles.nfsTitle}>Itens desta NF associados a esta garantia</h3>
-
-      <div className={styles.containerInformacoes}>
-
-        
-        <CollapsibleSection
-          title="000666-00147.A.01"
-          isVisible={isContentVisible}
-          toggleVisibility={toggleContentVisibility}
+    if (loading) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
         >
-          {/* Anexo da NF de venda (visível apenas para não supervisores) */}
-          {context.user.rule.name !== UserRoleEnum.Supervisor && (
-            <div style={{ marginTop: "20px" }}>
-              <FileAttachment label="Anexo da NF de venda" backgroundColor="white" />
-            </div>
-          )}
+          <Spin
+            size="large"
+            style={{
+              color: "red",
+              filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)",
+            }}
+          />
+        </div>
+      );
+    }
 
-          <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+    return (
+      <div className={styles.containerApp}>
+        <hr className={styles.divisor} />
+        <div className={styles.ContainerButtonBack}>
+          <Button type="link" className={styles.ButtonBack}>
+            <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
+          </Button>
+          <span className={styles.RgiCode}>RGI {context.user.codigoCigam}</span>
+        </div>
 
-          <div className={styles.inputsContainer}>
-            <div className={styles.inputsConjun}>
-              <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                <OutlinedInputWithLabel label="Código da peça" value="ALR-84888" fullWidth disabled />
-              </div>
-              <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                <OutlinedInputWithLabel label="Lote da peça" value="2547A" fullWidth disabled />
-              </div>
-            </div>
+        <div className={styles.containerCabecalho}>
+          <h1 className={styles.tituloRgi}>000666-00147.A</h1>
 
-            <div className={styles.inputsConjun}>
-              <div className={styles.inputGroup} style={{ flex: 0.4 }}>
-                <OutlinedSelectWithLabel
-                  label="Possível defeito"
-                  disabled
-                  fullWidth
-                  options={[
-                    { value: "Opção 1", label: "Opção 1" },
-                    { value: "Opção 2", label: "Opção 2" },
-                    { value: "Opção 3", label: "Opção 3" },
-                  ]}
-                  defaultValue={undefined}
-                />
-              </div>
-              <div className={styles.inputGroup} style={{ flex: 1 }}>
-                <OutlinedInputWithLabel
-                  label="Modelo do veículo que aplicou"
-                  fullWidth
-                  disabled
-                  value="Modelo X"
-                />
-              </div>
-              <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                <OutlinedInputWithLabel
-                  label="Ano do veículo"
-                  disabled
-                  value="2020"
-                  fullWidth
-                />
-              </div>
-            </div>
-            <div className={styles.inputsConjun}>
-              <div className={styles.inputGroup} style={{ flex: 1 }}>
-                <OutlinedInputWithLabel
-                  label="Torque aplicado à peça"
-                  value="XXXXXXXXXX"
-                  fullWidth
-                  disabled
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Solicitar ressarcimento (visível apenas para não supervisores) */}
+          {/* Botões visíveis apenas para não supervisores */}
           {context.user.rule.name !== UserRoleEnum.Supervisor && (
             <>
-              <div className={styles.checkboxContainer}>
-                <ColorCheckboxes onChange={handleCheckboxChange} checked={isReimbursementChecked} />
-                <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
+              <div className={styles.buttonsContainer}>
+                <Button
+                  type="default"
+                  danger
+                  className={styles.buttonCancelRgi}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={handleSave}
+                  danger
+                  style={{ backgroundColor: "red" }}
+                  className={styles.buttonSaveRgi}
+                >
+                  Salvar
+                </Button>
               </div>
-              {isReimbursementChecked && (
-                <div className={styles.contentReimbursement}>
-                  <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
-                  {[
-                    "1. Documento de identificação (RG ou CNH):",
-                    "2. Documentação do veículo:",
-                    "3. NF do guincho:",
-                    "4. NF de outras despesa/produtos pertinentes:",
-                  ].map((item, index) => (
-                    <FileAttachment key={index} label={item} backgroundColor="#f5f5f5" />
-                  ))}
+            </>
+          )}
+        </div>
+
+        <hr className={styles.divisor} />
+        <h3 className={styles.nfsTitle}>
+          Itens desta NF associados a esta garantia
+        </h3>
+
+        {garantiasModel!.itens.map((item, index) => {
+          return (
+            <div className={styles.containerInformacoes}>
+              <CollapsibleSection
+                title={item.codigoItem}
+                isVisible={isContentVisible}
+                toggleVisibility={toggleContentVisibility}
+              >
+                {/* Anexo da NF de venda (visível apenas para não supervisores) */}
+                {context.user.rule.name !== UserRoleEnum.Supervisor && (
+                  <div style={{ marginTop: "20px" }}>
+                    <FileAttachment
+                      label="Anexo da NF de venda"
+                      backgroundColor="white"
+                    />
+                  </div>
+                )}
+
+                <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+
+                <div className={styles.inputsContainer}>
+                  <div className={styles.inputsConjun}>
+                    <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                      <OutlinedInputWithLabel
+                        label="Código da peça"
+                        value={item.codigoPeca}
+                        fullWidth
+                        disabled
+                      />
+                    </div>
+                    <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                      <OutlinedInputWithLabel
+                        label="Lote da peça"
+                        value={item.loteItem}
+                        fullWidth
+                        disabled
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputsConjun}>
+                    <div className={styles.inputGroup} style={{ flex: 0.4 }}>
+                      <OutlinedSelectWithLabel
+                        label="Possível defeito"
+                        disabled
+                        fullWidth
+                        options={[
+                          { value: "Opção 1", label: "Opção 1" },
+                          { value: "Opção 2", label: "Opção 2" },
+                          { value: "Opção 3", label: "Opção 3" },
+                        ]}
+                        defaultValue={undefined}
+                      />
+                    </div>
+                    <div className={styles.inputGroup} style={{ flex: 1 }}>
+                      <OutlinedInputWithLabel
+                        label="Modelo do veículo que aplicou"
+                        fullWidth
+                        disabled
+                        value={item.modeloVeiculoAplicado}
+                      />
+                    </div>
+                    <div className={styles.inputGroup} style={{ flex: 0.3 }}>
+                      <OutlinedInputWithLabel
+                        label="Ano do veículo"
+                        disabled
+                        value={item.modeloVeiculoAplicado}
+                        fullWidth
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.inputsConjun}>
+                    <div className={styles.inputGroup} style={{ flex: 1 }}>
+                      <OutlinedInputWithLabel
+                        label="Torque aplicado à peça"
+                        value={item.torqueAplicado.toString()}
+                        fullWidth
+                        disabled
+                      />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </>
-          )}
 
-          {/* Anexo da NF de Referência (visível para todos) */}
-          <FileAttachment label="Anexo da NF de Referência" backgroundColor="white" />
+                {/* Solicitar ressarcimento (visível apenas para não supervisores) */}
+                {context.user.rule.name !== UserRoleEnum.Supervisor && (
+                  <>
+                    <div className={styles.checkboxContainer}>
+                      <ColorCheckboxes
+                        onChange={handleCheckboxChange}
+                        checked={isReimbursementChecked}
+                      />
+                      <label className={styles.checkboxDanger}>
+                        Solicitar ressarcimento
+                      </label>
+                    </div>
+                    {!isReimbursementChecked && (
+                      <div className={styles.contentReimbursement}>
+                        <h3 className={styles.tituloA}>
+                          Anexo de dados adicionais para ressarcimento
+                        </h3>
+                        {[
+                          "1. Documento de identificação (RG ou CNH):",
+                          "2. Documentação do veículo:",
+                          "3. NF do guincho:",
+                          "4. NF de outras despesa/produtos pertinentes:",
+                        ].map((item, index) => (
+                          <FileAttachment
+                            key={index}
+                            label={item}
+                            backgroundColor="#f5f5f5"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
 
-          {/* Anexos de Imagens (visível apenas para não supervisores) */}
-          {context.user.rule.name !== UserRoleEnum.Supervisor && (
-            <>
-              <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-              {[
-                "1. Foto do lado onde está a gravação IMA:",
-                "2. Foto da parte danificada/amassada/quebrada:",
-                "3. Foto marcações suspeitas na peça:",
-                "4. Foto da peça completa:",
-                "5. Outras fotos pertinentes:",
-              ].map((item, index) => (
-                <FileAttachment key={index} label={item} backgroundColor="white" />
-              ))}
-
-              <hr className={styles.divisor} />
-              <div className={styles.containerSelect}>
-                <OutlinedSelectWithLabel
-                  label="Envio Autorizado"
-                  options={[
-                    { value: "Procedente", label: "Procedente" },
-                    { value: "Improcedente", label: "Improcedente" },
-                  ]}
-                  value={envioAutorizado}
-                  onChange={(e) => setEnvioAutorizado(e.target.value)}
+                {/* Anexo da NF de Referência (visível para todos) */}
+                <FileAttachment
+                  label="Anexo da NF de Referência"
+                  backgroundColor="white"
                 />
-              </div>
 
-              <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
-              <QuillEditor editorRef={editorRef} setEditorContent={setEditorContent} />
+                {/* Anexos de Imagens (visível apenas para não supervisores) */}
+                {context.user.rule.name !== UserRoleEnum.Supervisor && (
+                  <>
+                    <h3 className={styles.tituloA}>Anexos de Imagens</h3>
+                    {[
+                      "1. Foto do lado onde está a gravação IMA:",
+                      "2. Foto da parte danificada/amassada/quebrada:",
+                      "3. Foto marcações suspeitas na peça:",
+                      "4. Foto da peça completa:",
+                      "5. Outras fotos pertinentes:",
+                    ].map((item, index) => (
+                      <FileAttachment
+                        key={index}
+                        label={item}
+                        backgroundColor="white"
+                      />
+                    ))}
 
-              <h3 className={styles.tituloA}>Conclusão</h3>
-              <MultilineTextFields
-                value={conclusao}
-                onChange={(e) => setConclusao(e.target.value)}
-                label="Conclusão"
-                placeholder="Digite a conclusão aqui..."
-              />
-            </>
-          )}
-        </CollapsibleSection>
+                    <hr className={styles.divisor} />
+                    <div className={styles.containerSelect}>
+                      <OutlinedSelectWithLabel
+                        label="Envio Autorizado"
+                        options={[
+                          { value: "Procedente", label: "Procedente" },
+                          { value: "Improcedente", label: "Improcedente" },
+                        ]}
+                        value={envioAutorizado}
+                        onChange={(e) => setEnvioAutorizado(e.target.value)}
+                      />
+                    </div>
+
+                    <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
+                    <QuillEditor
+                      editorRef={editorRef}
+                      setEditorContent={setEditorContent}
+                    />
+
+                    <h3 className={styles.tituloA}>Conclusão</h3>
+                    <MultilineTextFields
+                      value={conclusao}
+                      onChange={(e) => setConclusao(e.target.value)}
+                      label="Conclusão"
+                      placeholder="Digite a conclusão aqui..."
+                    />
+                  </>
+                )}
+              </CollapsibleSection>
+            </div>
+          );
+        })}
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default TechnicalAndSupervisorDetailsItens;

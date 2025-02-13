@@ -1,7 +1,7 @@
 import { Button, Spin } from "antd";
 import { FileOutlined, LeftOutlined } from "@ant-design/icons";
 import styles from "./technicalAndSupervisorInitialRGI.module.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
 import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
@@ -26,12 +26,22 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
     { itemId: string; nf: string; itens: number; sequence: number }[]
   >([]);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
+  const location = useLocation();
 
   useEffect(() => {
-    console.log("id existe: " + id);
+    //console.log("id existe: " + id);
     const fetchData = async () => {
       let data: GarantiasModel = null;
       try {
+        console.error("Error fetching data:", JSON.stringify(location.state));
+
+        if (location.state) {
+          data = location.state.location.state.garantia;
+        console.error("Error fetching data:", JSON.stringify(data));
+
+        }
+
+
         if (!id) {
           await getGarantiaByIdAsync(location.pathname.split("/")[3]).then(
             (dataReturned) => {
@@ -39,7 +49,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
             }
           );
           // Se os dados vieram via location.state (por navegação interna)
-          console.log(location.pathname.split("/")[3]);
+          //console.log(location.pathname.split("/")[3]);
           if (!isNull(data)) {
             setSocialReason(data.razaoSocial);
             setPhone(data.telefone);
@@ -61,12 +71,12 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
       }
 
       try {
-        console.log("id existe: " + id);
+        //console.log("id existe: " + id);
 
         // Se houver um ID na URL, busca os dados da garantia pela API
         if (id) {
           const response = await getGarantiaByIdAsync(id);
-          console.log("aqui: " + JSON.stringify(response));
+          //console.log("aqui: " + JSON.stringify(response));
           const data = response.data.data;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
@@ -84,13 +94,13 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        console.log("finalizou");
+        //console.log("finalizou");
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]); // Executa a requisição apenas uma vez, quando o `id` mudar
+  }, [id, location.state]); // Executa a requisição apenas uma vez, quando o `id` mudar
 
   if (loading) {
     return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}><Spin size="large" className="custom-spin" /></div>;
@@ -220,9 +230,9 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
                 type="text"
                 className={styles.nextButton}
                 onClick={() => {
-                  console.log("teste");
+                  //console.log("teste");
                   const itemId: string = nf.itemId;
-                  console.log("itemID: " + itemId);
+                  //console.log("itemID: " + itemId);
                   navigate(
                     `/garantias/technical-and-supervisor/visor-item-details/${id}/${itemId}`
                   );

@@ -31,8 +31,8 @@ const Garantias: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("teste user: " + context.user.rule.name);
     const fetchCardData = async () => {
-      
       try {
         if (context.user.rule.name === "cliente") {
           const response = await getGarantiasPaginationAsync(1, 10);
@@ -54,16 +54,20 @@ const Garantias: React.FC = () => {
           };
           const promises = status.map(async (element) => {
             const response = await getGarantiasByStatusAsync(1, 10, element);
-            return response.data.data.data;
+            const responseData = await response.data.data;
+            return responseData;
           });
 
           const results = await Promise.all(promises);
           const dataArray = results.flat(); // Concatena todos os arrays em um único array
           setCardData(dataArray);
+        console.log("cardDAta: " + JSON.stringify(cardData));
+
         }
       } catch (error) {
         console.error("Error fetching card data:", error);
       } finally {
+        console.log("cardDAta: " + JSON.stringify(cardData));
         setLoading(false);
       }
     };
@@ -88,6 +92,8 @@ const Garantias: React.FC = () => {
   };
 
   const filteredItems = cardData.flatMap((card) => {
+    // console.log("TESTE CARDDATA: " + JSON.stringify(cardData));
+    // console.log("TESTE CARD: " + JSON.stringify(card));
     return card.itens.filter((item) => {
       const matchesStatus =
         filterStatus === "todos" ||
@@ -190,9 +196,29 @@ const Garantias: React.FC = () => {
                     GarantiaItem={item}
                     codigoFormatado={`RGI ${item.rgi}`}
                     onClick={() => {
-                      navigate(`/garantias/rgi/${garantia.id}`, {
-                        state: { item, garantia },
-                      });
+                      console.log('use: ' + context.user.rule.name);
+                      if (
+                        context.user.rule.name.includes("admin") ||
+                        context.user.rule.name.includes("cliente")
+                      )
+                        navigate(`/garantias/rgi/${garantia.id}`, {
+                          state: { item, garantia },
+                        });
+                      else if (
+                        context.user.rule.name.includes("tecnico") ||
+                        context.user.rule.name.includes("supervisor")
+                      )
+                      {
+                        console.log('item: ' + JSON.stringify(item));
+                        console.log('associatedCardData: ' + JSON.stringify(garantia));
+
+                        navigate(
+                          `/garantias/technical-and-supervisor/visor-inital/${garantia.id}`,
+                          { 
+                            state: { item, garantia},
+                          }
+                        );
+                      }
                     }}
                   />
                 );
@@ -254,32 +280,39 @@ const Garantias: React.FC = () => {
           <div className={styled.containerGrid}>
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => {
-                const associatedCardData = cardData.find(
+                const garantia = cardData.find(
                   (card) => card.rgi === item.rgi
                 );
+
                 return (
                   <CardCategorias
                     key={item.id}
-                    data={new Date(associatedCardData.data)}
+                    data={new Date(garantia.data)}
                     GarantiaItem={item}
                     onClick={() => {
+                      console.log('use: ' + context.user.rule.name);
                       if (
                         context.user.rule.name.includes("admin") ||
                         context.user.rule.name.includes("cliente")
                       )
-                        navigate(`/garantias/rgi/${associatedCardData.id}`, {
-                          state: { item, associatedCardData },
+                        navigate(`/garantias/rgi/${garantia.id}`, {
+                          state: { item, garantia },
                         });
                       else if (
                         context.user.rule.name.includes("tecnico") ||
                         context.user.rule.name.includes("supervisor")
                       )
+                      {
+                        console.log('item: ' + JSON.stringify(item));
+                        console.log('associatedCardData: ' + JSON.stringify(garantia));
+
                         navigate(
-                          `/garantias/technical-and-supervisor/visor-inital/${associatedCardData.id}`,
-                          {
-                            state: { item, associatedCardData },
+                          `/garantias/technical-and-supervisor/visor-inital/${garantia.id}`,
+                          { 
+                            state: { item, garantia },
                           }
                         );
+                      }
                     }}
                     codigoFormatado={""}
                   />
