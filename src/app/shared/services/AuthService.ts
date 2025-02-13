@@ -5,8 +5,6 @@ import api from "@shared/Interceptors";
 import environment from "@env/environment.ts";
 import { from } from "rxjs";
 import { take } from "rxjs/operators";
-// import { RuleModel } from "@shared/models/RuleModel";
-// import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 let isLoggingIn = false;
 
@@ -29,11 +27,11 @@ const login = async (
     });
 
     const token = response.data.token;
+  } catch (error) {
     localStorage.setItem(environment.TOKEN, token);
 
     const data: AuthModel = response.data;
     loginContext(data);
-  } catch (error) {
     console.error("Erro ao fazer login:", error);
     throw error;
   } finally {

@@ -106,7 +106,7 @@ const Garantias: React.FC = () => {
         item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.codigoItem.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
-
+          return 
       return matchesStatus && matchesSearch;
     });
   });

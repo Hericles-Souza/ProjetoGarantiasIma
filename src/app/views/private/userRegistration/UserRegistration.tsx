@@ -51,7 +51,7 @@ const UserRegistration: React.FC = () => {
     }
   };
 
-  const openModal = (user: DataType | null = null) => {
+  const openModal = (user: DataType) => {
     setSelectedUser(user);
     setIsModalOpen(true);
   };
@@ -68,6 +68,7 @@ const UserRegistration: React.FC = () => {
     setLoading(true);
     try {
       const response: GetAllUsersResponse = await getAllUsers(page, limit);
+      console.log("USERS: " + JSON.stringify(response.data.data.data));
       const usersData = response.data.data.data.map((user) => ({
         key: user.id,
         id: user.id,

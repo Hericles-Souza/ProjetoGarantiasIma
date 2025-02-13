@@ -10,14 +10,15 @@ interface CreateAccountProps {
 const DialogCreateAccount: React.FC<CreateAccountProps> = ({ isVisible, onClose }) => {
   const [form] = Form.useForm()
 
-  const onFinish = async (values: any) => {
+  const onFinish = async () => {
     try {
-      const response = await fetch('/api/cadastro', {
+      const requestBody = form.getFieldsValue();    
+      const response = await fetch('/user/send-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(requestBody),
       })
 
       if (response.ok) {
@@ -67,12 +68,13 @@ const DialogCreateAccount: React.FC<CreateAccountProps> = ({ isVisible, onClose 
           rules={[{ required: true, message: 'CNPJ é obrigatório!' }]}
         >
           <Input
-            placeholder='Digite seu CNPJ'
-            style={{
+              placeholder="000.000.000/0001-00"
+              style={{
               height: '50px',
               fontSize: '18px',
               borderRadius: '10px',
               borderColor: 'red',
+              mask: "000.000.000/0001-00"
             }}
           />
         </Form.Item>

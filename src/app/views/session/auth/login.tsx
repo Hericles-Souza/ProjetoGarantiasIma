@@ -36,7 +36,6 @@ export const LoginPage = () => {
     try {
       await AuthService.login(username, password, (user) => {
         if (login) {
-          console.log(JSON.stringify(user));
           login(user);
         }
         console.log(user);
@@ -46,7 +45,7 @@ export const LoginPage = () => {
         "Falha no login. Verifique suas credenciais e tente novamente."
       );
     }finally{
-      while(!login){ /* empty */ }
+      while(!login(user)){ /* empty */ }
       navigate("/garantias");
     }
   };
