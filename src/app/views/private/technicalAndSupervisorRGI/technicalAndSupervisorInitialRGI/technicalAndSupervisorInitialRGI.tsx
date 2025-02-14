@@ -10,6 +10,7 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { isNull } from "util";
+import { cardData } from "../../garantias/mock/cardData";
 
 const TechnicalAndSupervisorInitialRGI: React.FC = () => {
   // Informações gerais fictícias
@@ -121,7 +122,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
 
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.rgiTitle}>RGI 000666-0001</h1>
+          <h1 className={styles.rgiTitle}>RGI {cardData[0].code}</h1>
           <div className={styles.statusTag}>Aguardando avaliação</div>
         </div>
         <div className={styles.buttonsContainer}>
