@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Divider, Form, Upload } from 'antd';
@@ -23,6 +24,7 @@ interface FileAttachmentProps {
   onFileSelect?: (file: File) => void;
   required?: boolean;
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FileAttachment: React.FC<FileAttachmentProps> = ({ label, backgroundColor, onFileSelect }) => {
   const [fileName, setFileName] = useState<string | null>(null);
 
@@ -94,6 +96,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({ onClose 
 
   // Estado para armazenar o arquivo selecionado
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let numNota: string = '';
 
   const handleSubmit = async (values: Record<string, any>) => {

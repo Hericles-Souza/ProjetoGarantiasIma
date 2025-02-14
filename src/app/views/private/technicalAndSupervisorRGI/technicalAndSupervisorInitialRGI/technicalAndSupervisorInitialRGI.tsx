@@ -36,6 +36,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
         console.error("Error fetching data:", JSON.stringify(location.state));
 
         if (location.state) {
+          console.log('teste user= ' + JSON.stringify(context.user.rule));
           data = location.state.location.state.garantia;
         console.error("Error fetching data:", JSON.stringify(data));
 
@@ -116,7 +117,6 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.RgiCode}>RGI N° 000666-0001</span>
       </div>
 
       <div className={styles.headerContainer}>
@@ -126,26 +126,8 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
         </div>
         <div className={styles.buttonsContainer}>
           {/* ---------------------------para o TÉCNICO aqui é oculto-------------------------------------- */}
-          {context.user.rule.name != UserRoleEnum.Técnico && (
-            <>
-              <Button
-                type="default"
-                danger
-                className={styles.buttonSaveRgi}
-                onClick={() => navigate("view-pre-invoice")}
-              >
-                Visualizar Pré-Nota
-              </Button>
-              <Button
-                type="primary"
-                danger
-                style={{ backgroundColor: "red" }}
-                className={styles.buttonSendRgi}
-              >
-                Autorizar envio de NFD
-              </Button>
-            </>
-          )}
+          
+          
 
           {/* ------------------------------------------------------------------------------------------------ */}
 

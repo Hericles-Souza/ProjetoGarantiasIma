@@ -62,7 +62,7 @@ const Garantias: React.FC = () => {
           const results = await Promise.all(promises);
           const dataArray = results.flat(); // Concatena todos os arrays em um único array
           setCardData(dataArray);
-        console.log("cardDAta: " + JSON.stringify(cardData));
+        // console.log("cardDAta: " + JSON.stringify(cardData));
 
         }
       } catch (error) {
@@ -87,13 +87,13 @@ const Garantias: React.FC = () => {
             return matchesStatus && matchesSearch;
           });
         }));
-        console.log("filteredItems finally: " + JSON.stringify(filteredItems));
+        // console.log("filteredItems finally: " + JSON.stringify(filteredItems));
         setLoading(false);
       }
     };
 
     fetchCardData();
-  }, [context, filteredItems]);
+  });
 
   const statuses = Object.values(GarantiasStatusEnum);
 
