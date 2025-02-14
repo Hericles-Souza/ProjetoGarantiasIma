@@ -17,6 +17,7 @@ export interface GarantiaItem {
   analiseTecnica?:string;
   conclusao?:string;
   anexos?: string;
+  autorizado?: string;
 }
 
 export interface GarantiasModel {

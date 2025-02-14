@@ -18,6 +18,12 @@ export enum GarantiasStatusEnum2 {
   CONFIRMADO = 7,
 }
 
+export enum GarantiasItemStatusEnum {
+  NAO_ANALISADO = 'Não analisado',
+  AUTORIZADO = 'Autorizado',
+  NAO_AUTORIZADO = 'Não autorizado'
+}
+
 export enum GarantiasItemStatusEnum2 {
   NAO_ANALISADO = 1,
   AUTORIZADO = 2,

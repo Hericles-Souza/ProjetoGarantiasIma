@@ -15,8 +15,9 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import api from "@shared/Interceptors";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
+import { GarantiasItemStatusEnum, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import message from "antd/lib/message";
+import { updateGarantiasItemStatusAsync } from "@shared/services/GarantiasService";
 
 // Componente QuillEditor
 interface QuillEditorProps {
@@ -112,7 +113,7 @@ const CollapsibleSection = ({
 // Componente Principal
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
-  const [envioAutorizado, setEnvioAutorizado] = useState(false);
+  const [envioAutorizado, setEnvioAutorizado] = useState("");
   const [conclusao, setConclusao] = useState("");
   const [garantiasModel, setGarantiasModel] = useState<GarantiasModel>();
   const context = useContext(AuthContext);
@@ -164,7 +165,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           `/garantias/garantiasItem/${item.id}/UpdateItem`,
           payload
         );
-        if (response.status === 200) {
+        
+        const descricao = item.autorizado === 'Improcedente' ? GarantiasItemStatusEnum.NAO_AUTORIZADO : GarantiasItemStatusEnum.NAO_AUTORIZADO;
+
+        const responseStatusItem = await updateGarantiasItemStatusAsync(descricao);
+        if (response.status === 200 && responseStatusItem.status === 200) {
           message.success("Garantia atualizada com sucesso!");
           navigate("/garantias");
         } else {
@@ -447,7 +452,10 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                         { value: "Improcedente", label: "Improcedente" },
                       ]}
                       value={envioAutorizado}
-                      onChange={(e) => setEnvioAutorizado(e.target.value)}
+                      onChange={(e) => {
+                        item.autorizado = e.target.value;
+                        setEnvioAutorizado(e.target.value)
+                      }}
                     />
                   </div>
 
