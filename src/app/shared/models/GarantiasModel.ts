@@ -1,5 +1,24 @@
 import {GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
 
+export interface GarantiaPedidos{
+  cdPedido: string;
+  cdMaterial: string;
+  descricaoMaterial: string;
+  cdTipoOperacao: string;
+  dataPedido: string;
+  cdCliente: string;
+  valorICMS: string;
+  valorIRRF: string;
+  valorISS: string;
+  valorIPI: string;
+  baseICMS: string;
+  baseIPI: string;
+  baseISS: string;
+  precoUnitario: string;
+  quantidade: string;
+  valorTotalItem: string;
+}
+
 export interface GarantiaItem {
   codigoPeca: string;
   id: string;

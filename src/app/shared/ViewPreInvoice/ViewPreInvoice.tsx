@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Table, Typography, Row, Col, Card, Button } from "antd";
 import styles from "./ViewPreInvoice.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
+import api from "@shared/Interceptors";
 
 const { Title } = Typography;
 
@@ -20,6 +21,8 @@ const InvoicePage = () => {
         dataNFOrigem: "", 
     });
 
+    const [data, setData] = useState([]);
+
     const columns = [
         { title: "CÓDIGO", dataIndex: "codigo", key: "codigo" },
         { title: "VL UNITÁRIO", dataIndex: "vlUnitario", key: "vlUnitario" },
@@ -34,24 +37,53 @@ const InvoicePage = () => {
         { title: "BC ST", dataIndex: "bcST", key: "bcST" },
         { title: "VL ST", dataIndex: "vlST", key: "vlST" },
     ];
+    const fetchData = async () => {
+        try {
+            const response = await api.get("/pedidos/pedidos"); // Coloque a URL da sua API aqui
+            const apiData = await response.data.data;
+            console.log("pedidos: " + JSON.stringify(apiData));
+            // Preenchendo o formData com os dados da API
+            setFormData({
+                baseICMS: apiData.baseICMS,
+                valorICMS: apiData.valorICMS,
+                baseICMSSubstituicao: apiData.baseICMSSubstituicao,
+                valorICMSSubstituicao: apiData.valorICMSSubstituicao,
+                valorProdutos: apiData.valorProdutos,
+                valorIPI: apiData.valorIPI,
+                valorNota: apiData.valorNota,
+                aliquotaInterna: apiData.aliquotaInterna,
+                numeroNFOrigem: apiData.numeroNFOrigem,
+                dataNFOrigem: apiData.dataNFOrigem,
+            });
 
-    const data = [
-        {
-            key: "1",
-            codigo: "AL-1206",
-            vlUnitario: "R$ 0,00",
-            quantidade: "0",
-            vlTotal: "R$ 0,00",
-            bcICMS: "0",
-            vlICMS: "0",
-            vlIPI: "0",
-            icms: "0%",
-            ipi: "0%",
-            mva: "0%",
-            bcST: "0",
-            vlST: "0",
-        },
-    ];
+            // Preenchendo a tabela com os dados dos pedidos
+            const tableData = apiData.data.garantiaPedidos.map((item) => ({
+                key: item.cdPedido,
+                codigo: item.cdMaterial,
+                vlUnitario: `R$ ${item.precoUnitario}`,
+                quantidade: item.quantidade,
+                vlTotal: `R$ ${item.valorTotalItem}`,
+                bcICMS: item.baseICMS,
+                vlICMS: item.valorICMS,
+                vlIPI: item.valorIPI,
+                icms: item.cdTipoOperacao === "ICMS" ? "18%" : "0%", // Exemplo de como você pode formatar o valor
+                ipi: "18%", // Isso pode ser dinâmico também
+                mva: "0%", // Isso pode ser dinâmico
+                bcST: item.baseISS,
+                vlST: item.valorISS,
+            }));
+
+            setData(tableData);
+        } catch (error) {
+            console.error("Erro ao carregar dados da API:", error);
+        } finally{
+
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [data]);
 
     return (
         <div style={{ padding: 24, backgroundColor: "#fff" }}>
@@ -71,7 +103,7 @@ const InvoicePage = () => {
                 </div>
             </div>
 
-           
+           {data}
             <Card style={{ backgroundColor: "#f5f5f5", borderRadius: "10px", }}>
                 <Row gutter={16} justify="space-between" style={{ marginBottom: "20px" }}>
                     {["baseICMS", "valorICMS", "baseICMSSubstituicao", "valorICMSSubstituicao", "valorProdutos"].map((key) => (
