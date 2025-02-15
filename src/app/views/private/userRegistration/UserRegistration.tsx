@@ -1,10 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Input, Modal, Space, Table, TableColumnsType, TableProps } from 'antd';
-import { getAllUsers, GetAllUsersResponse } from "@shared/services/UserService.ts";
-import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
-import styles from './UserRegistration.module.css';
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Input,
+  Modal,
+  Space,
+  Table,
+  TableColumnsType,
+  TableProps,
+} from "antd";
+import {
+  getAllUsers,
+  GetAllUsersResponse,
+} from "@shared/services/UserService.ts";
+import DialogUserRegistration from "@shared/dialogs/dialog-new-user";
+import styles from "./UserRegistration.module.css";
 
-type TableRowSelection<T extends object = object> = TableProps<T>["rowSelection"];
+type TableRowSelection<T extends object = object> =
+  TableProps<T>["rowSelection"];
 
 interface DataType {
   cigamCode: string;
@@ -16,21 +28,20 @@ interface DataType {
   age: string;
   status: boolean;
   email: string;
-  user: string;
   create: string;
   lastAlteration: string;
+  userRole: string;
 }
 
 const columns: TableColumnsType<DataType> = [
-  { title: 'ID', dataIndex: 'id' },
-  { title: 'Razão Social', dataIndex: 'age' },
-  { title: 'Código Cigam', dataIndex: 'cigamCode' },
-  { title: 'Telefone', dataIndex: 'phone' },
-  { title: 'Status', dataIndex: 'status' },
-  { title: 'E-mail', dataIndex: 'email' },
-  { title: 'Perfil do Usuário', dataIndex: 'user' },
-  { title: 'Criado', dataIndex: 'create' },
-  { title: 'Última Alteração', dataIndex: 'lastAlteration' },
+  { title: "Razão Social", dataIndex: "age" },
+  { title: "Código Cigam", dataIndex: "cigamCode" },
+  { title: "Telefone", dataIndex: "phone" },
+  { title: "Status", dataIndex: "status" },
+  { title: "E-mail", dataIndex: "email" },
+  { title: "Perfil do Usuário", dataIndex: "userRole" },
+  { title: "Criado", dataIndex: "create" },
+  { title: "Última Alteração", dataIndex: "lastAlteration" },
 ];
 
 const { Search } = Input;
@@ -43,8 +54,12 @@ const UserRegistration: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
-
-  const onSelectChange = (newSelectedRowKeys: React.Key[], selectedRows: DataType[]) => {
+  const [selectedAction, setSelectedAction] = useState<boolean>(false);
+  const [searchValue, setSearchValue] = useState<string>("");
+  const onSelectChange = (
+    newSelectedRowKeys: React.Key[],
+    selectedRows: DataType[]
+  ) => {
     setSelectedRowKeys(newSelectedRowKeys);
     if (selectedRows.length > 0) {
       setSelectedUser(selectedRows[0]);
@@ -75,7 +90,7 @@ const UserRegistration: React.FC = () => {
         age: user.fullname,
         status: user.isActive,
         email: user.email,
-        user: user.rule?.name,
+        userRole: user.rule?.name,
         create: user.createdAt,
         lastAlteration: user.updatedAt,
         cigamCode: user.codigoCigam,
@@ -85,9 +100,16 @@ const UserRegistration: React.FC = () => {
         isActive: user.isActive,
         isAdmin: user.isAdmin,
       }));
-      setDataSource(usersData);
+
+      const filteredData = usersData.filter((user) =>
+        user.companyName.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.userRole.toLowerCase().includes(searchValue.toLowerCase())
+      );
+
+      setDataSource(filteredData);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
+      console.error("Erro ao buscar usuários:", error);
     } finally {
       setLoading(false);
     }
@@ -95,11 +117,15 @@ const UserRegistration: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [page, limit]);
+  }, [page, limit, searchValue]);
 
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
     onChange: onSelectChange,
+  };
+
+  const onSearchValues = (value: string) => {
+    setSearchValue(value);  
   };
 
   return (
@@ -109,12 +135,27 @@ const UserRegistration: React.FC = () => {
           <Search
             className={styles.inputSearch}
             placeholder="Pesquisar"
-            onSearch={(value) => console.log(value)}
+            onSearch={onSearchValues} 
           />
-          <Button type="default" className={styles.buttonEdite} onClick={() => openModal(selectedUser)}>
+          <Button
+            type="default"
+            className={styles.buttonEdite}
+            onClick={() => {
+              setSelectedAction(false);
+              openModal(selectedUser);
+            }}
+          >
             Editar
           </Button>
-          <Button type="primary" className={styles.buttonCreate} danger onClick={() => openModal(null)}>
+          <Button
+            type="primary"
+            className={styles.buttonCreate}
+            danger
+            onClick={() => {
+              setSelectedAction(true);
+              openModal(null);
+            }}
+          >
             Criar Usuário
           </Button>
         </Space>
@@ -126,6 +167,7 @@ const UserRegistration: React.FC = () => {
             closeModal={closeModal}
             onSearch={onSearch}
             selectedUser={selectedUser}
+            selectedUserActionCreation={selectedAction}
           />
         </div>
       </Modal>

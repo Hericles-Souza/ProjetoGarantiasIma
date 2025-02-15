@@ -33,41 +33,40 @@ const Garantias: React.FC = () => {
 
 
   useEffect(() => {
-    const fetchCardData = async () => {
-      try {
-        if (context.user.rule.name === "cliente") {
-          const response = await getGarantiasPaginationAsync(1, 10);
-          const data = await response.data.data.data;
-          setCardData(data);
-        } else {
-          let status: number[] = [];
-          if (context.user.rule.name === "tecnico") {
-            status = [
-              GarantiasStatusEnum2.EM_ANALISE,
-              GarantiasStatusEnum2.CONFIRMADO,
-            ];
-          } else if (context.user.rule.name === "supervisor") {
-            status = [
-              GarantiasStatusEnum2.EM_ANALISE,
-              GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
-              GarantiasStatusEnum2.CONFIRMADO,
-            ];
-          };
-          const promises = status.map(async (element) => {
-            const response = await getGarantiasByStatusAsync(1, 10, element);
-            const responseData = await response.data.data;
-            return responseData;
-          });
 
-          const results = await Promise.all(promises);
-          const dataArray = results.flat(); // Concatena todos os arrays em um único array
-          setCardData(dataArray);
-        // console.log("cardDAta: " + JSON.stringify(cardData));
 
-        }
-      } catch (error) {
-        console.error("Error fetching card data:", error);
-      } finally {
+    fetchCardData();
+  });
+
+  const fetchCardData = async () => {
+    try {
+      if (context.user.rule.name === "cliente") {
+        const response = await getGarantiasPaginationAsync(1, 10);
+        const data = await response.data.data.data;
+        setCardData(data);
+      } else {
+        let status: number[] = [];
+        if (context.user.rule.name === "tecnico") {
+          status = [
+            GarantiasStatusEnum2.EM_ANALISE,
+            GarantiasStatusEnum2.CONFIRMADO,
+          ];
+        } else if (context.user.rule.name === "supervisor") {
+          status = [
+            GarantiasStatusEnum2.EM_ANALISE,
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
+            GarantiasStatusEnum2.CONFIRMADO,
+          ];
+        };
+        const promises = status.map(async (element) => {
+          const response = await getGarantiasByStatusAsync(1, 10, element);
+          const responseData = await response.data.data;
+          return responseData;
+        });
+
+        const results = await Promise.all(promises);
+        const dataArray = results.flat(); // Concatena todos os arrays em um único array
+        setCardData(dataArray);
         setFilteredItems(cardData.flatMap((card) => {
           // console.log("TESTE CARDDATA: " + JSON.stringify(cardData));
           // console.log("TESTE CARD: " + JSON.stringify(card));
@@ -87,13 +86,16 @@ const Garantias: React.FC = () => {
             return matchesStatus && matchesSearch;
           });
         }));
-        // console.log("filteredItems finally: " + JSON.stringify(filteredItems));
-        setLoading(false);
-      }
-    };
+      // console.log("cardDAta: " + JSON.stringify(cardData));
 
-    fetchCardData();
-  });
+      }
+    } catch (error) {
+      console.error("Error fetching card data:", error);
+    } finally {
+      
+      setLoading(false);
+    }
+  };
 
   const statuses = Object.values(GarantiasStatusEnum);
 

@@ -10,6 +10,7 @@ import * as Yup from 'yup';
 import {PiCopySimpleLight} from "react-icons/pi";
 import {TfiReload} from "react-icons/tfi";
 import InputMask from 'react-input-mask';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createUser, CreateUserRequest, updateUser, UpdateUserRequest } from '@shared/services/UserService';
 import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
@@ -24,35 +25,34 @@ interface DataType {
   age: string;
   status: boolean;
   email: string;
-  user: string;
   create: string;
   lastAlteration: string;
+  userRole: string;
 }
 
 interface DialogUserRegistrationProps {
   closeModal: () => void;
   onSearch: () => void;
   selectedUser: DataType | null;
+  selectedUserActionCreation: boolean;
 }
 
-const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeModal, onSearch, selectedUser}) => {
+const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeModal, onSearch, selectedUser, selectedUserActionCreation}) => {
   const [rule, setRule] = useState<RuleModel[] | null>(null);
   const [selectedProfile, setSelectedProfile] = useState('');
-  const typeRule = "Técnico";
   const generatePassword = () => Math.random().toString(36).slice(-8);
   const context = useContext(AuthContext);
     
-
   const formik = useFormik({
     initialValues: {
-      profile: selectedUser ? selectedUser.user : '', // Preenchendo com os dados do usuário se estiver em edição
       cnpj: selectedUser ? selectedUser.cnpj : '',
       cigamCode: selectedUser ? selectedUser.cigamCode : '',
       companyName: selectedUser ? selectedUser.companyName : '',
       phone: selectedUser ? selectedUser.phone : '',
       email: selectedUser ? selectedUser.email : '',
       password: generatePassword(),
-      isActive: selectedUser ? selectedUser.status : true
+      isActive: selectedUser ? selectedUser.status : true,
+      userRole: selectedUser ? selectedUser.userRole : 'tecnico'
     },
     validationSchema: Yup.object({
       cnpj: Yup.string().required('CNPJ obrigatório'),
@@ -66,28 +66,41 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       onSearch();
     },
   });
-
+  
   useEffect(() => {
-    getRules()
-      .then((response) => {
-        setRule(response.data.data);
-        setSelectedProfile(response.data.data[0].id);
-      })
-      .catch((error) => {
+    const fetchData = async () => {
+      try {
+        const response = await getRules();  
+        console.log("response data: ", response.data);
+        
+        if (response.data && response.data.data) {
+          setRule(response.data.data);
+          
+          const initialUserRole = selectedUser ? selectedUser.userRole  : 'admin';
+          const foundRule = response.data.data.find((value) => value.name === initialUserRole);
+          if (foundRule) {
+            setSelectedProfile(foundRule.name); 
+          }
+        }
+      } catch (error) {
         console.error('Error fetching rules', error);
-      });
-  }, []);
-
+      }
+    };
+  
+    fetchData();
+  
+  }, []); 
+  
   useEffect(() => {
     formik.resetForm();
     formik.setFieldValue('password', generatePassword());
   }, [closeModal]);
-
+  
   const handleCopyPassword = () => {
     if (formik.values.password) {
       navigator.clipboard.writeText(formik.values.password)
-        .then(() => message.success('Senha copiada para a área de transferência!'))
-        .catch(() => message.error('Falha ao copiar a senha.'));
+      .then(() => message.success('Senha copiada para a área de transferência!'))
+      .catch(() => message.error('Falha ao copiar a senha.'));
     } else {
       message.warning('Nenhuma senha para copiar.').then();
     }
@@ -106,7 +119,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       password: formik.values.password,
       CNPJ: formik.values.cnpj,
       codigoCigam: formik.values.cigamCode,
-      ruleId: formik.values.profile,
+      ruleId: formik.values.userRole,
     };
     console.log("userdata: " + JSON.stringify(userRequest));
     await createUser(userRequest, context.user.token).then((value) => console.log(value));
@@ -134,7 +147,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
               marginBottom: '0px',
               paddingBottom: '0px'
             }}>
-            CRIAR NOVO USUÁRIO
+            {selectedUserActionCreation ? 'Criar Novo Usuário' : 'Editar Usuário'}
           </Typography>
         </div>
       </div>
@@ -148,10 +161,9 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           onChange={(e) => {
             const value = e.target.value;
             const valueProfile = rule.find((ruleSelected) => ruleSelected.name == value);
-            console.log("perfil: " + valueProfile);
             setSelectedProfile(valueProfile.name);
-            formik.setFieldValue('profile', valueProfile.id);
-            
+            formik.setFieldValue('userRole', valueProfile.name);
+            console.log("profile selected: " + selectedProfile);
           } }
           defaultValue="EUR"
           focused
@@ -189,7 +201,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           <span style={{marginTop: '-22px'}}>Usuário Ativo</span>
         </div>
       </div>
-      {!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && (
+      {(!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin")) && (
         <div className={style.row}>
           <InputMask
             mask="99.999.999/9999-99"
@@ -236,13 +248,13 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       )}
       <div className={style.row}>
         <TextField
-          label={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && "Razão Social" || "Nome"}
+          label={(!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin")) ? "Razão Social" : "Nome"}
           variant="outlined"
           {...formik.getFieldProps('companyName')}
           fullWidth
           required
           focused
-          placeholder={!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && "Razão Social" || "Nome"}
+          placeholder={(!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin")) ? "Razão Social" : "Nome"}
           className="outlined-input-contact"
           sx={{
             '& fieldset': {
@@ -253,7 +265,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       </div>
       <div className={style.row}>
 
-        {!rule?.find(x => x.id === selectedProfile)?.name.includes(typeRule) && (
+        {!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin") && (
           <InputMask
             mask="+99 99 99999-9999"
             value={formik.values.phone}
@@ -296,7 +308,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           }}
         />
       </div>
-      <div className={style.row}>
+      {selectedUserActionCreation && <div className={style.row}>
         <TextField
           label="Senha Provisória"
           variant="outlined"
@@ -323,12 +335,13 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           }}
         />
       </div>
+      }
       <div style={{display: "flex", justifyContent: "end", gap: "1rem"}}>
         <Button onClick={closeModal} style={{backgroundColor: "white", color: "red"}}>
           CANCELAR
         </Button>
         <Button onClick={createNewUser} type="primary" style={{backgroundColor: "red"}}>
-          CRIAR
+          {selectedUserActionCreation ? 'CRIAR' : 'ATUALIZAR'}
         </Button>
       </div>
     </form>
