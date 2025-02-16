@@ -217,7 +217,7 @@ const Garantias: React.FC = () => {
                         console.log('associatedCardData: ' + JSON.stringify(garantia));
 
                         navigate(
-                          `/garantias/technical-and-supervisor/visor-inital/${garantia.id}`,
+                          `/garantias/acordo-commercial`,
                           { 
                             state: { item, garantia},
                           }

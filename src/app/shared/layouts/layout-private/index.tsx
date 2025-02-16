@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {ConfigProvider, Dropdown, Layout, Menu} from 'antd';
+import {ConfigProvider, Dropdown, Layout, Menu, message, Spin} from 'antd';
 import {Link, Outlet, useLocation} from 'react-router-dom';
 import {ArrowLeftOutlined, ArrowRightOutlined} from '@ant-design/icons';
 import styles from './styles.ts';
@@ -52,12 +52,22 @@ const LayoutPrivate: React.FC = () => {
   const [selectedKey, setSelectedKey] = useState<string>();
   const location = useLocation();
   const {user, logout} = useContext(AuthContext); 
+  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
+
 
   useEffect(() => {
-    const currentItem = menuData.find(item => location.pathname.startsWith(item.path));
-    if (currentItem) {
-      setSelectedKey(currentItem.key);
+    try {
+      const currentItem = menuData.find(item => location.pathname.startsWith(item.path));
+      if (currentItem) {
+        setSelectedKey(currentItem.key);
+      }
+      
+    } catch (error) {
+      message.error(error);
+    } finally{
+      setLoading(false);
     }
+    
   }, [location.pathname, user]);
 
   const toggleSidebar = () => setCollapsed(prev => !prev);
@@ -73,6 +83,29 @@ const LayoutPrivate: React.FC = () => {
       <Menu.Item onClick={handleLogout}>Logout</Menu.Item>
     </Menu>
   );
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spin
+          size="large"
+          style={{
+            color: "red",
+            filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)",
+          }}
+        />
+      </div>
+    );
+  }
+
+
 
   return (
     <ConfigProvider>

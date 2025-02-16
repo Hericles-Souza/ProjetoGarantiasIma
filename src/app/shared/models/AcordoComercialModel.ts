@@ -43,3 +43,29 @@ export interface AcordoComercialModel {
   dataAtualizacao?: string;
   usuarioAtualizacao?: string;
 }
+
+export interface ResponseNfItem{
+  success: boolean;
+  data: NfItem[];
+}
+
+export interface NfItem {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  rgi: string;
+  codigoItem: string;
+  loteItem: string;
+  tipoDefeito: string;
+  modeloVeiculoAplicado: string;
+  torqueAplicado: number;
+  nfReferencia: string;
+  loteItemOficial: string;
+  status: string;
+  codigoStatus: number;
+  sequencia: string;
+  analiseTecnica: string | null;
+  conclusao: string | null;
+  solicitarRessarcimento: boolean;
+  garantia_id: string;
+}

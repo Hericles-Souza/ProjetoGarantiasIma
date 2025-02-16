@@ -38,7 +38,7 @@ const TechnicalAndSupervisorInitialRGI: React.FC = () => {
 
         if (location.state) {
           console.log('teste user= ' + JSON.stringify(context.user.rule));
-          data = location.state.location.state.garantia;
+          data = location.state.garantia;
         console.error("Error fetching data:", JSON.stringify(data));
 
         }

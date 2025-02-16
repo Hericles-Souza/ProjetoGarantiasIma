@@ -43,7 +43,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
   const generatePassword = () => Math.random().toString(36).slice(-8);
   const context = useContext(AuthContext);
 
-  let formik = useFormik({
+  const formik = useFormik({
     initialValues: {
       cnpj: selectedUser ? selectedUser.cnpj : '',
       cigamCode: selectedUser ? selectedUser.cigamCode : '',
@@ -149,7 +149,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
         ruleId: rule.find((value) => value.name === formik.values.userRole).id,
       };
       console.log(JSON.stringify(userRequest));
-      await createUser(userRequest, context.user.token).then((value) => {
+      await createUser(userRequest, context.user.token).then(() => {
         message.success('Cadastro criado com sucesso!')
         selectedUser = null;
         closeModal();
@@ -158,7 +158,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
 
     } catch (error) {
       message.error('Erro ao cadastrar usuário!')
-
+      console.log(error);
     }
   };
 

@@ -18,7 +18,7 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext.tsx";
 
 export const LoginPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { login } = useContext(AuthContext) || {};
@@ -34,7 +34,7 @@ export const LoginPage = () => {
     e.preventDefault();
 
     try {
-      await AuthService.login(username, password, (user) => {
+      await AuthService.login(email, password, (user) => {
         if (login) {
           login(user);
         }
@@ -177,14 +177,15 @@ export const LoginPage = () => {
                       />
                     }
                     size="large"
-                    placeholder="Digite seu Usuário"
+                    placeholder="Digite seu email"
+                    type="email"
                     style={{
                       height: "55px",
                       fontSize: "18px",
                       borderRadius: "15px",
                     }}
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div style={{ marginBottom: "16px" }}>

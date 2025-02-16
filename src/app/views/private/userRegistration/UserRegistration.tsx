@@ -7,7 +7,6 @@ import {
   Space,
   Table,
   TableColumnsType,
-  TableProps,
 } from "antd";
 import {
   getAllUsers,
@@ -15,9 +14,6 @@ import {
 } from "@shared/services/UserService.ts";
 import DialogUserRegistration from "@shared/dialogs/dialog-new-user";
 import styles from "./UserRegistration.module.css";
-
-type TableRowSelection<T extends object = object> =
-  TableProps<T>["rowSelection"];
 
 interface DataType {
   cigamCode: string;
@@ -48,7 +44,6 @@ const columns: TableColumnsType<DataType> = [
 const { Search } = Input;
 
 const UserRegistration: React.FC = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,16 +52,7 @@ const UserRegistration: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
   const [selectedAction, setSelectedAction] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
-  const onSelectChange = (
-    newSelectedRowKeys: React.Key[],
-    selectedRows: DataType[]
-  ) => {
-    setSelectedRowKeys(newSelectedRowKeys);
-    if (selectedRows.length > 0) {
-      setSelectedUser(selectedRows[0]);
-    }
-  };
-
+  
   
 
   const openModal = (user: DataType) => {
@@ -126,6 +112,7 @@ const UserRegistration: React.FC = () => {
   const rowSelection = {
     type: 'radio' as const,  // Garantindo que 'radio' seja reconhecido como o tipo fixo
     selectedRowKeys: selectedUser ? [selectedUser.key] : [],  // Controla qual linha está selecionada
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
       if (selectedRowKeys.length > 1) {
         message.error("Você pode selecionar apenas uma linha!");

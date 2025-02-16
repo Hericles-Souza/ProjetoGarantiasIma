@@ -48,7 +48,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         allowedRoles: [UserRoleEnum.Admin]
       },
       {
-        path: "acordo-commercial",
+        path: "garantias/acordo-commercial",
         element: <ScreenAcordoComercial />, 
         private: true, 
       },

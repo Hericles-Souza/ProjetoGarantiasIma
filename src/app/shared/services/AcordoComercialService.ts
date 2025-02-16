@@ -1,5 +1,5 @@
 import api from "@shared/Interceptors";
-import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
+import { AcordoComercialModel, ResponseNfItem } from "@shared/models/AcordoComercialModel";
 
 export const getAllAcordosComerciaisByUser = async (data: AcordoComercialModel) => {
   try {
@@ -32,3 +32,13 @@ export const getAcordosComerciaisByStatusAsync = async (
     throw error;
   }
 };
+
+export const getItemsByNfAsync = async (nfCode: string): Promise<ResponseNfItem> => {
+  try {
+    const nfItems = await api.get(`garantias/item/by-nf/${nfCode}`);
+    return nfItems.data;
+  } catch (error) {
+    console.error('Error fetching acordos comerciais by status:', error);
+    throw error;
+  }
+}
