@@ -1,14 +1,14 @@
-import {Checkbox, InputAdornment, TextField} from '@mui/material';
-import {Button, message, Typography,} from 'antd';
-import React, {useContext, useEffect, useState} from 'react';
+import { Checkbox, InputAdornment, TextField } from '@mui/material';
+import { Button, message, Typography, } from 'antd';
+import React, { useContext, useEffect, useState } from 'react';
 import './dialog.style.css'
 import style from "./style.module.css";
-import {RuleModel} from "@shared/models/RuleModel.ts";
-import {getRules} from "@shared/services/RuleService.ts";
-import {useFormik} from "formik";
+import { RuleModel } from "@shared/models/RuleModel.ts";
+import { getRules } from "@shared/services/RuleService.ts";
+import { useFormik } from "formik";
 import * as Yup from 'yup';
-import {PiCopySimpleLight} from "react-icons/pi";
-import {TfiReload} from "react-icons/tfi";
+import { PiCopySimpleLight } from "react-icons/pi";
+import { TfiReload } from "react-icons/tfi";
 import InputMask from 'react-input-mask';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createUser, CreateUserRequest, updateUser, UpdateUserRequest } from '@shared/services/UserService';
@@ -37,13 +37,13 @@ interface DialogUserRegistrationProps {
   selectedUserActionCreation: boolean;
 }
 
-const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeModal, onSearch, selectedUser, selectedUserActionCreation}) => {
+const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeModal, onSearch, selectedUser, selectedUserActionCreation, }) => {
   const [rule, setRule] = useState<RuleModel[] | null>(null);
   const [selectedProfile, setSelectedProfile] = useState('');
   const generatePassword = () => Math.random().toString(36).slice(-8);
   const context = useContext(AuthContext);
-    
-  const formik = useFormik({
+
+  let formik = useFormik({
     initialValues: {
       cnpj: selectedUser ? selectedUser.cnpj : '',
       cigamCode: selectedUser ? selectedUser.cigamCode : '',
@@ -66,63 +66,130 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
       onSearch();
     },
   });
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getRules();  
+
+  const fetchData = async () => {
+    try {
+      const response = await getRules();
+      
+      if (response.data && response.data.data) {
+        setRule(response.data.data);
         console.log("response data: ", response.data);
-        
-        if (response.data && response.data.data) {
-          setRule(response.data.data);
-          
-          const initialUserRole = selectedUser ? selectedUser.userRole  : 'admin';
-          const foundRule = response.data.data.find((value) => value.name === initialUserRole);
-          if (foundRule) {
-            setSelectedProfile(foundRule.name); 
-          }
+
+        const initialUserRole = selectedUser ? selectedUser.userRole : 'admin';
+        const foundRule = response.data.data.find((value) => value.name === initialUserRole);
+        if (foundRule) {
+          setSelectedProfile(foundRule.name);
+          console.log(foundRule.name);
         }
-      } catch (error) {
-        console.error('Error fetching rules', error);
       }
-    };
-  
-    fetchData();
-  
-  }, []); 
-  
+    } catch (error) {
+      console.error('Error fetching rules', error);
+    }
+  };
+
+
   useEffect(() => {
     formik.resetForm();
     formik.setFieldValue('password', generatePassword());
-  }, [closeModal]);
-  
+  }, [closeModal, selectedUser]);
+
+  useEffect(() => {
+    fetchData();
+    if (selectedUser) {
+
+
+      formik.setValues({
+        cnpj: selectedUser.cnpj,
+        cigamCode: selectedUser.cigamCode,
+        companyName: selectedUser.companyName,
+        phone: selectedUser.phone,
+        email: selectedUser.email,
+        password: generatePassword(), // Garantir que a senha seja nova a cada vez
+        isActive: selectedUser.status,
+        userRole: selectedUser.userRole,
+      });
+    } else {
+      // Resetando para os valores de criação
+      formik.setValues({
+        cnpj: '',
+        cigamCode: '',
+        companyName: '',
+        phone: '',
+        email: '',
+        password: generatePassword(),
+        isActive: true,
+        userRole: 'admin',
+      });
+    }
+  }, [selectedUser, selectedUserActionCreation]);
+
   const handleCopyPassword = () => {
     if (formik.values.password) {
       navigator.clipboard.writeText(formik.values.password)
-      .then(() => message.success('Senha copiada para a área de transferência!'))
-      .catch(() => message.error('Falha ao copiar a senha.'));
+        .then(() => message.success('Senha copiada para a área de transferência!'))
+        .catch(() => message.error('Falha ao copiar a senha.'));
     } else {
       message.warning('Nenhuma senha para copiar.').then();
     }
   };
 
   const createNewUser = async () => {
-    
-    const userRequest: CreateUserRequest = {
-      username: formik.values.cigamCode,
-      email: formik.values.email,
-      fullname: formik.values.companyName,
-      shortname: formik.values.companyName.trim()[0],
-      isActive: formik.values.isActive,
-      isAdmin: selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id ? true : false,
-      phone: formik.values.phone,
-      password: formik.values.password,
-      CNPJ: formik.values.cnpj,
-      codigoCigam: formik.values.cigamCode,
-      ruleId: formik.values.userRole,
-    };
-    console.log("userdata: " + JSON.stringify(userRequest));
-    await createUser(userRequest, context.user.token).then((value) => console.log(value));
+    try {
+      const userRequest: CreateUserRequest = {
+        username: formik.values.cigamCode || 'defaultCigamCode',
+        email: formik.values.email,
+        fullname: formik.values.companyName,
+        shortname: formik.values.companyName.trim()[0],
+        isActive: formik.values.isActive,
+        isAdmin: selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id ? true : false,
+        phone: formik.values.phone || '+99 99 99999-9999',
+        password: formik.values.password,
+        CNPJ: formik.values.cnpj || '12.345.678/0001-96',
+        codigoCigam: formik.values.cigamCode || 'defaultCigamCode',
+        ruleId: rule.find((value) => value.name === formik.values.userRole).id,
+      };
+      console.log(JSON.stringify(userRequest));
+      await createUser(userRequest, context.user.token).then((value) => {
+        message.success('Cadastro criado com sucesso!')
+        selectedUser = null;
+        closeModal();
+        onSearch(); 
+      });
+
+    } catch (error) {
+      message.error('Erro ao cadastrar usuário!')
+
+    }
+  };
+
+  const updateExistUser = async () => {
+    try {
+      const updateUserRequest: UpdateUserRequest = {
+        id: selectedUser.id,
+        username: formik.values.cigamCode || 'defaultCigamCode',
+        email: formik.values.email,
+        fullname: formik.values.companyName,
+        shortname: formik.values.companyName.trim()[0],
+        isActive: formik.values.isActive,
+        isAdmin: selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id ? true : false,
+        phone: formik.values.phone || '+99 99 99999-9999',
+        password: formik.values.password,
+        CNPJ: formik.values.cnpj || '12.345.678/0001-96',
+        codigoCigam: formik.values.cigamCode || 'defaultCigamCode',
+        ruleId: rule.find((value) => value.name === formik.values.userRole).id,
+      };
+      console.log("uupdateUserserdata: " + JSON.stringify(updateUserRequest));
+      await updateUser(updateUserRequest, context.user.token).then((value) => console.log(JSON.stringify(value)));
+      message.success('Usuário atualizado com sucesso!')
+      selectedUser = null;
+      closeModal();
+      onSearch();
+
+    } catch (error) {
+      console.log(JSON.stringify(error));
+      message.error('Erro ao atualizar usuário!');
+
+    }
   };
 
   return (
@@ -164,7 +231,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
             setSelectedProfile(valueProfile.name);
             formik.setFieldValue('userRole', valueProfile.name);
             console.log("profile selected: " + selectedProfile);
-          } }
+          }}
           defaultValue="EUR"
           focused
           className="outlined-input-select"
@@ -187,7 +254,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
             </option>
           ))}
         </TextField>
-        <div style={{display: 'flex', alignItems: 'center', flex: 1}}>
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
           <Checkbox
             defaultChecked
             sx={{
@@ -198,7 +265,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
               marginTop: '-22px',
             }}
           />
-          <span style={{marginTop: '-22px'}}>Usuário Ativo</span>
+          <span style={{ marginTop: '-22px' }}>Usuário Ativo</span>
         </div>
       </div>
       {(!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin")) && (
@@ -321,10 +388,10 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
           InputProps={{
             endAdornment: (
               <InputAdornment position="end"
-                              style={{display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem'}}>
-                <TfiReload style={{cursor: 'pointer', color: "#FF0000"}}
-                           onClick={() => formik.setFieldValue('password', generatePassword())}/>
-                <PiCopySimpleLight style={{cursor: 'pointer'}} onClick={handleCopyPassword}/>
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
+                <TfiReload style={{ cursor: 'pointer', color: "#FF0000" }}
+                  onClick={() => formik.setFieldValue('password', generatePassword())} />
+                <PiCopySimpleLight style={{ cursor: 'pointer' }} onClick={handleCopyPassword} />
               </InputAdornment>
             ),
           }}
@@ -336,13 +403,16 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({closeMod
         />
       </div>
       }
-      <div style={{display: "flex", justifyContent: "end", gap: "1rem"}}>
-        <Button onClick={closeModal} style={{backgroundColor: "white", color: "red"}}>
+      <div style={{ display: "flex", justifyContent: "end", gap: "1rem" }}>
+        <Button onClick={closeModal} style={{ backgroundColor: "white", color: "red" }}>
           CANCELAR
         </Button>
-        <Button onClick={createNewUser} type="primary" style={{backgroundColor: "red"}}>
+        {selectedUserActionCreation && <Button onClick={createNewUser} type="primary" style={{ backgroundColor: "red" }}>
           {selectedUserActionCreation ? 'CRIAR' : 'ATUALIZAR'}
-        </Button>
+        </Button>}
+        {!selectedUserActionCreation && <Button onClick={updateExistUser} type="primary" style={{ backgroundColor: "red" }}>
+          {'ATUALIZAR'}
+        </Button>}
       </div>
     </form>
 

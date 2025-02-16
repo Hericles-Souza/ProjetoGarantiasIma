@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
       setLoading(false); // Define como carregado mesmo que não haja token
       navigate("/login");
     }
-  }, [navigate]);
+  });
 
   const login = (user: AuthModel) => {
     setUser(user);

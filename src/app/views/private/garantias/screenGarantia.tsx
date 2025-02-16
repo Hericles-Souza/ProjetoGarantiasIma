@@ -33,14 +33,12 @@ const Garantias: React.FC = () => {
 
 
   useEffect(() => {
-
-
     fetchCardData();
-  });
+  }, []);  // [] para garantir que só execute uma vez
 
   const fetchCardData = async () => {
     try {
-      if (context.user.rule.name === "cliente") {
+      if (context.user!.rule!.name === "cliente") {
         const response = await getGarantiasPaginationAsync(1, 10);
         const data = await response.data.data.data;
         setCardData(data);
@@ -57,7 +55,8 @@ const Garantias: React.FC = () => {
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
             GarantiasStatusEnum2.CONFIRMADO,
           ];
-        };
+        }
+
         const promises = status.map(async (element) => {
           const response = await getGarantiasByStatusAsync(1, 10, element);
           const responseData = await response.data.data;
@@ -65,37 +64,38 @@ const Garantias: React.FC = () => {
         });
 
         const results = await Promise.all(promises);
-        const dataArray = results.flat(); // Concatena todos os arrays em um único array
-        setCardData(dataArray);
-        setFilteredItems(cardData.flatMap((card) => {
-          // console.log("TESTE CARDDATA: " + JSON.stringify(cardData));
-          // console.log("TESTE CARD: " + JSON.stringify(card));
-          return card.itens.filter((item) => {
-            const matchesStatus =
-              filterStatus === "todos" ||
-              item.codigoStatus ===
-                converterStatusGarantiaInverso(
-                  converterStringParaStatusGarantia(filterStatus)
-                );
-            const matchesSearch =
-              searchTerm === "" ||
-              item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              item.codigoItem.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              item.tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
-                 
-            return matchesStatus && matchesSearch;
-          });
-        }));
-      // console.log("cardDAta: " + JSON.stringify(cardData));
-
+        const dataArray = results.flat();
+        setCardData(dataArray);  // Atualiza o cardData com os resultados
       }
     } catch (error) {
       console.error("Error fetching card data:", error);
     } finally {
-      
       setLoading(false);
     }
   };
+
+  // 2. Filtrar os dados sempre que `cardData`, `filterStatus` ou `searchTerm` mudar
+  useEffect(() => {
+    const newFilteredItems = cardData.flatMap((card) => {
+      return card.itens.filter((item) => {
+        const matchesStatus =
+          filterStatus === "todos" ||
+          item.codigoStatus ===
+            converterStatusGarantiaInverso(
+              converterStringParaStatusGarantia(filterStatus)
+            );
+        const matchesSearch =
+          searchTerm === "" ||
+          item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.codigoItem.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
+
+        return matchesStatus && matchesSearch;
+      });
+    });
+    setFilteredItems(newFilteredItems);  // Atualiza o estado com os itens filtrados
+  }, [cardData, filterStatus, searchTerm]);  
+  
 
   const statuses = Object.values(GarantiasStatusEnum);
 

@@ -78,5 +78,5 @@ export function updateUser(user: UpdateUserRequest, token: string) {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-  }).then((value) => console.log("request: " + value.request));
+  }).then((value) => console.log("request: " + JSON.stringify(value.request)));
 }

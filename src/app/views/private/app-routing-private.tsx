@@ -22,7 +22,8 @@ export const appRoutingPrivate: RouteConfig[] = [
       {
         path: "garantias",
         element: <Garantias />,
-        private: true
+        private: true,
+        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Técnico, UserRoleEnum.Cliente]
       },
       {
         path: "garantias/rgi/:id",

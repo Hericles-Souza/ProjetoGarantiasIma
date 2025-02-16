@@ -35,13 +35,14 @@ const menuData: MenuItem[] = [
     label: 'Garantias',
     icon: <img src={IconGarantia} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
     path: '/garantias',
+    allowedRoles:[UserRoleEnum.Técnico, UserRoleEnum.Supervisor, UserRoleEnum.Cliente]
   },
   {
     key: '2',
     label: 'Cadastro de Usuários',
     icon: <img src={IconUser} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
     path: '/users',
-    allowedRoles: [UserRoleEnum.Admin,],
+    allowedRoles: [UserRoleEnum.Admin],
   },
 
 ];
@@ -57,7 +58,7 @@ const LayoutPrivate: React.FC = () => {
     if (currentItem) {
       setSelectedKey(currentItem.key);
     }
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   const toggleSidebar = () => setCollapsed(prev => !prev);
 
@@ -94,7 +95,7 @@ const LayoutPrivate: React.FC = () => {
           >
             
             {menuData.filter(item =>
-              !item.allowedRoles || item.allowedRoles.includes(user?.rule?.name)).map(item => {
+              !item.allowedRoles || item.allowedRoles.includes(user!.rule!.name as UserRoleEnum)).map(item => {
                 return (
                   <Menu.Item
                     key={item.key}

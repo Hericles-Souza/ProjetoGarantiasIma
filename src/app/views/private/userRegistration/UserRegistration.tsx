@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Button,
   Input,
+  message,
   Modal,
   Space,
   Table,
@@ -52,7 +53,7 @@ const UserRegistration: React.FC = () => {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(20);
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
   const [selectedAction, setSelectedAction] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
@@ -66,12 +67,15 @@ const UserRegistration: React.FC = () => {
     }
   };
 
+  
+
   const openModal = (user: DataType) => {
     setSelectedUser(user);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    setSelectedUser(null);
     setIsModalOpen(false);
   };
 
@@ -119,13 +123,21 @@ const UserRegistration: React.FC = () => {
     fetchData();
   }, [page, limit, searchValue]);
 
-  const rowSelection: TableRowSelection<DataType> = {
-    selectedRowKeys,
-    onChange: onSelectChange,
+  const rowSelection = {
+    type: 'radio' as const,  // Garantindo que 'radio' seja reconhecido como o tipo fixo
+    selectedRowKeys: selectedUser ? [selectedUser.key] : [],  // Controla qual linha está selecionada
+    onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
+      if (selectedRowKeys.length > 1) {
+        message.error("Você pode selecionar apenas uma linha!");
+      } else {
+        setSelectedUser(selectedRows[0]);
+      }
+    },
   };
 
+
   const onSearchValues = (value: string) => {
-    setSearchValue(value);  
+    setSearchValue(value);
   };
 
   return (
@@ -135,14 +147,19 @@ const UserRegistration: React.FC = () => {
           <Search
             className={styles.inputSearch}
             placeholder="Pesquisar"
-            onSearch={onSearchValues} 
+            onSearch={onSearchValues}
           />
           <Button
             type="default"
             className={styles.buttonEdite}
             onClick={() => {
-              setSelectedAction(false);
-              openModal(selectedUser);
+              if (!selectedUser)
+                message.error("Deve ser selecionado um usário!");
+              else {
+                setSelectedAction(false);
+                openModal(selectedUser);
+                console.log("update " + JSON.stringify( selectedUser));
+              }
             }}
           >
             Editar
