@@ -147,6 +147,7 @@ const ScreenAcordoComercial = () => {
               value={razaoSocial}
               onChange={(e) => setRazaoSocial(e.target.value)}
               fullWidth
+              disabled
             />
           </div>
           <div className="info-row">
@@ -155,6 +156,8 @@ const ScreenAcordoComercial = () => {
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
               fullWidth
+              disabled
+
             />
           </div>
           <div className="info-row">
@@ -163,6 +166,8 @@ const ScreenAcordoComercial = () => {
               value={dataSolicitacao}
               onChange={(e) => setDataSolicitacao(e.target.value)}
               fullWidth
+              disabled
+
             />
           </div>
         </div>

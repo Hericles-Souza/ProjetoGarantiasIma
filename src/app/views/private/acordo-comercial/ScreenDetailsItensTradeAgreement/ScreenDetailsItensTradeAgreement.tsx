@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useContext, useEffect, useRef, useState } from "react";
-import { Button, Spin } from "antd";
+import { Button, message, Spin } from "antd";
 import {
   DownOutlined,
   LeftOutlined,
@@ -22,7 +22,10 @@ import Quill from "quill";
 import api from "@shared/Interceptors";
 import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
 import { UpdateItemRequest } from "@shared/models/GarantiasModel";
-import { GarantiasItemStatusEnum, GarantiasItemStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
+import {
+  GarantiasItemStatusEnum,
+  GarantiasItemStatusEnum2,
+} from "@shared/enums/GarantiasStatusEnum";
 // import { GarantiasModel } from "@shared/models/GarantiasModel";
 // Componente QuillEditor
 interface QuillEditorProps {
@@ -84,8 +87,6 @@ const FileAttachment = ({
       setFileName(event.target.files[0].name);
     }
   };
-
-  
 
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
@@ -188,18 +189,20 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsReimbursementChecked(e.target.checked);
   };
-  
-  const [visibleSections, setVisibleSections] = useState<{ [key: string]: boolean }>({});
+
+  const [visibleSections, setVisibleSections] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const toggleContentVisibility = (itemId: string) => {
-    console.log("item Id: " + itemId)
-    setVisibleSections(prevState => ({
+    console.log("item Id: " + itemId);
+    setVisibleSections((prevState) => ({
       ...prevState,
       [itemId]: !prevState[itemId],
     }));
   };
 
-const handleSave = async () => {
+  const handleSave = async () => {
     items.map(async (item, index) => {
       const dataToSend = {
         ItemId: item.id,
@@ -212,7 +215,7 @@ const handleSave = async () => {
           `/garantias/analisetecnica/`,
           dataToSend
         );
-        
+
         const updateRequest: UpdateItemRequest = {
           garantiaId: item.garantia_id,
           codigoItem: item.codigoItem,
@@ -224,24 +227,27 @@ const handleSave = async () => {
           loteItem: item.loteItem,
           codigoStatus: item.codigoStatus,
           solicitarRessarcimento: item.solicitarRessarcimento == true ? 1 : 0,
-          index: index.toString()
-        }
-        
+          index: index.toString(),
+        };
+
         console.log("data to send: " + JSON.stringify(updateRequest));
-        const ressponseItem = await updateGarantiaItemByIdAsync(item.id, updateRequest);
+        const ressponseItem = await updateGarantiaItemByIdAsync(
+          item.id,
+          updateRequest
+        );
 
         if (response.status === 200 && ressponseItem.status === 200) {
           // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
-          alert("Dados salvos com sucesso!");
+          message.success("Dados salvos com sucesso!");
+          navigate(`/garantias/acordo-commercial`);
+          
         } else {
           // Handle error
-          alert("Falha ao salvar os dados.");
+          message.error("Falha ao salvar os dados.");
         }
-
-
       } catch (error) {
         console.error("Erro ao tentar salvar:", error);
-        alert("Erro ao tentar salvar.");
+        message.error("Erro ao tentar salvar.");
       }
     });
   };
@@ -285,13 +291,24 @@ const handleSave = async () => {
       <div className={styles.ContainerHeader}>
         <h1 className={styles.tituloRgi}>{location.state.cardData.rgi}</h1>
         <div className={styles.botoesCabecalho}>
-          <Button type="default" className={styles.ButtonDelete}>
-            Visualizar Pré-Nota
-          </Button>
+          {context.user.rule.name != UserRoleEnum.Técnico && (
+            <Button
+              type="default"
+              className={styles.ButtonDelete}
+              onClick={() => navigate("/view-pre-invoice")}
+            >
+              Visualizar Pré-Nota
+            </Button>
+          )}
+
           <Button type="default" className={styles.ButtonDelete}>
             Excluir
           </Button>
-          <Button type="primary" className={styles.ButonToSend} onClick={handleSave}>
+          <Button
+            type="primary"
+            className={styles.ButonToSend}
+            onClick={handleSave}
+          >
             Salvar
           </Button>
         </div>
@@ -315,7 +332,7 @@ const handleSave = async () => {
           <div className={styles.containerInformacoes}>
             <CollapsibleSection
               title={item.codigoItem}
-              isVisible={visibleSections[item.id ]}
+              isVisible={visibleSections[item.id]}
               toggleVisibility={() => toggleContentVisibility(item.id)}
             >
               {/* Anexo da NF de venda (visível apenas para não supervisores) */}
@@ -427,8 +444,14 @@ const handleSave = async () => {
                       ]}
                       value={envioAutorizado}
                       onChange={(e) => {
-                        item.status = envioAutorizado == "Procedente" ? GarantiasItemStatusEnum.AUTORIZADO : GarantiasItemStatusEnum.NAO_AUTORIZADO;
-                        item.codigoStatus = envioAutorizado == "Procedente" ? GarantiasItemStatusEnum2.AUTORIZADO : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
+                        item.status =
+                          envioAutorizado == "Procedente"
+                            ? GarantiasItemStatusEnum.AUTORIZADO
+                            : GarantiasItemStatusEnum.NAO_AUTORIZADO;
+                        item.codigoStatus =
+                          envioAutorizado == "Procedente"
+                            ? GarantiasItemStatusEnum2.AUTORIZADO
+                            : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
                         setEnvioAutorizado(e.target.value);
                       }}
                     />
