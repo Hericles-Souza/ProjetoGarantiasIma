@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useContext, useEffect, useRef, useState } from "react";
 import { Button, Spin } from "antd";
 import {
@@ -19,6 +20,9 @@ import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import MultilineTextFields from "@shared/components/multline/multLine";
 import Quill from "quill";
 import api from "@shared/Interceptors";
+import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
+import { UpdateItemRequest } from "@shared/models/GarantiasModel";
+import { GarantiasItemStatusEnum, GarantiasItemStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 // import { GarantiasModel } from "@shared/models/GarantiasModel";
 // Componente QuillEditor
 interface QuillEditorProps {
@@ -102,7 +106,7 @@ const FileAttachment = ({
         <label className={styles.buttonUpdateNfSale}>
           <input
             type="file"
-            style={{ display: "none" }}
+            style={{ display: "none", borderColor: "red" }}
             onChange={handleFileChange}
           />
           Visualizar
@@ -110,7 +114,7 @@ const FileAttachment = ({
         <label className={styles.buttonUpdateNfSale}>
           <input
             type="file"
-            style={{ backgroundColor: "red", display: "none", color }}
+            style={{ backgroundColor: "red", display: "none" }}
             onChange={handleFileChange}
           />
           Baixar Arquivo
@@ -181,36 +185,60 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
     fetchUserData();
   }, [location.state]);
 
-  const toggleContentVisibility = () => {
-    setIsContentVisible(!isContentVisible);
-  };
-
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsReimbursementChecked(e.target.checked);
   };
   
+  const [visibleSections, setVisibleSections] = useState<{ [key: string]: boolean }>({});
+
+  const toggleContentVisibility = (itemId: string) => {
+    console.log("item Id: " + itemId)
+    setVisibleSections(prevState => ({
+      ...prevState,
+      [itemId]: !prevState[itemId],
+    }));
+  };
+
 const handleSave = async () => {
-    items.map(async (item) => {
+    items.map(async (item, index) => {
       const dataToSend = {
         ItemId: item.id,
-        analiseTecnica: editorContent,
-        conclusao: conclusao,
+        analiseTecnica: item.analiseTecnica,
+        conclusao: item.conclusao,
       };
       console.log("aqui: " + JSON.stringify(item.id));
-      console.log("data to send: " + JSON.stringify(dataToSend));
       try {
         const response = await api.put(
           `/garantias/analisetecnica/`,
           dataToSend
         );
+        
+        const updateRequest: UpdateItemRequest = {
+          garantiaId: item.garantia_id,
+          codigoItem: item.codigoItem,
+          tipoDefeito: item.tipoDefeito,
+          modeloVeiculoAplicado: item.modeloVeiculoAplicado,
+          torqueAplicado: item.torqueAplicado,
+          nfReferencia: item.nfReferencia,
+          loteItemOficial: item.loteItemOficial,
+          loteItem: item.loteItem,
+          codigoStatus: item.codigoStatus,
+          solicitarRessarcimento: item.solicitarRessarcimento == true ? 1 : 0,
+          index: index.toString()
+        }
+        
+        console.log("data to send: " + JSON.stringify(updateRequest));
+        const ressponseItem = await updateGarantiaItemByIdAsync(item.id, updateRequest);
 
-        if (response.status === 200) {
+        if (response.status === 200 && ressponseItem.status === 200) {
           // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
           alert("Dados salvos com sucesso!");
         } else {
           // Handle error
           alert("Falha ao salvar os dados.");
         }
+
+
       } catch (error) {
         console.error("Erro ao tentar salvar:", error);
         alert("Erro ao tentar salvar.");
@@ -287,8 +315,8 @@ const handleSave = async () => {
           <div className={styles.containerInformacoes}>
             <CollapsibleSection
               title={item.codigoItem}
-              isVisible={isContentVisible}
-              toggleVisibility={toggleContentVisibility}
+              isVisible={visibleSections[item.id ]}
+              toggleVisibility={() => toggleContentVisibility(item.id)}
             >
               {/* Anexo da NF de venda (visível apenas para não supervisores) */}
               {context.user.rule.name !== UserRoleEnum.Supervisor && (
@@ -365,40 +393,6 @@ const handleSave = async () => {
                 </div>
               </div>
 
-              {/* Solicitar ressarcimento (visível apenas para não supervisores) */}
-              {context.user.rule.name !== UserRoleEnum.Supervisor && (
-                <>
-                  <div className={styles.checkboxContainer}>
-                    <ColorCheckboxes
-                      onChange={handleCheckboxChange}
-                      checked={isReimbursementChecked}
-                    />
-                    <label className={styles.checkboxDanger}>
-                      Solicitar ressarcimento
-                    </label>
-                  </div>
-                  {!isReimbursementChecked && (
-                    <div className={styles.contentReimbursement}>
-                      <h3 className={styles.tituloA}>
-                        Anexo de dados adicionais para ressarcimento
-                      </h3>
-                      {[
-                        "1. Documento de identificação (RG ou CNH):",
-                        "2. Documentação do veículo:",
-                        "3. NF do guincho:",
-                        "4. NF de outras despesa/produtos pertinentes:",
-                      ].map((item, index) => (
-                        <FileAttachment
-                          key={index}
-                          label={item}
-                          backgroundColor="#f5f5f5"
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
               {/* Anexo da NF de Referência (visível para todos) */}
               <FileAttachment
                 label="Anexo da NF de Referência"
@@ -433,7 +427,8 @@ const handleSave = async () => {
                       ]}
                       value={envioAutorizado}
                       onChange={(e) => {
-                        item.status = e.target.value;
+                        item.status = envioAutorizado == "Procedente" ? GarantiasItemStatusEnum.AUTORIZADO : GarantiasItemStatusEnum.NAO_AUTORIZADO;
+                        item.codigoStatus = envioAutorizado == "Procedente" ? GarantiasItemStatusEnum2.AUTORIZADO : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
                         setEnvioAutorizado(e.target.value);
                       }}
                     />
@@ -447,7 +442,7 @@ const handleSave = async () => {
 
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields
-                    value={conclusao}
+                    value={item.conclusao}
                     onChange={(e) => setConclusao(e.target.value)}
                     label="Conclusão"
                     placeholder="Digite a conclusão aqui..."

@@ -39,6 +39,21 @@ export interface GarantiaItem {
   autorizado?: string;
 }
 
+export interface UpdateItemRequest {
+  garantiaId: string;
+  codigoItem: string;
+  tipoDefeito: string;
+  modeloVeiculoAplicado: string;
+  torqueAplicado: number;
+  nfReferencia: string;
+  loteItemOficial: string;
+  loteItem: string;
+  codigoStatus: number;
+  solicitarRessarcimento: number;
+  index: string;
+}
+
+
 export interface GarantiasModel {
   id?: string; 
   createdAt?: string;

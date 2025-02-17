@@ -1,5 +1,5 @@
 import api from "@shared/Interceptors";
-import {GarantiaItem, GarantiasModel} from "@shared/models/GarantiasModel.ts";
+import {GarantiasModel, UpdateItemRequest} from "@shared/models/GarantiasModel.ts";
 
 
 export const createGarantiaAsync = (data: GarantiasModel) => {
@@ -27,11 +27,11 @@ export const updateGarantiasItemStatusAsync = (descricao: string) => {
   return api.put(`/garantias/garantia-item-status`, JSON.stringify(descricao));
 }
 
-export const updateGarantiaItemByIdAsync = (garantiaId: string, data: GarantiaItem) => {
-  if (!garantiaId) {
+export const updateGarantiaItemByIdAsync = (itemId: string, data: UpdateItemRequest) => {
+  if (!itemId) {
     throw new Error('ID da garantia é obrigatório');
   }
-  return api.put(`/garantias/garantiasItem/${garantiaId}/UpdateItem`, data);
+  return api.put(`garantias/item/update/${itemId}`, data);
 };
 
 export const getGarantiasPaginationAsync = (page: number, limit: number, search?: string) => {
