@@ -129,10 +129,10 @@ const ScreenAcordoComercial = () => {
           <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
           <div className="ButtonHeader">
             <Button type="default" className="ButtonDelete">
-              EXCLUIR
+              Salvar
             </Button>
             <Button onClick={handleSave} type="primary" className="ButonToSend">
-              SALVAR
+              Enviar
             </Button>
           </div>
         </div>

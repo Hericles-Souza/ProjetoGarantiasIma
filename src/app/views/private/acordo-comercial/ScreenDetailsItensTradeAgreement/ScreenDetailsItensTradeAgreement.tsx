@@ -219,7 +219,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         const updateRequest: UpdateItemRequest = {
           garantiaId: item.garantia_id,
           codigoItem: item.codigoItem,
-          tipoDefeito: item.tipoDefeito,
+          tipoDefeito: 'defeito1',
           modeloVeiculoAplicado: item.modeloVeiculoAplicado,
           torqueAplicado: item.torqueAplicado,
           nfReferencia: item.nfReferencia,
@@ -240,7 +240,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
           message.success("Dados salvos com sucesso!");
           navigate(`/garantias/acordo-commercial`);
-
         } else {
           // Handle error
           message.error("Falha ao salvar os dados.");
@@ -301,9 +300,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             </Button>
           )}
 
-          <Button type="default" className={styles.ButtonDelete}>
-            Excluir
-          </Button>
           <Button
             type="primary"
             className={styles.ButonToSend}
@@ -368,19 +364,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                 </div>
 
                 <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 0.4 }}>
-                    <OutlinedSelectWithLabel
-                      label="Possível defeito"
-                      disabled
-                      fullWidth
-                      options={[
-                        { value: "Opção 1", label: "Opção 1" },
-                        { value: "Opção 2", label: "Opção 2" },
-                        { value: "Opção 3", label: "Opção 3" },
-                      ]}
-                      defaultValue={undefined}
-                    />
-                  </div>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
                     <OutlinedInputWithLabel
                       label="Modelo do veículo que aplicou"
@@ -439,20 +422,44 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                     <OutlinedSelectWithLabel
                       label="Envio Autorizado"
                       options={[
-                        { value: "Procedente", label: "Procedente" },
+                        {
+                          value: "Autorizado",
+                          label: "Autorizar envio da NF de devolução",
+                        },
                         { value: "Improcedente", label: "Improcedente" },
                       ]}
                       value={envioAutorizado}
                       onChange={(e) => {
                         item.status =
-                          e.target.value == "Procedente"
+                          e.target.value == "Autorizado"
                             ? GarantiasItemStatusEnum.AUTORIZADO
                             : GarantiasItemStatusEnum.NAO_AUTORIZADO;
                         item.codigoStatus =
-                          e.target.value == "Procedente"
+                          e.target.value == "Autorizado"
                             ? GarantiasItemStatusEnum2.AUTORIZADO
                             : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
                         setEnvioAutorizado(e.target.value);
+                      }}
+                    />
+                  </div>
+
+                  <hr className={styles.divisor} />
+                  <div className={styles.containerSelect}>
+                    <OutlinedSelectWithLabel
+                      label="Possível defeito"
+                      options={[
+                        {
+                          value: "defeito1",
+                          label: "Defeito 1",
+                        },
+                        {
+                          value: "defeito2",
+                          label: "Defeito 2",
+                        },
+                      ]}
+                      value= 'defeito1'
+                      onChange={(e) => {
+                        item.tipoDefeito = e.target.value 
                       }}
                     />
                   </div>
