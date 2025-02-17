@@ -240,7 +240,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
           message.success("Dados salvos com sucesso!");
           navigate(`/garantias/acordo-commercial`);
-          
+
         } else {
           // Handle error
           message.error("Falha ao salvar os dados.");
@@ -445,11 +445,11 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                       value={envioAutorizado}
                       onChange={(e) => {
                         item.status =
-                          envioAutorizado == "Procedente"
+                          e.target.value == "Procedente"
                             ? GarantiasItemStatusEnum.AUTORIZADO
                             : GarantiasItemStatusEnum.NAO_AUTORIZADO;
                         item.codigoStatus =
-                          envioAutorizado == "Procedente"
+                          e.target.value == "Procedente"
                             ? GarantiasItemStatusEnum2.AUTORIZADO
                             : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
                         setEnvioAutorizado(e.target.value);

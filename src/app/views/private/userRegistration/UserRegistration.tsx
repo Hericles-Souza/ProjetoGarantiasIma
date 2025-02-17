@@ -48,7 +48,8 @@ const UserRegistration: React.FC = () => {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limitGet, setLimitGet] = useState(100);
+  const [limit, setLimit] = useState(10);
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
   const [selectedAction, setSelectedAction] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
@@ -72,7 +73,7 @@ const UserRegistration: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response: GetAllUsersResponse = await getAllUsers(page, limit);
+      const response: GetAllUsersResponse = await getAllUsers(page, limitGet);
       console.log("USERS: " + JSON.stringify(response.data.data.data));
       const usersData = response.data.data.data.map((user) => ({
         key: user.id,
