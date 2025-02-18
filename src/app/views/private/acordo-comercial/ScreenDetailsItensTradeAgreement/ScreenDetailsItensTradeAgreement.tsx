@@ -26,6 +26,9 @@ import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
+import { getFileById } from "@shared/services/FilesService";
+import pako from 'pako';
+
 // import { GarantiasModel } from "@shared/models/GarantiasModel";
 // Componente QuillEditor
 interface QuillEditorProps {
@@ -76,16 +79,50 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 const FileAttachment = ({
   label,
   backgroundColor,
+  itemId
 }: {
   label: string;
   backgroundColor?: string;
+  itemId: string;
 }) => {
   const [fileName, setFileName] = useState<string | null>(null);
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setFileName(event.target.files[0].name);
-    }
+  const handleFileChange = async (itemId: string) => {
+    console.log("itemId: " + JSON.stringify(itemId));
+    const fileGet = await getFileById(itemId);
+    const decompressedData = pako.ungzip(fileGet, { to: 'string' });
+    const byteArray = new Uint8Array(decompressedData);
+    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+    const imageURL = URL.createObjectURL(blob);
+    console.log("blob: " + JSON.stringify(imageURL));
+    setImage(imageURL);
+    setLoading(false);
+    console.log("fileGet: " + JSON.stringify(fileGet));
+  };
+
+  const downloadImage = (itemId: string) => {
+    const fileGet = getFileById(itemId);
+    // .finally(() => {
+    //   console.log("fileGet: " + JSON.stringify(fileGet));
+    //   const link = document.createElement('a');
+    //   const decompressedData = pako.ungzip(fileGet, { to: 'uint8array' });
+    //   console.log("decompressedData: " + JSON.stringify(decompressedData));
+    //   // const byteArray = new Uint8Array(decompressedData);
+    //   const blob = new Blob([decompressedData], { type: 'image/jpg' });
+  
+    //   const imageURL = URL.createObjectURL(blob);
+    //   setImage(imageURL);
+  
+    //   link.href = imageURL;  // A URL temporária da imagem
+    //   link.download = 'imagem.jpg';  // Nome do arquivo para o download
+    //   link.click();  // Dispara o download
+
+    // });
+    
+
   };
 
   return (
@@ -105,22 +142,23 @@ const FileAttachment = ({
           </span>
         )}
         <label className={styles.buttonUpdateNfSale}>
-          <input
-            type="file"
+          <button
+          
             style={{ display: "none", borderColor: "red" }}
-            onChange={handleFileChange}
+            onClick={() =>   handleFileChange(itemId)}
           />
           Visualizar
         </label>
         <label className={styles.buttonUpdateNfSale}>
-          <input
-            type="file"
+          <button
             style={{ backgroundColor: "red", display: "none" }}
-            onChange={handleFileChange}
+            onClick={() =>   downloadImage(itemId)}
           />
           Baixar Arquivo
         </label>
       </div>
+      {/* {loading ? <p>Carregando...</p> : <img src={image} alt="Imagem carregada" />} */}
+
     </div>
   );
 };
@@ -239,7 +277,11 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         if (response.status === 200 && ressponseItem.status === 200) {
           // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
           message.success("Dados salvos com sucesso!");
-          navigate(`/garantias/acordo-commercial`);
+          const garantia = location.state.cardData;
+          navigate(`/garantias/acordo-commercial`,
+          { 
+            state: { item, garantia },
+          }); 
         } else {
           // Handle error
           message.error("Falha ao salvar os dados.");
@@ -337,6 +379,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                   <FileAttachment
                     label="Anexo da NF de venda"
                     backgroundColor="white"
+                    itemId={item.id}
                   />
                 </div>
               )}
@@ -397,6 +440,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
               <FileAttachment
                 label="Anexo da NF de Referência"
                 backgroundColor="white"
+                itemId={item.id}
               />
 
               {/* Anexos de Imagens (visível apenas para não supervisores) */}
@@ -414,6 +458,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                       key={index}
                       label={item}
                       backgroundColor="white"
+                      itemId={item}
                     />
                   ))}
 
