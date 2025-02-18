@@ -277,11 +277,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         if (response.status === 200 && ressponseItem.status === 200) {
           // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
           message.success("Dados salvos com sucesso!");
-          const garantia = location.state.cardData;
-          navigate(`/garantias/acordo-commercial`,
-          { 
-            state: { item, garantia },
-          }); 
+          
         } else {
           // Handle error
           message.error("Falha ao salvar os dados.");
