@@ -39,12 +39,12 @@ const ScreenAcordoComercial = () => {
           className="ButtonBack"
           // onClick={() => navigator(`/garantias/rgi/${id}`)}
         >
-          <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
+          <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO ACI
         </Button>
-        <span className="RgiCode">RGI N° 000666-0001 / NF 000666-00147.A</span> 
+        <span className="RgiCode">ACI N° 000666-0001 / NF 000666-00147.A</span> 
       </div>
       <div className="ContainerHeader">
-        <h1 className="tituloRgi">000666-00147.A</h1>
+        <h1 className="tituloRgi"> ACI 000666-00147.A</h1>
         <div className="ButtonHeader">
           <Button type="default" className="ButtonDelete">
             EXCLUIR
