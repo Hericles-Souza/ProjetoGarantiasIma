@@ -2,10 +2,9 @@
   padding: 20px;
   font-family: Arial, sans-serif;
   overflow-y: auto;
+  color: #5f5a56;
   max-height: 100vh;
-  background-color: white;
 }
-
 
 .divisor {
   margin-bottom: 16px;
@@ -13,51 +12,51 @@
   border-top: 1px solid #d9d9d9;
 }
 
-.containerBotaoVoltar {
+.ContainerButtonBack {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: auto;
   gap: 16px;
   margin-top: 30px;
 }
 
-.botaoVoltar {
+.ButtonBack {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  font-size: 10px;
-  line-height: 13.02px;
-  color: #000000;
-  width: 175px;
-  height: 13px;
-  margin-bottom: 16px;
+  font-size: 14px;
+  color: #a7a7a7;
+  outline: none !important;
+
 }
 
-.rgiPreto {
-  font-family: 'DM Sans', sans-serif;
+.ButtonBack:hover{
+  outline: none;
+  border-color: transparent;
+  color: red !important;
+}
+
+.RgiCode {
   font-weight: 500;
-  font-size: 10px;
-  line-height: 13.02px;
-  color: #000000;
+  font-size: 14px;
+  color: #555;
   text-align: right;
-  width: 217px;
-  height: 13px;
 }
 
-.cabecalhoRgi {
-  font-size: 10px;
-  font-weight: 400;
-  color: #ff4d4f;
+.containerSelectDefect{
+  margin-top: 20px;
+  margin-bottom: 30px;
+
 }
 
-.containerCabecalho {
+
+
+.ContainerHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 9px;
+  margin-top: 14px;
   margin-bottom: 20px;
 }
 
@@ -68,6 +67,14 @@
   font-weight: 280;
 }
 
+.nfsTitle {
+  color: #555;
+  font-size: 24px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  font-weight: 400;
+}
+
 .subtitulo {
   font-size: 16px;
   color: #555;
@@ -75,12 +82,9 @@
 
 .containerInformacoes {
   padding: 20px;
-  background-color: #F9F9F9;
+  background-color: #f9f9f9;
   border-radius: 12px;
-  margin-bottom: 1px;
-  max-height: none;
-  min-height: 10%;
-
+  margin-bottom: 15px;
 }
 
 .tituloSecao {
@@ -88,9 +92,16 @@
   font-weight: 500;
   font-size: 16px;
   line-height: 20.83px;
-  color: #5F5A56;
+  color: #5f5a56;
   margin-top: 20px;
-  margin-bottom: 20PX;;
+  margin-bottom: 20px;
+}
+
+.tituloSecaoVermelho {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: #ff0000;
 }
 
 .tituloA {
@@ -98,28 +109,14 @@
   font-weight: 500;
   font-size: 16px;
   line-height: 20.83px;
-  color: #000000;
+  color: #000;
   margin-top: 30px;
   margin-bottom: 20px;
 }
 
-.tituloSecaoContainer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.grupoInput {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  margin-bottom: 16px;
-  min-width: 200px;
-}
-
-.labelInput {
-  font-size: 12px;
+.containerSelect .labelInput {
+  font-size: 14px;
+  margin-bottom: 40px;
   color: #555;
 }
 
@@ -128,7 +125,6 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 16px;
-  align-items: flex-start;
 }
 
 .inputsConjun {
@@ -147,58 +143,40 @@
   min-width: 200px;
 }
 
-.inputsConjun .inputGroup {
-  flex: 1;
-}
-
-
-.customSelect {
-  width: 246px;
-  height: 40px;
-  border-radius: 4px 4px 0 0;
-}
-
-
-.inputsConjun > .inputGroup:nth-child(1),
-.inputsConjun > .inputGroup:nth-child(2) {
-  flex: 1;
-}
-
-.inputsConjun > .inputGroup:nth-child(3) {
-  flex: 0.5;
-}
-
 .inputLabel {
   font-size: 12px;
   color: #555;
   margin-bottom: 4px;
 }
 
-.inputLarge, .inputMedium {
+.inputLarge,
+.inputMedium {
   width: 100%;
   height: 40px;
   border-radius: 12px;
   border: 1px solid #d9d9d9;
   padding: 8px 12px;
   font-size: 14px;
-}
-
-.inputLarge, .inputMedium {
   background-color: #f5f5f5;
-  border-color: #d9d9d9;
-  color: #000;
 }
 
-.inputLarge:focus, .inputMedium:focus {
+.inputLarge:focus,
+.inputMedium:focus {
   border-color: #ff4d4f;
   box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+}
+
+.customSelect {
+  width: 246px;
+  height: 40px;
+  border-radius: 4px;
 }
 
 .containerAnexo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #fff;
+  background-color: #f9f9f9;
   padding: 10px;
   border-radius: 12px;
   margin-top: 10px;
@@ -212,7 +190,6 @@
 
 .itemAnexo {
   display: flex;
-  
   align-items: center;
   justify-content: space-between;
   background-color: #fff;
@@ -224,38 +201,47 @@
 
 .itemLabelAnexo {
   font-size: 16.5px;
-  color: #000000;
+  color: #000;
 }
 
-
-.botoesAnexo {
+.botoesCabecalho {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.botoesAnexo button {
+/* .botoesCabecalho button {
   font-size: 10px;
-  width: auto;
-  height: auto;
-  border-radius: 10px;
   height: 35px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+} */
+
+.enviar {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
 }
 
-.botoesAnexo button:focus {
-  outline: none;
+.enviar:hover {
+  background-color: #d92a2e;
+  border-color: #ff4d4f;
 }
 
-button:hover {
-  background-color: #752525;
-  color: #fff;
-  border-color: #752525;
+
+.botoesCabecalho .excluir {
+  background-color: transparent;
+  color: #5f5a56;
+  border: 1px solid #dadada;
 }
 
+.botoesCabecalho .excluir:hover {
+  background-color: #f0f0f0;
+  color: #5f5a56;
+  border-color: #dadada;
+}
 
 .topButtonsContainer {
   display: flex;
@@ -264,12 +250,18 @@ button:hover {
   margin-bottom: 16px;
 }
 
-
 .listaAnexosImagens {
   list-style-type: none;
   padding-left: 0;
   font-size: 16px;
 }
+
+.tituloSecaoContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 
 .itemAnexoImagem {
   display: flex;
@@ -279,24 +271,8 @@ button:hover {
 }
 
 .itemAnexoImagem span {
-  flex: 1;
-  color: #555;
+  color: #000;
 }
-
-.containerSelect {
-  margin-top: 20px;
-  width: 400px;
-}
-
-.containerSelect .labelInput {
-  font-size: 14px;
-  color: #555;
-}
-
-.containerSelect .ant-select-selector {
-  border-radius: 16px;
-}
-
 
 .visualAnalysis {
   margin-top: 16px;
@@ -308,50 +284,120 @@ button:hover {
   font-size: 14px;
 }
 
-.itemAnexoImagem span {
-  color: #000;
+
+.dialoginfo {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: rgba(1, 161, 214, 0.174);
+  border-radius: 10px;
+  padding: 5px 10px;
+  margin-bottom: 20px;
+  height: 40px;
+  gap: 10px;
 }
 
-
-.tituloSecaoVermelho {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 400;
-  font-size: 20px;
-  line-height: 26.04px;
-  color: #FF0000;
+.buttonRed {
+  display: flex;
+  align-items: center;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  height: 35px;
+  cursor: pointer;
 }
 
-.nfsTitle {
-  color: #555;
-  font-size: 24px;
-  margin-top: 15px;
-  margin-bottom: 15px;
-  font-weight: 400;
+.buttonRed:hover {
+  background-color: #d92a2e;
 }
 
-/* parte dos anexos dinamica é aqui, foi sofrido!  */
-
-
-.fileAttachmentContainer {
+.updateNFRef {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
   height: 65px;
   padding: 10px 15px;
   border-radius: 10px !important;
+  background-color: #fff !important;
+}
+
+.descriptionUpdateNFRef {
+  color: #5f5a56;
+}
+
+/* parte dos anexos dinamica é aqui, foi sofrido!  */
+.fileAttachmentContainer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  height: 65px;
+  padding: 0px 15px !important;
+  border-radius: 10px !important;
   /* background-color: #f5f5f5 !important; */
   margin-bottom: 20px;
 }
 
-.labelUpdate {
-  font-size: 17.5px;
-  color: #555;
-}
-
-.fileUpdateContent {
+.buttonUpdateNfSale {
   display: flex;
   align-items: center;
-  gap: 10px;
+  padding: 0px 20px;
+  background-color: white;
+  border: solid 1px hsl(0, 0%, 85%) !important;
+  color: #5f5a56;
+  height: 45px;
+  margin: 0 !important;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.updateNFSale {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  height: 65px;
+  padding: 10px 15px;
+  border-radius: 10px !important;
+  background-color: #f5f5f5 !important;
+  margin-bottom: 20px;
+}
+
+
+.descriptionUpdateNFSale {
+  color: #5f5a56;
+}
+
+.buttonUpdateNfSale {
+  border: solid 1px #dadada !important;
+  color: #5f5a56;
+  outline: none !important;
+  height: 45px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.buttonUpdateNfSale:hover {
+  border: solid 1px #dadada !important;
+  color: #5f5a56 !important;
+}
+
+.buttonRemoveUpload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 18px;
+  background-color: #f9f9f9;
+  color: #555;
+  height: 25px;
+  outline: none !important;
+  width: 25px;
+}
+
+.buttonRemoveUpload:hover {
+  border: solid 1px transparent;
+  outline: none;
+  color: red;
 }
 
 .fileName {
@@ -368,46 +414,20 @@ button:hover {
   color: #555;
 }
 
-.buttonRemoveUpload {
+.fileUpdateContent {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-size: 18px;
-  background-color: #f9f9f9;
-  color: #555;
-  height: 25px;
-  outline: none !important;
-  width: 25px;
+  gap:10px;
+  /* padding-top: 10px; */
 }
 
-.buttonUpdateNfSale {
+.TitleItens {
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  background-color: white;
-  border: solid 1px hsl(0, 0%, 85%) !important;
-  color: #5f5a56;
-  height: 45px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
+  justify-content: space-between;
 }
 
-.buttonUpdateNfSale:hover {
-  border: solid 1px red !important;
-  color: red !important;
-}
 
-/* -------------------------------------------------------- */
-
-.checkboxContainer{
-  align-items: center;
-  display: flex;
-}
-.checkboxDanger {
-  color: #5f5a56;
-}
 
 .contentReimbursement {
   border-radius: 15px;
@@ -416,92 +436,113 @@ button:hover {
   margin-bottom: 20px;
 }
 
-.ContainerButtonBack {
+.itemUpdateReimbursement {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-top: 30px;
-  outline: none !important;
+  justify-content: space-between;
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
-.ButtonBack {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 500;
-  font-size: 14px;
-  color: #a7a7a7;
+.ButtonUpdateReimbursement {
+  border: solid 1px #dadada;
+  border-radius: 10px;
+  height: 45px;
+  background-color: white !important;
   outline: none !important;
+  color: #5f5a56 !important;
+}
+
+.ButtonUpdateReimbursement:hover {
+  border: solid 1px red;
+  color: red !important;
+}
+
+.ButtonUpdate {
+  border: solid 1px #dadada;
+  border-radius: 10px;
+  height: 45px;
+  background-color: white !important;
+  color: #5f5a56 !important;
+  outline: none !important;
+}
+
+
+.ButtonUpdate:hover {
+  outline: none !important;
+  border: solid 1px red;
+  color: red !important;
 
 }
 
-.RgiCode {
-  font-weight: 500;
-  font-size: 14px;
-  color: #555;
-  text-align: right;
+.toggleButton{
+  outline: none !important;
 }
 
+.toggleButton:hover {
+  outline: none;
+  border: solid 1px transparent !important;
+}
 
-.nextButton {
-  margin-left: auto;
-  font-size: 25px;
-  outline: none !important;
+.ButonToSend {
+  background-color: red !important;
+  border-radius: 10px !important;
   height: 45px !important;
-  color: #555;
-}
-.nextButton:hover{
-  background-color: transparent !important;
-  color: #FF0000;
-  border: solid 1px transparent;
-}
-.buttonsContainer{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-
-}
-.buttonDeleteRgi{
-  border: solid 1px #dadada !important;
-  color: #5F5A56;
-  height: 45px;
-  padding: 0 20px;
-}
-
-.buttonDeleteRgi:hover{
-  color: red  !important;
-  border: solid 1px red !important;
-}
-
-.buttonCancelRgi{
-  border: solid 1px #dadada !important;
-  height: 45px;
-  padding: 0 20px !important;
-
-  color: #5F5A56;
+  font-size: "16px"!important;
+  padding: 0 25px !important;
   outline: none !important;
-
-  border-radius: 10px;
+  border: none;
 }
 
-.buttonCancelRgi:hover{
-  color: red  !important;
-  border: solid 1px red !important;
-}
-
-
-.buttonSaveRgi{
-  height: 45px;
+.ButtonDelete{
+  background-color: white !important;
+  border-radius: 10px !important;
+  font-size: "16px"!important;
+  height: 45px !important;
+  padding: 0 25px !important;
   outline: none !important;
-  border-radius: 10px;
-  padding: 0 20px !important;
 }
 
-.buttonSaveRgi:hover{
-  background-color: #FF0000 !important;
-  color: white !important;
-  border: solid 1px #FF0000 !important;
+.ButtonDelete:hover{
+  border: solid 1px red !important;
+  color: red !important;
+}
+
+.DeleteOutlined:hover{
+  color: red !important;
+}
+
+.statusAuthorized  {
+  color: #28a745; /* Verde */
+  font-weight: 500;
+  padding: 8px 15px;
+  margin-left: 10px;
+  background-color: #d4edda; 
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.statusRejected  {
+  color: #dc3545; 
+  font-weight: 500;
+  padding: 8px 10px;
+  margin-left: 10px;
+  background-color: #f8d7da; 
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.checkboxContainer{
+  display: flex !important;
+  justify-content: center;
+  height: 40px;
+  align-items: center !important;
+}
+
+.checkboxDanger {
+  color: #5f5a56;
+  margin: 0 !important;
 }

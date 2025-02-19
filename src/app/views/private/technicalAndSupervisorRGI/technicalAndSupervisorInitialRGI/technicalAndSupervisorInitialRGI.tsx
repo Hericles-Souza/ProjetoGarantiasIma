@@ -1,232 +1,203 @@
+import "./technicalAndSupervisorInitialRGI.module.css";
+import { LeftOutlined } from "@ant-design/icons";
+import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { Button, Spin } from "antd";
-import { FileOutlined, LeftOutlined } from "@ant-design/icons";
-import styles from "./technicalAndSupervisorInitialRGI.module.css";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
-import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
-import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
-import dayjs from "dayjs";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { updateGarantiasHeaderByIdAsync } from "@shared/services/GarantiasService";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
-import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
-import { isNull } from "util";
-import { cardData } from "../../garantias/mock/cardData";
+import { AuthModel } from "@shared/models/AuthModel";
 
-const TechnicalAndSupervisorInitialRGI: React.FC = () => {
-  // Informações gerais fictícias
-  const [socialReason, setSocialReason] = useState("Empresa Fictícia LTDA");
-  const [phone, setPhone] = useState("(11) 12345-6789");
-  const [requestDate, setRequestDate] = useState(
-    dayjs("2025-01-01").format("DD/MM/YYYY")
-  );
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [, setCardData] = useState<GarantiasModel>();
-  const context = useContext(AuthContext);
-  const [nfs, setNfs] = useState<
-    { itemId: string; nf: string; itens: number; sequence: number }[]
-  >([]);
-  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
+const TechnicalAndSupervisorInitialRGI = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const nfOrigem: string =
+    location.state && location.state["N° NF de origem"]
+      ? location.state["N° NF de origem"]
+      : "";
+
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [dataSolicitacao, setDataSolicitacao] = useState("");
+  const [nfs, setNfs] = useState<{ itemId: string; nf: string; itens: number ; sequence: number}[]>(
+    nfOrigem ? [{ itemId: location.state.item.id, nf: nfOrigem, itens: 0 , sequence: 0}] : []
+  );
+  const [cardData, setCardData] = useState<GarantiasModel>();
+  const context = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    //console.log("id existe: " + id);
-    const fetchData = async () => {
-      let data: GarantiasModel = null;
+    const fetchUserData = async () => {
       try {
-        console.error("Error fetching data:", JSON.stringify(location.state));
-
+        let data: GarantiasModel = null;
         if (location.state) {
-          console.log('teste user= ' + JSON.stringify(context.user.rule));
           data = location.state.garantia;
-        console.error("Error fetching data:", JSON.stringify(data));
-
         }
 
-
-        if (!id) {
-          await getGarantiaByIdAsync(location.pathname.split("/")[3]).then(
-            (dataReturned) => {
-              data = dataReturned.data;
-            }
-          );
-          // Se os dados vieram via location.state (por navegação interna)
-          //console.log(location.pathname.split("/")[3]);
-          if (!isNull(data)) {
-            setSocialReason(data.razaoSocial);
-            setPhone(data.telefone);
-            setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
-            setCardData(data);
-            setNfs([
-              {
-                itemId: data.id,
-                nf: data.nf,
-                itens: data.itens ? data.itens.length : 0,
-                sequence: 1,
-              },
-            ]);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-
-      try {
-        //console.log("id existe: " + id);
-
-        // Se houver um ID na URL, busca os dados da garantia pela API
-        if (id) {
-          const response = await getGarantiaByIdAsync(id);
-          //console.log("aqui: " + JSON.stringify(response));
-          const data = response.data.data;
-          setSocialReason(data.razaoSocial);
-          setPhone(data.telefone);
-          setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
+        if (data != null) {
+          setRazaoSocial(data.razaoSocial);
+          setTelefone(data.telefone);
+          setDataSolicitacao(data.data);
           setCardData(data);
           setNfs([
             {
-              itemId: data.id,
+              itemId: location.state.item.id,
               nf: data.nf,
               itens: data.itens ? data.itens.length : 0,
               sequence: 1,
             },
           ]);
+          return;
         }
+        
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Erro ao buscar dados do usuário:", error);
       } finally {
-        //console.log("finalizou");
         setLoading(false);
+
+        console.log("cardDAta: " + JSON.stringify(cardData));
       }
     };
+    fetchUserData();
+  }, [location.state]);
 
-    fetchData();
-  }, [id, location.state]); // Executa a requisição apenas uma vez, quando o `id` mudar
+  const handleSave = () => {
+    const now = new Date();
+    const currentDate = now.toLocaleDateString();
 
-  if (loading) {
-    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}><Spin size="large" className="custom-spin" /></div>;
+    const garantiaModel: GarantiasModel = {
+      email: context.user.email,
+      razaoSocial:
+        razaoSocial ||
+        (context.user as AuthModel).username ||
+        context.user.fullname,
+      createdAt: context.user.createdAt,
+      dataAtualizacao: currentDate,
+      data: currentDate,
+      updatedAt: context.user.updatedAt || currentDate,
+      usuarioAtualizacao: context.user.fullname,
+      usuarioInsercao: context.user.fullname,
+      telefone: telefone || context.user.phone,
+    };
+
+    updateGarantiasHeaderByIdAsync(garantiaModel)
+      .then((value) => console.log(value))
+      .catch((error) => console.error("Erro ao atualizar dados:", error));
+  };
+
+  if (loading || !cardData) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spin
+          size="large"
+          style={{
+            color: "red",
+            filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)",
+          }}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className={styles.appContainer} style={{ backgroundColor: "#fffff" }}>
-      <div className={styles.ContainerButtonBack}>
-        <Button
-          type="link"
-          className={styles.ButtonBack}
-          onClick={() => navigate("/garantias")}
-        >
-          <LeftOutlined /> VOLTAR PARA O INÍCIO
-        </Button>
-      </div>
-
-      <div className={styles.headerContainer}>
-        <div className={styles.headerLeft}>
-          <h1 className={styles.rgiTitle}>RGI {cardData[0].code}</h1>
-          <div className={styles.statusTag}>Aguardando avaliação</div>
+    <div className="acordo-container">
+      <header className="header">
+        <div className="ContainerButtonBack">
+          <Button
+            type="link"
+            className="ButtonBack"
+            onClick={() => navigate("/garantias")}
+          >
+            <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
+          </Button>
+          <span className="RgiCode">
+            RGI {cardData.rgi}/{" "}
+            
+          </span>
         </div>
-        <div className={styles.buttonsContainer}>
-          {/* ---------------------------para o TÉCNICO aqui é oculto-------------------------------------- */}
-          
-          
-
-          {/* ------------------------------------------------------------------------------------------------ */}
-
-          {/* ---------------------------para o SUPERVISOR aqui é oculto-------------------------------------- */}
-          {context.user.rule.name != UserRoleEnum.Supervisor && (
-            <>
-              <Button type="default" danger className={styles.buttonSaveRgi}>
-                Salvar
-              </Button>
-              <Button
-                type="primary"
-                danger
-                style={{ backgroundColor: "red" }}
-                className={styles.buttonSendRgi}
-              >
-                Enviar
-              </Button>
-            </>
-          )}
-
-          {/* ------------------------------------------------------------------------------------------------ */}
+        <div className="ContainerHeader">
+          <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
+          <div className="ButtonHeader">
+            <Button type="default" className="ButtonDelete">
+              Salvar
+            </Button>
+            <Button onClick={handleSave} type="primary" className="ButonToSend">
+              Enviar
+            </Button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <hr className={styles.divider} />
-
-      <div className={styles.infoContainer}>
-        <h3 className={styles.infoTitle}>Informações Gerais</h3>
-        <div className={styles.inputsContainer}>
-          <div className={styles.inputGroup} style={{ flex: 15 }}>
+      <section className="general-info">
+        <h2 className="title-infos-general">Informações Gerais</h2>
+        <div className="inputs-general">
+          <div className="info-row">
             <OutlinedInputWithLabel
-              InputProps={{ readOnly: true }}
               label="Razão social"
-              value={socialReason}
+              value={razaoSocial}
+              onChange={(e) => setRazaoSocial(e.target.value)}
               fullWidth
               disabled
             />
           </div>
-          <div className={styles.inputGroup} style={{ flex: 5 }}>
+          <div className="info-row">
             <OutlinedInputWithLabel
-              InputProps={{ readOnly: true }}
               label="Telefone"
-              value={phone}
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
               fullWidth
               disabled
+
             />
           </div>
-          <div className={styles.inputGroup} style={{ flex: 5 }}>
+          <div className="info-row">
             <OutlinedInputWithLabel
-              InputProps={{ readOnly: true }}
               label="Data da solicitação"
-              value={requestDate}
+              value={dataSolicitacao}
+              onChange={(e) => setDataSolicitacao(e.target.value)}
               fullWidth
               disabled
+
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className={styles.nfsContainer}>
-        <div className={styles.nfcont}>
-          <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
+      <section className="nf-section">
+        <div className="headerNF">
+          <h2 className="title-nf">NFs associadas a este acordo</h2>
         </div>
-
         {nfs.map((nf, index) => (
-          <div key={index} className={styles.nfsItem}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <FileOutlined
-                style={{
-                  marginRight: "10px",
-                  marginLeft: "20px",
-                  fontSize: "20px",
-                  color: "red",
-                }}
-              />
-              <span className={styles.nfsCode}>{nf.nf}</span>
-              <span className={styles.nfsDivider}> | </span>
-              <span className={styles.nfsQuantity}> {nf.itens} ITENS</span>
+          <div key={index} className="nf-item">
+            <div>
+              <span className="nf-number">{nf.nf}</span>
+              <span className="nf-divider"> | </span>
+              <span className="nf-details">{nf.itens} ITENS</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
+            <div>
               <Button
                 type="text"
-                className={styles.nextButton}
-                onClick={() => {
-                  //console.log("teste");
-                  const itemId: string = nf.itemId;
-                  //console.log("itemID: " + itemId);
-                  navigate(
-                    `/garantias/technical-and-supervisor/visor-item-details/${id}/${itemId}`
-                  );
-                }}
+                className="nextButton"
+                onClick={() =>
+                  navigate("/technical-and-supervisor/details-itens", {
+                    state: { nf, cardData },
+                  })
+                }
               >
                 &gt;
               </Button>
             </div>
           </div>
         ))}
-      </div>
+      </section>
     </div>
   );
 };

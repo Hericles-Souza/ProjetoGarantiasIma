@@ -1,24 +1,35 @@
-/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { Button, Spin } from "antd";
-import { RightOutlined, DownOutlined, LeftOutlined } from "@ant-design/icons";
-import Quill from "quill";
-import "quill/dist/quill.snow.css";
-import styles from "./technicalAndSupervisorDetailsItens.module.css";
-import OutlinedInputWithLabel from "../../../../shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import OutlinedSelectWithLabel from "../../../../shared/components/select/OutlinedSelectWithLabel";
-import MultilineTextFields from "../../../../shared/components/multline/multLine";
-import ColorCheckboxes from "@shared/components/checkBox/checkBox";
-import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
-import { AuthContext } from "@shared/contexts/Auth/AuthContext";
-import api from "@shared/Interceptors";
-import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Button, message, Spin } from "antd";
+import {
+  DownOutlined,
+  LeftOutlined,
+  FileOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
+import styles from "./TechnicalAndSupervisorDetailsItens.module.css";
+import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { GarantiasItemStatusEnum, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
-import message from "antd/lib/message";
-import { updateGarantiasItemStatusAsync } from "@shared/services/GarantiasService";
+// import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { getItemsByNfAsync } from "@shared/services/AcordoComercialService";
+import { NfItem } from "@shared/models/AcordoComercialModel";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
+import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
+import ColorCheckboxes from "@shared/components/checkBox/checkBox";
+import MultilineTextFields from "@shared/components/multline/multLine";
+import Quill from "quill";
+import api from "@shared/Interceptors";
+import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
+import { UpdateItemRequest } from "@shared/models/GarantiasModel";
+import {
+  GarantiasItemStatusEnum,
+  GarantiasItemStatusEnum2,
+} from "@shared/enums/GarantiasStatusEnum";
+import { getFileById } from "@shared/services/FilesService";
+import pako from 'pako';
 
+// import { GarantiasModel } from "@shared/models/GarantiasModel";
 // Componente QuillEditor
 interface QuillEditorProps {
   editorRef: React.RefObject<HTMLDivElement>;
@@ -65,26 +76,93 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   return <div ref={editorRef} style={{ height: "300px" }} />;
 };
 
-// Componente FileAttachment
 const FileAttachment = ({
   label,
   backgroundColor,
+  itemId
 }: {
   label: string;
   backgroundColor?: string;
+  itemId: string;
 }) => {
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const handleFileChange = async (itemId: string) => {
+    console.log("itemId: " + JSON.stringify(itemId));
+    const fileGet = await getFileById(itemId);
+    const decompressedData = pako.ungzip(fileGet, { to: 'string' });
+    const byteArray = new Uint8Array(decompressedData);
+    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+    const imageURL = URL.createObjectURL(blob);
+    console.log("blob: " + JSON.stringify(imageURL));
+    setImage(imageURL);
+    setLoading(false);
+    console.log("fileGet: " + JSON.stringify(fileGet));
+  };
+
+  const downloadImage = (itemId: string) => {
+    const fileGet = getFileById(itemId);
+    // .finally(() => {
+    //   console.log("fileGet: " + JSON.stringify(fileGet));
+    //   const link = document.createElement('a');
+    //   const decompressedData = pako.ungzip(fileGet, { to: 'uint8array' });
+    //   console.log("decompressedData: " + JSON.stringify(decompressedData));
+    //   // const byteArray = new Uint8Array(decompressedData);
+    //   const blob = new Blob([decompressedData], { type: 'image/jpg' });
+
+    //   const imageURL = URL.createObjectURL(blob);
+    //   setImage(imageURL);
+
+    //   link.href = imageURL;  // A URL temporária da imagem
+    //   link.download = 'imagem.jpg';  // Nome do arquivo para o download
+    //   link.click();  // Dispara o download
+
+    // });
+
+
+  };
+
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
-      <span className={styles.labelUpdate}>{label}</span>
+      <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
-        <label className={styles.buttonUpdateNfSale}>Visualizar</label>
-        <label className={styles.buttonUpdateNfSale}>Baixar Imagem</label>
+        {fileName && (
+          <span className={styles.fileName}>
+            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
+            {fileName}
+            <button
+              className={styles.buttonRemoveUpload}
+              onClick={() => setFileName(null)}
+            >
+              x
+            </button>
+          </span>
+        )}
+        <label className={styles.buttonUpdateNfSale}>
+          <button
+
+            style={{ display: "none", borderColor: "red" }}
+            onClick={() => handleFileChange(itemId)}
+          />
+          Visualizar
+        </label>
+        <label className={styles.buttonUpdateNfSale}>
+          <button
+            style={{ backgroundColor: "red", display: "none" }}
+            onClick={() => downloadImage(itemId)}
+          />
+          Baixar Arquivo
+        </label>
       </div>
+      {/* {loading ? <p>Carregando...</p> : <img src={image} alt="Imagem carregada" />} */}
+
     </div>
   );
 };
 
-// Componente CollapsibleSection
 const CollapsibleSection = ({
   title,
   isVisible,
@@ -110,110 +188,106 @@ const CollapsibleSection = ({
   </div>
 );
 
-// Componente Principal
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const [envioAutorizado, setEnvioAutorizado] = useState("");
   const [conclusao, setConclusao] = useState("");
-  const [garantiasModel, setGarantiasModel] = useState<GarantiasModel>();
   const context = useContext(AuthContext);
+  const [items, setItems] = useState<NfItem[]>();
+  // const [cardData, setCardData] = useState<GarantiasModel>();
+  const { id } = useParams<{ id: string }>();
+  // const context = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
-  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
   const navigate = useNavigate();
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [editorContent, setEditorContent] = useState("");
+  const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
 
-  useEffect(() => {
+  const fetchUserData = async () => {
     try {
       if (location.state) {
-        setGarantiasModel(location.state.garantia);
-        console.log("garantia: " + JSON.stringify(garantiasModel.itens));
+        await getItemsByNfAsync(location.state.nf.nf).then((value) => {
+          console.log("data: " + JSON.stringify(value.data));
+          setItems(value.data);
+        });
       }
+      return;
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Erro ao buscar dados do usuário:", error);
     } finally {
       setLoading(false);
     }
-  });
-
-  const toggleContentVisibility = () => {
-    setIsContentVisible(!isContentVisible);
   };
 
-  const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
+  useEffect(() => {
+    fetchUserData();
+  }, [location.state]);
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsReimbursementChecked(e.target.checked);
   };
 
-  const handleAuthorizeNf = async () => {
-    garantiasModel!.itens.map(async (item, index) => {
-      const payload = {
-        codigoItem: item.codigoItem,
-        tipoDefeito: item.tipoDefeito,
-        modeloVeiculoAplicado: item.modeloVeiculoAplicado,
-        torqueAplicado: Number(item.torqueAplicado) || 0,
-        nfReferencia: item.modeloVeiculoAplicado,
-        loteItemOficial: item.loteItem,
-        loteItem: item.loteItemOficial,
-        codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-        solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
-      };
+  const [visibleSections, setVisibleSections] = useState<{
+    [key: string]: boolean;
+  }>({});
 
-      console.log(JSON.stringify(payload));
-     
-      try {
-        const response = await api.put(
-          `/garantias/garantiasItem/${item.id}/UpdateItem`,
-          payload
-        );
-        
-        const descricao = item.autorizado === 'Improcedente' ? GarantiasItemStatusEnum.NAO_AUTORIZADO : GarantiasItemStatusEnum.NAO_AUTORIZADO;
-
-        const responseStatusItem = await updateGarantiasItemStatusAsync(descricao);
-        if (response.status === 200 && responseStatusItem.status === 200) {
-          message.success("Garantia atualizada com sucesso!");
-          navigate("/garantias");
-        } else {
-          message.error("Erro ao atualizar a garantia.");
-        }
-      } catch (error) {
-        console.error("Erro ao atualizar a garantia:", error);
-        message.error("Erro ao atualizar a garantia.");
-      }
-    });
+  const toggleContentVisibility = (itemId: string) => {
+    console.log("item Id: " + itemId);
+    setVisibleSections((prevState) => ({
+      ...prevState,
+      [itemId]: !prevState[itemId],
+    }));
   };
 
-  const editorRef = useRef<HTMLDivElement>(null);
-  let [editorContent, setEditorContent] = useState("");
-
   const handleSave = async () => {
-    garantiasModel!.itens.map(async (item, index) => {
+    items.map(async (item, index) => {
       const dataToSend = {
         ItemId: item.id,
-        analiseTecnica: editorContent,
-        conclusao: conclusao,
+        analiseTecnica: item.analiseTecnica,
+        conclusao: item.conclusao,
       };
       console.log("aqui: " + JSON.stringify(item.id));
-      console.log("data to send: " + JSON.stringify(dataToSend));
       try {
         const response = await api.put(
           `/garantias/analisetecnica/`,
           dataToSend
         );
 
-        if (response.status === 200) {
-          // Handle success (pode ser uma mensagem de sucesso, redirecionamento, etc)
-          alert("Dados salvos com sucesso!");
+        const updateRequest: UpdateItemRequest = {
+          garantiaId: item.garantia_id,
+          codigoItem: item.codigoItem,
+          tipoDefeito: 'defeito1',
+          modeloVeiculoAplicado: item.modeloVeiculoAplicado,
+          torqueAplicado: item.torqueAplicado,
+          nfReferencia: item.nfReferencia,
+          loteItemOficial: item.loteItemOficial,
+          loteItem: item.loteItem,
+          codigoStatus: item.codigoStatus,
+          solicitarRessarcimento: item.solicitarRessarcimento == true ? 1 : 0,
+          index: index.toString(),
+        };
+
+        console.log("data to send: " + JSON.stringify(updateRequest));
+        const ressponseItem = await updateGarantiaItemByIdAsync(
+          item.id,
+          updateRequest
+        );
+
+        if (response.status === 200 && ressponseItem.status === 200) {
+          message.success("Dados salvos com sucesso!");
+
         } else {
-          // Handle error
-          alert("Falha ao salvar os dados.");
+          message.error("Falha ao salvar os dados.");
         }
       } catch (error) {
         console.error("Erro ao tentar salvar:", error);
-        alert("Erro ao tentar salvar.");
+        message.error("Erro ao tentar salvar.");
       }
     });
   };
-  if (loading) {
+
+  if (loading || !items) {
     return (
       <div
         style={{
@@ -235,80 +309,63 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   }
 
   return (
-    <div className={styles.containerApp}>
-      <hr className={styles.divisor} />
+    <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
-        <Button type="link" className={styles.ButtonBack}>
-          <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
+        <Button
+          type="link"
+          className={styles.ButtonBack}
+          onClick={() => navigate(`/garantias/technical-and-supervisor/${items[0].garantia_id}`)}
+        >
+          <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA RGI
         </Button>
-        <span className={styles.RgiCode}>RGI {context.user.codigoCigam}</span>
+        <span className={styles.RgiCode}>
+          RGI N° {location.state.cardData.rgi} / NF {items[0].nfReferencia}
+        </span>
       </div>
 
-      <div className={styles.containerCabecalho}>
-        <h1 className={styles.tituloRgi}>{garantiasModel.rgi}</h1>
-
-        {/* Botões visíveis apenas para não supervisores */}
-        {context.user.rule.name != UserRoleEnum.Técnico && (
-          <>
+      <div className={styles.ContainerHeader}>
+        <h1 className={styles.tituloRgi}>{location.state.cardData.rgi}</h1>
+        <div className={styles.botoesCabecalho}>
+          {context.user.rule.name != UserRoleEnum.Técnico && (
             <Button
               type="default"
-              danger
-              className={styles.buttonSaveRgi}
+              className={styles.ButtonDelete}
               onClick={() => navigate("/view-pre-invoice")}
             >
               Visualizar Pré-Nota
             </Button>
-            <Button
-              type="primary"
-              danger
-              style={{ backgroundColor: "red" }}
-              onClick={() => navigate("/view-pre-invoice")}
-            >
-              Não Autorizado
-            </Button>
-            <Button
-              type="primary"
-              danger
-              style={{ backgroundColor: "red" }}
-              className={styles.buttonSendRgi}
-              onClick={handleAuthorizeNf}
-            >
-              Autorizar envio de NFD
-            </Button>
-          </>
-        )}
-        {context.user.rule.name !== UserRoleEnum.Supervisor && (
-          <>
-            <div className={styles.buttonsContainer}>
-              <Button type="default" danger className={styles.buttonCancelRgi}>
-                Cancelar
-              </Button>
-              <Button
-                type="primary"
-                onClick={handleSave}
-                danger
-                style={{ backgroundColor: "red" }}
-                className={styles.buttonSaveRgi}
-              >
-                Salvar
-              </Button>
-            </div>
-          </>
-        )}
+          )}
+
+          <Button
+            type="primary"
+            className={styles.ButonToSend}
+            onClick={handleSave}
+          >
+            Salvar
+          </Button>
+        </div>
       </div>
-
       <hr className={styles.divisor} />
-      <h3 className={styles.nfsTitle}>
-        Itens desta NF associados a esta garantia
-      </h3>
 
-      {garantiasModel!.itens.map((item, index) => {
+      <div className={styles.TitleItens}>
+        <h3 className={styles.nfsTitle}>
+          Itens desta NF associados a esta garantia
+        </h3>
+      </div>
+      {/* <div className={styles.dialoginfo}>
+        <InfoCircleOutlined style={{ color: "#0277BD" }} />
+        <span style={{ color: "#0277BD" }}>
+          Caso a peça não possua um lote, o campo Lote da peça deve ser preenchido com “Não contém”
+        </span>
+      </div> */}
+
+      {items.map((item) => {
         return (
           <div className={styles.containerInformacoes}>
             <CollapsibleSection
               title={item.codigoItem}
-              isVisible={isContentVisible}
-              toggleVisibility={toggleContentVisibility}
+              isVisible={visibleSections[item.id]}
+              toggleVisibility={() => toggleContentVisibility(item.id)}
             >
               {/* Anexo da NF de venda (visível apenas para não supervisores) */}
               {context.user.rule.name !== UserRoleEnum.Supervisor && (
@@ -316,6 +373,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   <FileAttachment
                     label="Anexo da NF de venda"
                     backgroundColor="white"
+                    itemId={item.id}
                   />
                 </div>
               )}
@@ -327,7 +385,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                     <OutlinedInputWithLabel
                       label="Código da peça"
-                      value={item.codigoPeca}
+                      value={item.codigoItem}
                       fullWidth
                       disabled
                     />
@@ -343,19 +401,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 </div>
 
                 <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 0.4 }}>
-                    <OutlinedSelectWithLabel
-                      label="Possível defeito"
-                      disabled
-                      fullWidth
-                      options={[
-                        { value: "Opção 1", label: "Opção 1" },
-                        { value: "Opção 2", label: "Opção 2" },
-                        { value: "Opção 3", label: "Opção 3" },
-                      ]}
-                      defaultValue={undefined}
-                    />
-                  </div>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
                     <OutlinedInputWithLabel
                       label="Modelo do veículo que aplicou"
@@ -385,44 +430,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 </div>
               </div>
 
-              {/* Solicitar ressarcimento (visível apenas para não supervisores) */}
-              {context.user.rule.name !== UserRoleEnum.Supervisor && (
-                <>
-                  <div className={styles.checkboxContainer}>
-                    <ColorCheckboxes
-                      onChange={handleCheckboxChange}
-                      checked={isReimbursementChecked}
-                    />
-                    <label className={styles.checkboxDanger}>
-                      Solicitar ressarcimento
-                    </label>
-                  </div>
-                  {!isReimbursementChecked && (
-                    <div className={styles.contentReimbursement}>
-                      <h3 className={styles.tituloA}>
-                        Anexo de dados adicionais para ressarcimento
-                      </h3>
-                      {[
-                        "1. Documento de identificação (RG ou CNH):",
-                        "2. Documentação do veículo:",
-                        "3. NF do guincho:",
-                        "4. NF de outras despesa/produtos pertinentes:",
-                      ].map((item, index) => (
-                        <FileAttachment
-                          key={index}
-                          label={item}
-                          backgroundColor="#f5f5f5"
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
               {/* Anexo da NF de Referência (visível para todos) */}
               <FileAttachment
                 label="Anexo da NF de Referência"
                 backgroundColor="white"
+                itemId={item.id}
               />
 
               {/* Anexos de Imagens (visível apenas para não supervisores) */}
@@ -440,30 +452,63 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       key={index}
                       label={item}
                       backgroundColor="white"
+                      itemId={item}
                     />
                   ))}
 
                   <hr className={styles.divisor} />
+                  <div className={styles.containerSelectDefect}>
+                    <OutlinedSelectWithLabel
+                      label="Possível defeito"
+                      options={[
+                        {
+                          value: "defeito1",
+                          label: "Defeito 1",
+                        },
+                        {
+                          value: "defeito2",
+                          label: "Defeito 2",
+                        },
+                      ]}
+                      value=''
+                      onChange={(e) => {
+                        item.tipoDefeito = e.target.value
+                      }}
+                    />
+                  </div>
                   <div className={styles.containerSelect}>
                     <OutlinedSelectWithLabel
                       label="Envio Autorizado"
                       options={[
-                        { value: "Procedente", label: "Procedente" },
+                        {
+                          value: "Autorizado",
+                          label: "Autorizar envio da NF de devolução",
+                        },
                         { value: "Improcedente", label: "Improcedente" },
                       ]}
                       value={envioAutorizado}
                       onChange={(e) => {
-                        item.autorizado = e.target.value;
-                        setEnvioAutorizado(e.target.value)
+                        item.status =
+                          e.target.value == "Autorizado"
+                            ? GarantiasItemStatusEnum.AUTORIZADO
+                            : GarantiasItemStatusEnum.NAO_AUTORIZADO;
+                        item.codigoStatus =
+                          e.target.value == "Autorizado"
+                            ? GarantiasItemStatusEnum2.AUTORIZADO
+                            : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
+                        setEnvioAutorizado(e.target.value);
                       }}
                     />
                   </div>
-
+              
                   <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
                   <QuillEditor
                     editorRef={editorRef}
                     setEditorContent={setEditorContent}
                   />
+
+
+
 
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields

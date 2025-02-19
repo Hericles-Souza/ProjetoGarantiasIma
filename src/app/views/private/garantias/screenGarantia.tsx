@@ -217,7 +217,7 @@ const Garantias: React.FC = () => {
                         console.log('associatedCardData: ' + JSON.stringify(garantia));
 
                         navigate(
-                          `/garantias/acordo-commercial`,
+                          `/garantias/technical-and-supervisor/${garantia.id}`,
                           { 
                             state: { item, garantia},
                           }
@@ -299,7 +299,7 @@ const Garantias: React.FC = () => {
                         context.user.rule.name.includes("admin") ||
                         context.user.rule.name.includes("cliente")
                       )
-                        navigate(`/garantias/rgi/${garantia.id}`, {
+                        navigate(`garantias/aci/:id`, {
                           state: { item, garantia },
                         });
                       else if (
@@ -309,9 +309,8 @@ const Garantias: React.FC = () => {
                       {
                         console.log('item: ' + JSON.stringify(item));
                         console.log('associatedCardData: ' + JSON.stringify(garantia));
-
                         navigate(
-                          `/garantias/technical-and-supervisor/visor-inital/${garantia.id}`,
+                          `/garantias/technical-and-supervisor/${garantia.id}`,
                           { 
                             state: { item, garantia },
                           }

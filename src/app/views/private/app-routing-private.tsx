@@ -11,6 +11,7 @@ import ScreenAcordoComercial from "./acordo-comercial/ScreenInitialTradeAgreemen
 import Dashboard from "./dashboard/dashboard";
 import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
 import TechnicalAndSupervisorDetailsItens from "./technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
+import TechnicalAndSupervisorInitialRGI from "./technicalAndSupervisorRGI/technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -18,7 +19,6 @@ export const appRoutingPrivate: RouteConfig[] = [
     element: <LayoutPrivate />,
     private: true,
     children: [
-      //Tela geral de garantias
       {
         path: "garantias",
         element: <Garantias />,
@@ -40,29 +40,23 @@ export const appRoutingPrivate: RouteConfig[] = [
         element: <InvoiceDetails />,
         private: true,
       },
-      //Tela de acordo comercial
       {
         path: "garantias/aci/:id",
         element: <ScreenAcordoComercial />,
         private: true,
-        allowedRoles: [UserRoleEnum.Admin]
       },
-      {
-        path: "garantias/acordo-commercial",
-        element: <ScreenAcordoComercial />, 
-        private: true, 
-      },
+      //admin
       {
         path: "users",
         element: <UserRegistration />,
         private: true,
         allowedRoles: [UserRoleEnum.Admin]
       },
+
       {
         path: "view-pre-invoice",
         element: <InvoicePage />,
         private: true,
-        allowedRoles: [UserRoleEnum.Supervisor]
       },
       {
         path: "dashboard",
@@ -70,20 +64,20 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
         allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Técnico, UserRoleEnum.Admin]
       }, 
+
+
+      //tecnicos e supervisores
       {
         path: "technical-and-supervisor/details-itens",
-        element: <ScreenDetailsItensTradeAgreement />,
-        private: true,
-      },
-      {
-        path: "garantias/technical-and-supervisor/visor-inital/:id",
         element: <TechnicalAndSupervisorDetailsItens />,
         private: true,
       },
+
       {
-        path: "garantias/technical-and-supervisor/visor-item-details/:id/:idItem",
-        element: <ScreenDetailsItensTradeAgreement />,
+        path: "/garantias/technical-and-supervisor/:id",
+        element: <TechnicalAndSupervisorInitialRGI />,
         private: true,
+        allowedRoles: [UserRoleEnum.Técnico, UserRoleEnum.Supervisor]
       },
 
 
