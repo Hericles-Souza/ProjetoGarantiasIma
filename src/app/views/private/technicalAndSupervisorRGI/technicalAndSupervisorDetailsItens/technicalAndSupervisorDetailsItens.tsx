@@ -21,13 +21,17 @@ import MultilineTextFields from "@shared/components/multline/multLine";
 import Quill from "quill";
 import api from "@shared/Interceptors";
 import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
-import { GarantiasModel, UpdateItemRequest } from "@shared/models/GarantiasModel";
+import {
+  GarantiasModel,
+  UpdateItemRequest,
+} from "@shared/models/GarantiasModel";
 import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
-import { getFileById } from "@shared/services/FilesService";
 import pako from "pako";
+import { ConfigContext } from "antd/es/config-provider";
+import environment from "@env/environment.ts";
 
 // import { GarantiasModel } from "@shared/models/GarantiasModel";
 // Componente QuillEditor
@@ -77,77 +81,99 @@ const FileAttachment = ({
   backgroundColor?: string;
   itemId: string;
 }) => {
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [image, setImage] = useState(null);
+  const [imagemUrl, setImagemUrl] = useState(null);
+const [fileName, setFileName] = useState("image.jpg");
   const [loading, setLoading] = useState(true);
+  const context = useContext(AuthContext);
 
-  const handleFileChange = async (itemId: string) => {
-    console.log("itemId: " + JSON.stringify(itemId));
-    const fileGet = await getFileById(itemId);
-    const decompressedData = pako.ungzip(fileGet, { to: "string" });
-    const byteArray = new Uint8Array(decompressedData);
-    const blob = new Blob([byteArray], { type: "image/jpeg" });
 
-    const imageURL = URL.createObjectURL(blob);
-    console.log("blob: " + JSON.stringify(imageURL));
-    setImage(imageURL);
-    setLoading(false);
-    console.log("fileGet: " + JSON.stringify(fileGet));
+  function getExtensionFromMimeType(mimeType: string): string {
+    const mimeTypes: { [key: string]: string } = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+      "application/zip": ".zip",
+      "audio/mpeg": ".mp3",
+      "video/mp4": ".mp4",
+      // Adicione outros tipos MIME conforme necessário
+    };
+  
+    return mimeTypes[mimeType] || '';  // Retorna a extensão ou uma string vazia se não encontrado
+  }
+
+  function getFileExtensionFromBlob(blob: Blob): string {
+    const mimeType = blob.type;  // Pega o tipo MIME do Blob
+    const extension = getExtensionFromMimeType(mimeType);
+    return extension;
+  }
+
+  const fetchImagem = async (itemId: string) => {
+    try {
+      const urlGetFile = environment.apiUrl + '/files/files-ById/download-private-byId/' + itemId;
+      console.log(urlGetFile);
+      const response = await fetch(
+        environment.apiUrl + '/files/files-ById/download-private-byId/' + itemId,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${context.user.token}`, // Token de autenticação
+            "Content-Type": "application/json", // Tipo de conteúdo (se necessário)
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Receber a imagem em formato binário (blob)
+        const blob = await response.blob();
+        // const file = new File([blob], fileName, { type: blob.type });
+        // const extension = fileName.split('.').pop();
+        // Gerar URL para a imagem
+        const imagemUrl = URL.createObjectURL(blob);
+        const fileExtension = getFileExtensionFromBlob(blob);
+        const fileNameWithExtension = label + fileExtension;
+        console.log("fileNameWithExtension: " + fileNameWithExtension);
+        setImagemUrl(imagemUrl);  
+        handleDownload(fileNameWithExtension);
+      } else {
+        console.error("Erro ao buscar a imagem", response.statusText);
+      }
+    } catch (error) {
+      console.error("Erro na requisição", error);
+    }
   };
 
-  const downloadImage = (itemId: string) => {
-    const fileGet = getFileById(itemId);
-    // .finally(() => {
-    //   console.log("fileGet: " + JSON.stringify(fileGet));
-    //   const link = document.createElement('a');
-    //   const decompressedData = pako.ungzip(fileGet, { to: 'uint8array' });
-    //   console.log("decompressedData: " + JSON.stringify(decompressedData));
-    //   // const byteArray = new Uint8Array(decompressedData);
-    //   const blob = new Blob([decompressedData], { type: 'image/jpg' });
-
-    //   const imageURL = URL.createObjectURL(blob);
-    //   setImage(imageURL);
-
-    //   link.href = imageURL;  // A URL temporária da imagem
-    //   link.download = 'imagem.jpg';  // Nome do arquivo para o download
-    //   link.click();  // Dispara o download
-
-    // });
+  const handleDownload = async (fileName:string) => {
+    // Criar um link temporário e disparar o download
+    const link = document.createElement("a");
+    link.href = imagemUrl;
+    link.download = fileName; // Defina o nome do arquivo que será baixado
+    link.click(); // Dispara o download
   };
 
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
-      <span className={styles.labelAnexo}>{label}</span>
-      <div className={styles.fileUpdateContent}>
-        {fileName && (
-          <span className={styles.fileName}>
-            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-            {fileName}
-            <button
-              className={styles.buttonRemoveUpload}
-              onClick={() => setFileName(null)}
-            >
-              x
-            </button>
-          </span>
-        )}
-        <label className={styles.buttonUpdateNfSale}>
-          <button
-            style={{ display: "none", borderColor: "red" }}
-            onClick={() => handleFileChange(itemId)}
-          />
-          Visualizar
-        </label>
-        <label className={styles.buttonUpdateNfSale}>
-          <button
-            style={{ backgroundColor: "red", display: "none" }}
-            onClick={() => downloadImage(itemId)}
-          />
-          Baixar Arquivo
-        </label>
-      </div>
-      {/* {loading ? <p>Carregando...</p> : <img src={image} alt="Imagem carregada" />} */}
+    <span className={styles.labelAnexo}>{label}</span>
+    <div className={styles.fileUpdateContent}>
+      <label className={styles.buttonUpdateNfSale}>
+        <button
+          style={{ display: "none", borderColor: "red" }}
+          // onClick={() => handleFileChange(itemId)}
+        /> 
+        Visualizar
+      </label>
+      <label className={styles.buttonUpdateNfSale}>
+        <button
+          style={{ backgroundColor: "red", display: "none" }}
+          onClick={() => fetchImagem(itemId)}
+        />
+        Baixar Arquivo
+      </label>
     </div>
+    {/* {loading ? <p>Carregando...</p> : <img src={image} alt="Imagem carregada" />} */}
+  </div>
   );
 };
 
@@ -222,7 +248,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         await getItemsByNfAsync(location.state.nf.nf).then((value) => {
           console.log("data: " + JSON.stringify(value.data));
           value.data.forEach((item) => {
-            
             if (editorRef.current) {
               console.log(
                 "item.analiseTecnica: " + JSON.stringify(item.analiseTecnica)
@@ -485,12 +510,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     "3. Foto marcações suspeitas na peça:",
                     "4. Foto da peça completa:",
                     "5. Outras fotos pertinentes:",
-                  ].map((item, index) => (
+                  ].map((itemQuestion, index) => (
                     <FileAttachment
                       key={index}
-                      label={item}
+                      label={itemQuestion}
                       backgroundColor="white"
-                      itemId={item}
+                      itemId={item.id}
                     />
                   ))}
 
