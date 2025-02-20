@@ -27,7 +27,7 @@ import {
   GarantiasItemStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import { getFileById } from "@shared/services/FilesService";
-import pako from 'pako';
+import pako from "pako";
 
 // import { GarantiasModel } from "@shared/models/GarantiasModel";
 // Componente QuillEditor
@@ -40,11 +40,9 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   editorRef,
   setEditorContent,
 }) => {
-  const quillInstance = useRef<Quill | null>(null);
-
   useEffect(() => {
-    if (editorRef.current && !quillInstance.current) {
-      quillInstance.current = new Quill(editorRef.current, {
+    if (editorRef.current) {
+      const quillInstance = new Quill(editorRef.current, {
         theme: "snow",
         modules: {
           toolbar: [
@@ -60,17 +58,11 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         },
       });
 
-      quillInstance.current.on("text-change", () => {
-        const content = quillInstance.current?.root.innerHTML || "";
-        setEditorContent(content);
+      quillInstance.on("text-change", () => {
+        const content = quillInstance.root.innerHTML;
+        setEditorContent(content); // Atualiza o estado
       });
     }
-
-    return () => {
-      if (quillInstance.current) {
-        quillInstance.current = null;
-      }
-    };
   }, [editorRef, setEditorContent]);
 
   return <div ref={editorRef} style={{ height: "300px" }} />;
@@ -79,7 +71,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 const FileAttachment = ({
   label,
   backgroundColor,
-  itemId
+  itemId,
 }: {
   label: string;
   backgroundColor?: string;
@@ -92,9 +84,9 @@ const FileAttachment = ({
   const handleFileChange = async (itemId: string) => {
     console.log("itemId: " + JSON.stringify(itemId));
     const fileGet = await getFileById(itemId);
-    const decompressedData = pako.ungzip(fileGet, { to: 'string' });
+    const decompressedData = pako.ungzip(fileGet, { to: "string" });
     const byteArray = new Uint8Array(decompressedData);
-    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+    const blob = new Blob([byteArray], { type: "image/jpeg" });
 
     const imageURL = URL.createObjectURL(blob);
     console.log("blob: " + JSON.stringify(imageURL));
@@ -121,8 +113,6 @@ const FileAttachment = ({
     //   link.click();  // Dispara o download
 
     // });
-
-
   };
 
   return (
@@ -143,7 +133,6 @@ const FileAttachment = ({
         )}
         <label className={styles.buttonUpdateNfSale}>
           <button
-
             style={{ display: "none", borderColor: "red" }}
             onClick={() => handleFileChange(itemId)}
           />
@@ -158,7 +147,6 @@ const FileAttachment = ({
         </label>
       </div>
       {/* {loading ? <p>Carregando...</p> : <img src={image} alt="Imagem carregada" />} */}
-
     </div>
   );
 };
@@ -203,12 +191,45 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState("");
   const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
+  const quillRef = useRef<Quill | null>(null); // Para armazenar a instância do Quill
+
+  const setEditorContentFromApi = (content: string) => {
+    if (editorRef.current) {
+      // Acessa a instância do Quill e modifica o conteúdo diretamente
+      const quillInstance = new Quill(editorRef.current, {
+        theme: "snow",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["blockquote", "code-block"],
+            [{ align: [] }],
+            [{ color: [] }, { background: [] }],
+            ["image", "video", "link"],
+            ["clean"],
+          ],
+        },
+      });
+      quillInstance.root.innerHTML = content; // Definir o conteúdo do Quill
+      setEditorContent(content); // Atualizar o estado
+    }
+  };
 
   const fetchUserData = async () => {
     try {
       if (location.state) {
         await getItemsByNfAsync(location.state.nf.nf).then((value) => {
           console.log("data: " + JSON.stringify(value.data));
+          value.data.forEach((item) => {
+            
+            if (editorRef.current) {
+              console.log(
+                "item.analiseTecnica: " + JSON.stringify(item.analiseTecnica)
+              );
+              setEditorContentFromApi(item.analiseTecnica); // Usar a função
+            }
+          });
           setItems(value.data);
         });
       }
@@ -257,7 +278,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         const updateRequest: UpdateItemRequest = {
           garantiaId: item.garantia_id,
           codigoItem: item.codigoItem,
-          tipoDefeito: 'defeito1',
+          tipoDefeito: "defeito1",
           modeloVeiculoAplicado: item.modeloVeiculoAplicado,
           torqueAplicado: item.torqueAplicado,
           nfReferencia: item.nfReferencia,
@@ -276,7 +297,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
         if (response.status === 200 && ressponseItem.status === 200) {
           message.success("Dados salvos com sucesso!");
-
         } else {
           message.error("Falha ao salvar os dados.");
         }
@@ -314,7 +334,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         <Button
           type="link"
           className={styles.ButtonBack}
-          onClick={() => navigate(`/garantias/technical-and-supervisor/${items[0].garantia_id}`)}
+          onClick={() =>
+            navigate(
+              `/garantias/technical-and-supervisor/${items[0].garantia_id}`
+            )
+          }
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA RGI
         </Button>
@@ -360,6 +384,15 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       </div> */}
 
       {items.map((item) => {
+        if (quillRef.current) {
+          // Se você tem um conteúdo em HTML, use root.innerHTML
+          quillRef.current.root.innerHTML = item.analiseTecnica;
+          setEditorContent(quillRef.current.root.innerHTML);
+          console.log("editor content: " + editorContent);
+          // Ou se você tem um objeto Delta, use setContents:
+          // const delta = quillRef.current.clipboard.convert(content);
+          // quillRef.current.setContents(delta);
+        }
         return (
           <div className={styles.containerInformacoes}>
             <CollapsibleSection
@@ -470,9 +503,9 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                           label: "Defeito 2",
                         },
                       ]}
-                      value=''
+                      value={item.tipoDefeito}
                       onChange={(e) => {
-                        item.tipoDefeito = e.target.value
+                        item.tipoDefeito = e.target.value;
                       }}
                     />
                   </div>
@@ -500,15 +533,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       }}
                     />
                   </div>
-              
+
                   <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
                   <QuillEditor
                     editorRef={editorRef}
                     setEditorContent={setEditorContent}
                   />
-
-
-
 
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields
