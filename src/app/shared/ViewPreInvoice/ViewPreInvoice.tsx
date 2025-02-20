@@ -4,10 +4,13 @@ import styles from "./ViewPreInvoice.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import api from "@shared/Interceptors";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 const { Title } = Typography;
 
 const InvoicePage = () => {
+    const location = useLocation();
+
     const [formData, setFormData] = useState({
         baseICMS: "1000,00",
         valorICMS: "180,00",
@@ -39,41 +42,44 @@ const InvoicePage = () => {
     ];
     const fetchData = async () => {
         try {
-            const response = await api.get("/pedidos/pedidos"); // Coloque a URL da sua API aqui
-            const apiData = await response.data.data;
-            console.log("pedidos: " + JSON.stringify(apiData));
-            // Preenchendo o formData com os dados da API
-            setFormData({
-                baseICMS: apiData.baseICMS,
-                valorICMS: apiData.valorICMS,
-                baseICMSSubstituicao: apiData.baseICMSSubstituicao,
-                valorICMSSubstituicao: apiData.valorICMSSubstituicao,
-                valorProdutos: apiData.valorProdutos,
-                valorIPI: apiData.valorIPI,
-                valorNota: apiData.valorNota,
-                aliquotaInterna: apiData.aliquotaInterna,
-                numeroNFOrigem: apiData.numeroNFOrigem,
-                dataNFOrigem: apiData.dataNFOrigem,
-            });
-
-            // Preenchendo a tabela com os dados dos pedidos
-            const tableData = apiData.data.garantiaPedidos.map((item) => ({
-                key: item.cdPedido,
-                codigo: item.cdMaterial,
-                vlUnitario: `R$ ${item.precoUnitario}`,
-                quantidade: item.quantidade,
-                vlTotal: `R$ ${item.valorTotalItem}`,
-                bcICMS: item.baseICMS,
-                vlICMS: item.valorICMS,
-                vlIPI: item.valorIPI,
-                icms: item.cdTipoOperacao === "ICMS" ? "18%" : "0%", // Exemplo de como você pode formatar o valor
-                ipi: "18%", // Isso pode ser dinâmico também
-                mva: "0%", // Isso pode ser dinâmico
-                bcST: item.baseISS,
-                vlST: item.valorISS,
-            }));
-
-            setData(tableData);
+            if(location.state){
+                console.log("garantia: " + location.state.cardData);
+                const response = await api.get("/pedidos/pedidos"); // Coloque a URL da sua API aqui
+                const apiData = await response.data.data;
+                console.log("pedidos: " + JSON.stringify(apiData));
+                // Preenchendo o formData com os dados da API
+                setFormData({
+                    baseICMS: apiData.baseICMS,
+                    valorICMS: apiData.valorICMS,
+                    baseICMSSubstituicao: apiData.baseICMSSubstituicao,
+                    valorICMSSubstituicao: apiData.valorICMSSubstituicao,
+                    valorProdutos: apiData.valorProdutos,
+                    valorIPI: apiData.valorIPI,
+                    valorNota: apiData.valorNota,
+                    aliquotaInterna: apiData.aliquotaInterna,
+                    numeroNFOrigem: apiData.numeroNFOrigem,
+                    dataNFOrigem: apiData.dataNFOrigem,
+                });
+    
+                // Preenchendo a tabela com os dados dos pedidos
+                const tableData = apiData.data.garantiaPedidos.map((item) => ({
+                    key: item.cdPedido,
+                    codigo: item.cdMaterial,
+                    vlUnitario: `R$ ${item.precoUnitario}`,
+                    quantidade: item.quantidade,
+                    vlTotal: `R$ ${item.valorTotalItem}`,
+                    bcICMS: item.baseICMS,
+                    vlICMS: item.valorICMS,
+                    vlIPI: item.valorIPI,
+                    icms: item.cdTipoOperacao === "ICMS" ? "18%" : "0%", // Exemplo de como você pode formatar o valor
+                    ipi: "18%", // Isso pode ser dinâmico também
+                    mva: "0%", // Isso pode ser dinâmico
+                    bcST: item.baseISS,
+                    vlST: item.valorISS,
+                }));
+    
+                setData(tableData);
+            }
         } catch (error) {
             console.error("Erro ao carregar dados da API:", error);
         } finally{

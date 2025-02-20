@@ -21,7 +21,7 @@ import MultilineTextFields from "@shared/components/multline/multLine";
 import Quill from "quill";
 import api from "@shared/Interceptors";
 import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
-import { UpdateItemRequest } from "@shared/models/GarantiasModel";
+import { GarantiasModel, UpdateItemRequest } from "@shared/models/GarantiasModel";
 import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
@@ -182,7 +182,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [conclusao, setConclusao] = useState("");
   const context = useContext(AuthContext);
   const [items, setItems] = useState<NfItem[]>();
-  // const [cardData, setCardData] = useState<GarantiasModel>();
+  const [cardData, setCardData] = useState<GarantiasModel>();
   const { id } = useParams<{ id: string }>();
   // const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
@@ -232,6 +232,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           });
           setItems(value.data);
         });
+        setCardData(location.state.cardData);
       }
       return;
     } catch (error) {
@@ -354,7 +355,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             <Button
               type="default"
               className={styles.ButtonDelete}
-              onClick={() => navigate("/view-pre-invoice")}
+              onClick={() =>
+                navigate("/view-pre-invoice", {
+                  state: { cardData },
+                })
+              }
             >
               Visualizar Pré-Nota
             </Button>
