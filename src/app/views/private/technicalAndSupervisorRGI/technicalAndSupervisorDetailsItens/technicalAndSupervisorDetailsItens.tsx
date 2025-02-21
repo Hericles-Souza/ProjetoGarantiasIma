@@ -82,7 +82,6 @@ const FileAttachment = ({
   itemId: string;
 }) => {
   const [imagemUrl, setImagemUrl] = useState(null);
-const [fileName, setFileName] = useState("image.jpg");
   const [loading, setLoading] = useState(true);
   const context = useContext(AuthContext);
 
@@ -112,10 +111,10 @@ const [fileName, setFileName] = useState("image.jpg");
 
   const fetchImagem = async (itemId: string) => {
     try {
-      const urlGetFile = environment.apiUrl + '/files/files-ById/download-private-byId/' + itemId;
+      const urlGetFile = environment.apiUrl + '/files/get-all';
       console.log(urlGetFile);
       const response = await fetch(
-        environment.apiUrl + '/files/files-ById/download-private-byId/' + itemId,
+        environment.apiUrl + '/files/get-all',
         {
           method: "GET",
           headers: {
@@ -123,23 +122,29 @@ const [fileName, setFileName] = useState("image.jpg");
             "Content-Type": "application/json", // Tipo de conteúdo (se necessário)
           },
         }
-      );
+      ).then((value) => {console.log(
+        "response: " + JSON.stringify(value.body)
+      )
+      return value;
+    });
+    
 
-      if (response.ok) {
-        // Receber a imagem em formato binário (blob)
-        const blob = await response.blob();
-        // const file = new File([blob], fileName, { type: blob.type });
-        // const extension = fileName.split('.').pop();
-        // Gerar URL para a imagem
-        const imagemUrl = URL.createObjectURL(blob);
-        const fileExtension = getFileExtensionFromBlob(blob);
-        const fileNameWithExtension = label + fileExtension;
-        console.log("fileNameWithExtension: " + fileNameWithExtension);
-        setImagemUrl(imagemUrl);  
-        handleDownload(fileNameWithExtension);
-      } else {
-        console.error("Erro ao buscar a imagem", response.statusText);
-      }
+      // if (response.ok) {
+      //   // Receber a imagem em formato binário (blob)
+      //   console.log(JSON.stringify(response));
+      //   const blob = await response.blob();
+      //   // const file = new File([blob], fileName, { type: blob.type });
+      //   // const extension = fileName.split('.').pop();
+      //   // Gerar URL para a imagem
+      //   const imagemUrl = URL.createObjectURL(blob);
+      //   const fileExtension = getFileExtensionFromBlob(blob);
+      //   const labelWithoutSpace = label.replace(/\s+/g, '');
+      //   const fileNameWithExtension = labelWithoutSpace + fileExtension;
+      //   setImagemUrl(imagemUrl);  
+      //   // handleDownload(fileNameWithExtension);
+      // } else {
+      //   console.error("Erro ao buscar a imagem", response.statusText);
+      // }
     } catch (error) {
       console.error("Erro na requisição", error);
     }
@@ -252,8 +257,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               console.log(
                 "item.analiseTecnica: " + JSON.stringify(item.analiseTecnica)
               );
+              
               setEditorContentFromApi(item.analiseTecnica); // Usar a função
             }
+            if(item.tipoDefeito == null)
+              item.tipoDefeito = "defeito1";
+            
           });
           setItems(value.data);
         });
