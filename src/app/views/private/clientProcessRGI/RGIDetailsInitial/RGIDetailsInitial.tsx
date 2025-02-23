@@ -378,7 +378,7 @@ const RGIDetailsInitial: React.FC = () => {
                   color: "red",
                 }}
               />
-              <span className={styles.nfsCode}>{getRgiWithSuffix(index)}</span>
+              <span className={styles.nfsCode}>{nf.codigoItem}</span>
               <span className={styles.nfsDivider}> | </span>
               <span className={styles.nfsQuantity}> {cardData.itens.length.toString()} ITENS</span>
             </div>

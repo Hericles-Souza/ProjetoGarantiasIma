@@ -15,8 +15,8 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import {
+  GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
-  GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
 import api from "@shared/Interceptors";
@@ -25,12 +25,14 @@ import environment from "@env/environment";
 
 // Funções para formatação do RGI
 // const formatMainRgi = (rgi: string): string => {
-//   const cleanRgi = rgi.split('.')[0];
+//   const cleanRgi = rgi.split('.')[0];s
 //   return `${cleanRgi}`;
 // };
 
-const formatItemRgi = (rgi: string, letter: string, sequence: number) => {
-  return `${letter}.${sequence}`;
+const formatItemRgi = (letter: string, sequence: number) => {
+  const letterWithoutDot = letter.split(".");
+  const newItemRgiFormatted = `${letterWithoutDot[0]}.${letterWithoutDot[1]}.${sequence}`;
+  return newItemRgiFormatted;
 };
 
 interface FileData {
@@ -180,7 +182,7 @@ const CollapsibleSection = ({
   showDeleteConfirm,
   children,
   status,
-  rgi,
+  title,
 }: {
   title: string;
   isVisible: boolean;
@@ -193,7 +195,7 @@ const CollapsibleSection = ({
   <div>
     <div className={styles.tituloSecaoContainer}>
       <h3 className={styles.tituloSecaoVermelho}>
-        {rgi}{" "}
+        {title}{" "}
         <span
           className={
             status === "Autorizado"
@@ -231,7 +233,7 @@ const DetailsItensNF: React.FC = () => {
   const { id: guaranteeId } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-
+  const context = useContext(AuthContext);
   const [items, setItems] = useState<
     Array<{
       id: string;
@@ -246,6 +248,7 @@ const DetailsItensNF: React.FC = () => {
       isReimbursementChecked: boolean;
       anexos: string;
       rgi: string;
+      codigoItem: string;
     }>
   >([]);
   const [visibleSectionId, setVisibleSectionId] = useState<string | null>(null);
@@ -254,7 +257,6 @@ const DetailsItensNF: React.FC = () => {
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rgiLetter = (location.state as any)?.rgiLetter || "A";
 
   const handleInputChange = (itemId: string, field: string, value: any) => {
@@ -306,7 +308,7 @@ const DetailsItensNF: React.FC = () => {
           const transformedItems = data.itens.map((item) => ({
             id: item.id,
             title: item.codigoItem || "",
-            codigoPeca: item.codigoItem || "",
+            codigoPeca: item.codigoPeca || "",
             lotePeca: item.loteItem || "",
             status: item.codigoStatus ? item.codigoStatus.toString() : "",
             tipoDefeito: item.tipoDefeito || "",
@@ -316,6 +318,7 @@ const DetailsItensNF: React.FC = () => {
             isReimbursementChecked: item.solicitarRessarcimento === false,
             anexos: item.anexos || "",
             rgi: item.rgi,
+            codigoItem: item.codigoItem,
           }));
           setItems(transformedItems);
           if (transformedItems.length > 0) {
@@ -336,8 +339,9 @@ const DetailsItensNF: React.FC = () => {
     const newItemId = crypto.randomUUID();
     const sequence = garantia.itens.length + 1;
     const newItemRgi = garantia
-      ? formatItemRgi(garantia.rgi, rgiLetter, sequence)
+      ? formatItemRgi(items[items.length - 1].codigoItem, sequence)
       : "";
+    console.log("newItemRgi: " + newItemRgi);
     setItems([
       ...items,
       {
@@ -345,7 +349,7 @@ const DetailsItensNF: React.FC = () => {
         title: "",
         codigoPeca: "",
         lotePeca: "",
-        status: "Autorizado",
+        status: GarantiasItemStatusEnum.NAO_ANALISADO,
         tipoDefeito: "",
         modeloVeiculo: "",
         anoVeiculo: "",
@@ -353,24 +357,21 @@ const DetailsItensNF: React.FC = () => {
         isReimbursementChecked: false,
         anexos: "",
         rgi: newItemRgi,
+        codigoItem: items[0].codigoItem,
       },
     ]);
     garantia.itens.push({
       id: newItemId,
       codigoPeca: "",
       loteItem: "",
-      status: "Autorizado",
+      status: GarantiasItemStatusEnum.NAO_ANALISADO,
       tipoDefeito: "",
       modeloVeiculoAplicado: "",
       torqueAplicado: 0,
       solicitarRessarcimento: false,
       anexos: "",
       rgi: newItemRgi,
-      codigoItem: formatItemRgi(
-        garantia?.rgi || "",
-        rgiLetter,
-        garantia.itens.length + 1
-      ),
+      codigoItem: newItemRgi,
       nfReferencia: garantia.nf,
       loteItemOficial: "",
       codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
@@ -398,7 +399,7 @@ const DetailsItensNF: React.FC = () => {
     setVisibleSectionId(visibleSectionId === id ? null : id);
   };
 
-  const send = async () => {
+  const save = async () => {
     console.log("salvamento: " + garantia);
     if (!garantia?.id) {
       message.error("ID da garantia não encontrado");
@@ -409,36 +410,68 @@ const DetailsItensNF: React.FC = () => {
       message.error("ID do item não encontrado");
       return;
     }
-    const payload = {
-      codigoItem: items[0].codigoPeca,
-      tipoDefeito: items[0].tipoDefeito,
-      modeloVeiculoAplicado: items[0].modeloVeiculo,
-      torqueAplicado: Number(items[0].torquePeca) || 0,
-      nfReferencia: items[0].anoVeiculo,
-      loteItemOficial: items[0].lotePeca,
-      loteItem: items[0].lotePeca,
-      codigoStatus:
-        items[0].status === "Autorizado"
-          ? GarantiasStatusEnum2.NAO_ENVIADO
-          : GarantiasStatusEnum2.EM_ANALISE,
-      solicitarRessarcimento: items[0].isReimbursementChecked ? 1 : 0,
-    };
-    console.log("payload:", payload);
-    try {
-      const response = await api.put(
-        `/garantias/garantiasItem/${itemId}/UpdateItem`,
-        payload
-      );
-      if (response.status === 200) {
-        message.success("Garantia atualizada com sucesso!");
-        navigate("/garantias");
-      } else {
+
+    garantia.itens.forEach(async (item, index) => {
+      const payload = {
+        codigoItem: item.codigoItem,
+        tipoDefeito: item.tipoDefeito,
+        modeloVeiculoAplicado: item.modeloVeiculoAplicado,
+        torqueAplicado: Number(item.torqueAplicado) || 0,
+        nfReferencia: garantia.nf,
+        loteItemOficial: item.loteItem,
+        loteItem: item.loteItem,
+        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+        solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
+      };
+      console.log("payload:", JSON.stringify(payload));
+      try {
+        const response = await api.put(
+          `/garantias/garantiasItem/${item.id}/UpdateItem`,
+          JSON.stringify(payload)
+        );
+        if (response.status === 200) {
+          message.success("Garantia atualizada com sucesso!");
+          navigate("/garantias");
+        } else {
+          message.error("Erro ao atualizar a garantia.");
+        }
+      } catch (error) {
+        const paylaodPost = {
+          garantiaId: garantia.id,
+          codigoItem: item.codigoItem,
+          tipoDefeito: item.tipoDefeito,
+          modeloVeiculoAplicado: item.modeloVeiculoAplicado,
+          torqueAplicado: item.torqueAplicado,
+          nfReferencia: garantia.nf,
+          loteItemOficial: item.loteItem,
+          loteItem: item.loteItem,
+          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+          solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
+          index: index.toString(),
+        };
+        console.log("paylaodPost:", JSON.stringify(paylaodPost));
+        const endpoint = environment.apiUrl + "/garantias/item/create";
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${context.user.token}`,
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify(paylaodPost),
+        });
+
+        if (response.status === 200) {
+          message.success("Garantia atualizada com sucesso!");
+          navigate("/garantias");
+        } else {
+          message.error("Erro ao atualizar a garantia.");
+        }
+        console.error("Erro ao atualizar a garantia:", error);
         message.error("Erro ao atualizar a garantia.");
       }
-    } catch (error) {
-      console.error("Erro ao atualizar a garantia:", error);
-      message.error("Erro ao atualizar a garantia.");
-    }
+    });
   };
 
   if (loading) {
@@ -493,7 +526,7 @@ const DetailsItensNF: React.FC = () => {
           >
             EXCLUIR
           </Button>
-          <Button type="primary" className={styles.ButonToSend} onClick={send}>
+          <Button type="primary" className={styles.ButonToSend} onClick={save}>
             SALVAR
           </Button>
         </div>
@@ -536,16 +569,16 @@ const DetailsItensNF: React.FC = () => {
           preenchido com “Não contém”
         </span>
       </div>
-      {garantia.itens.map((item, index) => {
+      {garantia.itens.map((item) => {
         return (
           <div className={styles.containerInformacoes} key={item.id}>
             <CollapsibleSection
-              title={`${item.rgi}.${index + 1}`}
+              title={item.codigoItem}
               isVisible={visibleSectionId === item.id}
               toggleVisibility={() => toggleSectionVisibility(item.id)}
               showDeleteConfirm={() => showDeleteConfirm(item.id)}
               status={item.status}
-              rgi={item.codigoItem}
+              rgi={item.rgi}
             >
               <h3 className={styles.tituloSecao}>Informações Gerais</h3>
               <div className={styles.inputsContainer}>
@@ -554,10 +587,16 @@ const DetailsItensNF: React.FC = () => {
                     <OutlinedInputWithLabel
                       label="Código da peça"
                       fullWidth
-                      value={item.codigoItem}
-                      onChange={(e) =>
-                        handleInputChange(item.id, "codigoPeca", e.target.value)
-                      }
+                      value={item.codigoPeca}
+                      onChange={(e) => {
+                        item.codigoPeca = e.target.value;
+                        handleInputChange(
+                          item.id,
+                          "codigoPeca",
+                          e.target.value
+                        );
+                        console.log("codigoPeca: " + e.target.value);
+                      }}
                     />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 0.5 }}>
@@ -565,9 +604,10 @@ const DetailsItensNF: React.FC = () => {
                       label="Lote da peça"
                       fullWidth
                       value={item.loteItem}
-                      onChange={(e) =>
-                        handleInputChange(item.id, "lotePeca", e.target.value)
-                      }
+                      onChange={(e) => {
+                        handleInputChange(item.id, "loteItem", e.target.value);
+                        item.loteItem = e.target.value;
+                      }}
                     />
                   </div>
                 </div>
@@ -582,13 +622,14 @@ const DetailsItensNF: React.FC = () => {
                         { value: "defeito3", label: "Opção 3" },
                       ]}
                       value={item.tipoDefeito}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        item.tipoDefeito = e.target.value;
                         handleInputChange(
                           item.id,
                           "tipoDefeito",
                           e.target.value
-                        )
-                      }
+                        );
+                      }}
                     />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
@@ -596,13 +637,14 @@ const DetailsItensNF: React.FC = () => {
                       label="Modelo do veículo que aplicou"
                       fullWidth
                       value={item.modeloVeiculoAplicado}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        item.modeloVeiculoAplicado = e.target.value;
                         handleInputChange(
                           item.id,
-                          "modeloVeiculo",
+                          "modeloVeiculoAplicado",
                           e.target.value
-                        )
-                      }
+                        );
+                      }}
                     />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 0.3 }}>
@@ -619,12 +661,18 @@ const DetailsItensNF: React.FC = () => {
                 <div className={styles.inputsConjun}>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
                     <OutlinedInputWithLabel
+                      type="number"
                       label="Torque aplicado à peça"
                       fullWidth
                       value={item.torqueAplicado.toString()}
-                      onChange={(e) =>
-                        handleInputChange(item.id, "torquePeca", e.target.value)
-                      }
+                      onChange={(e) => {
+                        item.torqueAplicado = Number(e.target.value);
+                        handleInputChange(
+                          item.id,
+                          "torqueAplicado",
+                          e.target.value
+                        );
+                      }}
                     />
                   </div>
                 </div>

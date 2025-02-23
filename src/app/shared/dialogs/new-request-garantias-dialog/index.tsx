@@ -105,10 +105,10 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         .map((rgi: string) => parseInt(rgi.split("-")[1]));
       const lastNumber = Math.max(0, ...existingRGIs);
       const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
-      return `${context.user.codigoCigam}-${nextNumber}`;
+      console.log("newrGi: " + `${allGarantias[0].rgi.split("-")[0]}-${nextNumber}`);
+      return `${context.user.username}-${nextNumber}`;
     } catch (error) {
       console.error("Erro ao gerar RGI:", error);
-      return `${context.user.codigoCigam}-0001`;
     }
   };
 
@@ -134,7 +134,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
 
       // 2. Construa o item de garantia
       const garantiaItem: GarantiaItem = {
-        codigoItem: context.user.codigoCigam + ".A.1",
+        codigoItem: newRGI + ".A.1",
         tipoDefeito: "defeito1",
         modeloVeiculoAplicado: "veiculo XYZ",
         torqueAplicado: 100,
@@ -144,7 +144,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
         solicitarRessarcimento: false,
         id: itemId,
-        rgi: context.user.codigoCigam,
+        rgi: values["N° NF de origem"] + "A.1",
         status: GarantiasItemStatusEnum.NAO_ANALISADO,
         codigoPeca: "",
       };
