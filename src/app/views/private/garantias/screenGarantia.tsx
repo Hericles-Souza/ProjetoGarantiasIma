@@ -10,7 +10,7 @@ import {
   getGarantiasByStatusAsync,
   getGarantiasPaginationAsync,
 } from "@shared/services/GarantiasService.ts";
-import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
+import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
   converterStringParaStatusGarantia,
@@ -29,7 +29,7 @@ const Garantias: React.FC = () => {
   const navigate = useNavigate();
   const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
-  const [filteredItems, setFilteredItems] = useState<GarantiaItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<GarantiasModel[]>([]);
 
 
   useEffect(() => {
@@ -37,6 +37,7 @@ const Garantias: React.FC = () => {
   }, []);  // [] para garantir que só execute uma vez
 
   const fetchCardData = async () => {
+
     try {
       if (context.user!.rule!.name === "cliente") {
         const response = await getGarantiasPaginationAsync(1, 10);
@@ -64,7 +65,7 @@ const Garantias: React.FC = () => {
         });
 
         const results = await Promise.all(promises);
-        const dataArray = results.flat();
+        const dataArray = results.flat().sort();
         setCardData(dataArray);  // Atualiza o cardData com os resultados
       }
     } catch (error) {
@@ -76,23 +77,21 @@ const Garantias: React.FC = () => {
 
   // 2. Filtrar os dados sempre que `cardData`, `filterStatus` ou `searchTerm` mudar
   useEffect(() => {
-    const newFilteredItems = cardData.flatMap((card) => {
-      return card.itens.filter((item) => {
+    const newFilteredItems = cardData.filter((card) => { 
         const matchesStatus =
           filterStatus === "todos" ||
-          item.codigoStatus ===
+          card.codigoStatus ===
             converterStatusGarantiaInverso(
               converterStringParaStatusGarantia(filterStatus)
             );
         const matchesSearch =
           searchTerm === "" ||
-          item.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.codigoItem.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
+          card.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.itens[0].tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesStatus && matchesSearch;
       });
-    });
     setFilteredItems(newFilteredItems);  // Atualiza o estado com os itens filtrados
   }, [cardData, filterStatus, searchTerm]);  
   

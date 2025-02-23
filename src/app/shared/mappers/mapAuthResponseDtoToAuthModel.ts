@@ -11,6 +11,7 @@ export const mapMeResponseToAuthModel = (meResponse: AuthResponseDto, token: str
     isAdmin: meResponse.isAdmin,
     rule: meResponse?.rule,
     cnpj: meResponse.cnpj,
+    phone: meResponse.phone,
     codigoCigam: meResponse.codigoCigam,
     createdAt: meResponse.createdAt,
     shortname: meResponse.shortname,

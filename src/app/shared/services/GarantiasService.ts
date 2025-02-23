@@ -37,7 +37,7 @@ export const updateGarantiaItemByIdAsync = (itemId: string, data: UpdateItemRequ
 export const getGarantiasPaginationAsync = (page: number, limit: number, search?: string) => {
 
   const data = {
-    page,
+    page, 
     limit,
     search
   }

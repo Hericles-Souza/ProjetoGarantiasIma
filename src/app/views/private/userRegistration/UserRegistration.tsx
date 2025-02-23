@@ -48,7 +48,7 @@ const UserRegistration: React.FC = () => {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [limitGet, setLimitGet] = useState(100);
+  const [limitGet,] = useState(100);
   const [limit, setLimit] = useState(10);
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
   const [selectedAction, setSelectedAction] = useState<boolean>(false);

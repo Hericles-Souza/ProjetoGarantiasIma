@@ -57,8 +57,11 @@ const RGIDetailsInitial: React.FC = () => {
   useEffect(() => {
     const fetchData = () => {
       let data: GarantiasModel = null;
+      console.log("locaton.state: " + JSON.stringify(location.state));
+
       try {
         if (location.state) {
+          console.log("locaton.state: " + JSON.stringify(location.state));
           data = location.state.garantia;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
@@ -210,7 +213,7 @@ const RGIDetailsInitial: React.FC = () => {
       fornecedor: context.user.fullname,
       codigoStatus: cardData.codigoStatus,
       observacao: "teste",
-      usuarioAtualizacao: context.user.fullname,
+      usuarioAtualizacao: context.user.username,
       status: cardData.status,
       dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
     };

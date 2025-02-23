@@ -37,8 +37,8 @@ export const LoginPage = () => {
       await AuthService.login(email, password, (user) => {
         if (login) {
           login(user);
+          console.log("phone user: " + JSON.stringify(user));
         }
-        console.log(user);
       });
     } catch {
       toast.error(

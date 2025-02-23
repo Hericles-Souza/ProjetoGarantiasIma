@@ -1,4 +1,4 @@
-import {GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
+import {GarantiasItemStatusEnum2, GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
 
 export interface GarantiaPedidos{
   cdPedido: string;
@@ -31,7 +31,7 @@ export interface GarantiaItem {
   loteItemOficial: string;
   loteItem: string;
   status: string; 
-  codigoStatus: GarantiasStatusEnum2;
+  codigoStatus: GarantiasItemStatusEnum2;
   solicitarRessarcimento: boolean;
   analiseTecnica?:string;
   conclusao?:string;
@@ -60,7 +60,7 @@ export interface GarantiasModel {
   updatedAt?: string; 
   rgi?: string;
   razaoSocial?: string;
-  telefone?: string;
+  telefone: string;
   email?: string;
   nf?: string;
   fornecedor?: string;

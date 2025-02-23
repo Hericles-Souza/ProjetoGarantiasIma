@@ -2,7 +2,7 @@ import { CalendarOutlined, RightOutlined } from '@ant-design/icons';
 import React from 'react';
 import styled from 'styled-components';
 import { converterStatusGarantia, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
-import { GarantiaItem } from "@shared/models/GarantiasModel.ts";
+import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from 'dayjs';
 
 const CardContainer = styled.div<{ clickable: boolean }>`
@@ -125,7 +125,7 @@ const statusStyles = {
 };
 
 interface CardCategoriasProps {
-  GarantiaItem: GarantiaItem;
+  GarantiaItem: GarantiasModel;
   data: Date;
   codigoFormatado: string; // Código já formatado (ex: "RGI 1234567" ou "ACI 98765432")
   onClick?: () => void;
@@ -144,11 +144,11 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, cod
       </Header>
       <RedContainer>
         <Code>{codigoFormatado}</Code>
-        <PieceCode>Código da Peça: {GarantiaItem.nfReferencia}</PieceCode>
+        <PieceCode>Código da Peça: {GarantiaItem.nf}</PieceCode>
       </RedContainer>
       <Defect>
         Possível Defeito:
-        <ValueDefect>{GarantiaItem.tipoDefeito}</ValueDefect>
+        <ValueDefect>{GarantiaItem.itens[0].tipoDefeito}</ValueDefect>
       </Defect>
       <Footer>
         <Date>

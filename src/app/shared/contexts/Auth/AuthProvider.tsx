@@ -32,6 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
 
   const login = (user: AuthModel) => {
     setUser(user);
+    
     localStorage.setItem(environment.TOKEN, user.token); // Salva o token no localStorage
   };
 
