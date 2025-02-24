@@ -31,16 +31,14 @@ const Garantias: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filteredItems, setFilteredItems] = useState<GarantiasModel[]>([]);
 
-
   useEffect(() => {
     fetchCardData();
-  }, []);  // [] para garantir que só execute uma vez
+  }, []); // [] para garantir que só execute uma vez
 
   const fetchCardData = async () => {
-
     try {
       if (context.user!.rule!.name === "cliente") {
-        const response = await getGarantiasPaginationAsync(1, 10);
+        const response = await getGarantiasPaginationAsync(1, 100);
         const data = await response.data.data.data;
         setCardData(data);
       } else {
@@ -66,7 +64,7 @@ const Garantias: React.FC = () => {
 
         const results = await Promise.all(promises);
         const dataArray = results.flat().sort();
-        setCardData(dataArray);  // Atualiza o cardData com os resultados
+        setCardData(dataArray); // Atualiza o cardData com os resultados
       }
     } catch (error) {
       console.error("Error fetching card data:", error);
@@ -77,24 +75,25 @@ const Garantias: React.FC = () => {
 
   // 2. Filtrar os dados sempre que `cardData`, `filterStatus` ou `searchTerm` mudar
   useEffect(() => {
-    const newFilteredItems = cardData.filter((card) => { 
-        const matchesStatus =
-          filterStatus === "todos" ||
-          card.codigoStatus ===
-            converterStatusGarantiaInverso(
-              converterStringParaStatusGarantia(filterStatus)
-            );
-        const matchesSearch =
-          searchTerm === "" ||
-          card.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          card.itens[0].tipoDefeito.toLowerCase().includes(searchTerm.toLowerCase());
+    const newFilteredItems = cardData.filter((card) => {
+      const matchesStatus =
+        filterStatus === "todos" ||
+        card.codigoStatus ===
+          converterStatusGarantiaInverso(
+            converterStringParaStatusGarantia(filterStatus)
+          );
+      const matchesSearch =
+        searchTerm === "" ||
+        card.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.itens[0].tipoDefeito
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
-        return matchesStatus && matchesSearch;
-      });
-    setFilteredItems(newFilteredItems);  // Atualiza o estado com os itens filtrados
-  }, [cardData, filterStatus, searchTerm]);  
-  
+      return matchesStatus && matchesSearch;
+    });
+    setFilteredItems(newFilteredItems); // Atualiza o estado com os itens filtrados
+  }, [cardData, filterStatus, searchTerm]);
 
   const statuses = Object.values(GarantiasStatusEnum);
 
@@ -111,8 +110,6 @@ const Garantias: React.FC = () => {
       container.scrollBy({ left: -150, behavior: "smooth" });
     }
   };
-
-
 
   if (loading || !cardData) {
     return (
@@ -189,9 +186,7 @@ const Garantias: React.FC = () => {
           <div className={styled.containerGrid}>
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => {
-                const garantia = cardData.find(
-                  (card) => card.rgi === item.rgi
-                );
+                const garantia = cardData.find((card) => card.rgi === item.rgi);
                 return (
                   <CardCategorias
                     key={item.id}
@@ -199,26 +194,29 @@ const Garantias: React.FC = () => {
                     GarantiaItem={item}
                     codigoFormatado={`RGI ${item.rgi}`}
                     onClick={() => {
-                      console.log('use: ' + context.user.rule.name);
+                      console.log("use: " + context.user.rule.name);
                       if (
                         context.user.rule.name.includes("admin") ||
                         context.user.rule.name.includes("cliente")
-                      )
+                      ) {
+                        const garantiaData = garantia;
+                        console.log("garantiaData: " + JSON.stringify(garantiaData));
                         navigate(`/garantias/rgi/${garantia.id}`, {
-                          state: { item, garantia },
+                          state: { item, garantiaData },
                         });
-                      else if (
+                      } else if (
                         context.user.rule.name.includes("tecnico") ||
                         context.user.rule.name.includes("supervisor")
-                      )
-                      {
-                        console.log('item: ' + JSON.stringify(item));
-                        console.log('associatedCardData: ' + JSON.stringify(garantia));
+                      ) {
+                        console.log("item: " + JSON.stringify(item));
+                        console.log(
+                          "associatedCardData: " + JSON.stringify(garantia)
+                        );
 
                         navigate(
                           `/garantias/technical-and-supervisor/${garantia.id}`,
-                          { 
-                            state: { item, garantia},
+                          {
+                            state: { item, garantia },
                           }
                         );
                       }
@@ -283,9 +281,7 @@ const Garantias: React.FC = () => {
           <div className={styled.containerGrid}>
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => {
-                const garantia = cardData.find(
-                  (card) => card.rgi === item.rgi
-                );
+                const garantia = cardData.find((card) => card.rgi === item.rgi);
 
                 return (
                   <CardCategorias
@@ -293,7 +289,7 @@ const Garantias: React.FC = () => {
                     data={new Date(garantia.data)}
                     GarantiaItem={item}
                     onClick={() => {
-                      console.log('use: ' + context.user.rule.name);
+                      console.log("use: " + context.user.rule.name);
                       if (
                         context.user.rule.name.includes("admin") ||
                         context.user.rule.name.includes("cliente")
@@ -304,13 +300,14 @@ const Garantias: React.FC = () => {
                       else if (
                         context.user.rule.name.includes("tecnico") ||
                         context.user.rule.name.includes("supervisor")
-                      )
-                      {
-                        console.log('item: ' + JSON.stringify(item));
-                        console.log('associatedCardData: ' + JSON.stringify(garantia));
+                      ) {
+                        console.log("item: " + JSON.stringify(item));
+                        console.log(
+                          "associatedCardData: " + JSON.stringify(garantia)
+                        );
                         navigate(
                           `/garantias/technical-and-supervisor/${garantia.id}`,
-                          { 
+                          {
                             state: { item, garantia },
                           }
                         );

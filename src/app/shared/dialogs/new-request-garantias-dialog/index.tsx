@@ -204,7 +204,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       if (selectedFile) {
         const endpoint = environment.apiUrl + "/files/upload-private-file-item";
         const responseGET = await garantiaItemResponse.json();
-        console.log("sdasdas: " + JSON.stringify(responseGET));
 
         const fileData = new FormData();
         fileData.append("file", selectedFile);
@@ -214,6 +213,8 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         fileData.forEach((item, key) => {
           console.log(key + ": " + item);
         });
+
+        garantiaPayload.itens[0].id = responseGET.data[0].id;
 
         const response = await fetch(endpoint, {
           method: "POST",
@@ -229,7 +230,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
             "Arquivo enviado com sucesso:",
             JSON.stringify(response.body)
           );
-          navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
+          navigate(`/garantias/rgi/${createdGarantia.id}`, {
             state: {
               garantiaData: { ...garantiaPayload, id: createdGarantia.id },
               garantiaId: createdGarantia.id,
@@ -238,6 +239,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
                 itens: garantiaPayload.itens?.length || 0,
                 sequence: 1,
               },
+              
               rgiLetter: "A",
             },
           });

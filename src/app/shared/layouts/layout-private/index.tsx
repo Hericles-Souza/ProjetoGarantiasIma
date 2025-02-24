@@ -65,7 +65,8 @@ const LayoutPrivate: React.FC = () => {
     } catch (error) {
       message.error(error);
     } finally{
-      setLoading(false);
+      if(user)
+        setLoading(false);
     }
     
   }, [location.pathname, user]);

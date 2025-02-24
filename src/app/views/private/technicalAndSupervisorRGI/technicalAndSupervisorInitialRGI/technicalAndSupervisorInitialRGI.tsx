@@ -2,12 +2,9 @@ import "./technicalAndSupervisorInitialRGI.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { Button, Spin } from "antd";
-import { useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { updateGarantiasHeaderByIdAsync } from "@shared/services/GarantiasService";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
-import { AuthContext } from "@shared/contexts/Auth/AuthContext";
-import { AuthModel } from "@shared/models/AuthModel";
 
 const TechnicalAndSupervisorInitialRGI = () => {
   const location = useLocation();
@@ -24,7 +21,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
     nfOrigem ? [{ itemId: location.state.item.id, nf: nfOrigem, itens: 0 , sequence: 0}] : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
-  const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,27 +59,42 @@ const TechnicalAndSupervisorInitialRGI = () => {
   }, [location.state]);
 
   const handleSave = () => {
-    const now = new Date();
-    const currentDate = now.toLocaleDateString();
+    // const now = new Date();
+    // const currentDate = now.toLocaleDateString();
+    
+    // const garantiaUpload: GarantiasModel = {
+    //   razaoSocial: razaoSocial ||
+    //   (context.user as AuthModel).username ||
+    //   context.user.fullname,
+    //   telefone: telefone || context.user.phone,
+    //   email: context.user.email,
+    //   nf: location.state.garantia.nf,
+    //   fornecedor: location.state.garantia.fornecedor,
+    //   codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
+    //   observacao: "Garantia válida por 12 meses",
+    //   usuarioAtualizacao: "60003",
+    //   dataAtualizacao: "\"2024-12-08 14:54:23.507261\""
+    // }
 
-    const garantiaModel: GarantiasModel = {
-      email: context.user.email,
-      razaoSocial:
-        razaoSocial ||
-        (context.user as AuthModel).username ||
-        context.user.fullname,
-      createdAt: context.user.createdAt,
-      dataAtualizacao: currentDate,
-      data: currentDate,
-      updatedAt: context.user.updatedAt || currentDate,
-      usuarioAtualizacao: context.user.fullname,
-      usuarioInsercao: context.user.fullname,
-      telefone: telefone || context.user.phone,
-    };
-
-    updateGarantiasHeaderByIdAsync(garantiaModel)
-      .then((value) => console.log(value))
-      .catch((error) => console.error("Erro ao atualizar dados:", error));
+    // const garantiaModel: GarantiasModel = {
+    //   id: location.state.garantia.id,
+    //   email: context.user.email,
+    //   razaoSocial:
+    //     razaoSocial ||
+    //     (context.user as AuthModel).username ||
+    //     context.user.fullname,
+    //   createdAt: context.user.createdAt,
+    //   dataAtualizacao: currentDate,
+    //   data: currentDate,
+    //   updatedAt: context.user.updatedAt || currentDate,
+    //   usuarioAtualizacao: context.user.fullname,
+    //   usuarioInsercao: context.user.fullname,
+    //   telefone: telefone || context.user.phone,
+    // };
+    // console.log("garantiayupldasd: " + JSON.stringify(garantiaModel));
+    // updateGarantiasHeaderByIdAsync(garantiaModel)
+    //   .then((value) => console.log(value))
+    //   .catch((error) => console.error("Erro ao atualizar dados:", error));
   };
 
   if (loading || !cardData) {
@@ -186,10 +197,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
               <Button
                 type="text"
                 className="nextButton"
-                onClick={() =>
+                onClick={() =>{
+                  console.log("asdasdasdsa: " + JSON.stringify(location.state.garantia) );
                   navigate("/technical-and-supervisor/details-itens", {
-                    state: { nf, cardData },
-                  })
+                    state: { nf, garantia: location.state.garantia },
+                  })}
                 }
               >
                 &gt;

@@ -64,7 +64,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 
       quillInstance.on("text-change", () => {
         const content = quillInstance.root.innerHTML;
-        setEditorContent(content); // Atualiza o estado
+        setEditorContent(content);
       });
     }
   }, [editorRef, setEditorContent]);
@@ -85,7 +85,6 @@ const FileAttachment = ({
   const [loading, setLoading] = useState(true);
   const context = useContext(AuthContext);
 
-
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
       "image/jpeg": ".jpg",
@@ -93,41 +92,60 @@ const FileAttachment = ({
       "image/gif": ".gif",
       "application/pdf": ".pdf",
       "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
       // Adicione outros tipos MIME conforme necessário
     };
-  
-    return mimeTypes[mimeType] || '';  // Retorna a extensão ou uma string vazia se não encontrado
+
+    return mimeTypes[mimeType] || ""; // Retorna a extensão ou uma string vazia se não encontrado
   }
 
   function getFileExtensionFromBlob(blob: Blob): string {
-    const mimeType = blob.type;  // Pega o tipo MIME do Blob
+    const mimeType = blob.type; // Pega o tipo MIME do Blob
     const extension = getExtensionFromMimeType(mimeType);
     return extension;
   }
 
-  const fetchImagem = async (itemId: string) => {
+  const fetchImagem = async (itemId: string, field: string) => {
     try {
-      const urlGetFile = environment.apiUrl + '/files/get-all';
+      let field: string;
+      const match = label.match(/^\d+/);
+      console.log("label: " + label);
+
+      if (!match && label.includes("venda")) field = "nfVenda";
+      else if (!match && label.includes("Referência")) field = "nfRef";
+      else if (match.length > 0) {
+        if (label.includes("Referência")) field = `${match[0]}.res`;
+        else if (label.toUpperCase().includes("FOTO"))
+          field = `${match[0]}.img`;
+      }
+
+      const urlGetFile =
+        environment.apiUrl +
+        `/files/files/download-private-file-item/${itemId}/${field}`;
       console.log(urlGetFile);
-      const response = await fetch(
-        environment.apiUrl + '/files/get-all',
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${context.user.token}`, // Token de autenticação
-            "Content-Type": "application/json", // Tipo de conteúdo (se necessário)
-          },
-        }
-      ).then((value) => {console.log(
-        "response: " + JSON.stringify(value.body)
-      )
-      return value;
-    });
-    
+
+      const response = await fetch(urlGetFile, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`, // Token de autenticação
+        },
+      }).then((value) => {
+        console.log("response: " + JSON.stringify(value.body));
+        return value;
+      });
+      const blob = await response.blob();
+      const fileExtension = getFileExtensionFromBlob(blob);
+      const labelWithoutSpace = label.replace(/\s+/g, "");
+      const fileNameWithExtension = field.replace(".", "_") + fileExtension;
+      const imagemUrl = URL.createObjectURL(blob);
+      console.log(fileNameWithExtension);
+      setImagemUrl(imagemUrl);
+      // handleDownload(fileNameWithExtension);
+      handleDownload(fileNameWithExtension, imagemUrl);
 
       // if (response.ok) {
       //   // Receber a imagem em formato binário (blob)
@@ -140,7 +158,7 @@ const FileAttachment = ({
       //   const fileExtension = getFileExtensionFromBlob(blob);
       //   const labelWithoutSpace = label.replace(/\s+/g, '');
       //   const fileNameWithExtension = labelWithoutSpace + fileExtension;
-      //   setImagemUrl(imagemUrl);  
+      //   setImagemUrl(imagemUrl);
       //   // handleDownload(fileNameWithExtension);
       // } else {
       //   console.error("Erro ao buscar a imagem", response.statusText);
@@ -150,35 +168,35 @@ const FileAttachment = ({
     }
   };
 
-  const handleDownload = async (fileName:string) => {
+  const handleDownload = async (fileName: string, imageUrl: string) => {
     // Criar um link temporário e disparar o download
     const link = document.createElement("a");
-    link.href = imagemUrl;
+    link.href = imageUrl;
     link.download = fileName; // Defina o nome do arquivo que será baixado
     link.click(); // Dispara o download
   };
 
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
-    <span className={styles.labelAnexo}>{label}</span>
-    <div className={styles.fileUpdateContent}>
-      <label className={styles.buttonUpdateNfSale}>
-        <button
-          style={{ display: "none", borderColor: "red" }}
-          // onClick={() => handleFileChange(itemId)}
-        /> 
-        Visualizar
-      </label>
-      <label className={styles.buttonUpdateNfSale}>
-        <button
-          style={{ backgroundColor: "red", display: "none" }}
-          onClick={() => fetchImagem(itemId)}
-        />
-        Baixar Arquivo
-      </label>
+      <span className={styles.labelAnexo}>{label}</span>
+      <div className={styles.fileUpdateContent}>
+        <label className={styles.buttonUpdateNfSale}>
+          <button
+            style={{ display: "none", borderColor: "red" }}
+            // onClick={() => handleFileChange(itemId)}
+          />
+          Visualizar
+        </label>
+        <label className={styles.buttonUpdateNfSale}>
+          <button
+            style={{ backgroundColor: "red", display: "none" }}
+            onClick={() => fetchImagem(itemId, label)}
+          />
+          Baixar Arquivo
+        </label>
+      </div>
+      {/* {loading ? <p>Carregando...</p> : <img src={image} alt="Imagem carregada" />} */}
     </div>
-    {/* {loading ? <p>Carregando...</p> : <img src={image} alt="Imagem carregada" />} */}
-  </div>
   );
 };
 
@@ -257,16 +275,18 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               console.log(
                 "item.analiseTecnica: " + JSON.stringify(item.analiseTecnica)
               );
-              
+
               setEditorContentFromApi(item.analiseTecnica); // Usar a função
             }
-            if(item.tipoDefeito == null)
-              item.tipoDefeito = "defeito1";
-            
+            if (item.tipoDefeito == null) item.tipoDefeito = "defeito1";
+            item.solicitarRessarcimento = true; ////////TA ERRADO
           });
           setItems(value.data);
         });
-        setCardData(location.state.cardData);
+        setCardData(location.state.garantia);
+        console.log(
+          "location.state.garantia: " + JSON.stringify(location.state.garantia)
+        );
       }
       return;
     } catch (error) {
@@ -297,13 +317,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   };
 
   const handleSave = async () => {
-    items.map(async (item, index) => {
+    cardData.itens.map(async (item, index) => {
       const dataToSend = {
         ItemId: item.id,
-        analiseTecnica: item.analiseTecnica,
+        analiseTecnica: "ANALISE TOP",
         conclusao: item.conclusao,
       };
-      console.log("aqui: " + JSON.stringify(item.id));
+      console.log("aqui: " + JSON.stringify(dataToSend));
       try {
         const response = await api.put(
           `/garantias/analisetecnica/`,
@@ -311,7 +331,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         );
 
         const updateRequest: UpdateItemRequest = {
-          garantiaId: item.garantia_id,
+          garantiaId: cardData.id,
           codigoItem: item.codigoItem,
           tipoDefeito: "defeito1",
           modeloVeiculoAplicado: item.modeloVeiculoAplicado,
@@ -378,12 +398,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA RGI
         </Button>
         <span className={styles.RgiCode}>
-          RGI N° {location.state.cardData.rgi} / NF {items[0].nfReferencia}
+          RGI N° {items[0].rgi} / NF {items[0].nfReferencia}
         </span>
       </div>
 
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>{location.state.cardData.rgi}</h1>
+        <h1 className={styles.tituloRgi}>{items[0].rgi}</h1>
         <div className={styles.botoesCabecalho}>
           {context.user.rule.name != UserRoleEnum.Técnico && (
             <Button
@@ -422,7 +442,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         </span>
       </div> */}
 
-      {items.map((item) => {
+      {cardData.itens.map((item) => {
+        item.solicitarRessarcimento = true;
         if (quillRef.current) {
           // Se você tem um conteúdo em HTML, use root.innerHTML
           quillRef.current.root.innerHTML = item.analiseTecnica;
@@ -501,6 +522,27 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   </div>
                 </div>
               </div>
+              
+              {item.solicitarRessarcimento && context.user.rule.name !== UserRoleEnum.Supervisor && (
+                <div className={styles.contentReimbursement}>
+                  <h3 className={styles.tituloA}>
+                    Anexo de dados adicionais para ressarcimento
+                  </h3>
+                  {[
+                    "1. Documento de identificação (RG ou CNH):",
+                    "2. Documentação do veículo:",
+                    "3. NF do guincho:",
+                    "4. NF de outras despesa/produtos pertinentes:",
+                  ].map((itemRes, index) => (
+                    <FileAttachment
+                      key={index}
+                      label={itemRes}
+                      itemId={item.id}
+                      backgroundColor="#f5f5f5"
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Anexo da NF de Referência (visível para todos) */}
               <FileAttachment
@@ -582,7 +624,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields
                     value={item.conclusao}
-                    onChange={(e) => setConclusao(e.target.value)}
+                    onChange={(e) => {
+                      item.conclusao = e.target.value;
+                      console.log(item.conclusao);
+                      setConclusao(e.target.value);
+                    }}
                     label="Conclusão"
                     placeholder="Digite a conclusão aqui..."
                   />

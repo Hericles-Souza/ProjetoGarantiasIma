@@ -18,7 +18,7 @@ import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
-import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
 import api from "@shared/Interceptors";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import environment from "@env/environment";
@@ -233,7 +233,6 @@ const DetailsItensNF: React.FC = () => {
   const { id: guaranteeId } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const context = useContext(AuthContext);
   const [items, setItems] = useState<
     Array<{
       id: string;
@@ -320,6 +319,8 @@ const DetailsItensNF: React.FC = () => {
             rgi: item.rgi,
             codigoItem: item.codigoItem,
           }));
+          console.log("garantia: ", JSON.stringify(garantia));
+
           setItems(transformedItems);
           if (transformedItems.length > 0) {
             setVisibleSectionId(transformedItems[0].id);
@@ -411,63 +412,69 @@ const DetailsItensNF: React.FC = () => {
       return;
     }
 
+    const responseGetItens = await api.get(
+      `/garantias/item/by-garantia/${garantia.id}`
+    );
+    const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
+
+
     garantia.itens.forEach(async (item, index) => {
-      const payload = {
-        codigoItem: item.codigoItem,
-        tipoDefeito: item.tipoDefeito,
-        modeloVeiculoAplicado: item.modeloVeiculoAplicado,
-        torqueAplicado: Number(item.torqueAplicado) || 0,
-        nfReferencia: garantia.nf,
-        loteItemOficial: item.loteItem,
-        loteItem: item.loteItem,
-        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-        solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
-      };
-      console.log("payload:", JSON.stringify(payload));
       try {
-        const response = await api.put(
-          `/garantias/garantiasItem/${item.id}/UpdateItem`,
-          JSON.stringify(payload)
-        );
-        if (response.status === 200) {
-          message.success("Garantia atualizada com sucesso!");
-          navigate("/garantias");
+        if (
+          garantiaItensAPI.filter((value) => value.id == item.id).length > 0
+        ) {
+          const paylaodPut = {
+            codigoItem: item.codigoItem,
+            tipoDefeito: item.tipoDefeito,
+            modeloVeiculoAplicado: item.modeloVeiculoAplicado,
+            torqueAplicado: Number(item.torqueAplicado) || 0,
+            nfReferencia: garantia.nf,
+            loteItemOficial: item.loteItem,
+            loteItem: item.loteItem,
+            codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+            solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
+          };
+          console.log("paylaodPut: ", JSON.stringify(paylaodPut));
+
+
+
+          const responsePut = await api.put(
+            `/garantias/garantiasItem/${item.id}/UpdateItem`,
+            paylaodPut
+          );
+          if (responsePut.status === 200) {
+            message.success("Garantia atualizada com sucesso!");
+            navigate("/garantias");
+          } else {
+            message.error("Erro ao atualizar a garantia.");
+          }
         } else {
-          message.error("Erro ao atualizar a garantia.");
+          const paylaodPost = {
+            garantiaId: garantia.id,
+            codigoItem: item.codigoItem,
+            tipoDefeito: item.tipoDefeito,
+            modeloVeiculoAplicado: item.modeloVeiculoAplicado,
+            torqueAplicado: item.torqueAplicado,
+            nfReferencia: garantia.nf,
+            loteItemOficial: item.loteItem,
+            loteItem: item.loteItem,
+            codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+            solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
+            index: index.toString(),
+          };
+          console.log("paylaodPost: ", JSON.stringify(paylaodPost));
+          const endpoint = environment.apiUrl + "/garantias/item/create";
+
+          const responsePost = await api.post(endpoint, paylaodPost);
+
+          if (responsePost.status === 200) {
+            message.success("Garantia atualizada com sucesso!");
+            navigate(`/garantias/rgi/${garantia.id}`);
+          } else {
+            message.error("Erro ao atualizar a garantia.");
+          }
         }
       } catch (error) {
-        const paylaodPost = {
-          garantiaId: garantia.id,
-          codigoItem: item.codigoItem,
-          tipoDefeito: item.tipoDefeito,
-          modeloVeiculoAplicado: item.modeloVeiculoAplicado,
-          torqueAplicado: item.torqueAplicado,
-          nfReferencia: garantia.nf,
-          loteItemOficial: item.loteItem,
-          loteItem: item.loteItem,
-          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-          solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
-          index: index.toString(),
-        };
-        console.log("paylaodPost:", JSON.stringify(paylaodPost));
-        const endpoint = environment.apiUrl + "/garantias/item/create";
-
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${context.user.token}`,
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify(paylaodPost),
-        });
-
-        if (response.status === 200) {
-          message.success("Garantia atualizada com sucesso!");
-          navigate("/garantias");
-        } else {
-          message.error("Erro ao atualizar a garantia.");
-        }
         console.error("Erro ao atualizar a garantia:", error);
         message.error("Erro ao atualizar a garantia.");
       }
@@ -693,7 +700,7 @@ const DetailsItensNF: React.FC = () => {
                   </label>
                 </div>
               </div>
-              {!item.solicitarRessarcimento && (
+              {item.solicitarRessarcimento && (
                 <div className={styles.contentReimbursement}>
                   <h3 className={styles.tituloA}>
                     Anexo de dados adicionais para ressarcimento

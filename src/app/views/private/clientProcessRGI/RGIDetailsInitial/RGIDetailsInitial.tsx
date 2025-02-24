@@ -62,7 +62,7 @@ const RGIDetailsInitial: React.FC = () => {
       try {
         if (location.state) {
           console.log("locaton.state: " + JSON.stringify(location.state));
-          data = location.state.garantia;
+          data = location.state.garantiaData;
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
           setCardData(data);
@@ -79,7 +79,6 @@ const RGIDetailsInitial: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-
         console.log("finalizou");
 
         console.log("razaoSocial: " + data.razaoSocial);
@@ -166,21 +165,9 @@ const RGIDetailsInitial: React.FC = () => {
     setModalDeleteOpen(true);
   };
 
-  const save = () => {
-    nfs.forEach((element) => {
-      console.log("itens: " + element.itens);
-      console.log("nf: " + element.nf);
-    });
-  };
-
   const send = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
-      return;
-    }
-    const itemId = cardData.itens?.[0]?.id;
-    if (!itemId) {
-      message.error("ID do item não encontrado");
       return;
     }
     const now = new Date();
@@ -192,50 +179,55 @@ const RGIDetailsInitial: React.FC = () => {
     const seconds = String(now.getSeconds()).padStart(2, "0");
     const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
-    const updatePayload = {
-      codigoItem: cardData.itens?.[0].codigoItem || "",
-      tipoDefeito: cardData.itens?.[0].tipoDefeito || "",
-      modeloVeiculoAplicado: cardData.itens?.[0].modeloVeiculoAplicado || "",
-      torqueAplicado: cardData.itens?.[0].torqueAplicado || 0,
-      nfReferencia: cardData.nf || "",
-      loteItemOficial: cardData.itens?.[0].loteItemOficial || "",
-      loteItem: cardData.itens?.[0].loteItem || "",
-      codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
-      solicitarRessarcimento:
-        cardData.itens?.[0].solicitarRessarcimento || false,
-    };
-
-    const garantia: GarantiasModel = {
-      razaoSocial: socialReason,
-      telefone: phone,
-      email: context.user.email,
-      nf: cardData.nf,
-      fornecedor: context.user.fullname,
-      codigoStatus: cardData.codigoStatus,
-      observacao: "teste",
-      usuarioAtualizacao: context.user.username,
-      status: cardData.status,
-      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-    };
     try {
-      console.log("TESTE: " + id);
-      const response = await api.put(
-        `/garantias/garantiasItem/${itemId}/UpdateItem`,
-        updatePayload
-      );
+      cardData.itens.forEach(async (item) => {
+        const itemId = item.id;
+        const updatePayload = {
+          codigoItem: item.codigoItem || "",
+          tipoDefeito: item.tipoDefeito || "",
+          modeloVeiculoAplicado: item.modeloVeiculoAplicado || "",
+          torqueAplicado: item.torqueAplicado || 0,
+          nfReferencia: cardData.nf || "",
+          loteItemOficial: item.loteItemOficial || "",
+          loteItem: item.loteItem || "",
+          codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
+          solicitarRessarcimento: item.solicitarRessarcimento || false,
+        };
+
+        const response = await api.put(
+          `/garantias/garantiasItem/${itemId}/UpdateItem`,
+          updatePayload
+        );
+
+        if (response.status === 200) {
+          console.log("Garantia Item atualizada com sucesso!");
+        }
+      });
+
+      const garantia: GarantiasModel = {
+        razaoSocial: socialReason,
+        telefone: phone,
+        email: context.user.email,
+        nf: cardData.nf,
+        fornecedor: context.user.fullname,
+        codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
+        observacao: "teste",
+        usuarioAtualizacao: context.user.username,
+        status: cardData.status,
+        dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      };
 
       const responseHeader = await api.put(
         `/garantias/garantiasHeader/${id}/UpdateHeader`,
         garantia
       );
 
-      if (response.status === 200 && responseHeader.status === 200) {
+      if (responseHeader.status === 200) {
         setCardData({
           ...cardData,
           codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
           status: GarantiasStatusEnum2.EM_ANALISE.toString(),
         });
-        console.log(response);
         message.success("Garantia atualizada com sucesso!");
         navigate("/garantias");
       }
@@ -296,7 +288,7 @@ const RGIDetailsInitial: React.FC = () => {
             </Button>
           )}
           <Button
-            onClick={save}
+            onClick={send}
             type="default"
             danger
             className={styles.buttonSaveRgi}
@@ -378,9 +370,14 @@ const RGIDetailsInitial: React.FC = () => {
                   color: "red",
                 }}
               />
-              <span className={styles.nfsCode}>{nf.codigoItem}</span>
+              <span className={styles.nfsCode}>{`${
+                nf.codigoItem.split(".")[0]
+              }.${nf.codigoItem.split(".")[1]}`}</span>
               <span className={styles.nfsDivider}> | </span>
-              <span className={styles.nfsQuantity}> {cardData.itens.length.toString()} ITENS</span>
+              <span className={styles.nfsQuantity}>
+                {" "}
+                {cardData.itens.length.toString()} ITENS
+              </span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
               <DeleteOutlined
@@ -391,11 +388,13 @@ const RGIDetailsInitial: React.FC = () => {
               <Button
                 type="text"
                 className={styles.nextButton}
-                onClick={() => handleDetailsNavigation({
-                  itens: cardData.itens.length,
-                  nf: nf.codigoItem,
-                  sequence: nfs[index].sequence
-                })}
+                onClick={() =>
+                  handleDetailsNavigation({
+                    itens: cardData.itens.length,
+                    nf: nf.codigoItem,
+                    sequence: nfs[index].sequence,
+                  })
+                }
               >
                 &gt;
               </Button>
