@@ -87,6 +87,6 @@ export const StatusColors = {
 
 export const StatusColorsItem = {
   [GarantiasItemStatusEnum2.NAO_ANALISADO]: "#8C8C8C", // Gray
-  [GarantiasItemStatusEnum2.AUTORIZADO]: "#1890FF", // Blue
-  [GarantiasItemStatusEnum2.NAO_AUTORIZADO]: "#FA8C16", // Orange
+  [GarantiasItemStatusEnum2.AUTORIZADO]: "#52C41A", // Green
+  [GarantiasItemStatusEnum2.NAO_AUTORIZADO]: "#FF4D4F", // Red
 } as const;
