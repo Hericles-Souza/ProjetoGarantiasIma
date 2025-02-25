@@ -3,12 +3,15 @@ import { Button, message, Modal, Spin } from "antd";
 import { DeleteOutlined, LeftOutlined, FileOutlined } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
-import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
+import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import NFModal from "../addNewNF/modalAddNewNF";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams
+  
+} from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { createGarantiaAsync } from "@shared/services/GarantiasService";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -32,7 +35,8 @@ export const getRGIByUserAsync = async (userId: string) => {
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id?: string }>();
+  const [date, setDate] = useState("");
   const navigate = useNavigate();
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,21 +50,30 @@ const RGIDetailsInitial: React.FC = () => {
   const [rgi, setRgi] = useState("");
   const location = useLocation();
   const context = useContext(AuthContext);
+  let newRgiCode;
+  const [isNewRgi, setIsNewRgi] = useState(false);
 
   // Função para gerar o sufixo do RGI
-  const getRgiWithSuffix = (index: number) => {
-    const base = rgi || cardData?.rgi || "RGI";
+  const getRgiWithSuffix = (RgiCode:string, indexLetters: number, index) => {
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    return `${base}.${letters[index]}.${index + 1}`;
+    return `${RgiCode}.${letters[indexLetters]}.${index + 1}`;
   };
 
   useEffect(() => {
-    const fetchData = () => {
+    const fetchData = async () => {
+      if(!id){
+        setIsNewRgi(true);
+        newRgiCode = await generateNextRGI();
+      }
+      else
+        setIsNewRgi(false);
+
+
       let data: GarantiasModel = null;
       console.log("locaton.state: " + JSON.stringify(location.state));
 
       try {
-        if (location.state) {
+        if (location.state && !isNewRgi) {
           console.log("locaton.state: " + JSON.stringify(location.state));
           data = location.state.garantiaData;
           setSocialReason(data.razaoSocial);
@@ -76,18 +89,30 @@ const RGIDetailsInitial: React.FC = () => {
           ]);
           // console.log("garantia: " + JSON.stringify(data));
         }
+        else{
+ console.log("mewgarantia");
+
+          setCardData( {
+            rgi: newRgiCode,
+            razaoSocial: context.user.fullname,
+            telefone: context.user.phone,
+            email: context.user.email,
+            nf: cardData.itens[0].nfReferencia,
+            fornecedor: context.user.codigoCigam,
+            codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+            observacao: "Garantia válida por 12 meses",
+            usuarioInsercao: context.user.username,
+            itens: [],
+            id: crypto.randomUUID()
+          } as GarantiasModel);
+        }
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
         console.log("finalizou");
-
-        console.log("razaoSocial: " + data.razaoSocial);
-        console.log("telefone: " + data.telefone);
-        console.log("data: " + data.data);
-        console.log("cardData: " + JSON.stringify(data));
-        console.log("rgi: " + data.rgi);
-        console.log("rgi: " + data.itens);
-        setLoading(false);
+        if(cardData != null)
+          setLoading(false);
       }
     };
 
@@ -125,6 +150,24 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
+  const generateNextRGI = async () => {
+    try {
+      const response = await api.get("/garantias");
+      const allGarantias = response.data.data || [];
+      const existingRGIs = allGarantias
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((g: any) => g.rgi)
+        .filter((rgi: string) => rgi?.startsWith(context.user.codigoCigam))
+        .map((rgi: string) => parseInt(rgi.split("-")[1]));
+      const lastNumber = Math.max(0, ...existingRGIs);
+      const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
+      console.log("newrGi: " + `${allGarantias[0].rgi.split("-")[0]}-${nextNumber}`);
+      return `${context.user.username}-${nextNumber}`;
+    } catch (error) {
+      console.error("Erro ao gerar RGI:", error);
+    }
+  };
+
   const handleDetailsNavigation = (nf: {
     nf: string;
     itens: number;
@@ -139,21 +182,16 @@ const RGIDetailsInitial: React.FC = () => {
         garantiaData: cardData,
         garantiaId: cardData.id,
         currentNf: nf,
-        rgiLetter: getRgiWithSuffix(nf.sequence - 1),
+        rgiLetter: getRgiWithSuffix(newRgiCode, cardData.itens.length + 1, cardData.itens.length + 1 ),
       },
     });
   };
 
-  const handleAddNF = (nfNumber: string) => {
-    setNfs((prevNfs) => [
-      ...prevNfs,
-      {
-        nf: nfNumber,
-        itens: 0,
-        sequence: prevNfs.length + 1,
-      },
-    ]);
-  };
+  const handleAddNF = async () => {
+    const newRgiCode = await generateNextRGI();
+    const itemCode = getRgiWithSuffix(newRgiCode, cardData.itens.length + 1, cardData.itens.length + 1 ) ///// TODO parametro 2 precis ser qtde de nfs + 1
+    cardData.itens.push({codigoItem: itemCode} as GarantiaItem)
+    };
 
   const handleDeleteNF = () => {
     setNfs((prevNfs) => prevNfs.filter((nf) => nf.nf !== nfToDelete));
@@ -164,6 +202,38 @@ const RGIDetailsInitial: React.FC = () => {
     setNfToDelete(nfNumber);
     setModalDeleteOpen(true);
   };
+
+  const newSend = async () => {
+    if (!isNewRgi)
+      await send();
+    else {
+      const garantiaPayload: GarantiasModel = {
+        rgi: newRgiCode,
+        razaoSocial: context.user.fullname,
+        telefone: context.user.phone,
+        email: context.user.email,
+        nf: cardData.itens[0].nfReferencia,
+        fornecedor: context.user.codigoCigam,
+        codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+        observacao: "Garantia válida por 12 meses",
+        usuarioInsercao: context.user.username,
+        itens: cardData.itens,
+        id: crypto.randomUUID()
+      };
+  
+      console.log(
+        "Enviando garantiaModel:",
+        JSON.stringify(garantiaPayload, null, 2)
+      );
+  
+      // 4. Cria a garantia via API
+      const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
+      console.log("Garantia criada com sucesso:", guaranteeResponse.data);
+
+    }
+
+      // 3. Construa o objeto garantiaModel
+  }
 
   const send = async () => {
     if (!cardData?.id) {
@@ -203,6 +273,7 @@ const RGIDetailsInitial: React.FC = () => {
           console.log("Garantia Item atualizada com sucesso!");
         }
       });
+      const garantaId = crypto.randomUUID();
 
       const garantia: GarantiasModel = {
         razaoSocial: socialReason,
@@ -218,7 +289,7 @@ const RGIDetailsInitial: React.FC = () => {
       };
 
       const responseHeader = await api.put(
-        `/garantias/garantiasHeader/${id}/UpdateHeader`,
+        `/garantias/garantiasHeader/${garantaId}/UpdateHeader`,
         garantia
       );
 
@@ -288,7 +359,7 @@ const RGIDetailsInitial: React.FC = () => {
             </Button>
           )}
           <Button
-            onClick={send}
+            onClick={newSend}
             type="default"
             danger
             className={styles.buttonSaveRgi}
@@ -296,7 +367,7 @@ const RGIDetailsInitial: React.FC = () => {
             Salvar
           </Button>
           <Button
-            onClick={send}
+            onClick={newSend}
             type="primary"
             danger
             style={{ backgroundColor: "red" }}
@@ -316,27 +387,30 @@ const RGIDetailsInitial: React.FC = () => {
             <OutlinedInputWithLabel
               InputProps={{ readOnly: true }}
               label="Razão social"
-              value={cardData.razaoSocial}
+              value={socialReason}
               fullWidth
               disabled
+              onChange={(value) => setSocialReason(value.currentTarget.value)}
             />
           </div>
           <div className={styles.inputGroup} style={{ flex: 5 }}>
             <OutlinedInputWithLabel
               InputProps={{ readOnly: true }}
               label="Telefone"
-              value={cardData.telefone}
+              value={phone}
               fullWidth
               disabled
+              onChange={(value) => setPhone(value.currentTarget.value)}
             />
           </div>
           <div className={styles.inputGroup} style={{ flex: 5 }}>
             <OutlinedInputWithLabel
               InputProps={{ readOnly: true }}
               label="Data da solicitação"
-              value={cardData.data}
+              value={date}
               fullWidth
               disabled
+              onChange={(value) => setDate(value.currentTarget.value)}
             />
           </div>
         </div>
@@ -359,7 +433,7 @@ const RGIDetailsInitial: React.FC = () => {
           </Button>
         </div>
 
-        {cardData.itens.map((nf, index) => (
+        {!loading && cardData.itens.length > 0 && cardData!.itens.map((nf, index) => (
           <div key={index} className={styles.nfsItem}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined

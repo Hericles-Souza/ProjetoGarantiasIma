@@ -83,3 +83,10 @@ export const StatusColors = {
   [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: "#FF4D4F", // Red
   [GarantiasStatusEnum2.CONFIRMADO]: "#52C41A", // Green
 } as const;
+
+
+export const StatusColorsItem = {
+  [GarantiasItemStatusEnum2.NAO_ANALISADO]: "#8C8C8C", // Gray
+  [GarantiasItemStatusEnum2.AUTORIZADO]: "#1890FF", // Blue
+  [GarantiasItemStatusEnum2.NAO_AUTORIZADO]: "#FA8C16", // Orange
+} as const;

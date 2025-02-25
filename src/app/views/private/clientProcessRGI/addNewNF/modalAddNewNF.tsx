@@ -17,9 +17,7 @@ const NFModal = ({ open, onOpenChange, onAddNF }: NFModalProps) => {
   const [file, setFile] = useState(null);
   const context = useContext(AuthContext);
 
-  var numNota :String = '';
-
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFileChange = (info: any) => {
     if (info.file.status !== "uploading") {
       setFileName(info.file.name);

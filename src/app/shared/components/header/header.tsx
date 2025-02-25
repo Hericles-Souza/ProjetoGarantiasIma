@@ -1,9 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Button, HeaderContainer } from "./Header.styles.ts";
 import { Tabs, Modal } from "antd";
 import NewRequestGarantiasDialog from "@shared/dialogs/new-request-garantias-dialog/index.tsx";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext.tsx";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum.ts";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   filterStatus: string;
@@ -14,17 +15,8 @@ const Header: React.FC<HeaderProps> = ({
   filterStatus,
   handleFilterChange,
 }) => {
-  const [isDialogVisible, setIsDialogVisible] = useState(false);
   const context = useContext(AuthContext);
-
-  const handleDialogOpen = () => {
-    setIsDialogVisible(true);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogVisible(false);
-  };
-  
+  const navigate = useNavigate();
 
   return (
     <HeaderContainer>
@@ -41,7 +33,14 @@ const Header: React.FC<HeaderProps> = ({
           className="custom-tabs"
           items={[
             { label: <span>REQUISIÇÕES DE GARANTIA (RGI)</span>, key: "rgi" },
-            { label: context.user.rule.name.includes(UserRoleEnum.Técnico) ? <div> </div> : <span>ACORDOS COMERCIAIS (ACI)</span>, key: "aci" },
+            {
+              label: context.user.rule.name.includes(UserRoleEnum.Técnico) ? (
+                <div> </div>
+              ) : (
+                <span>ACORDOS COMERCIAIS (ACI)</span>
+              ),
+              key: "aci",
+            },
           ]}
         />
       </div>
@@ -50,20 +49,19 @@ const Header: React.FC<HeaderProps> = ({
           <div
             style={{ display: "flex", padding: "1rem", alignItems: "center" }}
           >
-            <Button style={{ margin: "0" }} onClick={handleDialogOpen}>
+            <Button
+              style={{ margin: "0" }}
+              onClick={() => {
+                navigate(`/garantias/rgi/:id?`);
+              }}
+            >
               NOVA SOLICITAÇÃO
             </Button>
           </div>
         )}
 
-      <Modal
-        visible={isDialogVisible}
-        onCancel={handleDialogClose}
-        footer={null}
-        width={600}
-        closeIcon={null}
-      >
-        <NewRequestGarantiasDialog onClose={handleDialogClose} />
+      <Modal footer={null} width={600} closeIcon={null}>
+        <NewRequestGarantiasDialog onClose={() => {}} />
       </Modal>
     </HeaderContainer>
   );
