@@ -52,10 +52,20 @@ const RGIDetailsInitial: React.FC = () => {
   const context = useContext(AuthContext);
   let newRgiCode;
   const [isNewRgi, setIsNewRgi] = useState(false);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
 
   // Função para gerar o sufixo do RGI
   const getRgiWithSuffix = (RgiCode:string, indexLetters: number, index) => {
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    console.log(`${RgiCode}.${letters[indexLetters]}.${index + 1}`);
     return `${RgiCode}.${letters[indexLetters]}.${index + 1}`;
   };
 
@@ -68,6 +78,10 @@ const RGIDetailsInitial: React.FC = () => {
       else
         setIsNewRgi(false);
 
+      
+      setSocialReason(context.user.fullname);
+      setPhone(context.user.phone);
+      setDate( `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`)
 
       let data: GarantiasModel = null;
       console.log("locaton.state: " + JSON.stringify(location.state));
@@ -110,14 +124,13 @@ const RGIDetailsInitial: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        console.log("finalizou");
-        if(cardData != null)
-          setLoading(false);
+        console.log("recCardData? " + JSON.stringify(cardData));
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, [location.state]);
+  }, [location.state, cardData]);
 
   // Função para excluir a garantia
   const handleDeleteGuarantee = async () => {
@@ -189,8 +202,8 @@ const RGIDetailsInitial: React.FC = () => {
 
   const handleAddNF = async () => {
     const newRgiCode = await generateNextRGI();
-    const itemCode = getRgiWithSuffix(newRgiCode, cardData.itens.length + 1, cardData.itens.length + 1 ) ///// TODO parametro 2 precis ser qtde de nfs + 1
-    cardData.itens.push({codigoItem: itemCode} as GarantiaItem)
+    const itemCode = getRgiWithSuffix(newRgiCode, cardData?.itens?.length + 1, cardData?.itens?.length + 1 ) ///// TODO parametro 2 precis ser qtde de nfs + 1
+    cardData?.itens?.push({codigoItem: itemCode} as GarantiaItem)
     };
 
   const handleDeleteNF = () => {
@@ -240,14 +253,6 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("ID da garantia não encontrado");
       return;
     }
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
     try {
       cardData.itens.forEach(async (item) => {
@@ -433,7 +438,7 @@ const RGIDetailsInitial: React.FC = () => {
           </Button>
         </div>
 
-        {!loading && cardData.itens.length > 0 && cardData!.itens.map((nf, index) => (
+        {cardData?.itens?.length > 0 && cardData?.itens?.map((nf, index) => (
           <div key={index} className={styles.nfsItem}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined
