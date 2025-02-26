@@ -200,8 +200,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         await getItemsByNfAsync(location.state.nf.nf).then((value) => {
           console.log("data: " + JSON.stringify(value.data));
           value.data.forEach((item) => {
-            if (editorRef.current) {
-            }
+
             if (item.tipoDefeito == null) item.tipoDefeito = "defeito1";
             item.solicitarRessarcimento = true; ////////TA ERRADO
           });

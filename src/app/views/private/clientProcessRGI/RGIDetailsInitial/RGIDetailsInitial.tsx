@@ -7,11 +7,10 @@ import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import NFModal from "../addNewNF/modalAddNewNF";
 import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
-import { useLocation, useNavigate, useParams
-  
-} from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { createGarantiaAsync } from "@shared/services/GarantiasService";
+import environment from "@env/environment";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -40,9 +39,7 @@ const RGIDetailsInitial: React.FC = () => {
   const navigate = useNavigate();
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [modalOpen, setModalOpen] = useState(false);
-  const [nfs, setNfs] = useState<
-    { nf: string; itens: number; sequence: number }[]
-  >([]);
+  const [nfs, setNfs] = useState<{ nf: string; countItems: number }[]>([]);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
@@ -52,6 +49,7 @@ const RGIDetailsInitial: React.FC = () => {
   const context = useContext(AuthContext);
   let newRgiCode;
   const [isNewRgi, setIsNewRgi] = useState(false);
+  const [cardDataAlreadyUpdated, setCardDataAlreadyUpdated] = useState(false);
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -61,66 +59,110 @@ const RGIDetailsInitial: React.FC = () => {
   const seconds = String(now.getSeconds()).padStart(2, "0");
   const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
-
   // Função para gerar o sufixo do RGI
-  const getRgiWithSuffix = (RgiCode:string, indexLetters: number, index) => {
+  const getRgiWithSuffix = (RgiCode: string, indexLetters: number, index) => {
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    console.log(`${RgiCode}.${letters[indexLetters]}.${index + 1}`);
-    return `${RgiCode}.${letters[indexLetters]}.${index + 1}`;
+    return `${RgiCode}.${letters[indexLetters]}.${index}`;
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getQtdeItensPerNfByItemId = async (
+    garantiaId: string
+  ): Promise<{ nf: string; countItems: number }[]> => {
+    console.log("getitens: " + garantiaId);
+    const nfWithCountItens = await fetch(
+      `${environment.apiUrl}/garantias/item/associated-nf/${garantiaId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+      }
+    );
+    const data = await nfWithCountItens.json();
+
+    // const formData = await nfWithCountItens.formData();
+    // const result = formData.keys();
+    // const keysArray = Array.from(result);
+
+    // // Agora você pode usar o array de chaves, por exemplo, atribuindo-o a uma variável
+    // console.log("teste: " + keysArray);
+    // console.log("result: " + JSON.stringify());
+    // const returnedItems: {nf: string, itens: number}[] = result["data"];
+    // setNfs(returnedItems);
+    return data.data;
+  };
+
+  const getItensByGarantia = async (garantiaId: string) => {
+    const nfWithCountItens = await fetch(
+      `${environment.apiUrl}/garantias/item/by-garantia/${garantiaId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+      }
+    );
+
+    const result = await nfWithCountItens.json();
+
+    console.log("result: " + JSON.stringify(result));
+    // const returnedItems: GarantiaItem[] = result["data"];
+
+    return result.data;
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      if(!id){
+      if (id == ":id") {
         setIsNewRgi(true);
         newRgiCode = await generateNextRGI();
-      }
-      else
-        setIsNewRgi(false);
+      } else setIsNewRgi(false);
 
-      
       setSocialReason(context.user.fullname);
       setPhone(context.user.phone);
-      setDate( `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`)
+      setDate(
+        `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
+      );
 
       let data: GarantiasModel = null;
       console.log("locaton.state: " + JSON.stringify(location.state));
+      console.log("isNewRgi: " + isNewRgi);
 
       try {
-        if (location.state && !isNewRgi) {
+        if (location.state && !isNewRgi && !cardDataAlreadyUpdated) {
           console.log("locaton.state: " + JSON.stringify(location.state));
           data = location.state.garantiaData;
           setSocialReason(data.razaoSocial);
-          setPhone(data.telefone);
-          setCardData(data);
           setRgi(data.rgi);
-          setNfs([
-            {
-              nf: data.nf,
-              itens: data.itens ? data.itens.length : 0,
-              sequence: 1,
-            },
-          ]);
+          const returnedNfs = await getQtdeItensPerNfByItemId(data.id);
+          const items = await getItensByGarantia(data.id);
+          console.log("items: " + JSON.stringify(items));
+          data.itens = items as GarantiaItem[];
+          setNfs(returnedNfs);
+          setCardData(data);
+          setCardDataAlreadyUpdated(true);
           // console.log("garantia: " + JSON.stringify(data));
+        } else {
+          if (!cardDataAlreadyUpdated) {
+            console.log("mewgarantia");
+            setCardData({
+              rgi: newRgiCode,
+              razaoSocial: context.user.fullname,
+              telefone: context.user.phone,
+              email: context.user.email,
+              nf: "",
+              fornecedor: context.user.codigoCigam,
+              codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+              observacao: "Garantia válida por 12 meses",
+              usuarioInsercao: context.user.username,
+              itens: [],
+              id: crypto.randomUUID(),
+            } as GarantiasModel);
+            setRgi(newRgiCode);
+            setCardDataAlreadyUpdated(true);
+          }
         }
-        else{
- console.log("mewgarantia");
-
-          setCardData( {
-            rgi: newRgiCode,
-            razaoSocial: context.user.fullname,
-            telefone: context.user.phone,
-            email: context.user.email,
-            nf: cardData.itens[0].nfReferencia,
-            fornecedor: context.user.codigoCigam,
-            codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
-            observacao: "Garantia válida por 12 meses",
-            usuarioInsercao: context.user.username,
-            itens: [],
-            id: crypto.randomUUID()
-          } as GarantiasModel);
-        }
-
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -174,18 +216,16 @@ const RGIDetailsInitial: React.FC = () => {
         .map((rgi: string) => parseInt(rgi.split("-")[1]));
       const lastNumber = Math.max(0, ...existingRGIs);
       const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
-      console.log("newrGi: " + `${allGarantias[0].rgi.split("-")[0]}-${nextNumber}`);
+      console.log(
+        "newrGi: " + `${allGarantias[0].rgi.split("-")[0]}-${nextNumber}`
+      );
       return `${context.user.username}-${nextNumber}`;
     } catch (error) {
       console.error("Erro ao gerar RGI:", error);
     }
   };
 
-  const handleDetailsNavigation = (nf: {
-    nf: string;
-    itens: number;
-    sequence: number;
-  }) => {
+  const handleDetailsNavigation = (nf: { nf: string; itens: number }) => {
     if (!cardData?.id) {
       console.error("Dados da garantia ainda não carregados.");
       return;
@@ -195,16 +235,33 @@ const RGIDetailsInitial: React.FC = () => {
         garantiaData: cardData,
         garantiaId: cardData.id,
         currentNf: nf,
-        rgiLetter: getRgiWithSuffix(newRgiCode, cardData.itens.length + 1, cardData.itens.length + 1 ),
+        rgiLetter: getRgiWithSuffix(
+          newRgiCode,
+          cardData.itens.length + 1,
+          cardData.itens.length + 1
+        ),
       },
     });
   };
 
-  const handleAddNF = async () => {
+  const handleAddNF = async (nfNumber: string) => {
     const newRgiCode = await generateNextRGI();
-    const itemCode = getRgiWithSuffix(newRgiCode, cardData?.itens?.length + 1, cardData?.itens?.length + 1 ) ///// TODO parametro 2 precis ser qtde de nfs + 1
-    cardData?.itens?.push({codigoItem: itemCode} as GarantiaItem)
-    };
+    const itemCode = getRgiWithSuffix(
+      newRgiCode,
+      nfs.length,
+      1
+    ); ///// TODO parametro 2 precis ser qtde de nfs + 1
+
+    console.log("itemCode" + itemCode);
+    setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, countItems: 1 }]);
+    cardData.itens.push({ codigoItem: itemCode,  nfReferencia: nfNumber } as GarantiaItem);
+
+    setCardData(cardData);
+
+    console.log("nfadicionada: " + JSON.stringify(cardData.itens));
+
+    setCardData(cardData);
+  };
 
   const handleDeleteNF = () => {
     setNfs((prevNfs) => prevNfs.filter((nf) => nf.nf !== nfToDelete));
@@ -217,8 +274,7 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const newSend = async () => {
-    if (!isNewRgi)
-      await send();
+    if (!isNewRgi) await send();
     else {
       const garantiaPayload: GarantiasModel = {
         rgi: newRgiCode,
@@ -231,22 +287,21 @@ const RGIDetailsInitial: React.FC = () => {
         observacao: "Garantia válida por 12 meses",
         usuarioInsercao: context.user.username,
         itens: cardData.itens,
-        id: crypto.randomUUID()
+        id: crypto.randomUUID(),
       };
-  
+
       console.log(
         "Enviando garantiaModel:",
         JSON.stringify(garantiaPayload, null, 2)
       );
-  
+
       // 4. Cria a garantia via API
       const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
       console.log("Garantia criada com sucesso:", guaranteeResponse.data);
-
     }
 
-      // 3. Construa o objeto garantiaModel
-  }
+    // 3. Construa o objeto garantiaModel
+  };
 
   const send = async () => {
     if (!cardData?.id) {
@@ -313,7 +368,7 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !cardData) {
     return (
       <div
         style={{
@@ -438,54 +493,66 @@ const RGIDetailsInitial: React.FC = () => {
           </Button>
         </div>
 
-        {cardData?.itens?.length > 0 && cardData?.itens?.map((nf, index) => (
-          <div key={index} className={styles.nfsItem}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <FileOutlined
-                style={{
-                  marginRight: "10px",
-                  marginLeft: "20px",
-                  fontSize: "20px",
-                  color: "red",
-                }}
-              />
-              <span className={styles.nfsCode}>{`${
-                nf.codigoItem.split(".")[0]
-              }.${nf.codigoItem.split(".")[1]}`}</span>
-              <span className={styles.nfsDivider}> | </span>
-              <span className={styles.nfsQuantity}>
-                {" "}
-                {cardData.itens.length.toString()} ITENS
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <DeleteOutlined
-                style={{ color: "#555", fontSize: "22px" }}
-                className={styles.DeleteOutlined}
-                onClick={() => showDeleteConfirm(nf.codigoItem)}
-              />
-              <Button
-                type="text"
-                className={styles.nextButton}
-                onClick={() =>
-                  handleDetailsNavigation({
-                    itens: cardData.itens.length,
-                    nf: nf.codigoItem,
-                    sequence: nfs[index].sequence,
-                  })
-                }
-              >
-                &gt;
-              </Button>
-            </div>
-          </div>
-        ))}
+        {cardData?.itens?.length > 0 &&
+          nfs!.length > 0 &&
+          cardData?.itens?.map((nf, index) => {
+            const titleNf: string = cardData?.itens?.find((value) => value.nfReferencia === nfs[index].nf).codigoItem;
+            const numberNf: number = nfs.find((value) => value.nf === cardData?.itens[index].nfReferencia).countItems;
+            
+            // if(index <= 1){
+            //   console.log("cardData.itens: " + JSON.stringify(cardData.itens));
+            //   console.log("cardData.itens: " + JSON.stringify(cardData.itens));
+
+            // }
+            return (
+              <div key={index} className={styles.nfsItem}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <FileOutlined
+                    style={{
+                      marginRight: "10px",
+                      marginLeft: "20px",
+                      fontSize: "20px",
+                      color: "red",
+                    }}
+                  />
+                  <span className={styles.nfsCode}>
+                    {`${titleNf.split(".")[0]}.${titleNf.split(".")[1]}`}
+                  </span>
+                  <span className={styles.nfsDivider}> | </span>
+                  <span className={styles.nfsQuantity}>
+                    {" "}
+                    {numberNf.toString()} ITENS
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <DeleteOutlined
+                    style={{ color: "#555", fontSize: "22px" }}
+                    className={styles.DeleteOutlined}
+                    onClick={() => showDeleteConfirm(nf.codigoItem)}
+                  />
+                  <Button
+                    type="text"
+                    className={styles.nextButton}
+                    onClick={() =>
+                      handleDetailsNavigation({
+                        itens: cardData.itens.length,
+                        nf: nf.codigoItem,
+                      })
+                    }
+                  >
+                    &gt;
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
       </div>
 
       <NFModal
         open={modalOpen}
         onOpenChange={setModalOpen}
         onAddNF={handleAddNF}
+        itemId={" ="}
       />
 
       <Modal

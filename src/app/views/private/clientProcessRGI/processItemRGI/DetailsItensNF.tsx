@@ -509,9 +509,9 @@ const DetailsItensNF: React.FC = () => {
           type="link"
           className={styles.ButtonBack}
           onClick={() =>
-            navigate(`/garantias/rgi/${guaranteeId}`, {
+            navigate(`/garantias/rgi/${garantia.id}`, {
               state: {
-                garantia: garantia,
+                garantiaData: garantia,
                 item: garantia?.nf,
               },
             })
@@ -578,14 +578,14 @@ const DetailsItensNF: React.FC = () => {
       </div>
       {garantia.itens.map((item) => {
         return (
-          <div className={styles.containerInformacoes} key={item.id}>
+          <div className={styles.containerInformacoes} key={item.id} >
             <CollapsibleSection
-              title={item.codigoItem}
+              title={item.codigoItem || ""}
               isVisible={visibleSectionId === item.id}
               toggleVisibility={() => toggleSectionVisibility(item.id)}
               showDeleteConfirm={() => showDeleteConfirm(item.id)}
-              status={item.status}
-              rgi={item.rgi}
+              status={item.status  || ""}
+              rgi={item.rgi || ""}
             >
               <h3 className={styles.tituloSecao}>Informações Gerais</h3>
               <div className={styles.inputsContainer}>
@@ -594,7 +594,7 @@ const DetailsItensNF: React.FC = () => {
                     <OutlinedInputWithLabel
                       label="Código da peça"
                       fullWidth
-                      value={item.codigoPeca}
+                      value={item.codigoPeca || ""}
                       onChange={(e) => {
                         item.codigoPeca = e.target.value;
                         handleInputChange(
@@ -610,7 +610,7 @@ const DetailsItensNF: React.FC = () => {
                     <OutlinedInputWithLabel
                       label="Lote da peça"
                       fullWidth
-                      value={item.loteItem}
+                      value={item.loteItem || ""}
                       onChange={(e) => {
                         handleInputChange(item.id, "loteItem", e.target.value);
                         item.loteItem = e.target.value;
@@ -628,7 +628,7 @@ const DetailsItensNF: React.FC = () => {
                         { value: "defeito2", label: "Opção 2" },
                         { value: "defeito3", label: "Opção 3" },
                       ]}
-                      value={item.tipoDefeito}
+                      value={item.tipoDefeito || ""}
                       onChange={(e) => {
                         item.tipoDefeito = e.target.value;
                         handleInputChange(
@@ -643,7 +643,7 @@ const DetailsItensNF: React.FC = () => {
                     <OutlinedInputWithLabel
                       label="Modelo do veículo que aplicou"
                       fullWidth
-                      value={item.modeloVeiculoAplicado}
+                      value={item.modeloVeiculoAplicado || ""}
                       onChange={(e) => {
                         item.modeloVeiculoAplicado = e.target.value;
                         handleInputChange(
@@ -658,7 +658,7 @@ const DetailsItensNF: React.FC = () => {
                     <OutlinedInputWithLabel
                       label="Ano do veículo"
                       fullWidth
-                      value={item.modeloVeiculoAplicado}
+                      value={item.modeloVeiculoAplicado || ""}
                       onChange={(e) =>
                         handleInputChange(item.id, "anoVeiculo", e.target.value)
                       }
@@ -671,7 +671,7 @@ const DetailsItensNF: React.FC = () => {
                       type="number"
                       label="Torque aplicado à peça"
                       fullWidth
-                      value={item.torqueAplicado.toString()}
+                      value={item.torqueAplicado?.toString()  || ""}
                       onChange={(e) => {
                         item.torqueAplicado = Number(e.target.value);
                         handleInputChange(
@@ -693,7 +693,7 @@ const DetailsItensNF: React.FC = () => {
                       );
                       item.solicitarRessarcimento = e.target.checked;
                     }}
-                    checked={item.solicitarRessarcimento}
+                    checked={item.solicitarRessarcimento || ""}
                   />
                   <label className={styles.checkboxDanger}>
                     Solicitar ressarcimento
