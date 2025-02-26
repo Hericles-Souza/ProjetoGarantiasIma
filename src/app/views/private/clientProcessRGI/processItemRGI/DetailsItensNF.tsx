@@ -693,7 +693,7 @@ const DetailsItensNF: React.FC = () => {
                       );
                       item.solicitarRessarcimento = e.target.checked;
                     }}
-                    checked={item.solicitarRessarcimento || ""}
+                    checked={item.solicitarRessarcimento || false}
                   />
                   <label className={styles.checkboxDanger}>
                     Solicitar ressarcimento
