@@ -45,6 +45,21 @@ export function converterStatusGarantia(status: GarantiasStatusEnum2): Garantias
   return mapping[status];
 }
 
+export function converterStatusGarantiaTecnicoAndSupervisor(status: GarantiasStatusEnum2, garantiaItemEvaluated: boolean): GarantiasStatusEnum | string {
+  const mapping: Record<GarantiasStatusEnum2, GarantiasStatusEnum | string> = {
+    [GarantiasStatusEnum2.NAO_ENVIADO]: GarantiasStatusEnum.NAO_ENVIADO,
+    [GarantiasStatusEnum2.EM_ANALISE]: garantiaItemEvaluated ? "Aguardando Avaliação" : GarantiasStatusEnum.EM_ANALISE,
+    [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE,
+    [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: GarantiasStatusEnum.AGUARDANDO_NF_DEVOLUCAO,
+    [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+    [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA,
+    [GarantiasStatusEnum2.CONFIRMADO]: GarantiasStatusEnum.CONFIRMADO,
+
+  };
+
+  return mapping[status];
+}
+
 export function converterStatusGarantiaInverso(status: GarantiasStatusEnum): GarantiasStatusEnum2 {
   const mapping: Record<GarantiasStatusEnum, GarantiasStatusEnum2> = {
     [GarantiasStatusEnum.NAO_ENVIADO]: GarantiasStatusEnum2.NAO_ENVIADO,
