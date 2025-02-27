@@ -244,6 +244,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       const dataToSend = {
         ItemId: item.id,
         conclusao: item.conclusao,
+        status: item.codigoStatus,
+        tipoDefeitoOficial: item.tipoDefeito
       };
       console.log("aqui: " + JSON.stringify(dataToSend));
       try {
@@ -252,27 +254,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           dataToSend
         );
 
-        const updateRequest: UpdateItemRequest = {
-          garantiaId: cardData.id,
-          codigoItem: item.codigoItem,
-          tipoDefeito: "defeito1",
-          modeloVeiculoAplicado: item.modeloVeiculoAplicado,
-          torqueAplicado: item.torqueAplicado,
-          nfReferencia: item.nfReferencia,
-          loteItemOficial: item.loteItemOficial,
-          loteItem: item.loteItem,
-          codigoStatus: item.codigoStatus,
-          solicitarRessarcimento: item.solicitarRessarcimento == true ? 1 : 0,
-          index: index.toString(),
-        };
-
-        console.log("data to send: " + JSON.stringify(updateRequest));
-        const ressponseItem = await updateGarantiaItemByIdAsync(
-          item.id,
-          updateRequest
-        );
-
-        if (response.status === 200 && ressponseItem.status === 200) {
+        if (response.status === 200) {
           message.success("Dados salvos com sucesso!");
         } else {
           message.error("Falha ao salvar os dados.");
