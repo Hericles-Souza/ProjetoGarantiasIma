@@ -49,9 +49,8 @@ export const appRoutingPrivate: RouteConfig[] = [
         path: "users",
         element: <UserRegistration />,
         private: true,
-        allowedRoles: [UserRoleEnum.Admin]
+        allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Técnico, UserRoleEnum.Supervisor]
       },
-
       {
         path: "view-pre-invoice",
         element: <InvoicePage />,

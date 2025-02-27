@@ -148,9 +148,10 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
         codigoCigam: formik.values.cigamCode || 'defaultCigamCode',
         ruleId: rule.find((value) => value.name === formik.values.userRole).id,
       };
-      console.log(JSON.stringify(userRequest));
-      await createUser(userRequest, context.user.token).then(() => {
-        message.success('Cadastro criado com sucesso!')
+      console.log("userRequest: " + JSON.stringify(userRequest));
+      await createUser(userRequest, context.user.token).then((value) => {
+        message.success('Cadastro criado com sucesso! ');
+        console.log("respose: " + JSON.stringify(value))
         selectedUser = null;
         closeModal();
         onSearch(); 

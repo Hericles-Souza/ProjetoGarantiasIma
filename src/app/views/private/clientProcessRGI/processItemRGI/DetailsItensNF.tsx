@@ -17,11 +17,13 @@ import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
+  GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
 import api from "@shared/Interceptors";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import environment from "@env/environment";
+import { createGarantiaAsync } from "@shared/services/GarantiasService";
 
 // Funções para formatação do RGI
 // const formatMainRgi = (rgi: string): string => {
@@ -255,6 +257,7 @@ const DetailsItensNF: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
+  const context = useContext(AuthContext);
 
   const rgiLetter = (location.state as any)?.rgiLetter || "A";
 
@@ -400,28 +403,80 @@ const DetailsItensNF: React.FC = () => {
     setVisibleSectionId(visibleSectionId === id ? null : id);
   };
 
+  const createGarantia = async () => {
+    
+          // 1. Gere o ID do item de garantia
+          const itemId = crypto.randomUUID();
+    
+          // 2. Construa o item de garantia
+          const garantiaItem: GarantiaItem = {
+            codigoItem: garantia.itens[0].codigoItem,
+            tipoDefeito: garantia.itens[0].tipoDefeito,
+            modeloVeiculoAplicado: garantia.itens[0].modeloVeiculoAplicado,
+            torqueAplicado: garantia.itens[0].torqueAplicado,
+            nfReferencia: location.state.currentNff,
+            loteItemOficial: garantia.itens[0].loteItem,
+            loteItem: garantia.itens[0].loteItem,
+            codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+            solicitarRessarcimento: garantia.itens[0].solicitarRessarcimento,
+            id: itemId,
+            rgi: garantia.rgi,
+            status: GarantiasItemStatusEnum.NAO_ANALISADO,
+            codigoPeca: garantia.itens[0].codigoPeca,
+          };
+    
+          // 3. Construa o objeto garantiaModel
+          const garantiaPayload: GarantiasModel = {
+            rgi: garantia.rgi,
+            razaoSocial: context.user.fullname,
+            telefone: context.user.phone,
+            email: context.user.email,
+            nf: garantia.itens[0].codigoItem.split(".")[0],
+            fornecedor: context.user.codigoCigam,
+            codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+            observacao: "Garantia válida por 12 meses",
+            usuarioInsercao: context.user.username,
+            itens: [garantiaItem],
+            id: itemId,
+          };
+    
+          console.log(
+            "Enviando garantiaModel:",
+            JSON.stringify(garantiaPayload, null, 2)
+          );
+    
+          // 4. Cria a garantia via API
+          const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
+          console.log("Garantia criada com sucesso:", guaranteeResponse.data);
+    
+  };
+
   const save = async () => {
     console.log("salvamento: " + garantia);
     if (!garantia?.id) {
       message.error("ID da garantia não encontrado");
       return;
     }
-    const itemId = garantia?.itens?.[0]?.id;
-    if (!itemId) {
-      message.error("ID do item não encontrado");
-      return;
-    }
+    // const itemId = garantia?.itens?.[0]?.id;
+    // if (!itemId) {
+    //   message.error("ID do item não encontrado");
+    //   return;
+    // }
 
     const responseGetItens = await api.get(
       `/garantias/item/by-garantia/${garantia.id}`
     );
     const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
 
+    const responseGetGarantia = await api.get(`/garantias/${garantia.id}`);
+    const garantiaAPI = responseGetGarantia.data.data as GarantiasModel[];
+
+    if (!garantiaAPI) await createGarantia();
 
     garantia.itens.forEach(async (item, index) => {
       try {
         if (
-          garantiaItensAPI.filter((value) => value.id == item.id).length > 0
+          garantiaItensAPI.filter((value) => value.codigoItem == item.codigoItem).length > 0
         ) {
           const paylaodPut = {
             codigoItem: item.codigoItem,
@@ -435,8 +490,6 @@ const DetailsItensNF: React.FC = () => {
             solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
           };
           console.log("paylaodPut: ", JSON.stringify(paylaodPut));
-
-
 
           const responsePut = await api.put(
             `/garantias/garantiasItem/${item.id}/UpdateItem`,
@@ -578,13 +631,13 @@ const DetailsItensNF: React.FC = () => {
       </div>
       {garantia.itens.map((item) => {
         return (
-          <div className={styles.containerInformacoes} key={item.id} >
+          <div className={styles.containerInformacoes} key={item.id}>
             <CollapsibleSection
               title={item.codigoItem || ""}
               isVisible={visibleSectionId === item.id}
               toggleVisibility={() => toggleSectionVisibility(item.id)}
               showDeleteConfirm={() => showDeleteConfirm(item.id)}
-              status={item.status  || ""}
+              status={item.status || ""}
               rgi={item.rgi || ""}
             >
               <h3 className={styles.tituloSecao}>Informações Gerais</h3>
@@ -671,7 +724,7 @@ const DetailsItensNF: React.FC = () => {
                       type="number"
                       label="Torque aplicado à peça"
                       fullWidth
-                      value={item.torqueAplicado?.toString()  || ""}
+                      value={item.torqueAplicado?.toString() || ""}
                       onChange={(e) => {
                         item.torqueAplicado = Number(e.target.value);
                         handleInputChange(
