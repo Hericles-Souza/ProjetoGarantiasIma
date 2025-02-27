@@ -18,7 +18,6 @@ import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import MultilineTextFields from "@shared/components/multline/multLine";
-import Quill from "quill";
 import api from "@shared/Interceptors";
 import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
 import {
@@ -32,45 +31,6 @@ import {
 import pako from "pako";
 import { ConfigContext } from "antd/es/config-provider";
 import environment from "@env/environment.ts";
-
-// import { GarantiasModel } from "@shared/models/GarantiasModel";
-// Componente QuillEditor
-interface QuillEditorProps {
-  editorRef: React.RefObject<HTMLDivElement>;
-  setEditorContent: (value: string) => void;
-}
-
-const QuillEditor: React.FC<QuillEditorProps> = ({
-  editorRef,
-  setEditorContent,
-}) => {
-  useEffect(() => {
-    if (editorRef.current) {
-      const quillInstance = new Quill(editorRef.current, {
-        theme: "snow",
-        modules: {
-          toolbar: [
-            [{ header: [1, 2, 3, false] }],
-            ["bold", "italic", "underline", "strike"],
-            [{ list: "ordered" }, { list: "bullet" }],
-            ["blockquote", "code-block"],
-            [{ align: [] }],
-            [{ color: [] }, { background: [] }],
-            ["image", "video", "link"],
-            ["clean"],
-          ],
-        },
-      });
-
-      quillInstance.on("text-change", () => {
-        const content = quillInstance.root.innerHTML;
-        setEditorContent(content);
-      });
-    }
-  }, [editorRef, setEditorContent]);
-
-  return <div ref={editorRef} style={{ height: "300px" }} />;
-};
 
 const FileAttachment = ({
   label,
@@ -182,13 +142,6 @@ const FileAttachment = ({
       <div className={styles.fileUpdateContent}>
         <label className={styles.buttonUpdateNfSale}>
           <button
-            style={{ display: "none", borderColor: "red" }}
-            // onClick={() => handleFileChange(itemId)}
-          />
-          Visualizar
-        </label>
-        <label className={styles.buttonUpdateNfSale}>
-          <button
             style={{ backgroundColor: "red", display: "none" }}
             onClick={() => fetchImagem(itemId, label)}
           />
@@ -240,30 +193,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState("");
   const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
-  const quillRef = useRef<Quill | null>(null); // Para armazenar a instância do Quill
-
-  const setEditorContentFromApi = (content: string) => {
-    if (editorRef.current) {
-      // Acessa a instância do Quill e modifica o conteúdo diretamente
-      const quillInstance = new Quill(editorRef.current, {
-        theme: "snow",
-        modules: {
-          toolbar: [
-            [{ header: [1, 2, 3, false] }],
-            ["bold", "italic", "underline", "strike"],
-            [{ list: "ordered" }, { list: "bullet" }],
-            ["blockquote", "code-block"],
-            [{ align: [] }],
-            [{ color: [] }, { background: [] }],
-            ["image", "video", "link"],
-            ["clean"],
-          ],
-        },
-      });
-      quillInstance.root.innerHTML = content; // Definir o conteúdo do Quill
-      setEditorContent(content); // Atualizar o estado
-    }
-  };
 
   const fetchUserData = async () => {
     try {
@@ -271,13 +200,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         await getItemsByNfAsync(location.state.nf.nf).then((value) => {
           console.log("data: " + JSON.stringify(value.data));
           value.data.forEach((item) => {
-            if (editorRef.current) {
-              console.log(
-                "item.analiseTecnica: " + JSON.stringify(item.analiseTecnica)
-              );
 
-              setEditorContentFromApi(item.analiseTecnica); // Usar a função
-            }
             if (item.tipoDefeito == null) item.tipoDefeito = "defeito1";
             item.solicitarRessarcimento = true; ////////TA ERRADO
           });
@@ -320,7 +243,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     cardData.itens.map(async (item, index) => {
       const dataToSend = {
         ItemId: item.id,
-        analiseTecnica: "ANALISE TOP",
         conclusao: item.conclusao,
       };
       console.log("aqui: " + JSON.stringify(dataToSend));
@@ -444,15 +366,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
       {cardData.itens.map((item) => {
         item.solicitarRessarcimento = true;
-        if (quillRef.current) {
-          // Se você tem um conteúdo em HTML, use root.innerHTML
-          quillRef.current.root.innerHTML = item.analiseTecnica;
-          setEditorContent(quillRef.current.root.innerHTML);
-          console.log("editor content: " + editorContent);
-          // Ou se você tem um objeto Delta, use setContents:
-          // const delta = quillRef.current.clipboard.convert(content);
-          // quillRef.current.setContents(delta);
-        }
+      
         return (
           <div className={styles.containerInformacoes}>
             <CollapsibleSection
@@ -616,10 +530,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   </div>
 
                   <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
-                  <QuillEditor
-                    editorRef={editorRef}
-                    setEditorContent={setEditorContent}
-                  />
+                  
 
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields
