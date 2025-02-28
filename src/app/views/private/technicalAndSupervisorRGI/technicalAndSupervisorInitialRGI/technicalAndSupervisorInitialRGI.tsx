@@ -1,14 +1,22 @@
 import "./technicalAndSupervisorInitialRGI.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import { Button, Spin } from "antd";
-import { useState, useEffect } from "react";
+import { Button, message, Spin } from "antd";
+import { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
+import {
+  GarantiasStatusEnum,
+  GarantiasStatusEnum2,
+} from "@shared/enums/GarantiasStatusEnum";
+import api from "@shared/Interceptors";
 
 const TechnicalAndSupervisorInitialRGI = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const context = useContext(AuthContext);
   const nfOrigem: string =
     location.state && location.state["N° NF de origem"]
       ? location.state["N° NF de origem"]
@@ -17,11 +25,30 @@ const TechnicalAndSupervisorInitialRGI = () => {
   const [razaoSocial, setRazaoSocial] = useState("");
   const [telefone, setTelefone] = useState("");
   const [dataSolicitacao, setDataSolicitacao] = useState("");
-  const [nfs, setNfs] = useState<{ itemId: string; nf: string; itens: number ; sequence: number}[]>(
-    nfOrigem ? [{ itemId: location.state.item.id, nf: nfOrigem, itens: 0 , sequence: 0}] : []
+  const [nfs, setNfs] = useState<
+    { itemId: string; nf: string; itens: number; sequence: number }[]
+  >(
+    nfOrigem
+      ? [
+          {
+            itemId: location.state.item.id,
+            nf: nfOrigem,
+            itens: 0,
+            sequence: 0,
+          },
+        ]
+      : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [loading, setLoading] = useState(true);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -46,7 +73,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
           ]);
           return;
         }
-        
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
       } finally {
@@ -56,12 +82,46 @@ const TechnicalAndSupervisorInitialRGI = () => {
       }
     };
     fetchUserData();
-  }, [location.state]);
+  }, [location.state, cardData]);
 
-  const handleSave = () => {
+  const handleSave = async (
+    status: GarantiasStatusEnum = GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
+  ) => {
+    try {
+      console.log(context.user.rule.name);
+      if (context.user.rule.name === UserRoleEnum.Supervisor) {
+        const garantia: GarantiasModel = {
+          razaoSocial: razaoSocial,
+          telefone: telefone,
+          email: context.user.email,
+          nf: cardData.nf,
+          fornecedor: context.user.fullname,
+          codigoStatus: status.includes("Aguardando NF de Devolução")
+            ? GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
+            : GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE,
+          observacao: "teste",
+          usuarioAtualizacao: context.user.username,
+          status: status,
+          dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        };
+
+        const responseHeader = await api.put(
+          `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
+          garantia
+        );
+
+        if (responseHeader.status === 200) {
+          message.success("Garantia atualizada com sucesso!");
+          navigate("/garantias");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar a garantia:", error);
+      message.error("Erro ao atualizar a garantia");
+    }
     // const now = new Date();
     // const currentDate = now.toLocaleDateString();
-    
+
     // const garantiaUpload: GarantiasModel = {
     //   razaoSocial: razaoSocial ||
     //   (context.user as AuthModel).username ||
@@ -129,21 +189,47 @@ const TechnicalAndSupervisorInitialRGI = () => {
           >
             <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
           </Button>
-          <span className="RgiCode">
-            RGI {cardData.rgi}/{" "}
-            
-          </span>
+          <span className="RgiCode">RGI {cardData.rgi}/ </span>
         </div>
         <div className="ContainerHeader">
           <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
-          <div className="ButtonHeader">
-            <Button type="default" className="ButtonDelete">
-              Salvar
-            </Button>
-            <Button onClick={handleSave} type="primary" className="ButonToSend">
-              Enviar
-            </Button>
-          </div>
+          {context.user.rule.name === UserRoleEnum.Técnico && (
+            <div className="ButtonHeader">
+              <Button type="default" className="ButtonDelete">
+                Salvar
+              </Button>
+              <Button
+                onClick={async () => handleSave()}
+                type="primary"
+                className="ButonToSend"
+              >
+                Enviar
+              </Button>
+            </div>
+          )}
+          {context.user.rule.name === UserRoleEnum.Supervisor &&
+            cardData.codigoStatus !=
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+              <div className="ButtonHeader">
+                <Button type="default" className="ButtonDelete">
+                  Visualizar Pré Nota
+                </Button>
+                <Button
+                  onClick={async () => handleSave()}
+                  type="primary"
+                  className="ButonToSend"
+                >
+                  Não autorizo
+                </Button>
+                <Button
+                  onClick={async () => handleSave()}
+                  type="primary"
+                  className="ButonToSend"
+                >
+                  Autorizar Envio
+                </Button>
+              </div>
+            )}
         </div>
       </header>
 
@@ -166,7 +252,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
               onChange={(e) => setTelefone(e.target.value)}
               fullWidth
               disabled
-
             />
           </div>
           <div className="info-row">
@@ -176,7 +261,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
               onChange={(e) => setDataSolicitacao(e.target.value)}
               fullWidth
               disabled
-
             />
           </div>
         </div>
@@ -197,12 +281,14 @@ const TechnicalAndSupervisorInitialRGI = () => {
               <Button
                 type="text"
                 className="nextButton"
-                onClick={() =>{
-                  console.log("asdasdasdsa: " + JSON.stringify(location.state.garantia) );
+                onClick={() => {
+                  console.log(
+                    "asdasdasdsa: " + JSON.stringify(location.state.garantia)
+                  );
                   navigate("/technical-and-supervisor/details-itens", {
                     state: { nf, garantia: location.state.garantia },
-                  })}
-                }
+                  });
+                }}
               >
                 &gt;
               </Button>

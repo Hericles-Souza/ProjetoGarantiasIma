@@ -1,7 +1,7 @@
 import { CalendarOutlined, RightOutlined } from '@ant-design/icons';
 import React, { useContext } from 'react';
 import styled from 'styled-components';
-import { converterStatusGarantia, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
+import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from 'dayjs';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
@@ -140,7 +140,7 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, cod
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
         <Status style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}>
-          {context.user.rule.name === 'cliente' || context.user.rule.name === 'admin' ? converterStatusGarantia(GarantiaItem.codigoStatus) : (GarantiaItem.itens.find((value) => value.codigoStatus > 1)) ? 1 : 0}
+          {context.user.rule.name === 'cliente' || context.user.rule.name === 'admin' ? converterStatusGarantia(GarantiaItem.codigoStatus) : (GarantiaItem.itens.find((value) => value.codigoStatus > 1)) ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true) : converterStatusGarantia(GarantiaItem.codigoStatus)}
         </Status>
         <RightOutlined />
       </Header>

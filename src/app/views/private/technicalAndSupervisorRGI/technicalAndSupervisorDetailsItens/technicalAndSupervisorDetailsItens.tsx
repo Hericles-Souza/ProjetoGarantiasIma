@@ -27,6 +27,7 @@ import {
 import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
+  GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import pako from "pako";
 import { ConfigContext } from "antd/es/config-provider";
@@ -167,6 +168,12 @@ const CollapsibleSection = ({
   <div>
     <div className={styles.tituloSecaoContainer}>
       <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
+      <Button type="primary" className={styles.ButonToSend}>
+        Recusar NF de Devolução
+      </Button>
+      <Button type="primary" className={styles.ButonToSend}>
+        Autorizar
+      </Button>
       <Button
         type="text"
         icon={isVisible ? <DownOutlined /> : <RightOutlined />}
@@ -200,7 +207,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         await getItemsByNfAsync(location.state.nf.nf).then((value) => {
           console.log("data: " + JSON.stringify(value.data));
           value.data.forEach((item) => {
-
             if (item.tipoDefeito == null) item.tipoDefeito = "defeito1";
             item.solicitarRessarcimento = true; ////////TA ERRADO
           });
@@ -245,7 +251,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         ItemId: item.id,
         conclusao: item.conclusao,
         status: item.codigoStatus,
-        tipoDefeitoOficial: item.tipoDefeito
+        tipoDefeitoOficial: item.tipoDefeito,
       };
       console.log("aqui: " + JSON.stringify(dataToSend));
       try {
@@ -309,27 +315,23 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       <div className={styles.ContainerHeader}>
         <h1 className={styles.tituloRgi}>{items[0].rgi}</h1>
         <div className={styles.botoesCabecalho}>
-          {context.user.rule.name != UserRoleEnum.Técnico && (
-            <Button
+          {cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
+            <><Button
               type="default"
               className={styles.ButtonDelete}
-              onClick={() =>
-                navigate("/view-pre-invoice", {
-                  state: { cardData },
-                })
-              }
+              onClick={() => navigate("/view-pre-invoice", {
+                state: { cardData },
+              })}
             >
               Visualizar Pré-Nota
-            </Button>
+            </Button><Button
+              type="primary"
+              className={styles.ButonToSend}
+              onClick={handleSave}
+            >
+                Salvar
+              </Button></>
           )}
-
-          <Button
-            type="primary"
-            className={styles.ButonToSend}
-            onClick={handleSave}
-          >
-            Salvar
-          </Button>
         </div>
       </div>
       <hr className={styles.divisor} />
@@ -348,7 +350,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
       {cardData.itens.map((item) => {
         item.solicitarRessarcimento = true;
-      
+
         return (
           <div className={styles.containerInformacoes}>
             <CollapsibleSection
@@ -368,7 +370,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               )}
 
               <h3 className={styles.tituloSecao}>Informações Gerais</h3>
-
               <div className={styles.inputsContainer}>
                 <div className={styles.inputsConjun}>
                   <div className={styles.inputGroup} style={{ flex: 0.5 }}>
@@ -418,34 +419,40 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
-              {item.solicitarRessarcimento && context.user.rule.name !== UserRoleEnum.Supervisor && (
-                <div className={styles.contentReimbursement}>
-                  <h3 className={styles.tituloA}>
-                    Anexo de dados adicionais para ressarcimento
-                  </h3>
-                  {[
-                    "1. Documento de identificação (RG ou CNH):",
-                    "2. Documentação do veículo:",
-                    "3. NF do guincho:",
-                    "4. NF de outras despesa/produtos pertinentes:",
-                  ].map((itemRes, index) => (
-                    <FileAttachment
-                      key={index}
-                      label={itemRes}
-                      itemId={item.id}
-                      backgroundColor="#f5f5f5"
-                    />
-                  ))}
-                </div>
-              )}
 
-              {/* Anexo da NF de Referência (visível para todos) */}
               <FileAttachment
                 label="Anexo da NF de Referência"
                 backgroundColor="white"
                 itemId={item.id}
               />
+              <div style={{ marginTop: "20px" }}>
+                <FileAttachment
+                  label="Anexo da NF de devolução"
+                  backgroundColor="white"
+                  itemId={item.id}
+                />
+              </div>
+              {item.solicitarRessarcimento &&
+                context.user.rule.name !== UserRoleEnum.Supervisor && (
+                  <div className={styles.contentReimbursement}>
+                    <h3 className={styles.tituloA}>
+                      Anexo de dados adicionais para ressarcimento
+                    </h3>
+                    {[
+                      "1. Documento de identificação (RG ou CNH):",
+                      "2. Documentação do veículo:",
+                      "3. NF do guincho:",
+                      "4. NF de outras despesa/produtos pertinentes:",
+                    ].map((itemRes, index) => (
+                      <FileAttachment
+                        key={index}
+                        label={itemRes}
+                        itemId={item.id}
+                        backgroundColor="#f5f5f5"
+                      />
+                    ))}
+                  </div>
+                )}
 
               {/* Anexos de Imagens (visível apenas para não supervisores) */}
               {context.user.rule.name !== UserRoleEnum.Supervisor && (
@@ -512,7 +519,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   </div>
 
                   <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
-                  
 
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields

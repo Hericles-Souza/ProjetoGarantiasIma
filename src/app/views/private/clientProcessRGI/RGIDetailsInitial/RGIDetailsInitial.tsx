@@ -277,38 +277,49 @@ const RGIDetailsInitial: React.FC = () => {
           <div className={styles.statusTag}>{cardData?.status}</div>
         </div>
         <div className={styles.buttonsContainer}>
-          {cardData?.codigoStatus !== 2 && (
-            <Button
-              type="default"
-              danger
-              className={styles.buttonDeleteRgi}
-              onClick={handleDeleteGuarantee}
-            >
-              Excluir
-            </Button>
-          )}
-          <Button
-            onClick={send}
-            type="default"
-            danger
-            className={styles.buttonSaveRgi}
-          >
-            Salvar
-          </Button>
-          <Button
-            onClick={send}
-            type="primary"
-            danger
-            style={{ backgroundColor: "red" }}
-            className={styles.buttonSendRgi}
-          >
-            Enviar
-          </Button>
+          {cardData?.codigoStatus !== 2 &&
+            cardData?.codigoStatus ==
+              GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+            context.user.rule.name != "cliente" && (
+              <Button
+                type="default"
+                danger
+                className={styles.buttonDeleteRgi}
+                onClick={handleDeleteGuarantee}
+              >
+                Excluir
+              </Button>
+            )}
+          {cardData?.codigoStatus ==
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+            context.user.rule.name != "cliente" && (
+              <>
+                <Button
+                  onClick={send}
+                  type="default"
+                  danger
+                  className={styles.buttonSaveRgi}
+                >
+                  Salvar
+                </Button>
+                <Button
+                  onClick={send}
+                  type="primary"
+                  danger
+                  style={{ backgroundColor: "red" }}
+                  className={styles.buttonSendRgi}
+                >
+                  Enviar
+                </Button>
+              </>
+            )}
         </div>
       </div>
 
       <hr className={styles.divider} />
-
+      {cardData?.codigoStatus ==
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+            context.user.rule.name != "cliente" && (
       <div className={styles.infoContainer}>
         <h3 className={styles.infoTitle}>Informações Gerais</h3>
         <div className={styles.inputsContainer}>
@@ -341,10 +352,13 @@ const RGIDetailsInitial: React.FC = () => {
           </div>
         </div>
       </div>
-
+            )}
       <div className={styles.nfsContainer}>
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
+          {cardData?.codigoStatus ==
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+            context.user.rule.name != "cliente" && (
           <Button
             type="primary"
             danger
@@ -356,7 +370,8 @@ const RGIDetailsInitial: React.FC = () => {
             onClick={() => setModalOpen(true)}
           >
             Adicionar NF de Origem
-          </Button>
+          </Button> 
+          )}
         </div>
 
         {cardData.itens.map((nf, index) => (
@@ -380,11 +395,15 @@ const RGIDetailsInitial: React.FC = () => {
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
+            {cardData?.codigoStatus ==
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO && context.user.rule.name != "cliente" && (
               <DeleteOutlined
                 style={{ color: "#555", fontSize: "22px" }}
                 className={styles.DeleteOutlined}
                 onClick={() => showDeleteConfirm(nf.codigoItem)}
               />
+            )}
+              
               <Button
                 type="text"
                 className={styles.nextButton}

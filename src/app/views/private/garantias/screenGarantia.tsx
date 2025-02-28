@@ -53,6 +53,7 @@ const Garantias: React.FC = () => {
             GarantiasStatusEnum2.EM_ANALISE,
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
             GarantiasStatusEnum2.CONFIRMADO,
+            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           ];
         }
 
