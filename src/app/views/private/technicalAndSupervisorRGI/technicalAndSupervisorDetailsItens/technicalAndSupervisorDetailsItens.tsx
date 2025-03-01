@@ -162,19 +162,21 @@ const CollapsibleSection = ({
   toggleVisibility,
   children,
   handleConfirm,
+  statusGarantia
 }: {
   title: string;
   isVisible: boolean;
   toggleVisibility: () => void;
   children: React.ReactNode;
   handleConfirm: () => void;
+  statusGarantia: number;
 }) => {
   const context = useContext(AuthContext);
   return (
     <div>
       <div className={styles.tituloSecaoContainer}>
         <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
-        {context.user.rule.name === UserRoleEnum.Supervisor && (
+        {context.user.rule.name === UserRoleEnum.Supervisor && statusGarantia === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
           <>
             <Button type="primary" className={styles.ButonToSend}>
               Recusar NF de Devolução
@@ -212,35 +214,37 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [editorContent, setEditorContent] = useState("");
   const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
 
-  const fetchUserData = async () => {
-    try {
-      if (location.state) {
-        await getItemsByNfAsync(location.state.nf.nf).then((value) => {
-          console.log("data: " + JSON.stringify(value.data));
-          value.data.forEach((item) => {
-            if (item.tipoDefeito == null) item.tipoDefeito = "defeito1";
-          });
-          setItems(value.data);
-        });
-        setCardData(location.state.garantia);
-        console.log(
-          "location.state.garantia: " + JSON.stringify(location.state.garantia)
-        );
-        console.log(
-          "cardDAta " + JSON.stringify(cardData)
-        );
-      }
-      return;
-    } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        if (location.state) {
+          await getItemsByNfAsync(location.state.nf.nf).then((value) => {
+            console.log("data: " + JSON.stringify(value.data));
+            value.data.forEach((item) => {
+              if (item.tipoDefeito == null) item.tipoDefeito = "defeito1";
+            });
+            setItems(value.data);
+          });
+          setCardData(location.state.garantia);
+          console.log(
+            "location.state.garantia: " + JSON.stringify(location.state.garantia)
+          );
+          console.log(
+            "cardDAta " + JSON.stringify(cardData)
+          );
+        }
+        return;
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchUserData();
-  }, [location.state]);
+  }, [cardData, location.state]);
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsReimbursementChecked(e.target.checked);
@@ -412,6 +416,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               isVisible={visibleSections[item.id]}
               toggleVisibility={() => toggleContentVisibility(item.id)}
               handleConfirm={handleConfirm}
+              statusGarantia={cardData.codigoStatus}
             >
               {/* Anexo da NF de venda (visível apenas para não supervisores) */}
               {context.user.rule.name !== UserRoleEnum.Supervisor && (

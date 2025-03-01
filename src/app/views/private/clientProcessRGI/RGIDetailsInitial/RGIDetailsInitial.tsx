@@ -137,26 +137,6 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-  const generateNextRGI = async () => {
-    try {
-      const response = await api.get("/garantias");
-      const allGarantias = response.data.data || [];
-      const existingRGIs = allGarantias
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((g: any) => g.rgi)
-        .filter((rgi: string) => rgi?.startsWith(context.user.codigoCigam))
-        .map((rgi: string) => parseInt(rgi.split("-")[1]));
-      const lastNumber = Math.max(0, ...existingRGIs);
-      const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
-      console.log(
-        "newrGi: " + `${allGarantias[0].rgi.split("-")[0]}-${nextNumber}`
-      );
-      return `${context.user.username}-${nextNumber}`;
-    } catch (error) {
-      console.error("Erro ao gerar RGI:", error);
-    }
-  };
-
   const handleDetailsNavigation = (nf: { nf: string; itens: number }) => {
     if (!cardData?.id) {
       console.error("Dados da garantia ainda não carregados.");
@@ -172,8 +152,7 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleAddNF = async (nfNumber: string) => {
-    const newRgiCode = await generateNextRGI();
-    const itemCode = getRgiWithSuffix(newRgiCode, nfs.length, 1); ///// TODO parametro 2 precis ser qtde de nfs + 1
+    const itemCode = getRgiWithSuffix(rgi, nfs.length, 1); ///// TODO parametro 2 precis ser qtde de nfs + 1
 
     console.log("itemCode" + itemCode);
     setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, itens: 1 }]);
@@ -300,8 +279,10 @@ const RGIDetailsInitial: React.FC = () => {
                 Excluir
               </Button>
             )}
-          {cardData?.codigoStatus ==
-            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+          {(cardData?.codigoStatus ==
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
+            cardData?.codigoStatus ==
+            GarantiasStatusEnum2.NAO_ENVIADO) &&
             context.user.rule.name == "cliente" && (
               <>
                 <Button
@@ -365,8 +346,9 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.nfsContainer}>
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-          {cardData?.codigoStatus ==
-            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+          {(cardData?.codigoStatus ==
+            GarantiasStatusEnum2.NAO_ENVIADO || cardData?.codigoStatus ==
+            GarantiasStatusEnum2.EM_ANALISE) &&
             context.user.rule.name == "cliente" && (
               <Button
                 type="primary"
@@ -417,7 +399,11 @@ const RGIDetailsInitial: React.FC = () => {
                   />
                 )}
               {cardData?.codigoStatus !=
-                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO && 
+                cardData?.codigoStatus !=
+                GarantiasStatusEnum2.NAO_ENVIADO &&
+                cardData?.codigoStatus !=
+                GarantiasStatusEnum2.EM_ANALISE &&
                 context.user.rule.name == "cliente" && (
                   <Button
                     type="primary"
@@ -459,7 +445,7 @@ const RGIDetailsInitial: React.FC = () => {
         onOpenChange={setModalOpen}
         onAddNF={handleAddNF}
         itemId={cardData.itens[0].id}
-        isSell={false}
+        isSell={modalOpen.isSell}
         garantiaId={cardData?.id}
       />
 

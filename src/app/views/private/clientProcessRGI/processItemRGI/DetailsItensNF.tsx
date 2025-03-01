@@ -619,9 +619,9 @@ const DetailsItensNF: React.FC = () => {
               </div>
             )}
 
-          {garantia.codigoStatus !=
+          {garantia.codigoStatus ==
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-            context.user.rule.name == "cliente" && (
+            context.user.rule.name != "cliente" && (
               <>
                 <Button
                   type="default"
@@ -700,14 +700,17 @@ const DetailsItensNF: React.FC = () => {
               status={item.status}
               rgi={item.rgi}
               isEvaluated={
-                garantia?.codigoStatus !=
+                garantia?.codigoStatus ==
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                 context.user.rule.name == "cliente"
                   ? false
                   : true
               }
             >
-              <FileAttachment
+              { garantia?.codigoStatus ==
+                  GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+                context.user.rule.name == "cliente" && (
+                  <FileAttachment
                 label="Anexo da NF de devolução"
                 backgroundColor="white"
                 garantiaItemId={item.id}
@@ -718,6 +721,8 @@ const DetailsItensNF: React.FC = () => {
                     : undefined
                 }
               />
+                )}
+              
               <h3 className={styles.tituloSecao}>Informações Gerais</h3>
               <div className={styles.inputsContainer}>
                 <div className={styles.inputsConjun}>

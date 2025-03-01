@@ -6,11 +6,11 @@ import { UserRoleEnum } from "@shared/enums/UserRoleEnum.ts";
 import UserRegistration from "@app/views/private/userRegistration/UserRegistration";
 import InvoicePage from "@shared/ViewPreInvoice/ViewPreInvoice";
 import DetailsItensNF from "./clientProcessRGI/processItemRGI/DetailsItensNF";
-import RgiDetailsPage from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import ScreenAcordoComercial from "./acordo-comercial/ScreenInitialTradeAgreement/ScreenInitialTradeAgreement";
 import Dashboard from "./dashboard/dashboard";
 import TechnicalAndSupervisorDetailsItens from "./technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
 import TechnicalAndSupervisorInitialRGI from "./technicalAndSupervisorRGI/technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI";
+import RGIDetailsInitial from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -26,7 +26,7 @@ export const appRoutingPrivate: RouteConfig[] = [
       },
       {
         path: "garantias/rgi/:id",
-        element: <RgiDetailsPage />,
+        element: <RGIDetailsInitial />,
         private: true,
       },
       {
