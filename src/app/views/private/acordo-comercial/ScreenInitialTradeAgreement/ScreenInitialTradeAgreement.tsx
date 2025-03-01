@@ -4,6 +4,7 @@ import OutlinedInputWithLabel from '@shared/components/input-outlined-with-label
 import { Button, Modal } from 'antd';
 import { useState } from 'react';
 import NFModal from "../../clientProcessRGI/addNewNF/modalAddNewNF";
+import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 
 
 const ScreenAcordoComercial = () => {
@@ -11,13 +12,13 @@ const ScreenAcordoComercial = () => {
   const [telefone, setTelefone] = useState('(31) 99847-5278');
   const [dataSolicitacao, setDataSolicitacao] = useState('12/07/2008');
   const [nfs, setNfs] = useState<{ nf: string; itens: number }[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState<ModalModel>({isOpen: false, isSell: false});
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [nfToDelete, setNfToDelete] = useState<string>("");
 
   const handleAddNF = (nfNumber: string) => {
     setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, itens: 0 }]);
-    setModalOpen(false);
+    setModalOpen({isOpen: false, isSell: false});
   };
 
   const handleDeleteNF = () => {
@@ -89,7 +90,7 @@ const ScreenAcordoComercial = () => {
       <section className="nf-section">
         <div className="headerNF">
           <h2 className="title-nf">NFs associadas a este acordo</h2>
-          <button className="add-nf-btn" onClick={() => setModalOpen(true)}>ADICIONAR NF DE ORIGEM</button>
+          <button className="add-nf-btn" onClick={() => setModalOpen({isOpen: true, isSell: false})}>ADICIONAR NF DE ORIGEM</button>
         </div>
         {nfs.map((nf, index) => (
           <div key={index} className="nf-item">
@@ -111,7 +112,7 @@ const ScreenAcordoComercial = () => {
         ))}
       </section>
 
-      <NFModal open={modalOpen} onOpenChange={setModalOpen} onAddNF={handleAddNF} />
+      <NFModal open={modalOpen.isOpen} onOpenChange={setModalOpen} onAddNF={handleAddNF} isSell={false} itemId={""} garantiaId={""} />
       <Modal
         title="Confirmar Exclusão"
         visible={modalDeleteOpen}

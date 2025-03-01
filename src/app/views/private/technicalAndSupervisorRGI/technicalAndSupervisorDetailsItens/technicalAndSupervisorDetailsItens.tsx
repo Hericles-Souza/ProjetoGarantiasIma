@@ -27,6 +27,7 @@ import {
 import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
+  GarantiasStatusEnum,
   GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import pako from "pako";
@@ -75,15 +76,16 @@ const FileAttachment = ({
       let field: string;
       const match = label.match(/^\d+/);
       console.log("label: " + label);
-
+      
       if (!match && label.includes("venda")) field = "nfVenda";
       else if (!match && label.includes("Referência")) field = "nfRef";
-      else if (match.length > 0) {
+      else {
         if (label.includes("Referência")) field = `${match[0]}.res`;
-        else if (label.toUpperCase().includes("FOTO"))
+        else
           field = `${match[0]}.img`;
       }
 
+      console.log("field: " + field);
       const urlGetFile =
         environment.apiUrl +
         `/files/files/download-private-file-item/${itemId}/${field}`;
@@ -159,31 +161,40 @@ const CollapsibleSection = ({
   isVisible,
   toggleVisibility,
   children,
+  handleConfirm,
 }: {
   title: string;
   isVisible: boolean;
   toggleVisibility: () => void;
   children: React.ReactNode;
-}) => (
-  <div>
-    <div className={styles.tituloSecaoContainer}>
-      <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
-      <Button type="primary" className={styles.ButonToSend}>
-        Recusar NF de Devolução
-      </Button>
-      <Button type="primary" className={styles.ButonToSend}>
-        Autorizar
-      </Button>
-      <Button
-        type="text"
-        icon={isVisible ? <DownOutlined /> : <RightOutlined />}
-        onClick={toggleVisibility}
-        className={styles.toggleButton}
-      />
+  handleConfirm: () => void;
+}) => {
+  const context = useContext(AuthContext);
+  return (
+    <div>
+      <div className={styles.tituloSecaoContainer}>
+        <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
+        {context.user.rule.name === UserRoleEnum.Supervisor && (
+          <>
+            <Button type="primary" className={styles.ButonToSend}>
+              Recusar NF de Devolução
+            </Button>
+            <Button type="primary" className={styles.ButonToSend} onClick={handleConfirm}>
+              Autorizar
+            </Button>
+          </>
+        )}
+        <Button
+          type="text"
+          icon={isVisible ? <DownOutlined /> : <RightOutlined />}
+          onClick={toggleVisibility}
+          className={styles.toggleButton}
+        />
+      </div>
+      {isVisible && <div className={styles.hiddenContent}>{children}</div>}
     </div>
-    {isVisible && <div className={styles.hiddenContent}>{children}</div>}
-  </div>
-);
+  );
+};
 
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isContentVisible, setIsContentVisible] = useState(false);
@@ -208,13 +219,15 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           console.log("data: " + JSON.stringify(value.data));
           value.data.forEach((item) => {
             if (item.tipoDefeito == null) item.tipoDefeito = "defeito1";
-            item.solicitarRessarcimento = true; ////////TA ERRADO
           });
           setItems(value.data);
         });
         setCardData(location.state.garantia);
         console.log(
           "location.state.garantia: " + JSON.stringify(location.state.garantia)
+        );
+        console.log(
+          "cardDAta " + JSON.stringify(cardData)
         );
       }
       return;
@@ -245,8 +258,42 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     }));
   };
 
+  const handleConfirm = async () => {
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+    const garantia: GarantiasModel = {
+      razaoSocial: location.state.garantia.razaoSocial,
+      telefone: location.state.garantia.telefone,
+      email: context.user.email,
+      nf: cardData.nf,
+      fornecedor: context.user.fullname,
+      codigoStatus: GarantiasStatusEnum2.CONFIRMADO,
+      observacao: "teste",
+      usuarioAtualizacao: context.user.username,
+      status: GarantiasStatusEnum.CONFIRMADO,
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+    };
+
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
+      garantia
+    );
+
+    if (responseHeader.status === 200) {
+      message.success("Gaantia confirmada com sucesso");
+    }
+  }
+
   const handleSave = async () => {
-    cardData.itens.map(async (item, index) => {
+    location.state.garantia.itens.map(async (item, index) => {
       const dataToSend = {
         ItemId: item.id,
         conclusao: item.conclusao,
@@ -301,36 +348,44 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           className={styles.ButtonBack}
           onClick={() =>
             navigate(
-              `/garantias/technical-and-supervisor/${items[0].garantia_id}`
+              `/garantias/technical-and-supervisor/${items[0].garantia_id}`, {
+                state: { item: cardData.itens[0], garantia: cardData },
+              }
+              
             )
           }
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA RGI
         </Button>
         <span className={styles.RgiCode}>
-          RGI N° {items[0].rgi} / NF {items[0].nfReferencia}
+          RGI N° {location.state.garantia.itens[0]?.rgi} / NF {location.state.garantia.itens[0].nfReferencia}
         </span>
       </div>
 
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>{items[0].rgi}</h1>
+        <h1 className={styles.tituloRgi}>{location.state.garantia.itens[0].rgi}</h1>
         <div className={styles.botoesCabecalho}>
           {cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
-            <><Button
-              type="default"
-              className={styles.ButtonDelete}
-              onClick={() => navigate("/view-pre-invoice", {
-                state: { cardData },
-              })}
-            >
-              Visualizar Pré-Nota
-            </Button><Button
-              type="primary"
-              className={styles.ButonToSend}
-              onClick={handleSave}
-            >
+            <>
+              <Button
+                type="default"
+                className={styles.ButtonDelete}
+                onClick={() =>
+                  navigate("/view-pre-invoice", {
+                    state: { cardData },
+                  })
+                }
+              >
+                Visualizar Pré-Nota
+              </Button>
+              <Button
+                type="primary"
+                className={styles.ButonToSend}
+                onClick={handleSave}
+              >
                 Salvar
-              </Button></>
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -349,7 +404,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       </div> */}
 
       {cardData.itens.map((item) => {
-        item.solicitarRessarcimento = true;
 
         return (
           <div className={styles.containerInformacoes}>
@@ -357,6 +411,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               title={item.codigoItem}
               isVisible={visibleSections[item.id]}
               toggleVisibility={() => toggleContentVisibility(item.id)}
+              handleConfirm={handleConfirm}
             >
               {/* Anexo da NF de venda (visível apenas para não supervisores) */}
               {context.user.rule.name !== UserRoleEnum.Supervisor && (
@@ -517,8 +572,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       }}
                     />
                   </div>
-
-                  <h3 className={styles.tituloA}>Análise Técnica Visual</h3>
 
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields

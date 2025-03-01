@@ -48,3 +48,7 @@ export const getGarantiasPaginationAsync = (page: number, limit: number, search?
 export const getGarantiasByStatusAsync = (page: number, limit: number, status: number) => {
   return api.get(`/garantias/garantias/status?page=${page}&limit=${limit}&codigoStatus=${status}`);
 }
+
+export const getGarantiasByUser = (username: string) => {
+  return api.get(`/garantias/by-user/${username}`);
+}

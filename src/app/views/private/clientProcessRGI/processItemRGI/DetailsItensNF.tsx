@@ -256,13 +256,15 @@ const DetailsItensNF: React.FC = () => {
       isReimbursementChecked: boolean;
       anexos: string;
       rgi: string;
-      codigoItem: string;
+      codigoItem: string,
+      codigoStatus: number
     }>
   >([]);
   const [visibleSectionId, setVisibleSectionId] = useState<string | null>(null);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
+  const [recRgiLetter, setRecRgiLetter] = useState("false");
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
+  const [garantia, setGarantia] = useState<GarantiasModel>();
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
   const context = useContext(AuthContext);
 
@@ -310,6 +312,10 @@ const DetailsItensNF: React.FC = () => {
           data = (location.state as { garantiaData: GarantiasModel })
             .garantiaData;
           console.log("Dados recebidos via state:", data);
+          const actualNf = location.state.currentNf;
+          setRecRgiLetter(actualNf.nf.split(".")[1]);
+          console.log("garantia: ", JSON.stringify(garantia?.codigoStatus));
+
         }
         if (data && location.state) {
           console.log("Anexos da garantia:", data.anexos);
@@ -328,8 +334,9 @@ const DetailsItensNF: React.FC = () => {
             anexos: item.anexos || "",
             rgi: item.rgi,
             codigoItem: item.codigoItem,
+            codigoStatus: item.codigoStatus 
           }));
-          console.log("garantia: ", JSON.stringify(garantia));
+          console.log("garantia: ", JSON.stringify(garantia?.codigoStatus));
 
           setItems(transformedItems);
           if (transformedItems.length > 0) {
@@ -367,6 +374,7 @@ const DetailsItensNF: React.FC = () => {
         torquePeca: "",
         isReimbursementChecked: false,
         anexos: "",
+        codigoStatus: 0,
         rgi: newItemRgi,
         codigoItem: items[0].codigoItem,
       },
@@ -444,6 +452,7 @@ const DetailsItensNF: React.FC = () => {
   };
 
   const save = async () => {
+    let error: boolean = false;
     console.log("salvamento: " + garantia);
     if (!garantia?.id) {
       message.error("ID da garantia não encontrado");
@@ -460,10 +469,10 @@ const DetailsItensNF: React.FC = () => {
     );
     const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
 
-    garantia.itens.forEach(async (item, index) => {
+    garantia.itens.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter).forEach(async (item, index) => {
       try {
         if (
-          garantiaItensAPI.filter((value) => value.id == item.id).length > 0
+          garantiaItensAPI.filter((value) => value.codigoItem == item.codigoItem).length > 0
         ) {
           const paylaodPut = {
             codigoItem: item.codigoItem,
@@ -471,6 +480,7 @@ const DetailsItensNF: React.FC = () => {
             modeloVeiculoAplicado: item.modeloVeiculoAplicado,
             torqueAplicado: Number(item.torqueAplicado) || 0,
             nfReferencia: garantia.nf,
+            codigoPeca: item.codigoPeca,
             loteItemOficial: item.loteItem,
             loteItem: item.loteItem,
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
@@ -484,9 +494,9 @@ const DetailsItensNF: React.FC = () => {
           );
           if (responsePut.status === 200) {
             message.success("Garantia atualizada com sucesso!");
-            navigate("/garantias");
           } else {
             message.error("Erro ao atualizar a garantia.");
+            error = true;
           }
         } else {
           const paylaodPost = {
@@ -496,6 +506,7 @@ const DetailsItensNF: React.FC = () => {
             modeloVeiculoAplicado: item.modeloVeiculoAplicado,
             torqueAplicado: item.torqueAplicado,
             nfReferencia: garantia.nf,
+            codigoPeca: item.codigoPeca,
             loteItemOficial: item.loteItem,
             loteItem: item.loteItem,
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
@@ -509,19 +520,28 @@ const DetailsItensNF: React.FC = () => {
 
           if (responsePost.status === 200) {
             message.success("Garantia atualizada com sucesso!");
-            navigate(`/garantias/rgi/${garantia.id}`);
+            
           } else {
             message.error("Erro ao atualizar a garantia.");
+            error = true
           }
-        }
+        } 
       } catch (error) {
         console.error("Erro ao atualizar a garantia:", error);
         message.error("Erro ao atualizar a garantia.");
+      } finally {
+        if(!error)
+          navigate(`/garantias/rgi/${garantia.id}`, {
+            state: {
+              garantiaData: garantia,
+              item: garantia?.nf,
+            },
+          });
       }
     });
   };
 
-  if (loading) {
+  if (loading && !garantia) {
     return (
       <div
         style={{
@@ -549,9 +569,9 @@ const DetailsItensNF: React.FC = () => {
           type="link"
           className={styles.ButtonBack}
           onClick={() =>
-            navigate(`/garantias/rgi/${guaranteeId}`, {
+            navigate(`/garantias/rgi/${garantia.id}`, {
               state: {
-                garantia: garantia,
+                garantiaData: garantia,
                 item: garantia?.nf,
               },
             })
@@ -588,7 +608,7 @@ const DetailsItensNF: React.FC = () => {
             )}
           {garantia.codigoStatus ==
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-            context.user.rule.name == "cliente" && (
+            context.user.rule.name != "cliente" && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
                   Visualizar Pré Nota
@@ -669,7 +689,7 @@ const DetailsItensNF: React.FC = () => {
             </span>
           </div>
         )}
-      {garantia.itens.map((item) => {
+      {garantia.itens.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter).map((item) => {
         return (
           <div className={styles.containerInformacoes} key={item.id}>
             <CollapsibleSection
@@ -824,7 +844,7 @@ const DetailsItensNF: React.FC = () => {
                       type="number"
                       label="Torque aplicado à peça"
                       fullWidth
-                      value={item.torqueAplicado.toString()}
+                      value={item.torqueAplicado?.toString() || ""}
                       onChange={(e) => {
                         item.torqueAplicado = Number(e.target.value);
                         handleInputChange(
