@@ -197,8 +197,8 @@ const CollapsibleSection = ({
   status: string;
   rgi: string;
   isEvaluated: boolean;
-}) => (
-  <div>
+}) => {
+  return <div>
     <div className={styles.tituloSecaoContainer}>
       <h3 className={styles.tituloSecaoVermelho}>
         {title}{" "}
@@ -236,30 +236,13 @@ const CollapsibleSection = ({
     </div>
     {isVisible && <div className={styles.hiddenContent}>{children}</div>}
   </div>
-);
+};
 
 const DetailsItensNF: React.FC = () => {
   const { id: guaranteeId } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const [items, setItems] = useState<
-    Array<{
-      id: string;
-      title: string;
-      codigoPeca: string;
-      lotePeca: string;
-      status: string;
-      tipoDefeito: string;
-      modeloVeiculo: string;
-      anoVeiculo: string;
-      torquePeca: string;
-      isReimbursementChecked: boolean;
-      anexos: string;
-      rgi: string;
-      codigoItem: string,
-      codigoStatus: number
-    }>
-  >([]);
+  const [items, setItems] = useState<GarantiaItem[]>([]);
   const [visibleSectionId, setVisibleSectionId] = useState<string | null>(null);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [recRgiLetter, setRecRgiLetter] = useState("false");
@@ -338,7 +321,7 @@ const DetailsItensNF: React.FC = () => {
           }));
           console.log("garantia: ", JSON.stringify(garantia?.codigoStatus));
 
-          setItems(transformedItems);
+          setItems(data.itens);
           if (transformedItems.length > 0) {
             setVisibleSectionId(transformedItems[0].id);
           }
@@ -355,46 +338,30 @@ const DetailsItensNF: React.FC = () => {
 
   const addNewItem = () => {
     const newItemId = crypto.randomUUID();
-    const sequence = garantia.itens.length + 1;
+    const sequence = items.length + 1;
     const newItemRgi = garantia
-      ? formatItemRgi(items[items.length - 1].codigoItem, sequence)
+      ? formatItemRgi(location.state.currentNf.nf, sequence)
       : "";
     console.log("newItemRgi: " + newItemRgi);
     setItems([
       ...items,
       {
         id: newItemId,
-        title: "",
         codigoPeca: "",
-        lotePeca: "",
+        loteItem: "",
         status: GarantiasItemStatusEnum.NAO_ANALISADO,
         tipoDefeito: "",
-        modeloVeiculo: "",
-        anoVeiculo: "",
-        torquePeca: "",
-        isReimbursementChecked: false,
+        modeloVeiculoAplicado: "",
+        torqueAplicado: 0,
+        solicitarRessarcimento: false,
         anexos: "",
-        codigoStatus: 0,
         rgi: newItemRgi,
-        codigoItem: items[0].codigoItem,
+        codigoItem: newItemRgi,
+        nfReferencia: "",
+        loteItemOficial: "",
+        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO
       },
     ]);
-    garantia.itens.push({
-      id: newItemId,
-      codigoPeca: "",
-      loteItem: "",
-      status: GarantiasItemStatusEnum.NAO_ANALISADO,
-      tipoDefeito: "",
-      modeloVeiculoAplicado: "",
-      torqueAplicado: 0,
-      solicitarRessarcimento: false,
-      anexos: "",
-      rgi: newItemRgi,
-      codigoItem: newItemRgi,
-      nfReferencia: garantia.nf,
-      loteItemOficial: "",
-      codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-    });
     setVisibleSectionId(newItemId);
   };
 
@@ -468,8 +435,11 @@ const DetailsItensNF: React.FC = () => {
       `/garantias/item/by-garantia/${garantia.id}`
     );
     const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
+    console.log("garantiaItensAPI: ", garantiaItensAPI);
+    
 
-    garantia.itens.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter).forEach(async (item, index) => {
+    items.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter).forEach(async (item, index) => {
+      console.log("itemsequal: ", item);
       try {
         if (
           garantiaItensAPI.filter((value) => value.codigoItem == item.codigoItem).length > 0
@@ -492,7 +462,7 @@ const DetailsItensNF: React.FC = () => {
             `/garantias/garantiasItem/${item.id}/UpdateItem`,
             paylaodPut
           );
-          if (responsePut.status === 200) {
+          if (responsePut.status === 200 || responsePut.status === 201 ) {
             message.success("Garantia atualizada com sucesso!");
           } else {
             message.error("Erro ao atualizar a garantia.");
@@ -518,7 +488,7 @@ const DetailsItensNF: React.FC = () => {
 
           const responsePost = await api.post(endpoint, paylaodPost);
 
-          if (responsePost.status === 200) {
+          if (responsePost.status === 200 || responsePost.status === 201 ) {
             message.success("Garantia atualizada com sucesso!");
             
           } else {
@@ -689,7 +659,7 @@ const DetailsItensNF: React.FC = () => {
             </span>
           </div>
         )}
-      {garantia.itens.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter).map((item) => {
+      {items.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter).map((item) => {
         return (
           <div className={styles.containerInformacoes} key={item.id}>
             <CollapsibleSection

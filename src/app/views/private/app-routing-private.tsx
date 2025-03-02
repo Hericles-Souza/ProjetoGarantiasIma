@@ -49,7 +49,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         path: "users",
         element: <UserRegistration />,
         private: true,
-        allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Cliente]
+        allowedRoles: [UserRoleEnum.Admin]
       },
 
       {

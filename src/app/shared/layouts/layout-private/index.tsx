@@ -42,7 +42,7 @@ const menuData: MenuItem[] = [
     label: 'Cadastro de Usuários',
     icon: <img src={IconUser} alt="Garantias" style={{width: "25px", height: "25px"}}/>,
     path: '/users',
-    allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Cliente],
+    allowedRoles: [UserRoleEnum.Admin],
   },
 
 ];
