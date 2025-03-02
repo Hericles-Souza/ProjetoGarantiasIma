@@ -48,7 +48,7 @@ const UserRegistration: React.FC = () => {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [limitGet,] = useState(100);
+  const [limitGet,] = useState(1000);
   const [limit, setLimit] = useState(10);
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
   const [selectedAction, setSelectedAction] = useState<boolean>(false);
@@ -95,7 +95,7 @@ const UserRegistration: React.FC = () => {
       const filteredData = usersData.filter((user) =>
         user.companyName.toLowerCase().includes(searchValue.toLowerCase()) ||
         user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
-        user.userRole.toLowerCase().includes(searchValue.toLowerCase())
+        user.userRole?.toLowerCase().includes(searchValue.toLowerCase())
       );
 
       setDataSource(filteredData);
@@ -183,6 +183,7 @@ const UserRegistration: React.FC = () => {
           columns={columns}
           dataSource={dataSource}
           loading={loading}
+          scroll={{ y: 400 }}
           pagination={{
             current: page,
             pageSize: limit,
