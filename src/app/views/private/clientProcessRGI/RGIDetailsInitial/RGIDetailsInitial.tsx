@@ -5,10 +5,11 @@ import styles from "./RGIDetailsInitial.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import NFModal from "../addNewNF/modalAddNewNF";
-import { GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
+import { GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import environment from "@env/environment";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -42,7 +43,8 @@ const RGIDetailsInitial: React.FC = () => {
   const navigate = useNavigate();
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [modalOpen, setModalOpen] = useState<ModalModel>({isOpen: false, isSell: false});
-  const [nfs, setNfs] = useState<{ nf: string; itens: number }[]>([]);
+  const [, setNfs] = useState<{ nf: string; itens: number }[]>([]);
+  const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<{ nf: string; countItems: number }[]>([]);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
@@ -64,8 +66,25 @@ const RGIDetailsInitial: React.FC = () => {
     return `${RgiCode}.${letters[indexLetters]}.${index}`;
   };
 
+  const getAssciatedNfs = async (garantiaId: string) => {
+    const garantiaItemResponse = await fetch(
+      `${environment.apiUrl}/garantias/item/associated-nf/${garantiaId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+      }
+    );
+    const associatedNfs = await garantiaItemResponse.json();
+    setAssociatedNfsWithItens(associatedNfs.data);
+    console.log("nfs associadas: ", associatedNfs.data);
+
+
+  }
+
   useEffect(() => {
-    const fetchData = () => {
+    const fetchData = async () => {
       let data: GarantiasModel = null;
       console.log("locaton.state: " + JSON.stringify(location.state));
 
@@ -73,6 +92,7 @@ const RGIDetailsInitial: React.FC = () => {
         if (location.state) {
           console.log("locaton.state: " + JSON.stringify(location.state));
           data = location.state.garantiaData;
+          await getAssciatedNfs(data.id);
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
           setDate(
@@ -137,11 +157,61 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
+  const postOrPutGarantiaItemAsync = async (itemCodeCompare: string, nfReference: string) => {
+    console.log("salvamento: " + cardData);
+    if (!cardData?.id) {
+      message.error("ID da garantia não encontrado");
+      return;
+    }
+    const itemId = cardData?.itens?.[0]?.id;
+    if (!itemId) {
+      message.error("ID do item não encontrado");
+      return;
+    }
+
+    const responseGetItens = await api.get(
+      `/garantias/item/by-garantia/${cardData.id}`
+    );
+    const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
+
+    if (
+      garantiaItensAPI.filter((value) => value.codigoItem == itemCodeCompare).length <= 0
+    ) {
+      const paylaodPost = {
+        garantiaId: cardData.id,
+        codigoItem: itemCodeCompare,
+        tipoDefeito: "Opção defeito",
+        modeloVeiculoAplicado: "Modelo veículo",
+        torqueAplicado: 0,
+        nfReferencia: nfReference,
+        codigoPeca: "",
+        loteItemOficial: "Lote Item Oficial",
+        loteItem: "Lote Item",
+        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+        solicitarRessarcimento: 0,
+        index: cardData.itens.length.toString(),
+      };
+      console.log("paylaodPost: ", JSON.stringify(paylaodPost));
+      const endpoint = environment.apiUrl + "/garantias/item/create";
+
+      const responsePost = await api.post(endpoint, paylaodPost);
+      if (responsePost.status === 200) {
+        message.success("Garantia atualizada com sucesso!");
+        
+      } else {
+        message.error("Erro ao atualizar a garantia.");
+      }
+      console.log("response: ", responsePost.data)
+    }
+  };
+
   const handleDetailsNavigation = (nf: { nf: string; itens: number }) => {
     if (!cardData?.id) {
       console.error("Dados da garantia ainda não carregados.");
       return;
     }
+
+
     navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
       state: {
         garantiaData: cardData,
@@ -152,7 +222,7 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleAddNF = async (nfNumber: string) => {
-    const itemCode = getRgiWithSuffix(rgi, nfs.length, 1); ///// TODO parametro 2 precis ser qtde de nfs + 1
+    const itemCode = getRgiWithSuffix(rgi, cardData.itens.length, 1); ///// TODO parametro 2 precis ser qtde de nfs + 1
 
     console.log("itemCode" + itemCode);
     setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, itens: 1 }]);
@@ -165,7 +235,7 @@ const RGIDetailsInitial: React.FC = () => {
 
     console.log("nfadicionada: " + JSON.stringify(cardData.itens));
 
-    setCardData(cardData);
+    await postOrPutGarantiaItemAsync(itemCode, nfNumber);
   };
 
   const handleDeleteNF = () => {
@@ -385,7 +455,7 @@ const RGIDetailsInitial: React.FC = () => {
               <span className={styles.nfsDivider}> | </span>
               <span className={styles.nfsQuantity}>
                 {" "}
-                {cardData.itens.length.toString()} ITENS
+                {associatedNfsWithItens[index]?.countItems} ITENS
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
