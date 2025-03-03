@@ -79,6 +79,7 @@ const FileAttachment = ({
       
       if (!match && label.includes("venda")) field = "nfVenda";
       else if (!match && label.includes("Referência")) field = "nfRef";
+      else if (!match && label.includes("devolução")) field = "nfDev";
       else {
         if (label.includes("Referência")) field = `${match[0]}.res`;
         else

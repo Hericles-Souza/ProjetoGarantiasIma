@@ -60,7 +60,7 @@ const Garantias: React.FC = () => {
         }
 
         const promises = status.map(async (element) => {
-          const response = await getGarantiasByStatusAsync(1, 10, element);
+          const response = await getGarantiasByStatusAsync(1, 100, element);
           const responseData = await response.data.data;
           return responseData;
         });

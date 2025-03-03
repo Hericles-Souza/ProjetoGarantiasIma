@@ -296,7 +296,7 @@ const RGIDetailsInitial: React.FC = () => {
         email: context.user.email,
         nf: cardData.nf,
         fornecedor: context.user.fullname,
-        codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
+        codigoStatus: cardData.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ? GarantiasStatusEnum2.EM_ANALISE : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
         observacao: "teste",
         usuarioAtualizacao: context.user.username,
         status: cardData.status,
@@ -497,6 +497,7 @@ const RGIDetailsInitial: React.FC = () => {
                 GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                 cardData?.codigoStatus != GarantiasStatusEnum2.NAO_ENVIADO &&
                 cardData?.codigoStatus != GarantiasStatusEnum2.EM_ANALISE &&
+                cardData?.codigoStatus != GarantiasStatusEnum2.CONFIRMADO &&
                 context.user.rule.name == "cliente" && (
                   <Button
                     type="primary"

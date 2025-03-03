@@ -8,7 +8,7 @@ import { GarantiasModel } from "@shared/models/GarantiasModel";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
-  GarantiasStatusEnum,
+  converterStatusGarantia,
   GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
@@ -85,10 +85,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
   }, [location.state, cardData]);
 
   const handleSave = async (
-    status: GarantiasStatusEnum = GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
+    statusGarantia: GarantiasStatusEnum2 = GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
   ) => {
     try {
-      console.log(context.user.rule.name);
       if (context.user.rule.name === UserRoleEnum.Supervisor) {
         const garantia: GarantiasModel = {
           razaoSocial: razaoSocial,
@@ -96,12 +95,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
           email: context.user.email,
           nf: cardData.nf,
           fornecedor: context.user.fullname,
-          codigoStatus: status.includes("Aguardando NF de Devolução")
-            ? GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
-            : GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE,
+          codigoStatus: statusGarantia,
           observacao: "teste",
           usuarioAtualizacao: context.user.username,
-          status: status,
+          status: converterStatusGarantia(statusGarantia),
           dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         };
 
@@ -193,23 +190,25 @@ const TechnicalAndSupervisorInitialRGI = () => {
         </div>
         <div className="ContainerHeader">
           <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
-          {context.user.rule.name === UserRoleEnum.Técnico && (
+          {/* {context.user.rule.name != UserRoleEnum.Técnico && (
             <div className="ButtonHeader">
               <Button type="default" className="ButtonDelete">
                 Salvar
               </Button>
               <Button
-                onClick={async () => handleSave()}
+                onClick={async () => handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)}
                 type="primary"
                 className="ButonToSend"
               >
                 Enviar
               </Button>
             </div>
-          )}
+          )} */}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus !=
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+            cardData.codigoStatus !=
+              GarantiasStatusEnum2.CONFIRMADO && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
                   Visualizar Pré Nota
@@ -222,7 +221,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   Não autorizo
                 </Button>
                 <Button
-                  onClick={async () => handleSave()}
+                  onClick={async () =>
+                    handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
+                  }
                   type="primary"
                   className="ButonToSend"
                 >
