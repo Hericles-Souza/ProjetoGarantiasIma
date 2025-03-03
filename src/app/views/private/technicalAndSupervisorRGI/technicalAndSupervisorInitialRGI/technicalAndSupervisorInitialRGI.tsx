@@ -4,14 +4,17 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import { Button, message, Spin } from "antd";
 import { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
   converterStatusGarantia,
+  GarantiasStatusEnum,
   GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
+import environment from "@env/environment";
+import stylesDetails from "../technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens.module.css";
 
 const TechnicalAndSupervisorInitialRGI = () => {
   const location = useLocation();
@@ -25,7 +28,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
   const [razaoSocial, setRazaoSocial] = useState("");
   const [telefone, setTelefone] = useState("");
   const [dataSolicitacao, setDataSolicitacao] = useState("");
-  const [nfs, setNfs] = useState<
+  const [groupedItems, setGroupedItems] = useState<string[]>();
+  const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
+    { nf: string; countItems: number }[]
+  >([]);
+  const [, setNfs] = useState<
     { itemId: string; nf: string; itens: number; sequence: number }[]
   >(
     nfOrigem
@@ -50,6 +57,37 @@ const TechnicalAndSupervisorInitialRGI = () => {
   const seconds = String(now.getSeconds()).padStart(2, "0");
   const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
+  const getAssciatedNfs = async (garantiaId: string) => {
+    const garantiaItemResponse = await fetch(
+      `${environment.apiUrl}/garantias/item/associated-nf/${garantiaId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+      }
+    );
+    const associatedNfs = await garantiaItemResponse.json();
+    setAssociatedNfsWithItens(associatedNfs.data);
+    console.log("nfs associadas: ", associatedNfs.data);
+  };
+
+  const groupByNfReferencia = (itens: GarantiaItem[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const grouped: { codigoItem?: string } = {};
+
+    itens?.forEach((item) => {
+      if (!grouped[item.nfReferencia]) {
+        const formatCodigoItem = item.codigoItem;
+        grouped[item.nfReferencia] =
+          formatCodigoItem.split(".")[0] + "." + formatCodigoItem.split(".")[1];
+      }
+    });
+
+    // Retorna um array com os itens agrupados
+    return Object.values(grouped);
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -63,6 +101,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
           setTelefone(data.telefone);
           setDataSolicitacao(data.data);
           setCardData(data);
+          await getAssciatedNfs(data.id);
           setNfs([
             {
               itemId: location.state.item.id,
@@ -71,6 +110,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
               sequence: 1,
             },
           ]);
+          if (cardData?.itens?.length > 0) {
+            const itensAgrupados = groupByNfReferencia(cardData?.itens);
+            console.log("itensAgrupados: ", itensAgrupados);
+            setGroupedItems(itensAgrupados);
+          }
           return;
         }
       } catch (error) {
@@ -83,6 +127,39 @@ const TechnicalAndSupervisorInitialRGI = () => {
     };
     fetchUserData();
   }, [location.state, cardData]);
+
+  const handleConfirm = async () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+    const garantia: GarantiasModel = {
+      razaoSocial: location.state.garantia.razaoSocial,
+      telefone: location.state.garantia.telefone,
+      email: context.user.email,
+      nf: cardData.nf,
+      fornecedor: context.user.fullname,
+      codigoStatus: GarantiasStatusEnum2.CONFIRMADO,
+      observacao: "teste",
+      usuarioAtualizacao: context.user.username,
+      status: GarantiasStatusEnum.CONFIRMADO,
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+    };
+
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
+      garantia
+    );
+
+    if (responseHeader.status === 200) {
+      message.success("Gaantia confirmada com sucesso");
+    }
+  };
 
   const handleSave = async (
     statusGarantia: GarantiasStatusEnum2 = GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
@@ -207,8 +284,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus !=
               GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
-            cardData.codigoStatus !=
-              GarantiasStatusEnum2.CONFIRMADO && (
+            cardData.codigoStatus != GarantiasStatusEnum2.CONFIRMADO && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
                   Visualizar Pré Nota
@@ -230,6 +306,23 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   Autorizar Envio
                 </Button>
               </div>
+            )}
+
+          {context.user.rule.name === UserRoleEnum.Supervisor &&
+            cardData.codigoStatus ===
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+              <>
+                <Button type="primary" className={stylesDetails.ButonToSend}>
+                  Recusar NF de Devolução
+                </Button>
+                <Button
+                  type="primary"
+                  className={stylesDetails.ButonToSend}
+                  onClick={handleConfirm}
+                >
+                  Autorizar
+                </Button>
+              </>
             )}
         </div>
       </header>
@@ -271,12 +364,14 @@ const TechnicalAndSupervisorInitialRGI = () => {
         <div className="headerNF">
           <h2 className="title-nf">NFs associadas a este acordo</h2>
         </div>
-        {nfs.map((nf, index) => (
+        {groupedItems?.sort().map((codigoItem, index) => (
           <div key={index} className="nf-item">
             <div>
-              <span className="nf-number">{nf.nf}</span>
+              <span className="nf-number">{codigoItem}</span>
               <span className="nf-divider"> | </span>
-              <span className="nf-details">{nf.itens} ITENS</span>
+              <span className="nf-details">
+                {associatedNfsWithItens[index]?.countItems} ITENS
+              </span>
             </div>
             <div>
               <Button
@@ -287,7 +382,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
                     "asdasdasdsa: " + JSON.stringify(location.state.garantia)
                   );
                   navigate("/technical-and-supervisor/details-itens", {
-                    state: { nf, garantia: location.state.garantia },
+                    state: {
+                      nf: codigoItem,
+                      garantia: location.state.garantia,
+                    },
                   });
                 }}
               >

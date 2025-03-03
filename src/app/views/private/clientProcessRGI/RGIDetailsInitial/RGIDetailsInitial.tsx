@@ -49,7 +49,7 @@ const RGIDetailsInitial: React.FC = () => {
     isOpen: false,
     isSell: false,
   });
-  const [, setNfs] = useState<{ nf: string; itens: number }[]>([]);
+  const [nfs, setNfs] = useState<{ itemCode: string; nfRef: string; itens: number }[]>([]);
   const [groupedItems, setGroupedItems] = useState<string[]>();
   const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
     { nf: string; countItems: number }[]
@@ -125,7 +125,8 @@ const RGIDetailsInitial: React.FC = () => {
           setRgi(data.rgi);
           setNfs([
             {
-              nf: data.nf,
+              itemCode: data.nf,
+              nfRef: data.nf,
               itens: data.itens ? data.itens.length : 0,
             },
           ]);
@@ -229,7 +230,7 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  const handleDetailsNavigation = (nf: { nf: string; itens: number }) => {
+  const handleDetailsNavigation = (nf: { nf: string; itens: number }, countItems: number, nfNumber: string) => {
     if (!cardData?.id) {
       console.error("Dados da garantia ainda não carregados.");
       return;
@@ -240,6 +241,8 @@ const RGIDetailsInitial: React.FC = () => {
         garantiaData: cardData,
         garantiaId: cardData.id,
         currentNf: nf,
+        countItems: countItems,
+        nfNumber: nfNumber
       },
     });
   };
@@ -247,8 +250,8 @@ const RGIDetailsInitial: React.FC = () => {
   const handleAddNF = async (nfNumber: string) => {
     const itemCode = getRgiWithSuffix(rgi, cardData.itens.length, 1); ///// TODO parametro 2 precis ser qtde de nfs + 1
 
-    console.log("itemCode" + itemCode);
-    setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, itens: 1 }]);
+    console.log("nfNumber" + nfNumber);
+    setNfs((prevNfs) => [...prevNfs, { itemCode: itemCode, nfRef: nfNumber, itens: 1 }]);
     setAssociatedNfsWithItens((prevassociatedNfsWithItens) => [...prevassociatedNfsWithItens, { nf: nfNumber, countItems: 1 }]);
     cardData.itens.push({
       codigoItem: itemCode,
@@ -266,7 +269,7 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleDeleteNF = () => {
-    setNfs((prevNfs) => prevNfs.filter((nf) => nf.nf !== nfToDelete));
+    setNfs((prevNfs) => prevNfs.filter((nf) => nf.itemCode !== nfToDelete));
     setModalDeleteOpen(false);
   };
 
@@ -525,7 +528,7 @@ const RGIDetailsInitial: React.FC = () => {
                   handleDetailsNavigation({
                     itens: cardData.itens.length,
                     nf: codigoItem,
-                  })
+                  }, associatedNfsWithItens[index]?.countItems, nfs[index]?.nfRef)
                 }
               >
                 &gt;

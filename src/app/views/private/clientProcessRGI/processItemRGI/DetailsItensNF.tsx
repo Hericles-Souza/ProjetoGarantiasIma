@@ -303,7 +303,7 @@ const DetailsItensNF: React.FC = () => {
         if (location.state && "garantiaData" in location.state) {
           data = (location.state as { garantiaData: GarantiasModel })
             .garantiaData;
-          console.log("Dados recebidos via state:", data);
+          console.log("Dados recebidos via state:", location.state.nfNumber);
           const actualNf = location.state.currentNf;
           setRecRgiLetter(actualNf.nf.split(".")[1]);
           console.log("garantia: ", JSON.stringify(garantia?.codigoStatus));
@@ -346,7 +346,7 @@ const DetailsItensNF: React.FC = () => {
 
   const addNewItem = () => {
     const newItemId = crypto.randomUUID();
-    const sequence = items.length + 1;
+    const sequence = location.state.countItems = location.state.countItems + 1;
     const newItemRgi = garantia
       ? formatItemRgi(location.state.currentNf.nf, sequence)
       : "";
@@ -365,7 +365,7 @@ const DetailsItensNF: React.FC = () => {
         anexos: "",
         rgi: newItemRgi,
         codigoItem: newItemRgi,
-        nfReferencia: "",
+        nfReferencia: location.state.nfNumber,
         loteItemOficial: "",
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
       },
@@ -460,7 +460,7 @@ const DetailsItensNF: React.FC = () => {
               tipoDefeito: item.tipoDefeito,
               modeloVeiculoAplicado: item.modeloVeiculoAplicado,
               torqueAplicado: Number(item.torqueAplicado) || 0,
-              nfReferencia: garantia.nf,
+              nfReferencia: item.nfReferencia,
               codigoPeca: item.codigoPeca,
               loteItemOficial: item.loteItem,
               loteItem: item.loteItem,
@@ -486,7 +486,7 @@ const DetailsItensNF: React.FC = () => {
               tipoDefeito: item.tipoDefeito,
               modeloVeiculoAplicado: item.modeloVeiculoAplicado,
               torqueAplicado: item.torqueAplicado,
-              nfReferencia: garantia.nf,
+              nfReferencia: location.state.nfNumber,
               codigoPeca: item.codigoPeca,
               loteItemOficial: item.loteItem,
               loteItem: item.loteItem,

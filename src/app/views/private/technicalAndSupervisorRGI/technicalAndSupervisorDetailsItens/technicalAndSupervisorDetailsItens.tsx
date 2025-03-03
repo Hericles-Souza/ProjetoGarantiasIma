@@ -76,14 +76,13 @@ const FileAttachment = ({
       let field: string;
       const match = label.match(/^\d+/);
       console.log("label: " + label);
-      
+
       if (!match && label.includes("venda")) field = "nfVenda";
       else if (!match && label.includes("Referência")) field = "nfRef";
       else if (!match && label.includes("devolução")) field = "nfDev";
       else {
         if (label.includes("Referência")) field = `${match[0]}.res`;
-        else
-          field = `${match[0]}.img`;
+        else field = `${match[0]}.img`;
       }
 
       console.log("field: " + field);
@@ -163,7 +162,7 @@ const CollapsibleSection = ({
   toggleVisibility,
   children,
   handleConfirm,
-  statusGarantia
+  statusGarantia,
 }: {
   title: string;
   isVisible: boolean;
@@ -177,16 +176,6 @@ const CollapsibleSection = ({
     <div>
       <div className={styles.tituloSecaoContainer}>
         <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
-        {context.user.rule.name === UserRoleEnum.Supervisor && statusGarantia === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
-          <>
-            <Button type="primary" className={styles.ButonToSend}>
-              Recusar NF de Devolução
-            </Button>
-            <Button type="primary" className={styles.ButonToSend} onClick={handleConfirm}>
-              Autorizar
-            </Button>
-          </>
-        )}
         <Button
           type="text"
           icon={isVisible ? <DownOutlined /> : <RightOutlined />}
@@ -208,14 +197,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [cardData, setCardData] = useState<GarantiasModel>();
   const { id } = useParams<{ id: string }>();
   // const context = useContext(AuthContext);
+  const [recRgiLetter, setRecRgiLetter] = useState("");
   const [loading, setLoading] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState("");
   const [isReimbursementChecked, setIsReimbursementChecked] = useState(false);
-
-
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -229,12 +217,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             setItems(value.data);
           });
           setCardData(location.state.garantia);
+          setRecRgiLetter(location.state.nf.split(".")[1]);
+          console.log("recRgiLetter: ", location.state.nf);
           console.log(
-            "location.state.garantia: " + JSON.stringify(location.state.garantia)
+            "location.state.garantia: " +
+              JSON.stringify(location.state.garantia)
           );
-          console.log(
-            "cardDAta " + JSON.stringify(cardData)
-          );
+          // console.log("cardDAta " + JSON.stringify(cardData));
         }
         return;
       } catch (error) {
@@ -264,7 +253,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   };
 
   const handleConfirm = async () => {
-
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -295,33 +283,36 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     if (responseHeader.status === 200) {
       message.success("Gaantia confirmada com sucesso");
     }
-  }
+  };
 
   const handleSave = async () => {
-    location.state.garantia.itens.map(async (item, index) => {
-      const dataToSend = {
-        ItemId: item.id,
-        conclusao: item.conclusao,
-        status: item.codigoStatus,
-        tipoDefeitoOficial: item.tipoDefeito,
-      };
-      console.log("aqui: " + JSON.stringify(dataToSend));
-      try {
-        const response = await api.put(
-          `/garantias/analisetecnica/`,
-          dataToSend
-        );
+    console.log("itens: ", cardData.itens);
+    cardData.itens
+      .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
+      .map(async (item, index) => {
+        const dataToSend = {
+          ItemId: item.id,
+          conclusao: item.conclusao,
+          status: item.codigoStatus,
+          tipoDefeitoOficial: item.tipoDefeito,
+        };
+        console.log("aqui: " + JSON.stringify(dataToSend));
+        try {
+          const response = await api.put(
+            `/garantias/analisetecnica/`,
+            dataToSend
+          );
 
-        if (response.status === 200) {
-          message.success("Dados salvos com sucesso!");
-        } else {
-          message.error("Falha ao salvar os dados.");
+          if (response.status === 200) {
+            message.success("Dados salvos com sucesso!");
+          } else {
+            message.error("Falha ao salvar os dados.");
+          }
+        } catch (error) {
+          console.error("Erro ao tentar salvar:", error);
+          message.error("Erro ao tentar salvar.");
         }
-      } catch (error) {
-        console.error("Erro ao tentar salvar:", error);
-        message.error("Erro ao tentar salvar.");
-      }
-    });
+      });
   };
 
   if (loading || !items) {
@@ -352,23 +343,23 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           type="link"
           className={styles.ButtonBack}
           onClick={() =>
-            navigate(
-              `/garantias/technical-and-supervisor/${items[0].garantia_id}`, {
-                state: { item: cardData.itens[0], garantia: cardData },
-              }
-              
-            )
+            navigate(`/garantias/technical-and-supervisor/${cardData.id}`, {
+              state: { item: cardData.itens[0], garantia: cardData },
+            })
           }
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA RGI
         </Button>
         <span className={styles.RgiCode}>
-          RGI N° {location.state.garantia.itens[0]?.rgi} / NF {location.state.garantia.itens[0].nfReferencia}
+          RGI N° {location.state.garantia.itens[0]?.rgi} / NF{" "}
+          {location.state.garantia.itens[0].nfReferencia}
         </span>
       </div>
 
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>{location.state.garantia.itens[0].rgi}</h1>
+        <h1 className={styles.tituloRgi}>
+          {location.state.garantia.itens[0].rgi}
+        </h1>
         <div className={styles.botoesCabecalho}>
           {cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
             <>
@@ -408,194 +399,195 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         </span>
       </div> */}
 
-      {cardData.itens.map((item) => {
+      {cardData.itens
+        .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
+        .map((item) => {
+          return (
+            <div className={styles.containerInformacoes}>
+              <CollapsibleSection
+                title={item.codigoItem}
+                isVisible={visibleSections[item.id]}
+                toggleVisibility={() => toggleContentVisibility(item.id)}
+                handleConfirm={handleConfirm}
+                statusGarantia={cardData.codigoStatus}
+              >
+                {/* Anexo da NF de venda (visível apenas para não supervisores) */}
+                {context.user.rule.name !== UserRoleEnum.Supervisor && (
+                  <div style={{ marginTop: "20px" }}>
+                    <FileAttachment
+                      label="Anexo da NF de venda"
+                      backgroundColor="white"
+                      itemId={item.id}
+                    />
+                  </div>
+                )}
 
-        return (
-          <div className={styles.containerInformacoes}>
-            <CollapsibleSection
-              title={item.codigoItem}
-              isVisible={visibleSections[item.id]}
-              toggleVisibility={() => toggleContentVisibility(item.id)}
-              handleConfirm={handleConfirm}
-              statusGarantia={cardData.codigoStatus}
-            >
-              {/* Anexo da NF de venda (visível apenas para não supervisores) */}
-              {context.user.rule.name !== UserRoleEnum.Supervisor && (
+                <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+                <div className={styles.inputsContainer}>
+                  <div className={styles.inputsConjun}>
+                    <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                      <OutlinedInputWithLabel
+                        label="Código da peça"
+                        value={item.codigoItem}
+                        fullWidth
+                        disabled
+                      />
+                    </div>
+                    <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                      <OutlinedInputWithLabel
+                        label="Lote da peça"
+                        value={item.loteItem}
+                        fullWidth
+                        disabled
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputsConjun}>
+                    <div className={styles.inputGroup} style={{ flex: 1 }}>
+                      <OutlinedInputWithLabel
+                        label="Modelo do veículo que aplicou"
+                        fullWidth
+                        disabled
+                        value={item.modeloVeiculoAplicado}
+                      />
+                    </div>
+                    <div className={styles.inputGroup} style={{ flex: 0.3 }}>
+                      <OutlinedInputWithLabel
+                        label="Ano do veículo"
+                        disabled
+                        value={item.modeloVeiculoAplicado}
+                        fullWidth
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.inputsConjun}>
+                    <div className={styles.inputGroup} style={{ flex: 1 }}>
+                      <OutlinedInputWithLabel
+                        label="Torque aplicado à peça"
+                        value={item.torqueAplicado.toString()}
+                        fullWidth
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <FileAttachment
+                  label="Anexo da NF de Referência"
+                  backgroundColor="white"
+                  itemId={item.id}
+                />
                 <div style={{ marginTop: "20px" }}>
                   <FileAttachment
-                    label="Anexo da NF de venda"
+                    label="Anexo da NF de devolução"
                     backgroundColor="white"
                     itemId={item.id}
                   />
                 </div>
-              )}
+                {item.solicitarRessarcimento &&
+                  context.user.rule.name !== UserRoleEnum.Supervisor && (
+                    <div className={styles.contentReimbursement}>
+                      <h3 className={styles.tituloA}>
+                        Anexo de dados adicionais para ressarcimento
+                      </h3>
+                      {[
+                        "1. Documento de identificação (RG ou CNH):",
+                        "2. Documentação do veículo:",
+                        "3. NF do guincho:",
+                        "4. NF de outras despesa/produtos pertinentes:",
+                      ].map((itemRes, index) => (
+                        <FileAttachment
+                          key={index}
+                          label={itemRes}
+                          itemId={item.id}
+                          backgroundColor="#f5f5f5"
+                        />
+                      ))}
+                    </div>
+                  )}
 
-              <h3 className={styles.tituloSecao}>Informações Gerais</h3>
-              <div className={styles.inputsContainer}>
-                <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                    <OutlinedInputWithLabel
-                      label="Código da peça"
-                      value={item.codigoItem}
-                      fullWidth
-                      disabled
-                    />
-                  </div>
-                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                    <OutlinedInputWithLabel
-                      label="Lote da peça"
-                      value={item.loteItem}
-                      fullWidth
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 1 }}>
-                    <OutlinedInputWithLabel
-                      label="Modelo do veículo que aplicou"
-                      fullWidth
-                      disabled
-                      value={item.modeloVeiculoAplicado}
-                    />
-                  </div>
-                  <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                    <OutlinedInputWithLabel
-                      label="Ano do veículo"
-                      disabled
-                      value={item.modeloVeiculoAplicado}
-                      fullWidth
-                    />
-                  </div>
-                </div>
-                <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 1 }}>
-                    <OutlinedInputWithLabel
-                      label="Torque aplicado à peça"
-                      value={item.torqueAplicado.toString()}
-                      fullWidth
-                      disabled
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <FileAttachment
-                label="Anexo da NF de Referência"
-                backgroundColor="white"
-                itemId={item.id}
-              />
-              <div style={{ marginTop: "20px" }}>
-                <FileAttachment
-                  label="Anexo da NF de devolução"
-                  backgroundColor="white"
-                  itemId={item.id}
-                />
-              </div>
-              {item.solicitarRessarcimento &&
-                context.user.rule.name !== UserRoleEnum.Supervisor && (
-                  <div className={styles.contentReimbursement}>
-                    <h3 className={styles.tituloA}>
-                      Anexo de dados adicionais para ressarcimento
-                    </h3>
+                {/* Anexos de Imagens (visível apenas para não supervisores) */}
+                {context.user.rule.name !== UserRoleEnum.Supervisor && (
+                  <>
+                    <h3 className={styles.tituloA}>Anexos de Imagens</h3>
                     {[
-                      "1. Documento de identificação (RG ou CNH):",
-                      "2. Documentação do veículo:",
-                      "3. NF do guincho:",
-                      "4. NF de outras despesa/produtos pertinentes:",
-                    ].map((itemRes, index) => (
+                      "1. Foto do lado onde está a gravação IMA:",
+                      "2. Foto da parte danificada/amassada/quebrada:",
+                      "3. Foto marcações suspeitas na peça:",
+                      "4. Foto da peça completa:",
+                      "5. Outras fotos pertinentes:",
+                    ].map((itemQuestion, index) => (
                       <FileAttachment
                         key={index}
-                        label={itemRes}
+                        label={itemQuestion}
+                        backgroundColor="white"
                         itemId={item.id}
-                        backgroundColor="#f5f5f5"
                       />
                     ))}
-                  </div>
+
+                    <hr className={styles.divisor} />
+                    <div className={styles.containerSelectDefect}>
+                      <OutlinedSelectWithLabel
+                        label="Possível defeito"
+                        options={[
+                          {
+                            value: "defeito1",
+                            label: "Defeito 1",
+                          },
+                          {
+                            value: "defeito2",
+                            label: "Defeito 2",
+                          },
+                        ]}
+                        value={item.tipoDefeito}
+                        onChange={(e) => {
+                          item.tipoDefeito = e.target.value;
+                        }}
+                      />
+                    </div>
+                    <div className={styles.containerSelect}>
+                      <OutlinedSelectWithLabel
+                        label="Envio Autorizado"
+                        options={[
+                          {
+                            value: "Autorizado",
+                            label: "Autorizar envio da NF de devolução",
+                          },
+                          { value: "Improcedente", label: "Improcedente" },
+                        ]}
+                        value={envioAutorizado}
+                        onChange={(e) => {
+                          item.status =
+                            e.target.value == "Autorizado"
+                              ? GarantiasItemStatusEnum.AUTORIZADO
+                              : GarantiasItemStatusEnum.NAO_AUTORIZADO;
+                          item.codigoStatus =
+                            e.target.value == "Autorizado"
+                              ? GarantiasItemStatusEnum2.AUTORIZADO
+                              : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
+                          setEnvioAutorizado(e.target.value);
+                        }}
+                      />
+                    </div>
+
+                    <h3 className={styles.tituloA}>Conclusão</h3>
+                    <MultilineTextFields
+                      value={item.conclusao}
+                      onChange={(e) => {
+                        item.conclusao = e.target.value;
+                        console.log(item.conclusao);
+                        setConclusao(e.target.value);
+                      }}
+                      label="Conclusão"
+                      placeholder="Digite a conclusão aqui..."
+                    />
+                  </>
                 )}
-
-              {/* Anexos de Imagens (visível apenas para não supervisores) */}
-              {context.user.rule.name !== UserRoleEnum.Supervisor && (
-                <>
-                  <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-                  {[
-                    "1. Foto do lado onde está a gravação IMA:",
-                    "2. Foto da parte danificada/amassada/quebrada:",
-                    "3. Foto marcações suspeitas na peça:",
-                    "4. Foto da peça completa:",
-                    "5. Outras fotos pertinentes:",
-                  ].map((itemQuestion, index) => (
-                    <FileAttachment
-                      key={index}
-                      label={itemQuestion}
-                      backgroundColor="white"
-                      itemId={item.id}
-                    />
-                  ))}
-
-                  <hr className={styles.divisor} />
-                  <div className={styles.containerSelectDefect}>
-                    <OutlinedSelectWithLabel
-                      label="Possível defeito"
-                      options={[
-                        {
-                          value: "defeito1",
-                          label: "Defeito 1",
-                        },
-                        {
-                          value: "defeito2",
-                          label: "Defeito 2",
-                        },
-                      ]}
-                      value={item.tipoDefeito}
-                      onChange={(e) => {
-                        item.tipoDefeito = e.target.value;
-                      }}
-                    />
-                  </div>
-                  <div className={styles.containerSelect}>
-                    <OutlinedSelectWithLabel
-                      label="Envio Autorizado"
-                      options={[
-                        {
-                          value: "Autorizado",
-                          label: "Autorizar envio da NF de devolução",
-                        },
-                        { value: "Improcedente", label: "Improcedente" },
-                      ]}
-                      value={envioAutorizado}
-                      onChange={(e) => {
-                        item.status =
-                          e.target.value == "Autorizado"
-                            ? GarantiasItemStatusEnum.AUTORIZADO
-                            : GarantiasItemStatusEnum.NAO_AUTORIZADO;
-                        item.codigoStatus =
-                          e.target.value == "Autorizado"
-                            ? GarantiasItemStatusEnum2.AUTORIZADO
-                            : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
-                        setEnvioAutorizado(e.target.value);
-                      }}
-                    />
-                  </div>
-
-                  <h3 className={styles.tituloA}>Conclusão</h3>
-                  <MultilineTextFields
-                    value={item.conclusao}
-                    onChange={(e) => {
-                      item.conclusao = e.target.value;
-                      console.log(item.conclusao);
-                      setConclusao(e.target.value);
-                    }}
-                    label="Conclusão"
-                    placeholder="Digite a conclusão aqui..."
-                  />
-                </>
-              )}
-            </CollapsibleSection>
-          </div>
-        );
-      })}
+              </CollapsibleSection>
+            </div>
+          );
+        })}
     </div>
   );
 };
