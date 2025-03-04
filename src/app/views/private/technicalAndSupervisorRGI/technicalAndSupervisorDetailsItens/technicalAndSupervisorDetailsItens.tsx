@@ -293,7 +293,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         const dataToSend = {
           ItemId: item.id,
           conclusao: item.conclusao,
-          status: item.codigoStatus,
+          status: item.status,
           tipoDefeitoOficial: item.tipoDefeito,
         };
         console.log("aqui: " + JSON.stringify(dataToSend));
@@ -478,6 +478,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   backgroundColor="white"
                   itemId={item.id}
                 />
+                {cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+                  context.user.rule.name == UserRoleEnum.Supervisor && (
                 <div style={{ marginTop: "20px" }}>
                   <FileAttachment
                     label="Anexo da NF de devolução"
@@ -485,6 +487,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     itemId={item.id}
                   />
                 </div>
+                  )}
                 {item.solicitarRessarcimento &&
                   context.user.rule.name !== UserRoleEnum.Supervisor && (
                     <div className={styles.contentReimbursement}>

@@ -158,6 +158,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
     if (responseHeader.status === 200) {
       message.success("Gaantia confirmada com sucesso");
+      navigate("/garantias");
     }
   };
 

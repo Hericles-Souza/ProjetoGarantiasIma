@@ -365,7 +365,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
                   Preencha todos os campos obrigatórios para salvar
                 </p>
               )}
-              <h3>RGI N° {context.user.codigoCigam}</h3>
               <Form.Item
                 style={{ margin: 0 }}
                 name="N° NF de origem"

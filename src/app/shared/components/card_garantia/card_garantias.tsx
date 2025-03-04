@@ -55,19 +55,7 @@ const PieceCode = styled.p`
   margin: 0;
 `;
 
-const Defect = styled.div`
-  font-size: 14px;
-  margin-left: 15px;
-  color: #555;
-  margin-top: 15px;
-`;
 
-const ValueDefect = styled.div`
-  font-size: 16px;
-  margin-top: 1px;
-  font-weight: bold;
-  color: #555;
-`;
 
 const Footer = styled.div`
   display: flex;
@@ -147,10 +135,6 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, cod
         <Code>{codigoFormatado}</Code>
         <PieceCode>Código da Peça: {GarantiaItem.nf}</PieceCode>
       </RedContainer>
-      <Defect>
-        Possível Defeito:
-        <ValueDefect>{GarantiaItem.itens[0].tipoDefeito}</ValueDefect>
-      </Defect>
       <Footer>
         <Date>
           <CalendarOutlined style={{ marginRight: 5 }} /> {dayjs(data).format('DD/MM/YYYY')}
