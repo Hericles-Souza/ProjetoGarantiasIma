@@ -216,7 +216,6 @@ const CollapsibleSection = ({
   toggleVisibility,
   showDeleteConfirm,
   children,
-  status,
   title,
   isEvaluated,
 }: {
@@ -234,15 +233,7 @@ const CollapsibleSection = ({
       <div className={styles.tituloSecaoContainer}>
         <h3 className={styles.tituloSecaoVermelho}>
           {title}{" "}
-          <span
-            className={
-              status === "Autorizado"
-                ? styles.statusAuthorized
-                : styles.statusRejected
-            }
-          >
-            {status}
-          </span>
+          
         </h3>
 
         <div className={styles.iconAndArrow}>
@@ -799,7 +790,7 @@ const DetailsItensNF: React.FC = () => {
                             ? false
                             : true
                         }
-                        label="Possível defeito"
+                        label="Defeito"
                         fullWidth
                         options={[
                           { value: "defeito1", label: "Opção 1" },

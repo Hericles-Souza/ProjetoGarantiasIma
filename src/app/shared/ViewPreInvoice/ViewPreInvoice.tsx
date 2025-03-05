@@ -4,7 +4,7 @@ import styles from "./ViewPreInvoice.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import api from "@shared/Interceptors";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const { Title } = Typography;
 
@@ -82,8 +82,6 @@ const InvoicePage = () => {
             }
         } catch (error) {
             console.error("Erro ao carregar dados da API:", error);
-        } finally{
-
         }
     };
 

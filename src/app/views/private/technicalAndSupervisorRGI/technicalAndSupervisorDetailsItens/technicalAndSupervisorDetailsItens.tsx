@@ -100,34 +100,25 @@ const FileAttachment = ({
         console.log("response: " + JSON.stringify(value.body));
         return value;
       });
-      const blob = await response.blob();
-      const fileExtension = getFileExtensionFromBlob(blob);
-      const labelWithoutSpace = label.replace(/\s+/g, "");
-      const fileNameWithExtension = field.replace(".", "_") + fileExtension;
-      const imagemUrl = URL.createObjectURL(blob);
-      console.log(fileNameWithExtension);
-      setImagemUrl(imagemUrl);
-      // handleDownload(fileNameWithExtension);
-      handleDownload(fileNameWithExtension, imagemUrl);
 
-      // if (response.ok) {
-      //   // Receber a imagem em formato binário (blob)
-      //   console.log(JSON.stringify(response));
-      //   const blob = await response.blob();
-      //   // const file = new File([blob], fileName, { type: blob.type });
-      //   // const extension = fileName.split('.').pop();
-      //   // Gerar URL para a imagem
-      //   const imagemUrl = URL.createObjectURL(blob);
-      //   const fileExtension = getFileExtensionFromBlob(blob);
-      //   const labelWithoutSpace = label.replace(/\s+/g, '');
-      //   const fileNameWithExtension = labelWithoutSpace + fileExtension;
-      //   setImagemUrl(imagemUrl);
-      //   // handleDownload(fileNameWithExtension);
-      // } else {
-      //   console.error("Erro ao buscar a imagem", response.statusText);
-      // }
+
+      if (response.ok) {
+        // Receber a imagem em formato binário (blob)
+        const blob = await response.blob();
+        const fileExtension = getFileExtensionFromBlob(blob);
+        const labelWithoutSpace = label.replace(/\s+/g, "");
+        const fileNameWithExtension = field.replace(".", "_") + fileExtension;
+        const imagemUrl = URL.createObjectURL(blob);
+        console.log(fileNameWithExtension);
+        setImagemUrl(imagemUrl);
+        // handleDownload(fileNameWithExtension);
+        handleDownload(fileNameWithExtension, imagemUrl);
+      } else {
+        message.error("Erro ao buscar a imagem");
+      }
     } catch (error) {
       console.error("Erro na requisição", error);
+
     }
   };
 
@@ -532,7 +523,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     <hr className={styles.divisor} />
                     <div className={styles.containerSelectDefect}>
                       <OutlinedSelectWithLabel
-                        label="Possível defeito"
+                        label="Defeito"
                         options={[
                           {
                             value: "defeito1",
@@ -543,6 +534,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                             label: "Defeito 2",
                           },
                         ]}
+                        defaultValue="defeito1"
                         value={item.tipoDefeito}
                         onChange={(e) => {
                           item.tipoDefeito = e.target.value;
