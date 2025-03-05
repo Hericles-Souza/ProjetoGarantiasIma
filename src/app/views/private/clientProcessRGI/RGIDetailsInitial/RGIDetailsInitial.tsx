@@ -41,6 +41,7 @@ export interface ModalModel {
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
+  const [sellFile, setSellFile] = useState<{fileNameWithExtension: string; imagemUrl: string}>();
   const { id } = useParams<{ id: string }>();
   const [date, setDate] = useState("");
   const navigate = useNavigate();
@@ -49,7 +50,9 @@ const RGIDetailsInitial: React.FC = () => {
     isOpen: false,
     isSell: false,
   });
-  const [nfs, setNfs] = useState<{ itemCode: string; nfRef: string; itens: number }[]>([]);
+  const [nfs, setNfs] = useState<
+    { itemCode: string; nfRef: string; itens: number }[]
+  >([]);
   const [groupedItems, setGroupedItems] = useState<string[]>();
   const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
     { nf: string; countItems: number }[]
@@ -69,6 +72,62 @@ const RGIDetailsInitial: React.FC = () => {
   const minutes = String(now.getMinutes()).padStart(2, "0");
   const seconds = String(now.getSeconds()).padStart(2, "0");
   const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+  
+  function getExtensionFromMimeType(mimeType: string): string {
+    const mimeTypes: { [key: string]: string } = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/zip": ".zip",
+      "audio/mpeg": ".mp3",
+      "video/mp4": ".mp4",
+      // Adicione outros tipos MIME conforme necessário
+    };
+
+    return mimeTypes[mimeType] || ""; // Retorna a extensão ou uma string vazia se não encontrado
+  }
+
+  function getFileExtensionFromBlob(blob: Blob): string {
+    const mimeType = blob.type; // Pega o tipo MIME do Blob
+    const extension = getExtensionFromMimeType(mimeType);
+    return extension;
+  }
+
+
+  const getSellFile = async (itemId: string, field: string) => {
+    const urlGetFile =
+      environment.apiUrl +
+      `/files/files/download-private-file-item/${itemId}/${field}`;
+    console.log(urlGetFile);
+
+    const response = await fetch(urlGetFile, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${context.user.token}`, // Token de autenticação
+      },
+    }).then((value) => {
+      console.log("response: " + JSON.stringify(value.body));
+      return value;
+    });
+
+    const blob = await response.blob();
+    const fileExtension = getFileExtensionFromBlob(blob);
+    const fileNameWithExtension = field + fileExtension;
+    const imagemUrl = URL.createObjectURL(blob);
+    console.log(fileNameWithExtension);
+    
+    // handleDownload(fileNameWithExtension);
+    // handleDownload(fileNameWithExtension, imagemUrl);
+
+    return {fileNameWithExtension, imagemUrl}
+  };
+
+
+
 
   const getRgiWithSuffix = (RgiCode: string, indexLetters: number, index) => {
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -123,6 +182,9 @@ const RGIDetailsInitial: React.FC = () => {
           );
           setCardData(data);
           setRgi(data.rgi);
+          const sellFile = await getSellFile(data.itens[0].id, "nfVenda") as {fileNameWithExtension: string; imagemUrl: string};
+          setSellFile(sellFile);
+          console.log("sellFile: " + JSON.stringify(sellFile));
           setNfs([
             {
               itemCode: data.nf,
@@ -221,7 +283,7 @@ const RGIDetailsInitial: React.FC = () => {
       const endpoint = environment.apiUrl + "/garantias/item/create";
 
       const responsePost = await api.post(endpoint, paylaodPost);
-      if (responsePost.status === 200 || responsePost.status === 201 ) {
+      if (responsePost.status === 200 || responsePost.status === 201) {
         message.success("Garantia atualizada com sucesso!");
       } else {
         message.error("Erro ao atualizar a garantia.");
@@ -230,7 +292,11 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  const handleDetailsNavigation = (nf: { nf: string; itens: number }, countItems: number, nfNumber: string) => {
+  const handleDetailsNavigation = (
+    nf: { nf: string; itens: number },
+    countItems: number,
+    nfNumber: string
+  ) => {
     if (!cardData?.id) {
       console.error("Dados da garantia ainda não carregados.");
       return;
@@ -242,7 +308,8 @@ const RGIDetailsInitial: React.FC = () => {
         garantiaId: cardData.id,
         currentNf: nf,
         countItems: countItems,
-        nfNumber: nfNumber
+        nfNumber: nfNumber,
+        sellFile: sellFile
       },
     });
   };
@@ -251,13 +318,18 @@ const RGIDetailsInitial: React.FC = () => {
     const itemCode = getRgiWithSuffix(rgi, cardData.itens.length, 1); ///// TODO parametro 2 precis ser qtde de nfs + 1
 
     console.log("nfNumber" + nfNumber);
-    setNfs((prevNfs) => [...prevNfs, { itemCode: itemCode, nfRef: nfNumber, itens: 1 }]);
-    setAssociatedNfsWithItens((prevassociatedNfsWithItens) => [...prevassociatedNfsWithItens, { nf: nfNumber, countItems: 1 }]);
+    setNfs((prevNfs) => [
+      ...prevNfs,
+      { itemCode: itemCode, nfRef: nfNumber, itens: 1 },
+    ]);
+    setAssociatedNfsWithItens((prevassociatedNfsWithItens) => [
+      ...prevassociatedNfsWithItens,
+      { nf: nfNumber, countItems: 1 },
+    ]);
     cardData.itens.push({
       codigoItem: itemCode,
       nfReferencia: nfNumber,
     } as GarantiaItem);
-    
 
     setCardData(cardData);
     const itensAgrupados = groupByNfReferencia(cardData?.itens);
@@ -299,7 +371,10 @@ const RGIDetailsInitial: React.FC = () => {
         email: context.user.email,
         nf: cardData.nf,
         fornecedor: context.user.fullname,
-        codigoStatus: cardData.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ? GarantiasStatusEnum2.EM_ANALISE : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+        codigoStatus:
+          cardData.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO
+            ? GarantiasStatusEnum2.EM_ANALISE
+            : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
         observacao: "teste",
         usuarioAtualizacao: context.user.username,
         status: cardData.status,
@@ -525,10 +600,14 @@ const RGIDetailsInitial: React.FC = () => {
                 type="text"
                 className={styles.nextButton}
                 onClick={() =>
-                  handleDetailsNavigation({
-                    itens: cardData.itens.length,
-                    nf: codigoItem,
-                  }, associatedNfsWithItens[index]?.countItems, nfs[index]?.nfRef)
+                  handleDetailsNavigation(
+                    {
+                      itens: cardData.itens.length,
+                      nf: codigoItem,
+                    },
+                    associatedNfsWithItens[index]?.countItems,
+                    nfs[index]?.nfRef
+                  )
                 }
               >
                 &gt;

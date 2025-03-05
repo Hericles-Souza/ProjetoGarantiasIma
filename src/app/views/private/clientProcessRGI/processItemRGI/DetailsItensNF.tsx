@@ -50,6 +50,7 @@ interface FileAttachmentProps {
   isRessarcimento: boolean;
   onFileSelect?: (file: File) => void;
   recGarantia: GarantiasModel;
+  recSellFile: {fileNameWithExtension: string; imagemUrl: string}
 }
 
 const FileAttachment: React.FC<FileAttachmentProps> = ({
@@ -60,6 +61,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   isRessarcimento,
   onFileSelect,
   recGarantia,
+  recSellFile
 }) => {
   // Estado que guarda os dados do arquivo (ID e nome)
   const [fileData, setFileData] = useState<FileData | null>(
@@ -147,6 +149,13 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     setFileName(null);
   };
 
+  const handleDownloadFile = () => {
+    const link = document.createElement("a");
+    link.href = recSellFile.imagemUrl;
+    link.download = recSellFile.fileNameWithExtension; // Defina o nome do arquivo que será baixado
+    link.click(); // Dispara o download
+  }
+
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
@@ -168,7 +177,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         )} 
         {recGarantia.codigoStatus != GarantiasStatusEnum2.CONFIRMADO &&
         recGarantia.codigoStatus != GarantiasStatusEnum2.EM_ANALISE &&
-        !fileData && (
+        recSellFile.fileNameWithExtension === ""
+        && recSellFile.imagemUrl === "" && (
           // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
           <label className={styles.buttonUpdateNfSale}>
             <input
@@ -180,6 +190,20 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
               }}
             />
             Adicionar Anexo
+          </label>
+        )}
+        {recGarantia.codigoStatus != GarantiasStatusEnum2.CONFIRMADO &&
+        recGarantia.codigoStatus != GarantiasStatusEnum2.EM_ANALISE &&
+        recSellFile.fileNameWithExtension != ""
+        && recSellFile.imagemUrl != "" && (
+          // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
+          <label className={styles.buttonUpdateNfSale}>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onClick={handleDownloadFile}
+            />
+            Baxar Arquivo
           </label>
         )}
       </div>
@@ -258,6 +282,7 @@ const DetailsItensNF: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [garantia, setGarantia] = useState<GarantiasModel>();
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
+  const [recSellFile, setRecSellFile] = useState<{fileNameWithExtension: string; imagemUrl: string}>(); // Para controlar o carregamento
   const context = useContext(AuthContext);
 
   const rgiLetter = (location.state as any)?.rgiLetter || "A";
@@ -328,7 +353,7 @@ const DetailsItensNF: React.FC = () => {
             codigoStatus: item.codigoStatus,
           }));
           console.log("garantia: ", JSON.stringify(garantia?.codigoStatus));
-
+          setRecSellFile(location.state.sellFile);
           setItems(data.itens);
           if (transformedItems.length > 0) {
             setVisibleSectionId(transformedItems[0].id);
@@ -640,6 +665,7 @@ const DetailsItensNF: React.FC = () => {
                 : undefined
             }
             recGarantia={garantia}
+            recSellFile={recSellFile}
           />
         )}
       <div className={styles.TitleItens}>
@@ -710,6 +736,7 @@ const DetailsItensNF: React.FC = () => {
                           : undefined
                       }
                       recGarantia={garantia}
+                      recSellFile={recSellFile}
                     />
                   )}
 
@@ -901,6 +928,7 @@ const DetailsItensNF: React.FC = () => {
                           isRessarcimento={true}
                           backgroundColor="#f5f5f5"
                           recGarantia={garantia}
+                          recSellFile={recSellFile}
                         />
                       ))}
                     </div>
@@ -914,6 +942,7 @@ const DetailsItensNF: React.FC = () => {
                       isRessarcimento={false}
                       backgroundColor="white"
                       recGarantia={garantia}
+                      recSellFile={recSellFile}
                     />
                   )}
 
@@ -940,6 +969,7 @@ const DetailsItensNF: React.FC = () => {
                       isRessarcimento={false}
                       backgroundColor="white"
                       recGarantia={garantia}
+                      recSellFile={recSellFile}
                     />
                   ))}
               </CollapsibleSection>
