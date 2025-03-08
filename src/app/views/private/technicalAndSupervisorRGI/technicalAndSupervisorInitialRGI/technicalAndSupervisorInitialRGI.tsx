@@ -49,6 +49,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [loading, setLoading] = useState(true);
+  const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(false); // New state for front-end mask
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -70,13 +71,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
     );
     const associatedNfs = await garantiaItemResponse.json();
     setAssociatedNfsWithItens(associatedNfs.data);
-    console.log("nfs associadas: ", associatedNfs.data);
   };
 
   const groupByNfReferencia = (itens: GarantiaItem[]) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const grouped: { codigoItem?: string } = {};
-
     itens?.forEach((item) => {
       if (!grouped[item.nfReferencia]) {
         const formatCodigoItem = item.codigoItem;
@@ -84,8 +82,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
           formatCodigoItem.split(".")[0] + "." + formatCodigoItem.split(".")[1];
       }
     });
-
-    // Retorna um array com os itens agrupados
     return Object.values(grouped);
   };
 
@@ -96,7 +92,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
         if (location.state) {
           data = location.state.garantia;
         }
-
         if (data != null) {
           setRazaoSocial(data.razaoSocial);
           setTelefone(data.telefone);
@@ -111,23 +106,19 @@ const TechnicalAndSupervisorInitialRGI = () => {
               sequence: 1,
             },
           ]);
-          if (cardData?.itens?.length > 0) {
-            const itensAgrupados = groupByNfReferencia(cardData?.itens);
-            console.log("itensAgrupados: ", itensAgrupados);
+          if (data?.itens?.length > 0) {
+            const itensAgrupados = groupByNfReferencia(data?.itens);
             setGroupedItems(itensAgrupados);
           }
-          return;
         }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
       } finally {
         setLoading(false);
-
-        console.log("cardDAta: " + JSON.stringify(cardData));
       }
     };
     fetchUserData();
-  }, [location.state, cardData]);
+  }, [location.state]);
 
   const handleConfirm = async () => {
     const now = new Date();
@@ -158,7 +149,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
     );
 
     if (responseHeader.status === 200) {
-      message.success("Gaantia confirmada com sucesso");
+      message.success("Garantia confirmada com sucesso");
       navigate("/garantias");
     }
   };
@@ -195,43 +186,49 @@ const TechnicalAndSupervisorInitialRGI = () => {
       console.error("Erro ao atualizar a garantia:", error);
       message.error("Erro ao atualizar a garantia");
     }
-    // const now = new Date();
-    // const currentDate = now.toLocaleDateString();
-
-    // const garantiaUpload: GarantiasModel = {
-    //   razaoSocial: razaoSocial ||
-    //   (context.user as AuthModel).username ||
-    //   context.user.fullname,
-    //   telefone: telefone || context.user.phone,
-    //   email: context.user.email,
-    //   nf: location.state.garantia.nf,
-    //   fornecedor: location.state.garantia.fornecedor,
-    //   codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
-    //   observacao: "Garantia válida por 12 meses",
-    //   usuarioAtualizacao: "60003",
-    //   dataAtualizacao: "\"2024-12-08 14:54:23.507261\""
-    // }
-
-    // const garantiaModel: GarantiasModel = {
-    //   id: location.state.garantia.id,
-    //   email: context.user.email,
-    //   razaoSocial:
-    //     razaoSocial ||
-    //     (context.user as AuthModel).username ||
-    //     context.user.fullname,
-    //   createdAt: context.user.createdAt,
-    //   dataAtualizacao: currentDate,
-    //   data: currentDate,
-    //   updatedAt: context.user.updatedAt || currentDate,
-    //   usuarioAtualizacao: context.user.fullname,
-    //   usuarioInsercao: context.user.fullname,
-    //   telefone: telefone || context.user.phone,
-    // };
-    // console.log("garantiayupldasd: " + JSON.stringify(garantiaModel));
-    // updateGarantiasHeaderByIdAsync(garantiaModel)
-    //   .then((value) => console.log(value))
-    //   .catch((error) => console.error("Erro ao atualizar dados:", error));
   };
+
+  const handleConcludeAnalysis = async () => {
+    // Check if all items have required fields filled
+    const allItemsFilled = cardData?.itens?.every(
+      (item) =>
+        item.tipoDefeito &&
+        item.conclusao &&
+        item.status &&
+        item.codigoStatus &&
+        item.modeloVeiculoAplicado &&
+        item.torqueAplicado !== null &&
+        item.loteItem
+    );
+
+    if (!allItemsFilled) {
+      message.error("Todos os itens devem estar preenchidos para concluir a análise.");
+      return;
+    }
+
+    try {
+      if (context.user.rule.name === UserRoleEnum.Técnico) {
+        setIsAnalysisConcluded(true);
+        message.success("Análise concluída com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao concluir a análise:", error);
+      message.error("Erro ao concluir a análise");
+    }
+  };
+
+  const displayedStatus =
+    cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
+      context.user.rule.name === UserRoleEnum.Técnico &&
+      isAnalysisConcluded
+      ? "Avaliação Concluída"
+      : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
+        (context.user.rule.name === UserRoleEnum.Técnico || context.user.rule.name === UserRoleEnum.Supervisor)
+        ? "Aguardando Avaliação"
+        : cardData?.status;
+
+  const statusColor =
+    displayedStatus === "Avaliação Concluída" ? "#00FF00" : StatusColors[cardData?.codigoStatus];
 
   if (loading || !cardData) {
     return (
@@ -270,12 +267,29 @@ const TechnicalAndSupervisorInitialRGI = () => {
         <div className={stylesDetails.headerContainer}>
           <div className={stylesDetails.headerLeft}>
             <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
-            <div style={{
-              color: StatusColors[cardData?.codigoStatus],
-              backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
-            }} className={stylesDetails.statusTag}>{cardData?.status}</div>
+            <div
+              style={{
+                color: statusColor,
+                backgroundColor: `${statusColor}26`,
+              }}
+              className={stylesDetails.statusTag}
+            >
+              {displayedStatus}
+            </div>
           </div>
-          {context.user.rule.name != UserRoleEnum.Técnico && (
+          {context.user.rule.name === UserRoleEnum.Técnico && (
+            <div className="ButtonHeader">
+              <Button
+                onClick={handleConcludeAnalysis}
+                type="primary"
+                className="ButonToSend"
+                disabled={isAnalysisConcluded}
+              >
+                Concluir Análise
+              </Button>
+            </div>
+          )}
+          {context.user.rule.name !== UserRoleEnum.Técnico && (
             <div className="ButtonHeader">
               <Button
                 onClick={async () => handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)}
@@ -287,9 +301,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
             </div>
           )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus !=
-            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
-            cardData.codigoStatus != GarantiasStatusEnum2.CONFIRMADO && (
+            cardData.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+            cardData.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
                   Visualizar Pré Nota
@@ -302,9 +315,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   Não autorizo
                 </Button>
                 <Button
-                  onClick={async () =>
-                    handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
-                  }
+                  onClick={async () => handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)}
                   type="primary"
                   className="ButonToSend"
                 >
@@ -312,10 +323,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 </Button>
               </div>
             )}
-
           {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus ===
-            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+            cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
               <>
                 <Button type="primary" className={stylesDetails.ButonToSend}>
                   Recusar NF de Devolução
@@ -383,13 +392,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 type="text"
                 className={stylesDetails.nextButton}
                 onClick={() => {
-                  console.log(
-                    "asdasdasdsa: " + JSON.stringify(location.state.garantia)
-                  );
                   navigate("/technical-and-supervisor/details-itens", {
                     state: {
                       nf: codigoItem,
-                      garantia: location.state.garantia,
+                      garantia: cardData,
+                      isAnalysisConcluded: context.user.rule.name === UserRoleEnum.Técnico && isAnalysisConcluded,
                     },
                   });
                 }}

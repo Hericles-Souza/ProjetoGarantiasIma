@@ -7,6 +7,7 @@ import './OutlinedSelectWithLabel.css';
 // Adicione uma interface para definir as props
 interface OutlinedSelectWithLabelProps {
   label: string;
+  placeholder?: string;
   options: { value: string; label: string }[];
   defaultValue?: string;
   className?: string; // Permite que o componente receba uma classe CSS
@@ -18,6 +19,7 @@ export default function OutlinedSelectWithLabel({
   options,
   defaultValue,
   className,
+  placeholder,
   ...props // Captura propriedades adicionais
 }: OutlinedSelectWithLabelProps) {
   return (
@@ -34,6 +36,7 @@ export default function OutlinedSelectWithLabel({
         <TextField
           id="outlined-select-currency"
           select
+          placeholder={placeholder}
           label={label}
           defaultValue={defaultValue || options[0]?.value}
           helperText=""
