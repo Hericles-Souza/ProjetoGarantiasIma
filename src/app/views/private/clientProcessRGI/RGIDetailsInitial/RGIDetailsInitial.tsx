@@ -8,6 +8,7 @@ import NFModal from "../addNewNF/modalAddNewNF";
 import {
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum2,
+  StatusColors
 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -41,7 +42,7 @@ export interface ModalModel {
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
-  const [sellFile, setSellFile] = useState<{fileNameWithExtension: string; imagemUrl: string}>();
+  const [sellFile, setSellFile] = useState<{ fileNameWithExtension: string; imagemUrl: string }>();
   const { id } = useParams<{ id: string }>();
   const [date, setDate] = useState("");
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ const RGIDetailsInitial: React.FC = () => {
   const minutes = String(now.getMinutes()).padStart(2, "0");
   const seconds = String(now.getSeconds()).padStart(2, "0");
   const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
-  
+
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
       "image/jpeg": ".jpg",
@@ -119,11 +120,11 @@ const RGIDetailsInitial: React.FC = () => {
     const fileNameWithExtension = field + fileExtension;
     const imagemUrl = URL.createObjectURL(blob);
     console.log(fileNameWithExtension);
-    
+
     // handleDownload(fileNameWithExtension);
     // handleDownload(fileNameWithExtension, imagemUrl);
 
-    return {fileNameWithExtension, imagemUrl}
+    return { fileNameWithExtension, imagemUrl }
   };
 
 
@@ -182,7 +183,7 @@ const RGIDetailsInitial: React.FC = () => {
           );
           setCardData(data);
           setRgi(data.rgi);
-          const sellFile = await getSellFile(data.itens[0].id, "nfVenda") as {fileNameWithExtension: string; imagemUrl: string};
+          const sellFile = await getSellFile(data.itens[0].id, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
           setSellFile(sellFile);
           console.log("sellFile: " + JSON.stringify(sellFile));
           setNfs([
@@ -221,6 +222,9 @@ const RGIDetailsInitial: React.FC = () => {
       content: "Você tem certeza de que deseja excluir esta garantia?",
       okText: "Excluir",
       cancelText: "Cancelar",
+      okButtonProps: {
+        style: { backgroundColor: "red", borderColor: "red" },
+      },
       onOk: async () => {
         try {
           // Supondo que o endpoint para excluir seja DELETE /garantias/{id}
@@ -315,7 +319,7 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleAddNF = async (nfNumber: string) => {
-    const itemCode = getRgiWithSuffix(rgi, cardData.itens.length, 1); ///// TODO parametro 2 precis ser qtde de nfs + 1
+    const itemCode = getRgiWithSuffix(rgi, cardData.itens.length, 1);
 
     console.log("nfNumber" + nfNumber);
     setNfs((prevNfs) => [
@@ -340,9 +344,32 @@ const RGIDetailsInitial: React.FC = () => {
     await postOrPutGarantiaItemAsync(itemCode, nfNumber);
   };
 
-  const handleDeleteNF = () => {
-    setNfs((prevNfs) => prevNfs.filter((nf) => nf.itemCode !== nfToDelete));
-    setModalDeleteOpen(false);
+  const handleDeleteNF = async () => {
+    try {
+      // Chamada à API para deletar a NF
+      const response = await api.delete(`/garantias/item/delete-by-codigo/${nfToDelete}`);
+      if (response.status === 200) {
+        // Atualiza os estados locais
+        setNfs((prevNfs) => prevNfs.filter((nf) => nf.itemCode !== nfToDelete));
+        setGroupedItems((prevGroupedItems) =>
+          prevGroupedItems?.filter((item) => item !== nfToDelete)
+        );
+        setAssociatedNfsWithItens((prevAssociatedNfs) =>
+          prevAssociatedNfs.filter((nf) => nf.nf !== nfToDelete)
+        );
+        setCardData((prevCardData) => ({
+          ...prevCardData,
+          itens: prevCardData.itens.filter((item) => item.codigoItem !== nfToDelete),
+        }));
+        setModalDeleteOpen(false);
+        message.success("NF excluída com sucesso!");
+      } else {
+        message.error("Erro ao excluir a NF.");
+      }
+    } catch (error) {
+      console.error("Erro ao excluir a NF:", error);
+      message.error("Erro ao excluir a NF.");
+    }
   };
 
   const showDeleteConfirm = (nfNumber: string) => {
@@ -438,13 +465,14 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
           <h1 className={styles.rgiTitle}>RGI {rgi}</h1>
-          <div className={styles.statusTag}>{cardData?.status}</div>
+          <div style={{
+            color: StatusColors[cardData?.codigoStatus], 
+            backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
+          }} className={styles.statusTag}>{cardData?.status}</div>
         </div>
         <div className={styles.buttonsContainer}>
-          {cardData?.codigoStatus !== 2 &&
-            cardData?.codigoStatus ==
-              GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-            context.user.rule.name == "cliente" && (
+          {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
+            context.user.rule.name === "cliente" && (
               <Button
                 type="default"
                 danger
@@ -521,7 +549,7 @@ const RGIDetailsInitial: React.FC = () => {
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
           {(cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ||
-            cardData?.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) &&
+            cardData?.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE && cardData?.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO) &&
             context.user.rule.name == "cliente" && (
               <Button
                 type="primary"
@@ -563,7 +591,7 @@ const RGIDetailsInitial: React.FC = () => {
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
               {cardData?.codigoStatus ==
-                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+                GarantiasStatusEnum2.NAO_ENVIADO &&
                 context.user.rule.name == "cliente" && (
                   <DeleteOutlined
                     style={{ color: "#555", fontSize: "22px" }}

@@ -11,10 +11,11 @@ import {
   converterStatusGarantia,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
+  StatusColors,
 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
 import environment from "@env/environment";
-import stylesDetails from "../technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens.module.css";
+import stylesDetails from "../technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI.module.css";
 
 const TechnicalAndSupervisorInitialRGI = () => {
   const location = useLocation();
@@ -37,13 +38,13 @@ const TechnicalAndSupervisorInitialRGI = () => {
   >(
     nfOrigem
       ? [
-          {
-            itemId: location.state.item.id,
-            nf: nfOrigem,
-            itens: 0,
-            sequence: 0,
-          },
-        ]
+        {
+          itemId: location.state.item.id,
+          nf: nfOrigem,
+          itens: 0,
+          sequence: 0,
+        },
+      ]
       : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
@@ -256,23 +257,26 @@ const TechnicalAndSupervisorInitialRGI = () => {
   return (
     <div className="acordo-container">
       <header className="header">
-        <div className="ContainerButtonBack">
+        <div className={stylesDetails.ContainerButtonBack}>
           <Button
             type="link"
-            className="ButtonBack"
+            className={stylesDetails.ButtonBack}
             onClick={() => navigate("/garantias")}
           >
-            <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
+            <LeftOutlined /> VOLTAR PARA O INÍCIO
           </Button>
-          <span className="RgiCode">RGI {cardData.rgi}/ </span>
+          <span className="RgiCode">RGI {cardData.rgi} </span>
         </div>
-        <div className="ContainerHeader">
-          <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
-          {/* {context.user.rule.name != UserRoleEnum.Técnico && (
+        <div className={stylesDetails.headerContainer}>
+          <div className={stylesDetails.headerLeft}>
+            <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
+            <div style={{
+              color: StatusColors[cardData?.codigoStatus],
+              backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
+            }} className={stylesDetails.statusTag}>{cardData?.status}</div>
+          </div>
+          {context.user.rule.name != UserRoleEnum.Técnico && (
             <div className="ButtonHeader">
-              <Button type="default" className="ButtonDelete">
-                Salvar
-              </Button>
               <Button
                 onClick={async () => handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)}
                 type="primary"
@@ -281,10 +285,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 Enviar
               </Button>
             </div>
-          )} */}
+          )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus !=
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             cardData.codigoStatus != GarantiasStatusEnum2.CONFIRMADO && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
@@ -311,7 +315,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus ===
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
               <>
                 <Button type="primary" className={stylesDetails.ButonToSend}>
                   Recusar NF de Devolução
@@ -328,9 +332,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
         </div>
       </header>
 
-      <section className="general-info">
-        <h2 className="title-infos-general">Informações Gerais</h2>
-        <div className="inputs-general">
+      <section className={stylesDetails.infoContainer}>
+        <h2 className={stylesDetails.infoTitle}>Informações Gerais</h2>
+        <div className={stylesDetails.inputsContainer}>
           <div className="info-row">
             <OutlinedInputWithLabel
               label="Razão social"
@@ -363,21 +367,21 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
       <section className="nf-section">
         <div className="headerNF">
-          <h2 className="title-nf">NFs associadas a este acordo</h2>
+          <h2 className={stylesDetails.titleNf}>NFs associadas a este acordo</h2>
         </div>
         {groupedItems?.sort().map((codigoItem, index) => (
-          <div key={index} className="nf-item">
+          <div key={index} className={stylesDetails.nfsItem}>
             <div>
-              <span className="nf-number">{codigoItem}</span>
+              <span className={stylesDetails.nfsCode}>{codigoItem}</span>
               <span className="nf-divider"> | </span>
-              <span className="nf-details">
+              <span className={stylesDetails.nfsQuantity}>
                 {associatedNfsWithItens[index]?.countItems} ITENS
               </span>
             </div>
             <div>
               <Button
                 type="text"
-                className="nextButton"
+                className={stylesDetails.nextButton}
                 onClick={() => {
                   console.log(
                     "asdasdasdsa: " + JSON.stringify(location.state.garantia)

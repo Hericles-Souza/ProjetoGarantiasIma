@@ -3,7 +3,7 @@ const styles = {
     display: 'flex' as const,
     flexWrap: 'wrap' as const,
     gap: '1rem',
-    overflowY: 'auto' as const, // Permite rolagem vertical
+    overflowY: 'auto' as const, 
   },
   tabActive: {
     color: 'red',

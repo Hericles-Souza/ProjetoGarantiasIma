@@ -90,11 +90,11 @@ export function converterStringParaStatusGarantia(status: string): GarantiasStat
 }
 
 export const StatusColors = {
-  [GarantiasStatusEnum2.NAO_ENVIADO]: "#8C8C8C", // Gray
-  [GarantiasStatusEnum2.EM_ANALISE]: "#1890FF", // Blue
-  [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: "#FA8C16", // Orange
-  [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: "#FAAD14", // Yellow
-  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: "#13C2C2", // Cyan
-  [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: "#FF4D4F", // Red
-  [GarantiasStatusEnum2.CONFIRMADO]: "#52C41A", // Green
+  [GarantiasStatusEnum2.NAO_ENVIADO]: "#8C8C8C", 
+  [GarantiasStatusEnum2.EM_ANALISE]: "#1890FF",
+  [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: "#FA8C16", 
+  [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: "#FAAD14",
+  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: "#13C2C2", 
+  [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: "#FF4D4F", 
+  [GarantiasStatusEnum2.CONFIRMADO]: "#52C41A", 
 } as const;

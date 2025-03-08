@@ -23,7 +23,7 @@ const CardContainer = styled.div<{ clickable: boolean }>`
   &:hover {
     transform: ${(props) => (props.clickable ? 'scale(1.01)' : 'none')};
     box-shadow: ${(props) =>
-      props.clickable ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+    props.clickable ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   }
 `;
 
@@ -133,7 +133,7 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, cod
       </Header>
       <RedContainer>
         <Code>{codigoFormatado}</Code>
-        <PieceCode>Código da Peça: {GarantiaItem.nf}</PieceCode>
+
       </RedContainer>
       <Footer>
         <Date>

@@ -4,21 +4,23 @@
     font-size: 16px;
     color: #5F5A56;
     background-color: transparent !important;
+    border-radius: 15px; 
+
   }
 
   
   .outlined-input .MuiInputLabel-root.Mui-focused {
     color: #5F5A56;
-    border-radius: 15px; 
+    border-radius: 15px !important; 
   }
   
   .outlined-input .MuiOutlinedInput-root {
-    border-radius: 15px;
+    border-radius: 15px !important;
   }
   
   .outlined-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
     color: #5F5A56;
     border: solid 1px #dadada;
-    border-radius: 15px;
+    border-radius: 15px !important;
   }
   

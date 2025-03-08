@@ -212,7 +212,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           console.log("recRgiLetter: ", location.state.nf);
           console.log(
             "location.state.garantia: " +
-              JSON.stringify(location.state.garantia)
+            JSON.stringify(location.state.garantia)
           );
           // console.log("cardDAta " + JSON.stringify(cardData));
         }
@@ -354,17 +354,19 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         <div className={styles.botoesCabecalho}>
           {cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
             <>
-              <Button
-                type="default"
-                className={styles.ButtonDelete}
-                onClick={() =>
-                  navigate("/view-pre-invoice", {
-                    state: { cardData },
-                  })
-                }
-              >
-                Visualizar Pré-Nota
-              </Button>
+              {context.user.rule.name == UserRoleEnum.Supervisor && (
+                <Button
+                  type="default"
+                  className={styles.ButtonDelete}
+                  onClick={() =>
+                    navigate("/view-pre-invoice", {
+                      state: { cardData },
+                    })
+                  }
+                >
+                  Visualizar Pré-Nota
+                </Button>
+              )}
               <Button
                 type="primary"
                 className={styles.ButonToSend}
@@ -471,13 +473,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 />
                 {cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
                   context.user.rule.name == UserRoleEnum.Supervisor && (
-                <div style={{ marginTop: "20px" }}>
-                  <FileAttachment
-                    label="Anexo da NF de devolução"
-                    backgroundColor="white"
-                    itemId={item.id}
-                  />
-                </div>
+                    <div style={{ marginTop: "20px" }}>
+                      <FileAttachment
+                        label="Anexo da NF de devolução"
+                        backgroundColor="white"
+                        itemId={item.id}
+                      />
+                    </div>
                   )}
                 {item.solicitarRessarcimento &&
                   context.user.rule.name !== UserRoleEnum.Supervisor && (

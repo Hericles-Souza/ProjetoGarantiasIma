@@ -4,7 +4,6 @@ import LogoCigam from "@assets/image/png/logo-cigam.png";
 import LogoAllSoft from "@assets/image/png/icone_allsoft.jpeg";
 import backgroundImage from "@assets/image/png/background.png";
 import React, { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import DialogCreateAccount from "@shared/dialogs/dialog-create-account/dialog-create-account.tsx";
 import { Card } from "@shared/components/card/index.tsx";
 import { Input } from "@shared/components/input/index.tsx";
@@ -15,13 +14,12 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext.tsx";
 
-
 export const LoginPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
   const { login } = useContext(AuthContext) || {};
+
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -33,30 +31,26 @@ export const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!login) {
+      toast.error("Erro no sistema: função de login não disponível.");
+      return;
+    }
+
     try {
-      await AuthService.login(email, password, (user) => {
-        if (login) {
-          login(user);
-        }
-      });
-    } catch {
-      toast.error(
-        "Falha no login. Verifique suas credenciais e tente novamente."
-      );
-    }finally{
-      // while(!login){ /* empty */ }
-      navigate("/garantias");
+      const user = await AuthService.login(username, password);
+      await login(user);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.error("Falha no login. Verifique suas credenciais e tente novamente.");
     }
   };
 
   return (
     <>
       <ToastContainer />
-
       {isModalVisible && (
         <DialogCreateAccount isVisible={isModalVisible} onClose={hideModal} />
       )}
-
       <div
         style={{
           display: "flex",
@@ -130,14 +124,18 @@ export const LoginPage = () => {
             }}
           >
             <Card
-              style={{
-                height: "90%",
-                border: "none",
-                alignItems: "center",
-                display: "flex",
-                backgroundColor: "transparent",
-                flexDirection: "column",
-                justifyContent: "center",
+              bordered={false} // Remove a borda padrão do Card
+              styles={{
+                body: {
+                  height: "90%",
+                  border: "none", // Garante que não haja borda no corpo
+                  boxShadow: "none", // Remove qualquer sombra padrão
+                  alignItems: "center",
+                  display: "flex",
+                  backgroundColor: "transparent",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                },
               }}
             >
               <div
@@ -176,15 +174,15 @@ export const LoginPage = () => {
                       />
                     }
                     size="large"
-                    placeholder="Digite seu email"
-                    type="email"
+                    placeholder="Digite seu usuário"
+                    type="text"
                     style={{
                       height: "55px",
                       fontSize: "18px",
                       borderRadius: "15px",
                     }}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
                 <div style={{ marginBottom: "16px" }}>
@@ -212,7 +210,6 @@ export const LoginPage = () => {
                 </div>
                 <div style={{ marginBottom: "16px" }}>
                   <Button
-                  onClick={handleLogin}
                     size="large"
                     type="primary"
                     htmlType="submit"
