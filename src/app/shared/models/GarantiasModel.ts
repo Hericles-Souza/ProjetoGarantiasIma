@@ -20,19 +20,20 @@ export interface GarantiaPedidos{
 }
 
 export interface GarantiaItem {
-  codigoPeca: string;
-  id: string;
-  rgi: string;
+  anoVeiculo?: string;
+  codigoPeca?: string;
+  id?: string;
+  rgi?: string;
   codigoItem: string;
-  tipoDefeito: string;
-  modeloVeiculoAplicado: string;
-  torqueAplicado: number;
+  tipoDefeito?: string;
+  modeloVeiculoAplicado?: string;
+  torqueAplicado?: number;
   nfReferencia: string;
-  loteItemOficial: string;
-  loteItem: string;
-  status: string; 
+  loteItemOficial?: string;
+  loteItem?: string;
+  status?: string; 
   codigoStatus: GarantiasItemStatusEnum2;
-  solicitarRessarcimento: boolean;
+  solicitarRessarcimento?: boolean;
   analiseTecnica?:string;
   conclusao?:string;
   anexos?: string;

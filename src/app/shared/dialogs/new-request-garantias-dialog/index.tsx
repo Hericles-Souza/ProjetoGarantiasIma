@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Divider, Form, Upload } from "antd";
 import { Input } from "@shared/components/input/index.tsx";
 import styles from "./new-request-garantias.module.css";
-import { GarantiasItemStatusEnum, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
+import { GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
 import {
@@ -135,18 +135,8 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       // 2. Construa o item de garantia
       const garantiaItem: GarantiaItem = {
         codigoItem: newRGI + ".A.1",
-        tipoDefeito: "defeito1",
-        modeloVeiculoAplicado: "veiculo XYZ",
-        torqueAplicado: 100,
         nfReferencia: values["N° NF de origem"],
-        loteItemOficial: "LOTE123",
-        loteItem: "LOTE456",
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-        solicitarRessarcimento: false,
-        id: itemId,
-        rgi: values["N° NF de origem"] + "A.1",
-        status: GarantiasItemStatusEnum.NAO_ANALISADO,
-        codigoPeca: "",
       };
 
       // 3. Construa o objeto garantiaModel
@@ -239,7 +229,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
                 itens: garantiaPayload.itens?.length || 0,
                 sequence: 1,
               },
-              
               rgiLetter: "A",
             },
           });

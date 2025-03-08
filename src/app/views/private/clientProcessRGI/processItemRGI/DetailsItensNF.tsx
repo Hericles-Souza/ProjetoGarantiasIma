@@ -55,9 +55,14 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   isRessarcimento,
   onFileSelect,
   recGarantia,
+  recSellFile,
 }) => {
-  const [fileData, setFileData] = useState<FileData | null>(initialFileData || null);
-  const [, setFileName] = useState<string | null>(initialFileData ? initialFileData.fileName : null);
+  const [fileData, setFileData] = useState<FileData | null>(
+    initialFileData || null
+  );
+  const [, setFileName] = useState<string | null>(
+    initialFileData ? initialFileData.fileName : null
+  );
   const authContext = useContext(AuthContext);
 
   useEffect(() => {
@@ -75,7 +80,9 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       setFileData({ id: "", fileName: file.name });
@@ -119,6 +126,13 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
+  const handleDownloadFile = () => {
+    const link = document.createElement("a");
+    link.href = recSellFile.imagemUrl;
+    link.download = recSellFile.fileNameWithExtension; // Defina o nome do arquivo que será baixado
+    link.click(); // Dispara o download
+  };
+
   const handleRemoveFile = () => {
     setFileData(null);
     setFileName(null);
@@ -130,38 +144,59 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       <div className={styles.fileUpdateContent}>
         {recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ? (
           <>
-            {fileData && (
+            {(fileData || recSellFile.imagemUrl != "") && (
               <span className={styles.fileName}>
                 <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-                {fileData.fileName}
+                {fileData?.fileName || recSellFile.fileNameWithExtension}
                 <Button
                   type="link"
                   onClick={handleRemoveFile}
                   style={{ outline: "none" }}
-                  icon={<DeleteOutlined style={{ color: "red", border: "none" }} />}
+                  icon={
+                    <DeleteOutlined style={{ color: "red", border: "none" }} />
+                  }
                   title="Remover arquivo"
                 />
               </span>
             )}
+
+            {recSellFile.fileNameWithExtension != "" &&
+            recSellFile.imagemUrl != "" ? (
+              // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
+              <label className={styles.buttonUpdateNfSale}>
+                <input
+                  type="file"
+                  style={{ display: "none" }}
+                  onClick={handleDownloadFile}
+                />
+                Baixar Arquivo
+              </label>
+            ) : (
+              <label className={styles.buttonUpdateNfSale}>
+                <input
+                  type="file"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    handleFileChange(e);
+                    handleFileUpload(e);
+                  }}
+                />
+                Adicionar Anexo
+              </label>
+            )}
+          </>
+        ) : (
+          recSellFile.fileNameWithExtension != "" &&
+          recSellFile.imagemUrl != "" && (
+            // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
             <label className={styles.buttonUpdateNfSale}>
               <input
                 type="file"
                 style={{ display: "none" }}
-                onChange={(e) => {
-                  handleFileChange(e);
-                  handleFileUpload(e);
-                }}
+                onClick={handleDownloadFile}
               />
-              Adicionar Anexo
+              Baixar Arquivo
             </label>
-          </>
-        ) : (
-          fileData && (
-            <span className={styles.fileName}>
-              <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-              {fileData.fileName}
-
-            </span>
           )
         )}
       </div>
@@ -175,6 +210,7 @@ const CollapsibleSection = ({
   showDeleteConfirm,
   children,
   title,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isEvaluated,
   garantia,
 }: {
@@ -229,7 +265,10 @@ const DetailsItensNF: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [garantia, setGarantia] = useState<GarantiasModel>();
   const [loading, setLoading] = useState<boolean>(true);
-  const [recSellFile, setRecSellFile] = useState<{ fileNameWithExtension: string; imagemUrl: string }>();
+  const [recSellFile, setRecSellFile] = useState<{
+    fileNameWithExtension: string;
+    imagemUrl: string;
+  }>();
   const context = useContext(AuthContext);
 
   const rgiLetter = (location.state as any)?.rgiLetter || "A";
@@ -262,7 +301,9 @@ const DetailsItensNF: React.FC = () => {
       },
       onOk: async () => {
         try {
-          const response = await api.delete(`/garantias/garantias/${garantia?.id}`);
+          const response = await api.delete(
+            `/garantias/garantias/${garantia?.id}`
+          );
           if (response.status === 200) {
             message.success("Garantia excluída com sucesso!");
             navigate("/garantias");
@@ -282,7 +323,8 @@ const DetailsItensNF: React.FC = () => {
       try {
         let data: GarantiasModel | null = null;
         if (location.state && "garantiaData" in location.state) {
-          data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
+          data = (location.state as { garantiaData: GarantiasModel })
+            .garantiaData;
           const actualNf = location.state.currentNf;
           setRecRgiLetter(actualNf.nf.split(".")[1]);
         }
@@ -307,6 +349,8 @@ const DetailsItensNF: React.FC = () => {
             loteItemOficial: item.loteItemOficial || "",
           }));
           setRecSellFile(location.state.sellFile);
+          console.log("sellFileDetailsITens: ", location.state.sellFile);
+          console.log("setsellfile: ", recSellFile);
           setItems(transformedItems);
           if (transformedItems.length > 0) {
             setVisibleSectionId(transformedItems[0].id);
@@ -324,8 +368,11 @@ const DetailsItensNF: React.FC = () => {
 
   const addNewItem = () => {
     const newItemId = crypto.randomUUID();
-    const sequence = (location.state.countItems = location.state.countItems + 1);
-    const newItemRgi = garantia ? formatItemRgi(location.state.currentNf.nf, sequence) : "";
+    const sequence = (location.state.countItems =
+      location.state.countItems + 1);
+    const newItemRgi = garantia
+      ? formatItemRgi(location.state.currentNf.nf, sequence)
+      : "";
     setItems([
       ...items,
       {
@@ -405,13 +452,22 @@ const DetailsItensNF: React.FC = () => {
       return;
     }
 
-    let error: boolean = false;
-    const responseGetItens = await api.get(`/garantias/item/by-garantia/${garantia.id}`);
+    let isError: boolean = false;
+    const responseGetItens = await api.get(
+      `/garantias/item/by-garantia/${garantia.id}`
+    );
     const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
 
-    for (const item of items.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)) {
+    for (const item of items.filter(
+      (value) => value.codigoItem?.split(".")[1] === recRgiLetter
+    )) {
       try {
-        if (garantiaItensAPI.some((apiItem) => apiItem.codigoItem === item.codigoItem)) {
+        if (
+          garantiaItensAPI.some(
+            (apiItem) => apiItem.codigoItem === item.codigoItem
+          )
+        ) {
+          
           const payloadPut = {
             codigoItem: item.codigoItem,
             tipoDefeito: item.tipoDefeito,
@@ -425,12 +481,17 @@ const DetailsItensNF: React.FC = () => {
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
             solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
           };
-          const responsePut = await api.put(`/garantias/garantiasItem/${item.id}/UpdateItem`, payloadPut);
+
+          const responsePut = await api.put(
+            `/garantias/garantiasItem/${item.id}/UpdateItem`,
+            payloadPut
+          );
           if (responsePut.status !== 200 && responsePut.status !== 201) {
             message.error("Erro ao atualizar a garantia.");
-            error = true;
+            isError = true;
           }
         } else {
+          
           const payloadPost = {
             garantiaId: garantia.id,
             codigoItem: item.codigoItem,
@@ -445,20 +506,23 @@ const DetailsItensNF: React.FC = () => {
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
             solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
           };
-          const responsePost = await api.post(environment.apiUrl + "/garantias/item/create", payloadPost);
+          const responsePost = await api.post(
+            environment.apiUrl + "/garantias/item/create",
+            payloadPost
+          );
           if (responsePost.status !== 200 && responsePost.status !== 201) {
             message.error("Erro ao criar a garantia.");
-            error = true;
+            isError = true;
           }
         }
       } catch (error) {
         console.error("Erro ao atualizar a garantia:", error);
         message.error("Erro ao atualizar a garantia.");
-        error = true;
+        isError = true;
       }
     }
 
-    if (!error) {
+    if (!isError) {
       message.success("Garantia atualizada com sucesso!");
       navigate(`/garantias/rgi/${garantia.id}`, {
         state: { garantiaData: garantia, item: garantia?.nf },
@@ -468,8 +532,21 @@ const DetailsItensNF: React.FC = () => {
 
   if (loading && !garantia) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-        <Spin size="large" style={{ color: "red", filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)" }} />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spin
+          size="large"
+          style={{
+            color: "red",
+            filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)",
+          }}
+        />
       </div>
     );
   }
@@ -493,7 +570,9 @@ const DetailsItensNF: React.FC = () => {
       <div className={styles.ContainerHeader}>
         <div className={styles.headerLeft}>
           <h1 className={styles.tituloRgi}>
-            NF {(location.state as any)?.currentNf?.nf || "Código da NF não disponível"}
+            NF{" "}
+            {(location.state as any)?.currentNf?.nf ||
+              "Código da NF não disponível"}
           </h1>
           <div
             style={{
@@ -506,26 +585,40 @@ const DetailsItensNF: React.FC = () => {
           </div>
         </div>
         <div className={styles.botoesCabecalho}>
-          {garantia.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+          {garantia.codigoStatus !==
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
             garantia.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO &&
             garantia.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE &&
             context.user.rule.name === "cliente" && (
               <>
-                <Button type="default" className={styles.ButtonDelete} onClick={handleDeleteGuarantee}>
+                <Button
+                  type="default"
+                  className={styles.ButtonDelete}
+                  onClick={handleDeleteGuarantee}
+                >
                   EXCLUIR
                 </Button>
-                <Button type="primary" className={styles.ButonToSend} onClick={save}>
+                <Button
+                  type="primary"
+                  className={styles.ButonToSend}
+                  onClick={save}
+                >
                   SALVAR
                 </Button>
               </>
             )}
-          {garantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+          {garantia.codigoStatus ===
+            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
             context.user.rule.name !== "cliente" && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
                   Visualizar Pré Nota
                 </Button>
-                <Button type="primary" className="ButonToSend" onClick={saveNfDevolcao}>
+                <Button
+                  type="primary"
+                  className="ButonToSend"
+                  onClick={saveNfDevolcao}
+                >
                   Enviar
                 </Button>
               </div>
@@ -538,27 +631,41 @@ const DetailsItensNF: React.FC = () => {
         backgroundColor="#f5f5f5"
         garantiaItemId={""}
         isRessarcimento={false}
-        initialFileData={garantia?.anexos ? { id: garantia.anexos, fileName: garantia.anexos } : undefined}
+        initialFileData={
+          garantia?.anexos
+            ? { id: garantia.anexos, fileName: garantia.anexos }
+            : undefined
+        }
         recGarantia={garantia}
         recSellFile={recSellFile}
       />
       <div className={styles.TitleItens}>
-        <h3 className={styles.nfsTitle}>Itens desta NF associados a esta garantia</h3>
-        {garantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO && context.user.rule.name === "cliente" && (
-          <Button
-            className={styles.buttonRed}
-            style={{ backgroundColor: "red", borderRadius: "10px", height: "45px", padding: "0px 25px", outline: "none" }}
-            type="primary"
-            onClick={addNewItem}
-          >
-            ADICIONAR PEÇA
-          </Button>
-        )}
+        <h3 className={styles.nfsTitle}>
+          Itens desta NF associados a esta garantia
+        </h3>
+        {garantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
+          context.user.rule.name === "cliente" && (
+            <Button
+              className={styles.buttonRed}
+              style={{
+                backgroundColor: "red",
+                borderRadius: "10px",
+                height: "45px",
+                padding: "0px 25px",
+                outline: "none",
+              }}
+              type="primary"
+              onClick={addNewItem}
+            >
+              ADICIONAR PEÇA
+            </Button>
+          )}
       </div>
       <div className={styles.dialoginfo}>
         <InfoCircleOutlined style={{ color: "#0277BD" }} />
         <span style={{ color: "#0277BD" }}>
-          Caso a peça não possua um lote, o campo Lote da peça deve ser preenchido com “Não contém”
+          Caso a peça não possua um lote, o campo Lote da peça deve ser
+          preenchido com “Não contém”
         </span>
       </div>
       {items
@@ -573,22 +680,28 @@ const DetailsItensNF: React.FC = () => {
               status={item.status}
               rgi={item.rgi}
               isEvaluated={
-                garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO && context.user.rule.name === "cliente"
+                garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
+                context.user.rule.name === "cliente"
                   ? false
                   : true
               }
               garantia={garantia}
             >
-              {garantia?.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+              {garantia?.codigoStatus ===
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                 context.user.rule.name === "cliente" && (
                   <FileAttachment
                     label="Anexo da NF de devolução"
                     backgroundColor="white"
                     garantiaItemId={item.id}
                     isRessarcimento={false}
-                    initialFileData={garantia?.anexos ? { id: garantia.anexos, fileName: garantia.anexos } : undefined}
+                    initialFileData={
+                      garantia?.anexos
+                        ? { id: garantia.anexos, fileName: garantia.anexos }
+                        : undefined
+                    }
                     recGarantia={garantia}
-                    recSellFile={recSellFile}
+                    recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
                   />
                 )}
               <h3 className={styles.tituloSecao}>Informações Gerais</h3>
@@ -596,27 +709,40 @@ const DetailsItensNF: React.FC = () => {
                 <div className={styles.inputsConjun}>
                   <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                     <OutlinedInputWithLabel
-                      disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
                       label="Código da peça"
                       fullWidth
                       value={item.codigoPeca}
-                      onChange={(e) => handleInputChange(item.id, "codigoPeca", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "codigoPeca", e.target.value)
+                      }
                     />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                     <OutlinedInputWithLabel
-                      disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
                       label="Lote da peça"
                       fullWidth
                       value={item.loteItem}
-                      onChange={(e) => handleInputChange(item.id, "loteItem", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "loteItem", e.target.value)
+                      }
                     />
                   </div>
                 </div>
                 <div className={styles.inputsConjun}>
                   <div className={styles.inputGroup} style={{ flex: 0.4 }}>
                     <OutlinedSelectWithLabel
-                      disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
                       label="Defeito"
                       fullWidth
                       options={[
@@ -625,54 +751,97 @@ const DetailsItensNF: React.FC = () => {
                         { value: "defeito3", label: "Opção 3" },
                       ]}
                       value={item.tipoDefeito}
-                      onChange={(e) => handleInputChange(item.id, "tipoDefeito", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.id,
+                          "tipoDefeito",
+                          e.target.value
+                        )
+                      }
                     />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
                     <OutlinedInputWithLabel
-                      disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
                       label="Modelo do veículo que aplicou"
                       fullWidth
                       value={item.modeloVeiculoAplicado}
-                      onChange={(e) => handleInputChange(item.id, "modeloVeiculoAplicado", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.id,
+                          "modeloVeiculoAplicado",
+                          e.target.value
+                        )
+                      }
                     />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 0.3 }}>
                     <OutlinedInputWithLabel
-                      disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
                       label="Ano do veículo"
                       fullWidth
                       value={item.anoVeiculo}
-                      onChange={(e) => handleInputChange(item.id, "anoVeiculo", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(item.id, "anoVeiculo", e.target.value)
+                      }
                     />
                   </div>
                 </div>
                 <div className={styles.inputsConjun}>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
                     <OutlinedInputWithLabel
-                      disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
                       type="number"
                       label="Torque aplicado à peça"
                       fullWidth
                       value={item.torqueAplicado?.toString() || ""}
-                      onChange={(e) => handleInputChange(item.id, "torqueAplicado", Number(e.target.value))}
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.id,
+                          "torqueAplicado",
+                          Number(e.target.value)
+                        )
+                      }
                     />
                   </div>
                 </div>
-                {garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO && (
+                {garantia?.codigoStatus ===
+                  GarantiasStatusEnum2.NAO_ENVIADO && (
                   <div className={styles.checkboxContainer}>
                     <ColorCheckboxes
                       checked={item.solicitarRessarcimento}
-                      onChange={(e) => handleInputChange(item.id, "solicitarRessarcimento", e.target.checked)}
-                      disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.id,
+                          "solicitarRessarcimento",
+                          e.target.checked
+                        )
+                      }
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
                     />
-                    <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
+                    <label className={styles.checkboxDanger}>
+                      Solicitar ressarcimento
+                    </label>
                   </div>
                 )}
               </div>
               {item.solicitarRessarcimento && (
                 <div className={styles.contentReimbursement}>
-                  <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
+                  <h3 className={styles.tituloA}>
+                    Anexo de dados adicionais para ressarcimento
+                  </h3>
                   {[
                     "1. Documento de identificação (RG ou CNH):",
                     "2. Documentação do veículo:",
@@ -686,18 +855,22 @@ const DetailsItensNF: React.FC = () => {
                       isRessarcimento={true}
                       backgroundColor="#f5f5f5"
                       recGarantia={garantia}
-                      recSellFile={recSellFile}
+                      recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
                     />
                   ))}
                 </div>
               )}
-              {item.solicitarRessarcimento === false && garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO && (
-                <div className={styles.dialoginfoRessarcimento}>
-                  <InfoCircleOutlined style={{ color: "#bd0502" }} />
-                  <span style={{ color: "#bd0502" }}>Item Não Possui Ressarcimento.</span>
-                </div>
-              )}
-              {garantia?.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+              {item.solicitarRessarcimento === false &&
+                garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO && (
+                  <div className={styles.dialoginfoRessarcimento}>
+                    <InfoCircleOutlined style={{ color: "#bd0502" }} />
+                    <span style={{ color: "#bd0502" }}>
+                      Item Não Possui Ressarcimento.
+                    </span>
+                  </div>
+                )}
+              {garantia?.codigoStatus !==
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                 context.user.rule.name === "cliente" && (
                   <FileAttachment
                     label="Anexo da NF de Referência"
@@ -705,14 +878,16 @@ const DetailsItensNF: React.FC = () => {
                     isRessarcimento={false}
                     backgroundColor="white"
                     recGarantia={garantia}
-                    recSellFile={recSellFile}
+                    recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
                   />
                 )}
-              {garantia?.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+              {garantia?.codigoStatus !==
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                 context.user.rule.name === "cliente" && (
                   <h3 className={styles.tituloA}>Anexos de Imagens</h3>
                 )}
-              {garantia?.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+              {garantia?.codigoStatus !==
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                 context.user.rule.name === "cliente" &&
                 [
                   "1. Foto do lado onde está a gravação IMA:",
@@ -728,7 +903,7 @@ const DetailsItensNF: React.FC = () => {
                     isRessarcimento={false}
                     backgroundColor="white"
                     recGarantia={garantia}
-                    recSellFile={recSellFile}
+                    recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
                   />
                 ))}
             </CollapsibleSection>
@@ -742,7 +917,12 @@ const DetailsItensNF: React.FC = () => {
         okText="Excluir"
         cancelText="Cancelar"
         okButtonProps={{
-          style: { backgroundColor: "red", borderColor: "red", color: "white", outline: "none" },
+          style: {
+            backgroundColor: "red",
+            borderColor: "red",
+            color: "white",
+            outline: "none",
+          },
         }}
         cancelButtonProps={{
           style: { borderColor: "#dadada", color: "#5F5A56", outline: "none" },

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useContext, useEffect, useState } from "react";
 import { Button, message, Modal, Spin } from "antd";
 import { DeleteOutlined, LeftOutlined, FileOutlined } from "@ant-design/icons";
@@ -296,7 +297,7 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  const handleDetailsNavigation = (
+  const handleDetailsNavigation = async (
     nf: { nf: string; itens: number },
     countItems: number,
     nfNumber: string
@@ -306,16 +307,25 @@ const RGIDetailsInitial: React.FC = () => {
       return;
     }
 
-    navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
-      state: {
-        garantiaData: cardData,
-        garantiaId: cardData.id,
-        currentNf: nf,
-        countItems: countItems,
-        nfNumber: nfNumber,
-        sellFile: sellFile
-      },
-    });
+    console.log("codigoitem: " , nf.nf);
+    
+
+    const itemId = cardData.itens.find((item) => item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1] === nf.nf).id;
+
+    const sellFile = await getSellFile(itemId, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
+    setSellFile(sellFile);
+
+    if(sellFile)
+      navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
+        state: {
+          garantiaData: cardData,
+          garantiaId: cardData.id,
+          currentNf: nf,
+          countItems: countItems,
+          nfNumber: nfNumber,
+          sellFile: sellFile
+        },
+      });
   };
 
   const handleAddNF = async (nfNumber: string) => {
