@@ -144,10 +144,10 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       <div className={styles.fileUpdateContent}>
         {recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ? (
           <>
-            {(fileData || recSellFile.imagemUrl != "") && (
+            {(fileData || recSellFile?.imagemUrl != "") && (
               <span className={styles.fileName}>
                 <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-                {fileData?.fileName || recSellFile.fileNameWithExtension}
+                {fileData?.fileName || recSellFile?.fileNameWithExtension}
                 <Button
                   type="link"
                   onClick={handleRemoveFile}
@@ -160,8 +160,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
               </span>
             )}
 
-            {recSellFile.fileNameWithExtension != "" &&
-            recSellFile.imagemUrl != "" ? (
+            {recSellFile?.fileNameWithExtension != "" &&
+            recSellFile?.imagemUrl != "" ? (
               // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
               <label className={styles.buttonUpdateNfSale}>
                 <input
@@ -330,29 +330,14 @@ const DetailsItensNF: React.FC = () => {
         }
         if (data && location.state) {
           setGarantia(data);
-          const transformedItems = data.itens.map((item) => ({
-            id: item.id,
-            title: item.codigoItem || "",
-            codigoPeca: item.codigoPeca || "",
-            loteItem: item.loteItem || "",
-            status: item.codigoStatus ? item.codigoStatus.toString() : "",
-            tipoDefeito: item.tipoDefeito || "",
-            modeloVeiculoAplicado: item.modeloVeiculoAplicado || "",
-            anoVeiculo: item.anoVeiculo || "",
-            torqueAplicado: item.torqueAplicado || 0,
-            solicitarRessarcimento: item.solicitarRessarcimento || false,
-            anexos: item.anexos || "",
-            rgi: item.rgi,
-            codigoItem: item.codigoItem,
-            codigoStatus: item.codigoStatus,
-            nfReferencia: location.state.nfNumber,
-            loteItemOficial: item.loteItemOficial || "",
-          }));
+          const transformedItems = await getItemsByGarantiaId(data.id);
+          
           setRecSellFile(location.state.sellFile);
           console.log("sellFileDetailsITens: ", location.state.sellFile);
           console.log("setsellfile: ", recSellFile);
+          console.log("transformedItems: ", data);
           setItems(transformedItems);
-          if (transformedItems.length > 0) {
+          if (transformedItems?.length > 0) {
             setVisibleSectionId(transformedItems[0].id);
           }
         }
@@ -366,34 +351,67 @@ const DetailsItensNF: React.FC = () => {
     loadGarantiaData();
   }, [location.state, guaranteeId, rgiLetter]);
 
-  const addNewItem = () => {
+  const addNewItem = async () => {
     const newItemId = crypto.randomUUID();
     const sequence = (location.state.countItems =
       location.state.countItems + 1);
     const newItemRgi = garantia
       ? formatItemRgi(location.state.currentNf.nf, sequence)
       : "";
-    setItems([
-      ...items,
-      {
+
+      console.log("location.state.nfNumber: ", location.state.nfNumber)
+
+    const payloadPost = {
+      id: newItemId,
+      garantiaId: garantia.id,
+      codigoItem: newItemRgi,
+      nfReferencia: location.state.nfNumber,
+      codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+    };
+    console.log("payloadpostwithid: ", payloadPost);
+    const responsePost = await api.post(
+      environment.apiUrl + "/garantias/item/create",
+      payloadPost
+    );
+    if (responsePost.status !== 200 && responsePost.status !== 201) {
+      message.error("Erro ao criar a garantia.");
+    } else{
+      message.success("Item criado com sucesso.")
+
+      setItems([
+        ...items,
+        {
+          id: newItemId,
+          codigoPeca: "",
+          loteItem: "",
+          status: GarantiasItemStatusEnum.NAO_ANALISADO,
+          tipoDefeito: "",
+          anoVeiculo: "",
+          modeloVeiculoAplicado: "",
+          torqueAplicado: 0,
+          solicitarRessarcimento: false,
+          anexos: "",
+          rgi: newItemRgi,
+          codigoItem: newItemRgi,
+          nfReferencia: location.state.nfNumber,
+          loteItemOficial: "",
+          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+        },
+      ]);
+      garantia.itens.push({
         id: newItemId,
-        codigoPeca: "",
-        loteItem: "",
-        status: GarantiasItemStatusEnum.NAO_ANALISADO,
-        tipoDefeito: "",
-        anoVeiculo: "",
-        modeloVeiculoAplicado: "",
-        torqueAplicado: 0,
-        solicitarRessarcimento: false,
-        anexos: "",
-        rgi: newItemRgi,
         codigoItem: newItemRgi,
         nfReferencia: location.state.nfNumber,
-        loteItemOficial: "",
-        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-      },
-    ]);
-    setVisibleSectionId(newItemId);
+        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO
+      })
+      
+      setVisibleSectionId(newItemId);
+    }
+    
+
+
+
+
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -446,6 +464,14 @@ const DetailsItensNF: React.FC = () => {
     }
   };
 
+  const getItemsByGarantiaId = async (idGarantia: string) : Promise<(GarantiaItem[])> =>   {
+    const responseGetItens = await api.get(
+      `/garantias/item/by-garantia/${idGarantia}`
+    );
+    const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
+    return garantiaItensAPI;
+  }
+
   const save = async () => {
     if (!garantia?.id) {
       message.error("ID da garantia não encontrado");
@@ -453,10 +479,7 @@ const DetailsItensNF: React.FC = () => {
     }
 
     let isError: boolean = false;
-    const responseGetItens = await api.get(
-      `/garantias/item/by-garantia/${garantia.id}`
-    );
-    const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
+    const garantiaItensAPI = await getItemsByGarantiaId(garantia.id);
 
     for (const item of items.filter(
       (value) => value.codigoItem?.split(".")[1] === recRgiLetter
@@ -668,8 +691,7 @@ const DetailsItensNF: React.FC = () => {
           preenchido com “Não contém”
         </span>
       </div>
-      {items
-        .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
+      {items?.filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
         .map((item) => (
           <div className={styles.containerInformacoes} key={item.id}>
             <CollapsibleSection

@@ -55,7 +55,7 @@ const RGIDetailsInitial: React.FC = () => {
   const [nfs, setNfs] = useState<
     { itemCode: string; nfRef: string; itens: number }[]
   >([]);
-  const [groupedItems, setGroupedItems] = useState<string[]>();
+  const [groupedItems, setGroupedItems] = useState<{ codigoItem?: string; nfReferencia?: string }[]>();
   const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
     { nf: string; countItems: number }[]
   >([]);
@@ -153,15 +153,19 @@ const RGIDetailsInitial: React.FC = () => {
 
   // Função para agrupar itens por nfReferencia e pegar somente 1 item de cada grupo
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const groupByNfReferencia = (itens: GarantiaItem[]) => {
+  const groupByNfReferencia = (itens: GarantiaItem[]): { codigoItem?: string; nfReferencia?: string }[] => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const grouped: { codigoItem?: string } = {};
+    const grouped: { codigoItem?: string; nfReferencia?: string }[] = [];
 
     itens?.forEach((item) => {
       if (!grouped[item.nfReferencia]) {
-        const formatCodigoItem = item.codigoItem;
-        grouped[item.nfReferencia] =
-          formatCodigoItem.split(".")[0] + "." + formatCodigoItem.split(".")[1];
+        const formatCodigoItem = item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1];
+
+        grouped[item.nfReferencia] = {
+          nfReferencia: item.nfReferencia,
+          codigoItem: formatCodigoItem
+        };
+
       }
     });
 
@@ -248,14 +252,14 @@ const RGIDetailsInitial: React.FC = () => {
 
   const postOrPutGarantiaItemAsync = async (
     itemCodeCompare: string,
-    nfReference: string
+    nfReference: string,
+    itemId: string,
   ) => {
     console.log("salvamento: " + cardData);
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
       return;
     }
-    const itemId = cardData?.itens?.[0]?.id;
     if (!itemId) {
       message.error("ID do item não encontrado");
       return;
@@ -271,17 +275,11 @@ const RGIDetailsInitial: React.FC = () => {
         .length <= 0
     ) {
       const paylaodPost = {
+        id: itemId,
         garantiaId: cardData.id,
         codigoItem: itemCodeCompare,
-        tipoDefeito: "Opção defeito",
-        modeloVeiculoAplicado: "Modelo veículo",
-        torqueAplicado: 0,
         nfReferencia: nfReference,
-        codigoPeca: "",
-        loteItemOficial: "Lote Item Oficial",
-        loteItem: "Lote Item",
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-        solicitarRessarcimento: 0,
         index: cardData.itens.length.toString(),
       };
       console.log("paylaodPost: ", JSON.stringify(paylaodPost));
@@ -307,15 +305,15 @@ const RGIDetailsInitial: React.FC = () => {
       return;
     }
 
-    console.log("codigoitem: " , nf.nf);
-    
+    console.log("codigoitem: ", nf.nf);
+
 
     const itemId = cardData.itens.find((item) => item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1] === nf.nf).id;
 
     const sellFile = await getSellFile(itemId, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
     setSellFile(sellFile);
 
-    if(sellFile)
+    if (sellFile)
       navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
         state: {
           garantiaData: cardData,
@@ -330,7 +328,7 @@ const RGIDetailsInitial: React.FC = () => {
 
   const handleAddNF = async (nfNumber: string) => {
     const itemCode = getRgiWithSuffix(rgi, cardData.itens.length, 1);
-
+    const itemId = crypto.randomUUID()
     console.log("nfNumber" + nfNumber);
     setNfs((prevNfs) => [
       ...prevNfs,
@@ -341,6 +339,7 @@ const RGIDetailsInitial: React.FC = () => {
       { nf: nfNumber, countItems: 1 },
     ]);
     cardData.itens.push({
+      id: itemId,
       codigoItem: itemCode,
       nfReferencia: nfNumber,
     } as GarantiaItem);
@@ -351,7 +350,7 @@ const RGIDetailsInitial: React.FC = () => {
 
     console.log("nfadicionada: " + JSON.stringify(cardData.itens));
 
-    await postOrPutGarantiaItemAsync(itemCode, nfNumber);
+    await postOrPutGarantiaItemAsync(itemCode, nfNumber, itemId);
   };
 
   const handleDeleteNF = async () => {
@@ -476,7 +475,7 @@ const RGIDetailsInitial: React.FC = () => {
         <div className={styles.headerLeft}>
           <h1 className={styles.rgiTitle}>RGI {rgi}</h1>
           <div style={{
-            color: StatusColors[cardData?.codigoStatus], 
+            color: StatusColors[cardData?.codigoStatus],
             backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
           }} className={styles.statusTag}>{cardData?.status}</div>
         </div>
@@ -581,8 +580,8 @@ const RGIDetailsInitial: React.FC = () => {
             )}
         </div>
 
-        {groupedItems?.sort().map((codigoItem, index) => (
-          <div key={index} className={styles.nfsItem}>
+        {groupedItems?.sort().map(({codigoItem, nfReferencia}, index) => (
+          <div className={styles.nfsItem}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined
                 style={{
@@ -592,11 +591,11 @@ const RGIDetailsInitial: React.FC = () => {
                   color: "red",
                 }}
               />
-              <span className={styles.nfsCode}>{`${codigoItem}`}</span>
+              <span className={styles.nfsCode}>{groupedItems[index].codigoItem}</span>
               <span className={styles.nfsDivider}> | </span>
               <span className={styles.nfsQuantity}>
                 {" "}
-                {associatedNfsWithItens[index]?.countItems} ITENS
+                {associatedNfsWithItens.find((value) => value.nf === nfReferencia).countItems} ITENS
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -644,7 +643,7 @@ const RGIDetailsInitial: React.FC = () => {
                       nf: codigoItem,
                     },
                     associatedNfsWithItens[index]?.countItems,
-                    nfs[index]?.nfRef
+                    associatedNfsWithItens[index]?.nf
                   )
                 }
               >
