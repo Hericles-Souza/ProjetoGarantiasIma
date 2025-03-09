@@ -61,7 +61,7 @@ export interface GarantiasModel {
   updatedAt?: string; 
   rgi?: string;
   razaoSocial?: string;
-  telefone: string;
+  telefone?: string;
   email?: string;
   nf?: string;
   fornecedor?: string;

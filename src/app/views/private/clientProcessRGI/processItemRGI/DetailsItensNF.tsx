@@ -188,6 +188,32 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             Baixar Arquivo
           </label>
         )}
+
+        {recGarantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO || recGarantia.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ? (
+          // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
+          <label className={styles.buttonUpdateNfSale}>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                handleFileChange(e);
+                handleFileUpload(e);
+              }}
+            />
+            Adicionar Anexo
+          </label>
+
+        ) : recGarantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ? (
+          <label className={styles.buttonUpdateNfSale}>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onClick={handleDownloadFile}
+            />
+            Baixar Arquivo
+          </label>
+        ) : <div />
+        }
       </div>
     </div>
   );

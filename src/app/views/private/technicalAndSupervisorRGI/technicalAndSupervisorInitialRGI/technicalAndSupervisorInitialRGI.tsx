@@ -154,6 +154,40 @@ const TechnicalAndSupervisorInitialRGI = () => {
     }
   };
 
+  const handleRefuse = async () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+    const garantia: GarantiasModel = {
+      razaoSocial: location.state.garantia.razaoSocial,
+      telefone: location.state.garantia.telefone,
+      email: context.user.email,
+      nf: cardData.nf,
+      fornecedor: context.user.fullname,
+      codigoStatus: GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA,
+      observacao: "teste",
+      usuarioAtualizacao: context.user.username,
+      status: GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA,
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+    };
+
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
+      garantia
+    );
+
+    if (responseHeader.status === 200) {
+      message.success("Garantia confirmada com sucesso");
+      navigate("/garantias");
+    }
+  };
+
   const handleSave = async (
     statusGarantia: GarantiasStatusEnum2 = GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
   ) => {
@@ -326,7 +360,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
               <>
-                <Button type="primary" className={stylesDetails.ButonToSend}>
+                <Button onClick={handleRefuse} type="primary" className={stylesDetails.ButonToSend}>
                   Recusar NF de Devolução
                 </Button>
                 <Button

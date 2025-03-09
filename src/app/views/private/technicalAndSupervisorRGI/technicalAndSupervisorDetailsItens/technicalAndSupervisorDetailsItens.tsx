@@ -162,7 +162,7 @@ const CollapsibleSection = ({
 };
 
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
-  const [isContentVisible, setIsContentVisible] = useState(false);
+  const [isContentVisible, setIsContentVisible] = useState<{ [key: string]: boolean }>({});
   const [envioAutorizado, setEnvioAutorizado] = useState("");
   const [conclusao, setConclusao] = useState("");
   const context = useContext(AuthContext);
@@ -591,7 +591,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       ]}
                       value={item.tipoDefeito || ""}
                       defaultValue=""
-                      onChange={(value) => updateItemDefect(item.id, value)}
+                      onChange={(e) => {
+                        console.log("defeito: ", e.target.value);
+                        
+                        item.tipoDefeito = e.target.value;
+                        updateItemDefect(item.id, e.target.value);
+                      }}
                     />
                   </div>
                   <div className={styles.containerSelect}>
