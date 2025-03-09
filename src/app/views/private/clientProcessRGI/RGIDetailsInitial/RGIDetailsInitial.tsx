@@ -557,8 +557,7 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.nfsContainer}>
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-          {(cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ||
-            cardData?.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE && cardData?.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO) &&
+          {(cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO) &&
             context.user.rule.name == "cliente" && (
               <Button
                 type="primary"
