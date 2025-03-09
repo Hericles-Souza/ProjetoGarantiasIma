@@ -641,29 +641,20 @@ const RGIDetailsInitial: React.FC = () => {
                     onClick={() => showDeleteConfirm(codigoItem)}
                   />
                 )}
-              {cardData?.codigoStatus !=
+              {cardData?.codigoStatus ===
                 GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-                cardData?.codigoStatus != GarantiasStatusEnum2.NAO_ENVIADO &&
-                cardData?.codigoStatus != GarantiasStatusEnum2.EM_ANALISE &&
-                cardData?.codigoStatus != GarantiasStatusEnum2.CONFIRMADO &&
+
                 context.user.rule.name == "cliente" && (
-                  <Button
-                    type="primary"
-                    danger
-                    style={{
-                      height: "45px",
-                      borderRadius: "10px",
-                      backgroundColor: "red",
-                    }}
-                    onClick={() =>
-                      setModalOpen({
-                        isOpen: true,
-                        isSell: false,
-                      })
-                    }
-                  >
-                    Adicionar NF de Devolução
-                  </Button>
+                  <label className={styles.buttonUpdateNfSale}>
+                    <input
+                      type="file"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                  
+                      }}
+                    />
+                    Adicionar Anexo
+                  </label>
                 )}
 
               <Button

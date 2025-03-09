@@ -94,7 +94,7 @@ export const StatusColors = {
   [GarantiasStatusEnum2.EM_ANALISE]: "#1890FF",
   [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: "#FA8C16", 
   [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: "#FAAD14",
-  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: "#13C2C2", 
+  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: "#1890FF", 
   [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: "#FF4D4F", 
   [GarantiasStatusEnum2.CONFIRMADO]: "#52C41A", 
 } as const;

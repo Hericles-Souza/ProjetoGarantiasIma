@@ -46,6 +46,7 @@ interface FileAttachmentProps {
   onFileSelect?: (file: File) => void;
   recGarantia: GarantiasModel;
   recSellFile: { fileNameWithExtension: string; imagemUrl: string };
+  item?: GarantiaItem; // Adicionado para acessar solicitarRessarcimento
 }
 
 const FileAttachment: React.FC<FileAttachmentProps> = ({
@@ -57,6 +58,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   onFileSelect,
   recGarantia,
   recSellFile = { fileNameWithExtension: "", imagemUrl: "" },
+  item,
 }) => {
   const [fileData, setFileData] = useState<FileData | null>(initialFileData || null);
   const [, setFileName] = useState<string | null>(
@@ -125,8 +127,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
 
   const handleDownloadFile = () => {
     const link = document.createElement("a");
-    link.href = recSellFile.imagemUrl;
-    link.download = recSellFile.fileNameWithExtension;
+    link.href = recSellFile.imagemUrl || "#";
+    link.download = recSellFile.fileNameWithExtension || "download";
     link.click();
   };
 
@@ -145,6 +147,28 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     (recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
       label === "Anexo da NF de devolução") &&
     (fileData || recSellFile.imagemUrl);
+
+  const isImageAttachment = [
+    "1. Foto do lado onde está a gravação IMA:",
+    "2. Foto da parte danificada/amassada-quebrada:",
+    "3. Foto marcações suspeitas na peça:",
+    "4. Foto da peça completa:",
+    "5. Outras fotos pertinentes:",
+  ].includes(label);
+
+  const isRessarcimentoAttachment = [
+    "1. Documento de identificação (RG ou CNH):",
+    "2. Documentação do veículo:",
+    "3. NF do guincho:",
+    "4. NF de outras despesa/produtos pertinentes:",
+  ].includes(label);
+
+  const canDownload =
+    recSellFile.imagemUrl || // Se já tem URL, sempre mostra
+    (fileData && // Ou se há um arquivo anexado localmente
+      recGarantia.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO && // E status não é NAO_ENVIADO
+      (isImageAttachment || // Para anexos de imagem
+        (isRessarcimentoAttachment && item?.solicitarRessarcimento))); // Para ressarcimento, se houver solicitação
 
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
@@ -178,42 +202,16 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             Adicionar Anexo
           </label>
         )}
-        {recSellFile?.imagemUrl && (
+        {recGarantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO && canDownload && (
           <label className={styles.buttonUpdateNfSale}>
             <input
               type="file"
               style={{ display: "none" }}
-              onClick={handleDownloadFile}
+              onClick={handleDownloadFile}  // quero que esse botão apareça se o status for diferente de NAO_ENVIADO
             />
             Baixar Arquivo
           </label>
         )}
-
-        {recGarantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO || recGarantia.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ? (
-          // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
-          <label className={styles.buttonUpdateNfSale}>
-            <input
-              type="file"
-              style={{ display: "none" }}
-              onChange={(e) => {
-                handleFileChange(e);
-                handleFileUpload(e);
-              }}
-            />
-            Adicionar Anexo
-          </label>
-
-        ) : recGarantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ? (
-          <label className={styles.buttonUpdateNfSale}>
-            <input
-              type="file"
-              style={{ display: "none" }}
-              onClick={handleDownloadFile}
-            />
-            Baixar Arquivo
-          </label>
-        ) : <div />
-        }
       </div>
     </div>
   );
@@ -284,7 +282,7 @@ const DetailsItensNF: React.FC = () => {
   }>({ fileNameWithExtension: "", imagemUrl: "" });
   const context = useContext(AuthContext);
 
-  const rgiLetter = (location.state as any)?.rgiLetter || "A";
+  // const rgiLetter = (location.state as any)?.rgiLetter || "A";
 
   const handleInputChange = (itemId: string, field: string, value: any) => {
     setItems((prevItems) =>
@@ -600,7 +598,7 @@ const DetailsItensNF: React.FC = () => {
         <div className={styles.botoesCabecalho}>
           {garantia.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
             garantia.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO &&
-            garantia.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE &&
+            garantia.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE && garantia.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && garantia.codigoStatus !== GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA &&
             context.user.rule.name === "cliente" && (
               <>
                 <Button
@@ -643,6 +641,28 @@ const DetailsItensNF: React.FC = () => {
         recGarantia={garantia}
         recSellFile={recSellFile}
       />
+      {(garantia?.codigoStatus ===
+        GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO || garantia?.codigoStatus ===
+        GarantiasStatusEnum2.CONFIRMADO || garantia?.codigoStatus ===
+        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO || garantia?.codigoStatus ===
+        GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
+        context.user.rule.name === "cliente" && (
+          <div style={{ marginTop: "15px" }}>
+            <FileAttachment
+              label="Anexo da NF de devolução"
+              backgroundColor="#f5f5f5"
+              garantiaItemId={""}
+              isRessarcimento={false}
+              initialFileData={
+                garantia?.anexos
+                  ? { id: garantia.anexos, fileName: garantia.anexos }
+                  : undefined
+              }
+              recGarantia={garantia}
+              recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
+            />
+          </div>
+        )}
       <div className={styles.TitleItens}>
         <h3 className={styles.nfsTitle}>
           Itens desta NF associados a esta garantia
@@ -795,12 +815,14 @@ const DetailsItensNF: React.FC = () => {
                     <div className={styles.checkboxContainer}>
                       <ColorCheckboxes
                         checked={item.solicitarRessarcimento || false}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          item.solicitarRessarcimento = e.target.checked;
                           handleInputChange(
                             item.id,
                             "solicitarRessarcimento",
                             e.target.checked
                           )
+                        }
                         }
                         disabled={
                           garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO
@@ -831,6 +853,7 @@ const DetailsItensNF: React.FC = () => {
                         backgroundColor="#f5f5f5"
                         recGarantia={garantia}
                         recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
+                        item={item}
                       />
                     ))}
                   </div>
@@ -873,28 +896,11 @@ const DetailsItensNF: React.FC = () => {
                       backgroundColor="white"
                       recGarantia={garantia}
                       recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
+                      item={item} // Passando o item, embora não seja necessário aqui
                     />
                   ))}
               </CollapsibleSection>
-              {garantia?.codigoStatus ===
-                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-                context.user.rule.name === "cliente" && (
-                  <div style={{ marginTop: "15px" }}>
-                    <FileAttachment
-                      label="Anexo da NF de devolução"
-                      backgroundColor="white"
-                      garantiaItemId={item.id}
-                      isRessarcimento={false}
-                      initialFileData={
-                        garantia?.anexos
-                          ? { id: garantia.anexos, fileName: garantia.anexos }
-                          : undefined
-                      }
-                      recGarantia={garantia}
-                      recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
-                    />
-                  </div>
-                )}
+
             </div>
           ))
       ) : (

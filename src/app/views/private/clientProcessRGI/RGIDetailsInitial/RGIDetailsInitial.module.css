@@ -282,3 +282,16 @@
 .DeleteOutlined:hover {
   color: red !important;
 }
+
+.buttonUpdateNfSale {
+  display: flex;
+  align-items: center;
+  padding: 0px 20px;
+  background-color: white;
+  border: solid 1px hsl(0, 0%, 85%) !important;
+  color: #5f5a56;
+  height: 45px;
+  margin: 0 !important;
+  border-radius: 10px;
+  font-size: 16px;
+}

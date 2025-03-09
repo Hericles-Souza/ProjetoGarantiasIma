@@ -323,7 +323,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
               </Button>
             </div>
           )}
-          {context.user.rule.name !== UserRoleEnum.Técnico && (
+          {/* {context.user.rule.name !== UserRoleEnum.Técnico && (
             <div className="ButtonHeader">
               <Button
                 onClick={async () => handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)}
@@ -333,7 +333,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 Enviar
               </Button>
             </div>
-          )}
+          )} */}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             cardData.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO && (
