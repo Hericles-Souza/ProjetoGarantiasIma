@@ -161,7 +161,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             )}
 
             {recSellFile?.fileNameWithExtension != "" &&
-            recSellFile?.imagemUrl != "" ? (
+              recSellFile?.imagemUrl != "" ? (
               // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
               <label className={styles.buttonUpdateNfSale}>
                 <input
@@ -186,8 +186,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             )}
           </>
         ) : (
-          recSellFile.fileNameWithExtension != "" &&
-          recSellFile.imagemUrl != "" && (
+          recSellFile?.fileNameWithExtension != "" &&
+          recSellFile?.imagemUrl != "" && (
             // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
             <label className={styles.buttonUpdateNfSale}>
               <input
@@ -199,6 +199,32 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             </label>
           )
         )}
+
+        {recGarantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO || recGarantia.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ? (
+          // Se nenhum arquivo foi selecionado, exibe o botão para selecionar
+          <label className={styles.buttonUpdateNfSale}>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                handleFileChange(e);
+                handleFileUpload(e);
+              }}
+            />
+            Adicionar Anexo
+          </label>
+
+        ) : recGarantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ? (
+          <label className={styles.buttonUpdateNfSale}>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onClick={handleDownloadFile}
+            />
+            Baixar Arquivo
+          </label>
+        ) : <div />
+        }
       </div>
     </div>
   );
@@ -331,7 +357,7 @@ const DetailsItensNF: React.FC = () => {
         if (data && location.state) {
           setGarantia(data);
           const transformedItems = await getItemsByGarantiaId(data.id);
-          
+
           setRecSellFile(location.state.sellFile);
           console.log("sellFileDetailsITens: ", location.state.sellFile);
           console.log("setsellfile: ", recSellFile);
@@ -359,7 +385,7 @@ const DetailsItensNF: React.FC = () => {
       ? formatItemRgi(location.state.currentNf.nf, sequence)
       : "";
 
-      console.log("location.state.nfNumber: ", location.state.nfNumber)
+    console.log("location.state.nfNumber: ", location.state.nfNumber)
 
     const payloadPost = {
       id: newItemId,
@@ -375,7 +401,7 @@ const DetailsItensNF: React.FC = () => {
     );
     if (responsePost.status !== 200 && responsePost.status !== 201) {
       message.error("Erro ao criar a garantia.");
-    } else{
+    } else {
       message.success("Item criado com sucesso.")
 
       setItems([
@@ -404,10 +430,10 @@ const DetailsItensNF: React.FC = () => {
         nfReferencia: location.state.nfNumber,
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO
       })
-      
+
       setVisibleSectionId(newItemId);
     }
-    
+
 
 
 
@@ -464,7 +490,7 @@ const DetailsItensNF: React.FC = () => {
     }
   };
 
-  const getItemsByGarantiaId = async (idGarantia: string) : Promise<(GarantiaItem[])> =>   {
+  const getItemsByGarantiaId = async (idGarantia: string): Promise<(GarantiaItem[])> => {
     const responseGetItens = await api.get(
       `/garantias/item/by-garantia/${idGarantia}`
     );
@@ -490,7 +516,7 @@ const DetailsItensNF: React.FC = () => {
             (apiItem) => apiItem.codigoItem === item.codigoItem
           )
         ) {
-          
+
           const payloadPut = {
             codigoItem: item.codigoItem,
             tipoDefeito: item.tipoDefeito,
@@ -514,7 +540,7 @@ const DetailsItensNF: React.FC = () => {
             isError = true;
           }
         } else {
-          
+
           const payloadPost = {
             garantiaId: garantia.id,
             codigoItem: item.codigoItem,
@@ -703,14 +729,16 @@ const DetailsItensNF: React.FC = () => {
               rgi={item.rgi}
               isEvaluated={
                 garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
-                context.user.rule.name === "cliente"
+                  context.user.rule.name === "cliente"
                   ? false
                   : true
               }
               garantia={garantia}
             >
-              {garantia?.codigoStatus ===
-                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+              {(garantia?.codigoStatus ===
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
+                garantia?.codigoStatus ===
+                GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
                 context.user.rule.name === "cliente" && (
                   <FileAttachment
                     label="Anexo da NF de devolução"
@@ -838,26 +866,26 @@ const DetailsItensNF: React.FC = () => {
                 </div>
                 {garantia?.codigoStatus ===
                   GarantiasStatusEnum2.NAO_ENVIADO && (
-                  <div className={styles.checkboxContainer}>
-                    <ColorCheckboxes
-                      checked={item.solicitarRessarcimento}
-                      onChange={(e) =>
-                        handleInputChange(
-                          item.id,
-                          "solicitarRessarcimento",
-                          e.target.checked
-                        )
-                      }
-                      disabled={
-                        garantia?.codigoStatus !==
-                        GarantiasStatusEnum2.NAO_ENVIADO
-                      }
-                    />
-                    <label className={styles.checkboxDanger}>
-                      Solicitar ressarcimento
-                    </label>
-                  </div>
-                )}
+                    <div className={styles.checkboxContainer}>
+                      <ColorCheckboxes
+                        checked={item.solicitarRessarcimento}
+                        onChange={(e) =>
+                          handleInputChange(
+                            item.id,
+                            "solicitarRessarcimento",
+                            e.target.checked
+                          )
+                        }
+                        disabled={
+                          garantia?.codigoStatus !==
+                          GarantiasStatusEnum2.NAO_ENVIADO
+                        }
+                      />
+                      <label className={styles.checkboxDanger}>
+                        Solicitar ressarcimento
+                      </label>
+                    </div>
+                  )}
               </div>
               {item.solicitarRessarcimento && (
                 <div className={styles.contentReimbursement}>

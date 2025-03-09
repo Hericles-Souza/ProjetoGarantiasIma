@@ -8,6 +8,7 @@ import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import NFModal from "../addNewNF/modalAddNewNF";
 import {
   GarantiasItemStatusEnum2,
+  GarantiasStatusEnum,
   GarantiasStatusEnum2,
   StatusColors
 } from "@shared/enums/GarantiasStatusEnum";
@@ -98,6 +99,17 @@ const RGIDetailsInitial: React.FC = () => {
     const extension = getExtensionFromMimeType(mimeType);
     return extension;
   }
+
+  const ordenarItens = () => {
+    setGroupedItems((prevItems) => {
+      return [...prevItems].sort((a, b) => {
+        if (a.codigoItem && b.codigoItem) {
+          return a.codigoItem.localeCompare(b.codigoItem); // Ordena alfabeticamente
+        }
+        return 0;
+      });
+    });
+  };
 
 
   const getSellFile = async (itemId: string, field: string) => {
@@ -202,6 +214,7 @@ const RGIDetailsInitial: React.FC = () => {
             const itensAgrupados = groupByNfReferencia(cardData?.itens);
             console.log("itensAgrupados: ", itensAgrupados);
             setGroupedItems(itensAgrupados);
+            ordenarItens();
           }
           // console.log("garantia: " + JSON.stringify(data));
         }
@@ -347,6 +360,7 @@ const RGIDetailsInitial: React.FC = () => {
     setCardData(cardData);
     const itensAgrupados = groupByNfReferencia(cardData?.itens);
     setGroupedItems(itensAgrupados);
+    ordenarItens();
 
     console.log("nfadicionada: " + JSON.stringify(cardData.itens));
 
@@ -363,6 +377,7 @@ const RGIDetailsInitial: React.FC = () => {
         setGroupedItems((prevGroupedItems) =>
           prevGroupedItems?.filter((item) => item !== nfToDelete)
         );
+        ordenarItens();
         setAssociatedNfsWithItens((prevAssociatedNfs) =>
           prevAssociatedNfs.filter((nf) => nf.nf !== nfToDelete)
         );
@@ -399,23 +414,41 @@ const RGIDetailsInitial: React.FC = () => {
     const minutes = String(now.getMinutes()).padStart(2, "0");
     const seconds = String(now.getSeconds()).padStart(2, "0");
     const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+    let garantia: GarantiasModel = {};
 
     try {
-      const garantia: GarantiasModel = {
-        razaoSocial: socialReason,
-        telefone: phone,
-        email: context.user.email,
-        nf: cardData.nf,
-        fornecedor: context.user.fullname,
-        codigoStatus:
-          cardData.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO
-            ? GarantiasStatusEnum2.EM_ANALISE
-            : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-        observacao: "teste",
-        usuarioAtualizacao: context.user.username,
-        status: cardData.status,
-        dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-      };
+      if (cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) {
+        garantia = {
+          razaoSocial: cardData?.razaoSocial,
+          telefone: cardData?.telefone,
+          email: cardData?.email,
+          nf: cardData?.nf,
+          fornecedor: cardData?.fornecedor,
+          codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+          observacao: cardData?.observacao,
+          usuarioAtualizacao: context.user.username,
+          status: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+          dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        };
+      }
+      else {
+        garantia = {
+          razaoSocial: socialReason,
+          telefone: phone,
+          email: context.user.email,
+          nf: cardData.nf,
+          fornecedor: context.user.fullname,
+          codigoStatus:
+            cardData.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO
+              ? GarantiasStatusEnum2.EM_ANALISE
+              : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+          observacao: "teste",
+          usuarioAtualizacao: context.user.username,
+          status: cardData.status,
+          dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        };
+
+      }
 
       const responseHeader = await api.put(
         `/garantias/garantiasHeader/${id}/UpdateHeader`,
@@ -493,7 +526,8 @@ const RGIDetailsInitial: React.FC = () => {
             )}
           {(cardData?.codigoStatus ==
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
-            cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO) &&
+            cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ||
+            cardData?.codigoStatus == GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
             context.user.rule.name == "cliente" && (
               <>
                 <Button
@@ -557,8 +591,7 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.nfsContainer}>
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-          {(cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ||
-            cardData?.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE && cardData?.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO) &&
+          {(cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO) &&
             context.user.rule.name == "cliente" && (
               <Button
                 type="primary"
@@ -580,7 +613,7 @@ const RGIDetailsInitial: React.FC = () => {
             )}
         </div>
 
-        {groupedItems?.sort().map(({codigoItem, nfReferencia}, index) => (
+        {groupedItems?.sort().map(({ codigoItem, nfReferencia }, index) => (
           <div className={styles.nfsItem}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined
