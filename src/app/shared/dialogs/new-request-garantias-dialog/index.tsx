@@ -220,7 +220,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
             "Arquivo enviado com sucesso:",
             JSON.stringify(response.body)
           );
-          navigate(`/garantias/rgi/${createdGarantia.id}`, {
+          navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
             state: {
               garantiaData: { ...garantiaPayload, id: createdGarantia.id },
               garantiaId: createdGarantia.id,
@@ -229,6 +229,8 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
                 itens: garantiaPayload.itens?.length || 0,
                 sequence: 1,
               },
+              countItems: 1,
+              nfNumber: values["N° NF de origem"],
               rgiLetter: "A",
             },
           });

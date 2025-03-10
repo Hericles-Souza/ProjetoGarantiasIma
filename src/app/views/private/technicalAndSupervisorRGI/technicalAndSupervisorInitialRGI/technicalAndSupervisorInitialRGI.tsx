@@ -338,7 +338,13 @@ const TechnicalAndSupervisorInitialRGI = () => {
             cardData.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             cardData.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO && (
               <div className="ButtonHeader">
-                <Button type="default" className="ButtonDelete">
+                <Button type="default" className="ButtonDelete" 
+                // onClick={() =>
+                //     navigate("/view-pre-invoice", {
+                //       state: { cardData },
+                //     })
+                //   }
+                  >
                   Visualizar Pré Nota
                 </Button>
                 <Button

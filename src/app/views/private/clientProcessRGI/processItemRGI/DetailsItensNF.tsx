@@ -15,6 +15,7 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import {
+  converterStatusGarantia,
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum2,
@@ -65,11 +66,70 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     initialFileData ? initialFileData.fileName : null
   );
   const authContext = useContext(AuthContext);
-
+  const [recFile, setRecFile] = useState<{ fileNameWithExtension: string; imagemUrl: string }>();
   useEffect(() => {
+    if(garantiaItemId){
+      let fieldFile: string = "";
+      const matchField = label.match(/^\d+/);
+
+      if (label.includes("devolução")) fieldFile ="nfDev";
+      else if (matchField) {
+        if (isRessarcimento) fieldFile = `${matchField[0]}.res`;
+        else fieldFile = `${matchField[0]}.img`;
+      } else fieldFile = "nfRef";
+
+      getFieldFile(garantiaItemId, fieldFile);
+    }
+
     setFileData(initialFileData || null);
     setFileName(initialFileData ? initialFileData.fileName : null);
   }, [initialFileData]);
+
+  function getExtensionFromMimeType(mimeType: string): string {
+    const mimeTypes: { [key: string]: string } = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/zip": ".zip",
+      "audio/mpeg": ".mp3",
+      "video/mp4": ".mp4",
+      // Adicione outros tipos MIME conforme necessário
+    };
+
+    return mimeTypes[mimeType] || ""; // Retorna a extensão ou uma string vazia se não encontrado
+  }
+
+  function getFileExtensionFromBlob(blob: Blob): string {
+    const mimeType = blob.type; // Pega o tipo MIME do Blob
+    const extension = getExtensionFromMimeType(mimeType);
+    return extension;
+  }
+
+  const getFieldFile = async (itemId: string, field: string) => {
+    const urlGetFile =
+      environment.apiUrl +
+      `/files/files/download-private-file-item/${itemId}/${field}`;
+    console.log(urlGetFile);
+
+    const response = await fetch(urlGetFile, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${authContext.user.token}`, // Token de autenticação
+      },
+    });
+
+    const blob = await response.blob();
+    const fileExtension = getFileExtensionFromBlob(blob);
+    const fileNameWithExtension = field + fileExtension;
+    const imagemUrl = URL.createObjectURL(blob);
+    console.log(fileNameWithExtension);
+
+    setRecFile({ fileNameWithExtension, imagemUrl });
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -126,10 +186,18 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   };
 
   const handleDownloadFile = () => {
-    const link = document.createElement("a");
-    link.href = recSellFile.imagemUrl || "#";
-    link.download = recSellFile.fileNameWithExtension || "download";
-    link.click();
+    if(recFile){
+      const link = document.createElement("a");
+      link.href = recFile.imagemUrl || "#";
+      link.download = recFile.fileNameWithExtension || "download";
+      link.click();
+    }
+    else{
+      const link = document.createElement("a");
+      link.href = recSellFile.imagemUrl || "#";
+      link.download = recSellFile.fileNameWithExtension || "download";
+      link.click();
+    }
   };
 
   const handleRemoveFile = () => {
@@ -174,6 +242,14 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
+        {recFile && recGarantia?.codigoStatus > 1 && <label className={styles.buttonUpdateNfSale}>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onClick={handleDownloadFile}  // quero que esse botão apareça se o status for diferente de NAO_ENVIADO
+            />
+            Baixar Arquivo
+          </label>}
         {(fileData || recSellFile?.imagemUrl) && (
           <span className={styles.fileName}>
             <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
@@ -334,6 +410,8 @@ const DetailsItensNF: React.FC = () => {
         }
         if (data) {
           setGarantia(data);
+          console.log("garantia received: ", garantia);
+          
           const transformedItems = await getItemsByGarantiaId(data.id);
           setRecSellFile(
             location.state?.sellFile || { fileNameWithExtension: "", imagemUrl: "" }
@@ -592,7 +670,7 @@ const DetailsItensNF: React.FC = () => {
             }}
             className={styles.statusTag}
           >
-            {garantia?.status || "Status não disponível"}
+            {converterStatusGarantia(garantia?.codigoStatus) || "Status não disponível"}
           </div>
         </div>
         <div className={styles.botoesCabecalho}>

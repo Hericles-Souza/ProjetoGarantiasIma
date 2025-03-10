@@ -7,6 +7,7 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import NFModal from "../addNewNF/modalAddNewNF";
 import {
+  converterStatusGarantia,
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
@@ -123,9 +124,6 @@ const RGIDetailsInitial: React.FC = () => {
       headers: {
         Authorization: `Bearer ${context.user.token}`, // Token de autenticação
       },
-    }).then((value) => {
-      console.log("response: " + JSON.stringify(value.body));
-      return value;
     });
 
     const blob = await response.blob();
@@ -143,9 +141,8 @@ const RGIDetailsInitial: React.FC = () => {
 
 
 
-  const getRgiWithSuffix = (RgiCode: string, indexLetters: number, index) => {
-    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    return `${RgiCode}.${letters[indexLetters]}.${index}`;
+  const getRgiWithSuffix = (RgiCode: string, letter: string, index) => {
+    return `${RgiCode}.${letter}.${index}`;
   };
 
   const getAssciatedNfs = async (garantiaId: string) => {
@@ -340,7 +337,14 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleAddNF = async (nfNumber: string) => {
-    const itemCode = getRgiWithSuffix(rgi, cardData.itens.length, 1);
+    const ultimoItem = groupedItems[groupedItems.length - 1];
+
+    // Extrai a parte numérica e a letra do último item
+    const [numero, letra] = ultimoItem.codigoItem.split('.');
+    
+    // Calcula a próxima letra do alfabeto
+    const proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
+    const itemCode = getRgiWithSuffix(rgi, proximaLetra, 1);
     const itemId = crypto.randomUUID()
     console.log("nfNumber" + nfNumber);
     setNfs((prevNfs) => [
@@ -369,27 +373,38 @@ const RGIDetailsInitial: React.FC = () => {
 
   const handleDeleteNF = async () => {
     try {
+      console.log(nfToDelete);
       // Chamada à API para deletar a NF
-      const response = await api.delete(`/garantias/item/delete-by-codigo/${nfToDelete}`);
+      const itensToDelete = cardData?.itens.filter((item) => item.codigoItem.split(".")[0] + "."+ item.codigoItem.split(".")[1] === nfToDelete)
+      
+
+      itensToDelete?.forEach(async (itemToDelete) => {
+        const response = await api.delete(`/garantias/item/delete/${itemToDelete.id}`);
       if (response.status === 200) {
         // Atualiza os estados locais
-        setNfs((prevNfs) => prevNfs.filter((nf) => nf.itemCode !== nfToDelete));
+        setNfs((prevNfs) => prevNfs.filter((nf) => nf.itemCode !== itemToDelete.codigoItem));
+        const groupedItemToDelete = groupedItems.find((groupedItem) => groupedItem.codigoItem === itemToDelete.codigoItem);
+      console.log("asdasdasdas", groupedItems.filter((item) => item.codigoItem !== itemToDelete.codigoItem.split(".")[0] + "." + itemToDelete.codigoItem.split(".")[1]));
         setGroupedItems((prevGroupedItems) =>
-          prevGroupedItems?.filter((item) => item !== nfToDelete)
+          prevGroupedItems?.filter((item) => item.codigoItem !== itemToDelete.codigoItem.split(".")[0] + "." + itemToDelete.codigoItem.split(".")[1])
         );
         ordenarItens();
+        console.log("55165153", associatedNfsWithItens.filter((nf) => nf.nf !== itemToDelete.nfReferencia));
+        
         setAssociatedNfsWithItens((prevAssociatedNfs) =>
-          prevAssociatedNfs.filter((nf) => nf.nf !== nfToDelete)
-        );
+          prevAssociatedNfs.filter((nf) => nf.nf !== itemToDelete.nfReferencia)
+        );  
         setCardData((prevCardData) => ({
           ...prevCardData,
-          itens: prevCardData.itens.filter((item) => item.codigoItem !== nfToDelete),
+          itens: prevCardData.itens.filter((item) => item.codigoItem !== itemToDelete.codigoItem),
         }));
         setModalDeleteOpen(false);
         message.success("NF excluída com sucesso!");
       } else {
         message.error("Erro ao excluir a NF.");
       }
+      });
+      
     } catch (error) {
       console.error("Erro ao excluir a NF:", error);
       message.error("Erro ao excluir a NF.");
@@ -510,7 +525,7 @@ const RGIDetailsInitial: React.FC = () => {
           <div style={{
             color: StatusColors[cardData?.codigoStatus],
             backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
-          }} className={styles.statusTag}>{cardData?.status}</div>
+          }} className={styles.statusTag}>{ converterStatusGarantia(cardData?.codigoStatus) || "Status não disponível"}</div>
         </div>
         <div className={styles.buttonsContainer}>
           {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
@@ -624,11 +639,11 @@ const RGIDetailsInitial: React.FC = () => {
                   color: "red",
                 }}
               />
-              <span className={styles.nfsCode}>{groupedItems[index].codigoItem}</span>
+              <span className={styles.nfsCode}>{codigoItem}</span>
               <span className={styles.nfsDivider}> | </span>
               <span className={styles.nfsQuantity}>
                 {" "}
-                {associatedNfsWithItens.find((value) => value.nf === nfReferencia).countItems} ITENS
+                {associatedNfsWithItens?.find((value) => value.nf === nfReferencia)?.countItems}  ITENS
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>

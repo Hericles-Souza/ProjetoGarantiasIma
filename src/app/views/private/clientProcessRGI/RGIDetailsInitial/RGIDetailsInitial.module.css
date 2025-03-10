@@ -2,6 +2,8 @@
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: white;
+  overflow-y: auto; /* Permite scroll vertical */
+
 }
 
 .ContainerButtonBack {
@@ -42,6 +44,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  overflow-y: auto; /* Permite scroll vertical */
+
 }
 
 .headerLeft {
@@ -99,6 +103,8 @@
   border-radius: 8px;
   padding-top: .5%;
   margin-bottom: 2px;
+  overflow-y: auto; /* Permite scroll vertical */
+  
 }
 
 .infoTitle {
@@ -196,6 +202,7 @@
 
 .nfsContainer {
   margin-left: 0;
+  overflow-y: auto; /* Permite scroll vertical */
 }
 
 .nfcont {
@@ -225,6 +232,7 @@
   border-radius: 10px;
   margin-top: 10px;
   gap: 8px;
+  overflow-y: auto; /* Permite scroll vertical */
 }
 
 .nfsCode {
