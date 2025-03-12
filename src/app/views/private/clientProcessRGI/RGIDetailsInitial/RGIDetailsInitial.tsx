@@ -316,9 +316,10 @@ const RGIDetailsInitial: React.FC = () => {
     }
 
     console.log("codigoitem: ", nf.nf);
+    console.log("cardData.itens: ", cardData.itens);
 
 
-    const itemId = cardData.itens.find((item) => item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1] === nf.nf).id;
+    const itemId = cardData.itens?.find((item) => item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1] === nf.nf).id;
 
     const sellFile = await getSellFile(itemId, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
     setSellFile(sellFile);
@@ -341,6 +342,7 @@ const RGIDetailsInitial: React.FC = () => {
 
     // Extrai a parte numérica e a letra do último item
     const [numero, letra] = ultimoItem.codigoItem.split('.');
+    console.log(numero, letra)
     
     // Calcula a próxima letra do alfabeto
     const proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
@@ -628,8 +630,9 @@ const RGIDetailsInitial: React.FC = () => {
             )}
         </div>
 
-        {groupedItems?.sort().map(({ codigoItem, nfReferencia }, index) => (
-          <div className={styles.nfsItem}>
+        {groupedItems?.sort().map(({ codigoItem, nfReferencia }, index) => {
+          codigoItem = rgi + "." + codigoItem.split(".")[1];
+          return <div className={styles.nfsItem}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined
                 style={{
@@ -690,7 +693,7 @@ const RGIDetailsInitial: React.FC = () => {
               </Button>
             </div>
           </div>
-        ))}
+        })}
       </div>
 
       <NFModal

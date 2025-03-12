@@ -101,11 +101,11 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       const allGarantias = response.data.data || [];
       const existingRGIs = allGarantias
         .map((g: any) => g.rgi)
-        .filter((rgi: string) => rgi?.startsWith(context.user.codigoCigam))
+        .filter((rgi: string) => rgi?.startsWith(context.user.username))
         .map((rgi: string) => parseInt(rgi.split("-")[1]));
       const lastNumber = Math.max(0, ...existingRGIs);
       const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
-      console.log("newrGi: " + `${allGarantias[0].rgi.split("-")[0]}-${nextNumber}`);
+      console.log("newrGi: " + `${nextNumber}`);
       return `${context.user.username}-${nextNumber}`;
     } catch (error) {
       console.error("Erro ao gerar RGI:", error);
@@ -128,6 +128,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       }
 
       const newRGI = await generateNextRGI();
+      console.log("newRGI: ", newRGI);
 
       // 1. Gere o ID do item de garantia
       const itemId = crypto.randomUUID();
@@ -225,7 +226,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
               garantiaData: { ...garantiaPayload, id: createdGarantia.id },
               garantiaId: createdGarantia.id,
               currentNf: {
-                nf: values["N° NF de origem"],
+                nf: newRGI + ".A.1",
                 itens: garantiaPayload.itens?.length || 0,
                 sequence: 1,
               },

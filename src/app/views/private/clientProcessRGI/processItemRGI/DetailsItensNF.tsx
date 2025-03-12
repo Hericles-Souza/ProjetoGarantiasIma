@@ -68,6 +68,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   const authContext = useContext(AuthContext);
   const [recFile, setRecFile] = useState<{ fileNameWithExtension: string; imagemUrl: string }>();
   useEffect(() => {
+    console.log("itemID: ", garantiaItemId);
+    
     if(garantiaItemId){
       let fieldFile: string = "";
       const matchField = label.match(/^\d+/);
@@ -110,7 +112,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   }
 
   const getFieldFile = async (itemId: string, field: string) => {
-    const urlGetFile =
+    try{
+      const urlGetFile =
       environment.apiUrl +
       `/files/files/download-private-file-item/${itemId}/${field}`;
     console.log(urlGetFile);
@@ -122,13 +125,29 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       },
     });
 
-    const blob = await response.blob();
-    const fileExtension = getFileExtensionFromBlob(blob);
-    const fileNameWithExtension = field + fileExtension;
-    const imagemUrl = URL.createObjectURL(blob);
-    console.log(fileNameWithExtension);
+    if(response.ok){
+      const blob = await response.blob();
+      const fileExtension = getFileExtensionFromBlob(blob);
+      const fileNameWithExtension = field + fileExtension;
+      const imagemUrl = URL.createObjectURL(blob);
+      console.log("buscou arquivo: ", fileNameWithExtension);
+      console.log("itemid: ", itemId);
+      console.log("field: ", field);
+      console.log("field: ", { fileNameWithExtension, imagemUrl });
+  
+      setRecFile({ fileNameWithExtension, imagemUrl });
 
-    setRecFile({ fileNameWithExtension, imagemUrl });
+    }
+    else{
+      setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+
+    }
+    }
+    catch(error){
+      console.log("erro: ", error);
+      
+    }
+    
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,7 +191,10 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             id: garantiaItemId,
             fileName: file.name,
           };
+          const blob = new  Blob([file]);
+          const imagemUrl = URL.createObjectURL(blob);
           setFileData(uploadedFileData);
+          setRecFile({fileNameWithExtension: uploadedFileData.fileName, imagemUrl: imagemUrl});
           setFileName(uploadedFileData.fileName);
           message.success("Arquivo enviado com sucesso!");
         } else {
@@ -205,11 +227,11 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     setFileName(null);
   };
 
-  const canAddAttachment =
-    (recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
-      label === "Anexo da NF de devolução") &&
-    !fileData &&
-    !recSellFile.imagemUrl;
+  // const canAddAttachment =
+  //   (recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
+  //     label === "Anexo da NF de devolução") &&
+  //   !fileData &&
+  //   !recSellFile.imagemUrl;
 
   const canRemoveAttachment =
     (recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
@@ -242,18 +264,17 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
-        {recFile && recGarantia?.codigoStatus > 1 && <label className={styles.buttonUpdateNfSale}>
-            <input
-              type="file"
+        {recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "" && recGarantia?.codigoStatus >= 1 && <label className={styles.buttonUpdateNfSale}>
+            <button
               style={{ display: "none" }}
               onClick={handleDownloadFile}  // quero que esse botão apareça se o status for diferente de NAO_ENVIADO
             />
             Baixar Arquivo
           </label>}
-        {(fileData || recSellFile?.imagemUrl) && (
+        {(fileData || (recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != ""))  && recGarantia?.codigoStatus <= 1 && (
           <span className={styles.fileName}>
             <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-            {fileData?.fileName || recSellFile?.fileNameWithExtension}
+            {recFile?.fileNameWithExtension}
             {canRemoveAttachment && (
               <Button
                 type="link"
@@ -265,7 +286,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             )}
           </span>
         )}
-        {canAddAttachment && (
+        {recFile?.fileNameWithExtension === "" && recFile?.imagemUrl === "" && (
           <label className={styles.buttonUpdateNfSale}>
             <input
               type="file"
@@ -280,8 +301,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         )}
         {recGarantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO && canDownload && (
           <label className={styles.buttonUpdateNfSale}>
-            <input
-              type="file"
+            <button
               style={{ display: "none" }}
               onClick={handleDownloadFile}  // quero que esse botão apareça se o status for diferente de NAO_ENVIADO
             />
@@ -405,8 +425,8 @@ const DetailsItensNF: React.FC = () => {
         let data: GarantiasModel | null = null;
         if (location.state && "garantiaData" in location.state) {
           data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
-          const actualNf = location.state.currentNf || { nf: "N/A" };
-          setRecRgiLetter(actualNf.nf.split(".")[1] || "A");
+          const actualNf = location.state.nfNumber || "N/A" ;
+          setRecRgiLetter(actualNf.split(".")[1] || "A");
         }
         if (data) {
           setGarantia(data);
@@ -442,7 +462,7 @@ const DetailsItensNF: React.FC = () => {
     const newItemId = crypto.randomUUID();
     const sequence = (location.state.countItems = location.state.countItems + 1);
     const newItemRgi = garantia
-      ? formatItemRgi(location.state.currentNf.nf, sequence)
+      ? formatItemRgi(location.state.nfNumber, sequence)
       : "";
 
     const payloadPost = {
