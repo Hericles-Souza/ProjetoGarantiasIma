@@ -264,7 +264,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
-        {recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "" && recGarantia?.codigoStatus >= 1 && <label className={styles.buttonUpdateNfSale}>
+        {recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "" && recGarantia?.codigoStatus >= 1 && 
+        <label className={styles.buttonUpdateNfSale}>
             <button
               style={{ display: "none" }}
               onClick={handleDownloadFile}  // quero que esse botão apareça se o status for diferente de NAO_ENVIADO
@@ -286,7 +287,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             )}
           </span>
         )}
-        {recFile?.fileNameWithExtension === "" && recFile?.imagemUrl === "" && (
+        {recFile?.fileNameWithExtension === "" && recFile?.imagemUrl === "" && recGarantia?.codigoStatus > 1 && (
           <label className={styles.buttonUpdateNfSale}>
             <input
               type="file"
@@ -436,10 +437,14 @@ const DetailsItensNF: React.FC = () => {
           setRecSellFile(
             location.state?.sellFile || { fileNameWithExtension: "", imagemUrl: "" }
           );
-          setItems(transformedItems || []);
+          setItems(transformedItems);
           if (transformedItems?.length > 0) {
             setVisibleSectionId(transformedItems[0].id);
           }
+          console.log("transformedItemsReceved: ", location.state.currentNf.nf);
+          console.log("itemsReceved: ", items
+            .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter));
+          
         } else {
           setGarantia({ id: "", codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO });
           setItems([]);
@@ -456,13 +461,13 @@ const DetailsItensNF: React.FC = () => {
     };
 
     loadGarantiaData();
-  }, [location.state, guaranteeId]);
+  }, [location.state, guaranteeId, garantia]);
 
   const addNewItem = async () => {
     const newItemId = crypto.randomUUID();
     const sequence = (location.state.countItems = location.state.countItems + 1);
     const newItemRgi = garantia
-      ? formatItemRgi(location.state.nfNumber, sequence)
+      ? formatItemRgi(location.state.currentNf.nf, sequence)
       : "";
 
     const payloadPost = {

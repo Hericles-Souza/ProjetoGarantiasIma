@@ -18,9 +18,7 @@ import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWit
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import MultilineTextFields from "@shared/components/multline/multLine";
 import api from "@shared/Interceptors";
-import {
-  GarantiasModel,
-} from "@shared/models/GarantiasModel";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
 import {
   GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
@@ -29,20 +27,45 @@ import {
   StatusColors,
 } from "@shared/enums/GarantiasStatusEnum";
 import environment from "@env/environment.ts";
+import MyPDF from "../../GeneratePDF";
+import { pdf } from "@react-pdf/renderer";
 
 // Componente FileAttachment (mantido igual)
 const FileAttachment = ({
   label,
   backgroundColor,
   itemId,
+  isRessarcimento,
 }: {
   label: string;
   backgroundColor?: string;
   itemId: string;
+  isRessarcimento: boolean;
 }) => {
   const [imagemUrl, setImagemUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const context = useContext(AuthContext);
+  const [recFile, setRecFile] = useState<{
+    fileNameWithExtension: string;
+    imagemUrl: string;
+  }>();
+
+  useEffect(() => {
+    console.log("itemID: ", itemId);
+
+    if (itemId) {
+      let fieldFile: string = "";
+      const matchField = label.match(/^\d+/);
+
+      if (label.includes("devolução")) fieldFile = "nfDev";
+      else if (matchField) {
+        if (isRessarcimento) fieldFile = `${matchField[0]}.res`;
+        else fieldFile = `${matchField[0]}.img`;
+      } else fieldFile = "nfRef";
+
+      fetchImagem(itemId, fieldFile);
+    }
+  });
 
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
@@ -68,19 +91,9 @@ const FileAttachment = ({
 
   const fetchImagem = async (itemId: string, field: string) => {
     try {
-      let fieldName: string;
-      const match = label.match(/^\d+/);
-      if (!match && label.includes("venda")) fieldName = "nfVenda";
-      else if (!match && label.includes("Referência")) fieldName = "nfRef";
-      else if (!match && label.includes("devolução")) fieldName = "nfDev";
-      else {
-        if (label.includes("Referência")) fieldName = `${match[0]}.res`;
-        else fieldName = `${match[0]}.img`;
-      }
-
       const urlGetFile =
         environment.apiUrl +
-        `/files/files/download-private-file-item/${itemId}/${fieldName}`;
+        `/files/files/download-private-file-item/${itemId}/${field}`;
 
       const response = await fetch(urlGetFile, {
         method: "GET",
@@ -92,12 +105,13 @@ const FileAttachment = ({
       if (response.ok) {
         const blob = await response.blob();
         const fileExtension = getFileExtensionFromBlob(blob);
-        const fieldNameFormatted = fieldName.replace(".", "_");
+        const fieldNameFormatted = field.replace(".", "_");
         const fileNameWithExtension = `${fieldNameFormatted}${fileExtension}`;
         const imagemUrl = URL.createObjectURL(blob);
         setImagemUrl(imagemUrl);
-        handleDownload(fileNameWithExtension, imagemUrl);
+        setRecFile({ fileNameWithExtension, imagemUrl });
       } else {
+        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
         message.error("Erro ao buscar a imagem");
       }
     } catch (error) {
@@ -115,15 +129,27 @@ const FileAttachment = ({
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
-      <div className={styles.fileUpdateContent}>
-        <label className={styles.buttonUpdateNfSale}>
-          <button
-            style={{ backgroundColor: "red", display: "none" }}
-            onClick={() => fetchImagem(itemId, label)}
-          />
-          Baixar Arquivo
+      {recFile?.fileNameWithExtension === "" && recFile?.imagemUrl === "" && (
+        <label
+          className={styles.buttonUpdateNfSale}
+          style={{ cursor: "default", opacity: 0.6 }}
+        >
+          Nenhum arquivo enviado
         </label>
-      </div>
+      )}
+      {recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "" && (
+        <div className={styles.fileUpdateContent}>
+          <label className={styles.buttonUpdateNfSale}>
+            <button
+              style={{ backgroundColor: "red", display: "none" }}
+              onClick={() =>
+                handleDownload(recFile.fileNameWithExtension, recFile.imagemUrl)
+              }
+            />
+            Baixar Arquivo
+          </label>
+        </div>
+      )}
     </div>
   );
 };
@@ -162,7 +188,9 @@ const CollapsibleSection = ({
 };
 
 const TechnicalAndSupervisorDetailsItens: React.FC = () => {
-  const [isContentVisible, setIsContentVisible] = useState<{ [key: string]: boolean }>({});
+  const [isContentVisible, setIsContentVisible] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [envioAutorizado, setEnvioAutorizado] = useState("");
   const [conclusao, setConclusao] = useState("");
   const context = useContext(AuthContext);
@@ -241,11 +269,28 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     }
   };
 
+  const generatePDF = async (items) => {
+    try {
+      const blob = await pdf(<MyPDF items={items} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "laudo_tecnico.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Erro ao gerar o PDF:", error);
+      message.error("Erro ao gerar o PDF.");
+    }
+  };
+
   const handleSave = async () => {
     if (!cardData?.itens) return;
 
     const hasInvalidDefect = cardData.itens.some(
-      (item) => item.codigoItem?.split(".")[1] === recRgiLetter && !item.tipoDefeito
+      (item) =>
+        item.codigoItem?.split(".")[1] === recRgiLetter && !item.tipoDefeito
     );
 
     if (hasInvalidDefect) {
@@ -253,7 +298,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       return;
     }
 
-    cardData.itens
+    const promises = cardData.itens
       .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
       .map(async (item) => {
         const dataToSend = {
@@ -263,7 +308,10 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           tipoDefeitoOficial: item.tipoDefeito,
         };
         try {
-          const response = await api.put(`/garantias/analisetecnica/`, dataToSend);
+          const response = await api.put(
+            `/garantias/analisetecnica/`,
+            dataToSend
+          );
 
           if (response.status === 200) {
             message.success("Dados salvos com sucesso!");
@@ -278,6 +326,14 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           message.error("Erro ao tentar salvar.");
         }
       });
+    await Promise.all(promises);
+    const notAuthorizeItems = cardData.itens.filter(
+      (value) =>
+        value.codigoItem?.split(".")[1] === recRgiLetter &&
+        value.codigoStatus == GarantiasItemStatusEnum2.NAO_AUTORIZADO
+    );
+
+    if (notAuthorizeItems.length > 0) generatePDF(notAuthorizeItems);
   };
 
   const updateItemDefect = (itemId: string, newDefect: string) => {
@@ -292,13 +348,14 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   // Lógica para exibir o status dinamicamente
   const displayedStatus =
     cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-      context.user.rule.name === UserRoleEnum.Técnico &&
-      isAnalysisConcluded
+    context.user.rule.name === UserRoleEnum.Técnico &&
+    isAnalysisConcluded
       ? "Avaliação Concluída"
       : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-        (context.user.rule.name === UserRoleEnum.Técnico || context.user.rule.name === UserRoleEnum.Supervisor)
-        ? "Aguardando Avaliação"
-        : cardData?.status;
+        (context.user.rule.name === UserRoleEnum.Técnico ||
+          context.user.rule.name === UserRoleEnum.Supervisor)
+      ? "Aguardando Avaliação"
+      : cardData?.status;
 
   const statusColor =
     displayedStatus === "Avaliação Concluída"
@@ -378,7 +435,10 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 type="primary"
                 className={styles.ButonToSend}
                 onClick={handleSave}
-                disabled={isAnalysisConcluded && context.user.rule.name === UserRoleEnum.Técnico}
+                disabled={
+                  isAnalysisConcluded &&
+                  context.user.rule.name === UserRoleEnum.Técnico
+                }
               >
                 Salvar
               </Button>
@@ -411,6 +471,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     label="Anexo da NF de venda"
                     backgroundColor="white"
                     itemId={item.id}
+                    isRessarcimento={item.solicitarRessarcimento}
                   />
                 </div>
               )}
@@ -470,6 +531,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 label="Anexo da NF de Referência"
                 backgroundColor="white"
                 itemId={item.id}
+                isRessarcimento={item.solicitarRessarcimento}
               />
               {cardData.codigoStatus ===
                 GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
@@ -479,6 +541,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       label="Anexo da NF de devolução"
                       backgroundColor="white"
                       itemId={item.id}
+                      isRessarcimento={item.solicitarRessarcimento}
                     />
                   </div>
                 )}
@@ -499,6 +562,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                         label={itemRes}
                         itemId={item.id}
                         backgroundColor="#f5f5f5"
+                        isRessarcimento={item.solicitarRessarcimento}
                       />
                     ))}
                   </div>
@@ -519,6 +583,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       label={itemQuestion}
                       backgroundColor="white"
                       itemId={item.id}
+                      isRessarcimento={item.solicitarRessarcimento}
                     />
                   ))}
 
@@ -593,7 +658,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       defaultValue=""
                       onChange={(e) => {
                         console.log("defeito: ", e.target.value);
-                        
+
                         item.tipoDefeito = e.target.value;
                         updateItemDefect(item.id, e.target.value);
                       }}
