@@ -27,7 +27,7 @@ import {
   StatusColors,
 } from "@shared/enums/GarantiasStatusEnum";
 import environment from "@env/environment.ts";
-import MyPDF from "../../GeneratePDF";
+import MyPDF from "../../clientProcessRGI/GeneratePDF";
 import { pdf } from "@react-pdf/renderer";
 
 // Componente FileAttachment (mantido igual)
@@ -112,7 +112,6 @@ const FileAttachment = ({
         setRecFile({ fileNameWithExtension, imagemUrl });
       } else {
         setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
-        message.error("Erro ao buscar a imagem");
       }
     } catch (error) {
       console.error("Erro na requisição", error);

@@ -45,6 +45,17 @@ export function converterStatusGarantia(status: GarantiasStatusEnum2): Garantias
   return mapping[status];
 }
 
+export function converterStatusItemGarantia(status: GarantiasItemStatusEnum2): GarantiasItemStatusEnum {
+  const mapping: Record<GarantiasItemStatusEnum2, GarantiasItemStatusEnum> = {
+    [GarantiasItemStatusEnum2.NAO_ANALISADO]: GarantiasItemStatusEnum.NAO_ANALISADO,
+    [GarantiasItemStatusEnum2.NAO_AUTORIZADO]: GarantiasItemStatusEnum.NAO_AUTORIZADO,
+    [GarantiasItemStatusEnum2.AUTORIZADO]: GarantiasItemStatusEnum.AUTORIZADO,
+
+  };
+
+  return mapping[status];
+}
+
 export function converterStatusGarantiaTecnicoAndSupervisor(status: GarantiasStatusEnum2, garantiaItemEvaluated: boolean): GarantiasStatusEnum | string {
   const mapping: Record<GarantiasStatusEnum2, GarantiasStatusEnum | string> = {
     [GarantiasStatusEnum2.NAO_ENVIADO]: GarantiasStatusEnum.NAO_ENVIADO,
