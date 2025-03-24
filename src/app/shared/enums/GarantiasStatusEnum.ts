@@ -19,6 +19,7 @@ export enum GarantiasStatusEnum2 {
 }
 
 export enum GarantiasItemStatusEnum {
+  NAO_ENVIADO = "Não Enviado",
   NAO_ANALISADO = 'Não analisado',
   AUTORIZADO = 'Autorizado',
   NAO_AUTORIZADO = 'Não autorizado'

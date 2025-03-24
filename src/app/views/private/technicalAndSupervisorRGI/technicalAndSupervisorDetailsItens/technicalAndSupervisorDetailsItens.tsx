@@ -51,8 +51,6 @@ const FileAttachment = ({
   }>();
 
   useEffect(() => {
-    console.log("itemID: ", itemId);
-
     if (itemId) {
       let fieldFile: string = "";
       const matchField = label.match(/^\d+/);
@@ -267,23 +265,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       message.success("Garantia confirmada com sucesso");
     }
   };
-
-  const generatePDF = async (items) => {
-    try {
-      const blob = await pdf(<MyPDF items={items} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "laudo_tecnico.pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Erro ao gerar o PDF:", error);
-      message.error("Erro ao gerar o PDF.");
-    }
-  };
-
   const handleSave = async () => {
     if (!cardData?.itens) return;
 
@@ -332,7 +313,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         value.codigoStatus == GarantiasItemStatusEnum2.NAO_AUTORIZADO
     );
 
-    if (notAuthorizeItems.length > 0) generatePDF(notAuthorizeItems);
   };
 
   const updateItemDefect = (itemId: string, newDefect: string) => {
@@ -481,7 +461,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                     <OutlinedInputWithLabel
                       label="Código da peça"
-                      value={item.codigoItem}
+                      value={item?.codigoPeca || ""}
                       fullWidth
                       disabled
                     />

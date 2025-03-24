@@ -317,7 +317,6 @@ const CollapsibleSection = ({
   status: string;
   rgi: string;
   isEvaluated: boolean;
-
   garantia: GarantiasModel;
   garantiaItem: GarantiaItem;
 }) => {
@@ -422,7 +421,7 @@ const CollapsibleSection = ({
           className={styles.statusTag}
         >
           {converterStatusItemGarantia(
-            garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO
+            garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO || garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
               ? GarantiasItemStatusEnum2.NAO_ANALISADO
               : garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO
               ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
@@ -727,7 +726,7 @@ const DetailsItensNF: React.FC = () => {
             payloadPut
           );
           if (responsePut.status !== 200 && responsePut.status !== 201) {
-            message.error("Erro ao atualizar a garantia.");
+            message.error("Erro ao atualizar o item.");
             isError = true;
           }
         } else {

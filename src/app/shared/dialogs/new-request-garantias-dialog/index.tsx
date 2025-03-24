@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Divider, Form, Upload } from "antd";
 import { Input } from "@shared/components/input/index.tsx";
 import styles from "./new-request-garantias.module.css";
-import { GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
+import { GarantiasItemStatusEnum, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
 import {
@@ -136,9 +136,11 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       // 2. Construa o item de garantia
       const garantiaItem: GarantiaItem = {
         codigoItem: newRGI + ".A.1",
+        rgi: newRGI,
         nfReferencia: values["N° NF de origem"],
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-      };
+        status: GarantiasItemStatusEnum.NAO_ANALISADO
+      };  
 
       // 3. Construa o objeto garantiaModel
       const garantiaPayload: GarantiasModel = {
