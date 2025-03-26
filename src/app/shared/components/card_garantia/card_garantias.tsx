@@ -5,6 +5,7 @@ import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, G
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from 'dayjs';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
+import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
 
 const CardContainer = styled.div<{ clickable: boolean }>`
   flex: 0 0 calc(25% - 12px);
@@ -49,6 +50,7 @@ const Code = styled.h3`
   margin: 2px 0;
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PieceCode = styled.p`
   font-size: 16px;
   color: #555;
@@ -127,7 +129,7 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, cod
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
         <Status style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}>
-          {context.user.rule.name === 'cliente' || context.user.rule.name === 'admin' ? converterStatusGarantia(GarantiaItem.codigoStatus) : (GarantiaItem.itens.find((value) => value.codigoStatus >= 1)) ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true) : converterStatusGarantia(GarantiaItem.codigoStatus)}
+          {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin ? converterStatusGarantia(GarantiaItem.codigoStatus) : (GarantiaItem.itens.find((value) => value.codigoStatus >= 1)) ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true) : converterStatusGarantia(GarantiaItem.codigoStatus)}
         </Status>
         <RightOutlined />
       </Header>

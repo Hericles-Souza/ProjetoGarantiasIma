@@ -19,6 +19,7 @@ import {
 } from "@shared/enums/GarantiasStatusEnum.ts";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("rgi");
@@ -37,18 +38,20 @@ const Garantias: React.FC = () => {
 
   const fetchCardData = async () => {
     try {
-      if (context.user!.rule!.name === "cliente") {
+      if (context.user!.rule!.name === UserRoleEnum.Cliente) {
         const response = await getGarantiasPaginationAsync(1, 100);
         const data = await response.data.data.data;
+        console.log("Data: ", data);
+        
         setCardData(data);
       } else {
         let status: number[] = [];
-        if (context.user.rule.name === "tecnico") {
+        if (context.user.rule.name === UserRoleEnum.Técnico) {
           status = [
             GarantiasStatusEnum2.EM_ANALISE,
             GarantiasStatusEnum2.CONFIRMADO,
           ];
-        } else if (context.user.rule.name === "supervisor") {
+        } else if (context.user.rule.name === UserRoleEnum.Supervisor) {
           status = [
             GarantiasStatusEnum2.EM_ANALISE,
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,

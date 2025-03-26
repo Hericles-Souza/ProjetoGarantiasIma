@@ -14,6 +14,7 @@ import {
 import api from "@shared/Interceptors";
 import { FileOutlined, InboxOutlined } from "@ant-design/icons";
 import environment from "@env/environment";
+import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 
 // Enum para controlar as abas
 enum FilterStatus {
@@ -101,12 +102,12 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       const allGarantias = response.data.data || [];
       const existingRGIs = allGarantias
         .map((g: any) => g.rgi)
-        .filter((rgi: string) => rgi?.startsWith(context.user.username))
+        .filter((rgi: string) => rgi?.startsWith(context.user.codigoCigam))
         .map((rgi: string) => parseInt(rgi.split("-")[1]));
       const lastNumber = Math.max(0, ...existingRGIs);
       const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
       console.log("newrGi: " + `${nextNumber}`);
-      return `${context.user.username}-${nextNumber}`;
+      return `${context.user.codigoCigam}-${nextNumber}`;
     } catch (error) {
       console.error("Erro ao gerar RGI:", error);
     }
@@ -127,20 +128,40 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         return;
       }
 
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
       const newRGI = await generateNextRGI();
-      console.log("newRGI: ", newRGI);
-
-      // 1. Gere o ID do item de garantia
       const itemId = crypto.randomUUID();
+      const notaFiscalId = crypto.randomUUID();
 
-      // 2. Construa o item de garantia
-      const garantiaItem: GarantiaItem = {
+      const garantiasItem: GarantiaItem[] = [{
+        nota_fiscal_id: notaFiscalId,
         codigoItem: newRGI + ".A.1",
         rgi: newRGI,
         nfReferencia: values["N° NF de origem"],
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
         status: GarantiasItemStatusEnum.NAO_ANALISADO
-      };  
+      }]
+
+      const notasFiscais: NotaFiscal[] = [{
+        id: notaFiscalId,
+        garantia_id: itemId,
+        codigo: values["N° NF de origem"],
+        tipo_nota: "nota fiscal de origem",
+        id_referencia: notaFiscalId,
+        itens: garantiasItem,
+        data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        updatedAt:`${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      }];
 
       // 3. Construa o objeto garantiaModel
       const garantiaPayload: GarantiasModel = {
@@ -153,8 +174,9 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
         observacao: "Garantia válida por 12 meses",
         usuarioInsercao: context.user.username,
-        itens: [garantiaItem],
+        notas: notasFiscais,
         id: itemId,
+        
       };
 
       console.log(
@@ -182,7 +204,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         console.error("Invalid response:", guaranteeResponse);
         throw new Error("Resposta inválida da API ao criar garantia");
       }
-      console.log("idItem: " + createdGarantia.id);
+      console.log("idItem: ", createdGarantia.id);
 
       const garantiaItemResponse = await fetch(
         `${environment.apiUrl}/garantias/item/by-garantia/${createdGarantia.id}`,
@@ -196,18 +218,15 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
 
       if (selectedFile) {
         const endpoint = environment.apiUrl + "/files/upload-private-file-item";
-        const responseGET = await garantiaItemResponse.json();
 
         const fileData = new FormData();
         fileData.append("file", selectedFile);
-        fileData.append("itemId", responseGET.data[0].id);
+        fileData.append("itemId", itemId);
         fileData.append("field", "nfVenda");
 
         fileData.forEach((item, key) => {
           console.log(key + ": " + item);
         });
-
-        garantiaPayload.itens[0].id = responseGET.data[0].id;
 
         const response = await fetch(endpoint, {
           method: "POST",
@@ -229,7 +248,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
               garantiaId: createdGarantia.id,
               currentNf: {
                 nf: newRGI + ".A.1",
-                itens: garantiaPayload.itens?.length || 0,
+                itens: garantiaPayload.notas?.length || 0,
                 sequence: 1,
               },
               countItems: 1,

@@ -1,4 +1,5 @@
 import {GarantiasItemStatusEnum2, GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
+import { NotaFiscal } from "./NotaFiscalModel";
 
 export interface GarantiaPedidos{
   cdPedido: string;
@@ -38,6 +39,7 @@ export interface GarantiaItem {
   conclusao?:string;
   anexos?: string;
   autorizado?: string;
+  nota_fiscal_id?: string;
 }
 
 export interface UpdateItemRequest {
@@ -72,6 +74,7 @@ export interface GarantiasModel {
   usuarioInsercao?: string;
   dataAtualizacao?: string;
   usuarioAtualizacao?: string;
-  itens?: GarantiaItem[];
+  notas?: NotaFiscal[];
   anexos?: string;
+  itens?: GarantiaItem[];
 }

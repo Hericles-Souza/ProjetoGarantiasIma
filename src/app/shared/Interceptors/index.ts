@@ -32,9 +32,7 @@ api.interceptors.response.use(
 
     if (error.response && error.response.status === 401) {
       console.log('Erro 401: Deslogando usuário...');
-      AuthService.logout(() => {
-        window.location.href = '/login';
-      });
+      AuthService.logout();
     }
 
     return Promise.reject(error);
