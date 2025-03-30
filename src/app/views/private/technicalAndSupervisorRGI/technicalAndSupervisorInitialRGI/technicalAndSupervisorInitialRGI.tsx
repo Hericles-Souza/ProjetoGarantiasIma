@@ -241,7 +241,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
     }
 
     try {
-      if (context.user.rule.name === UserRoleEnum.Técnico) {
+      if (context.user.rule.name === UserRoleEnum.Tecnico) {
         setIsAnalysisConcluded(true);
         message.success("Análise concluída com sucesso!");
       }
@@ -253,11 +253,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
   const displayedStatus =
     cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-      context.user.rule.name === UserRoleEnum.Técnico &&
+      context.user.rule.name === UserRoleEnum.Tecnico &&
       isAnalysisConcluded
       ? "Avaliação Concluída"
       : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-        (context.user.rule.name === UserRoleEnum.Técnico || context.user.rule.name === UserRoleEnum.Supervisor)
+        (context.user.rule.name === UserRoleEnum.Tecnico || context.user.rule.name === UserRoleEnum.Supervisor)
         ? "Aguardando Avaliação"
         : cardData?.status;
 
@@ -311,7 +311,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
               {displayedStatus}
             </div>
           </div>
-          {context.user.rule.name === UserRoleEnum.Técnico && (
+          {context.user.rule.name === UserRoleEnum.Tecnico && (
             <div className="ButtonHeader">
               <Button
                 onClick={handleConcludeAnalysis}
@@ -436,7 +436,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                     state: {
                       nf: codigoItem,
                       garantia: cardData,
-                      isAnalysisConcluded: context.user.rule.name === UserRoleEnum.Técnico && isAnalysisConcluded,
+                      isAnalysisConcluded: context.user.rule.name === UserRoleEnum.Tecnico && isAnalysisConcluded,
                     },
                   });
                 }}

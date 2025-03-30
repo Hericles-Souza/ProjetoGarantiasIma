@@ -41,11 +41,11 @@ const Header: React.FC<HeaderProps> = ({
           className="custom-tabs"
           items={[
             { label: <span>REQUISIÇÕES DE GARANTIA (RGI)</span>, key: "rgi" },
-            { label: context.user.rule.name.includes(UserRoleEnum.Técnico) ? <div> </div> : <span>ACORDOS COMERCIAIS (ACI)</span>, key: "aci" },
+            { label: context.user.rule.name.includes(UserRoleEnum.Tecnico) ? <div> </div> : <span>ACORDOS COMERCIAIS (ACI)</span>, key: "aci" },
           ]}
         />
       </div>
-      {!context.user.rule.name.includes(UserRoleEnum.Técnico) &&
+      {!context.user.rule.name.includes(UserRoleEnum.Tecnico) &&
         !context.user.rule.name.includes(UserRoleEnum.Supervisor) && (
           <div
             style={{ display: "flex", padding: "1rem", alignItems: "center" }}

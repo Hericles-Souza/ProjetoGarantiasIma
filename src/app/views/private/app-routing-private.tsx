@@ -22,7 +22,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         path: "garantias",
         element: <Garantias />,
         private: true,
-        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Técnico, UserRoleEnum.Cliente]
+        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Tecnico, UserRoleEnum.Cliente]
       },
       {
         path: "garantias/rgi/:id",
@@ -61,7 +61,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         path: "dashboard",
         element: <Dashboard />,
         private: true,
-        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Técnico, UserRoleEnum.Admin]
+        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Tecnico, UserRoleEnum.Admin]
       }, 
 
 
@@ -76,7 +76,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         path: "/garantias/technical-and-supervisor/:id",
         element: <TechnicalAndSupervisorInitialRGI />,
         private: true,
-        allowedRoles: [UserRoleEnum.Técnico, UserRoleEnum.Supervisor]
+        allowedRoles: [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor]
       },
 
 

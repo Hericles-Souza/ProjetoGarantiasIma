@@ -30,6 +30,7 @@ import environment from "@env/environment";
 import { updateGarantiasHeaderByIdAsync } from "@shared/services/GarantiasService";
 import ReportPDF from "../GeneratePDF";
 import { pdf } from "@react-pdf/renderer";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 const formatItemRgi = (letter: string, sequence: number) => {
   const letterWithoutDot = letter.split(".");
@@ -538,7 +539,7 @@ const DetailsItensNF: React.FC = () => {
           setGarantia(data);
           console.log("garantia received: ", garantia);
 
-          const transformedItems = await getItemsByGarantiaId(data.id);
+          const transformedItems = await getItemsByNotaId(location.state.notaId);
           setRecSellFile(
             location.state?.sellFile || {
               fileNameWithExtension: "",
@@ -549,7 +550,7 @@ const DetailsItensNF: React.FC = () => {
           if (transformedItems?.length > 0) {
             setVisibleSectionId(transformedItems[0].id);
           }
-          console.log("transformedItemsReceved: ", location.state.currentNf.nf);
+          console.log("transformedItemsReceved: ", location.state.nota);
           console.log(
             "itemsReceved: ",
             items.filter(
@@ -613,7 +614,7 @@ const DetailsItensNF: React.FC = () => {
           torqueAplicado: 0,
           solicitarRessarcimento: false,
           anexos: "",
-          rgi: newItemRgi,
+          codigoRgi: newItemRgi,
           codigoItem: newItemRgi,
           nfReferencia: location.state.nfNumber,
           loteItemOficial: "",
@@ -681,7 +682,7 @@ const DetailsItensNF: React.FC = () => {
     }
   };
 
-  const getItemsByGarantiaId = async (
+  const getItemsByNotaId = async (
     idGarantia: string
   ): Promise<GarantiaItem[]> => {
     const responseGetItens = await api.get(
@@ -697,7 +698,7 @@ const DetailsItensNF: React.FC = () => {
     }
 
     let isError: boolean = false;
-    const garantiaItensAPI = await getItemsByGarantiaId(garantia.id);
+    const garantiaItensAPI = await getItemsByNotaId(location.state.notaId);
 
     for (const item of items.filter(
       (value) => value.codigoItem?.split(".")[1] === recRgiLetter
@@ -803,7 +804,7 @@ const DetailsItensNF: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
-        <span className={styles.RgiCode}>RGI {garantia?.rgi || "N/A"}</span>
+        <span className={styles.RgiCode}>RGI {garantia?.codigoRgi || "N/A"}</span>
       </div>
       <div className={styles.ContainerHeader}>
         <div className={styles.headerLeft}>
@@ -834,7 +835,7 @@ const DetailsItensNF: React.FC = () => {
               GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             garantia.codigoStatus !==
               GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA &&
-            context.user.rule.name === "cliente" && (
+            context.user.rule.name === UserRoleEnum.Cliente && (
               <>
                 <Button
                   type="default"
@@ -854,7 +855,7 @@ const DetailsItensNF: React.FC = () => {
             )}
           {garantia.codigoStatus ===
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-            context.user.rule.name !== "cliente" && (
+            context.user.rule.name !== UserRoleEnum.Cliente && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
                   Visualizar Pré Nota
@@ -896,7 +897,7 @@ const DetailsItensNF: React.FC = () => {
           GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
         garantia?.codigoStatus ===
           GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
-        context.user.rule.name === "cliente" && (
+        context.user.rule.name === UserRoleEnum.Cliente && (
           <div style={{ marginTop: "15px" }}>
             <FileAttachment
               label="Anexo da NF de devolução"
@@ -918,7 +919,7 @@ const DetailsItensNF: React.FC = () => {
           Itens desta NF associados a esta garantia
         </h3>
         {garantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
-          context.user.rule.name === "cliente" && (
+          context.user.rule.name === UserRoleEnum.Cliente && (
             <Button
               className={styles.buttonRed}
               style={{
@@ -953,10 +954,10 @@ const DetailsItensNF: React.FC = () => {
                 toggleVisibility={() => toggleSectionVisibility(item.id)}
                 showDeleteConfirm={() => showDeleteConfirm(item.id)}
                 status={item.status}
-                rgi={item.rgi || ""}
+                rgi={item.codigoRgi || ""}
                 isEvaluated={
                   garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
-                  context.user.rule.name === "cliente"
+                  context.user.rule.name === UserRoleEnum.Cliente
                     ? false
                     : true
                 }
@@ -1142,7 +1143,7 @@ const DetailsItensNF: React.FC = () => {
                       </span>
                     </div>
                   )}
-                {context.user.rule.name === "cliente" && (
+                {context.user.rule.name === UserRoleEnum.Cliente && (
                   <FileAttachment
                     label="Anexo da NF de Referência"
                     garantiaItemId={item.id}
@@ -1152,10 +1153,10 @@ const DetailsItensNF: React.FC = () => {
                     recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
                   />
                 )}
-                {context.user.rule.name === "cliente" && (
+                {context.user.rule.name === UserRoleEnum.Cliente && (
                   <h3 className={styles.tituloA}>Anexos de Imagens</h3>
                 )}
-                {context.user.rule.name === "cliente" &&
+                {context.user.rule.name === UserRoleEnum.Cliente &&
                   [
                     "1. Foto do lado onde está a gravação IMA:",
                     "2. Foto da parte danificada/amassada-quebrada:",

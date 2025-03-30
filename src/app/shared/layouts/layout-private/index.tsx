@@ -28,14 +28,14 @@ const menuData: MenuItem[] = [
     label: 'Dashboard Inicial',
     icon: <img src={IconInitial} alt="Dashboard" style={{ width: "25px", height: "25px" }} />,
     path: '/dashboard',
-    allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Técnico, UserRoleEnum.Supervisor],
+    allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Tecnico, UserRoleEnum.Supervisor],
   },
   {
     key: '1',
     label: 'Garantias',
     icon: <img src={IconGarantia} alt="Garantias" style={{ width: "25px", height: "25px" }} />,
     path: '/garantias',
-    allowedRoles: [UserRoleEnum.Técnico, UserRoleEnum.Supervisor, UserRoleEnum.Cliente],
+    allowedRoles: [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor, UserRoleEnum.Cliente],
   },
   {
     key: '2',

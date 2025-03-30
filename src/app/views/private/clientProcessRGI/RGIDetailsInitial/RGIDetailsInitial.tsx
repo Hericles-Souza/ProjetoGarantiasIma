@@ -17,6 +17,8 @@ import api from "@shared/Interceptors";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import environment from "@env/environment";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
+import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -54,12 +56,11 @@ const RGIDetailsInitial: React.FC = () => {
     isOpen: false,
     isSell: false,
   });
-  const [nfs, setNfs] = useState<
-    { itemCode: string; nfRef: string; itens: number }[]
-  >([]);
   const [groupedItems, setGroupedItems] = useState<{ codigoItem?: string; nfReferencia?: string }[]>();
   const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
     { nf: string; countItems: number }[]
+  >([]);
+  const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<NotaFiscal[]
   >([]);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
@@ -147,7 +148,7 @@ const RGIDetailsInitial: React.FC = () => {
 
   const getAssciatedNfs = async (garantiaId: string) => {
     const garantiaItemResponse = await fetch(
-      `${environment.apiUrl}/garantias/item/associated-nf/${garantiaId}`,
+      `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
       {
         method: "GET",
         headers: {
@@ -155,9 +156,10 @@ const RGIDetailsInitial: React.FC = () => {
         },
       }
     );
-    const associatedNfs = await garantiaItemResponse.json();
-    setAssociatedNfsWithItens(associatedNfs.data);
-    console.log("nfs associadas: ", associatedNfs.data);
+    const associatedNfsByGarantia = await garantiaItemResponse.json();
+    setGarantiaNfsWithItens(associatedNfsByGarantia.data);
+    console.log("nfs associadas: ", associatedNfsByGarantia.data);
+
   };
 
   // Função para agrupar itens por nfReferencia e pegar somente 1 item de cada grupo
@@ -196,21 +198,17 @@ const RGIDetailsInitial: React.FC = () => {
             `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
           );
           setCardData(data);
-          setRgi(data.rgi);
-          const sellFile = await getSellFile(data.itens[0].id, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
+          setRgi(data.codigoRgi);
+          const sellFile = await getSellFile(data.notas[0].itens[0].id, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
           setSellFile(sellFile);
           console.log("sellFile: " + JSON.stringify(sellFile));
-          setNfs([
-            {
-              itemCode: data.nf,
-              nfRef: data.nf,
-              itens: data.itens ? data.itens.length : 0,
-            },
-          ]);
-          if (cardData?.itens?.length > 0) {
+          if (cardData?.notas?.length > 0) {
             const itensAgrupados = groupByNfReferencia(cardData?.itens);
-            console.log("itensAgrupados: ", itensAgrupados);
-            setGroupedItems(itensAgrupados);
+            console.log("itensAgrupados: ", cardData?.notas);
+            setGroupedItems(cardData?.notas.map(nota => ({
+              codigoItem: nota.codigo,
+              nfReferencia: nota.id_referencia
+            })));
             ordenarItens();
           }
           // console.log("garantia: " + JSON.stringify(data));
@@ -308,7 +306,8 @@ const RGIDetailsInitial: React.FC = () => {
   const handleDetailsNavigation = async (
     nf: { nf: string; itens: number },
     countItems: number,
-    nfNumber: string
+    nfNumber: string,
+    nota: NotaFiscal
   ) => {
     if (!cardData?.id) {
       console.error("Dados da garantia ainda não carregados.");
@@ -328,7 +327,7 @@ const RGIDetailsInitial: React.FC = () => {
       navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
         state: {
           garantiaData: cardData,
-          garantiaId: cardData.id,
+          notaId: nota.id,
           currentNf: nf,
           countItems: countItems,
           nfNumber: nfNumber,
@@ -349,10 +348,6 @@ const RGIDetailsInitial: React.FC = () => {
     const itemCode = getRgiWithSuffix(rgi, proximaLetra, 1);
     const itemId = crypto.randomUUID()
     console.log("nfNumber" + nfNumber);
-    setNfs((prevNfs) => [
-      ...prevNfs,
-      { itemCode: itemCode, nfRef: nfNumber, itens: 1 },
-    ]);
     setAssociatedNfsWithItens((prevassociatedNfsWithItens) => [
       ...prevassociatedNfsWithItens,
       { nf: nfNumber, countItems: 1 },
@@ -384,7 +379,6 @@ const RGIDetailsInitial: React.FC = () => {
         const response = await api.delete(`/garantias/item/delete/${itemToDelete.id}`);
       if (response.status === 200) {
         // Atualiza os estados locais
-        setNfs((prevNfs) => prevNfs.filter((nf) => nf.itemCode !== itemToDelete.codigoItem));
         const groupedItemToDelete = groupedItems.find((groupedItem) => groupedItem.codigoItem === itemToDelete.codigoItem);
       console.log("asdasdasdas", groupedItems.filter((item) => item.codigoItem !== itemToDelete.codigoItem.split(".")[0] + "." + itemToDelete.codigoItem.split(".")[1]));
         setGroupedItems((prevGroupedItems) =>
@@ -531,7 +525,7 @@ const RGIDetailsInitial: React.FC = () => {
         </div>
         <div className={styles.buttonsContainer}>
           {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
-            context.user.rule.name === "cliente" && (
+            context.user.rule.name === UserRoleEnum.Cliente && (
               <Button
                 type="default"
                 danger
@@ -545,7 +539,7 @@ const RGIDetailsInitial: React.FC = () => {
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
             cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ||
             cardData?.codigoStatus == GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
-            context.user.rule.name == "cliente" && (
+            context.user.rule.name == UserRoleEnum.Cliente && (
               <>
                 <Button
                   onClick={send}
@@ -571,7 +565,7 @@ const RGIDetailsInitial: React.FC = () => {
 
       <hr className={styles.divider} />
       {cardData?.codigoStatus != GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-        context.user.rule.name == "cliente" && (
+        context.user.rule.name == UserRoleEnum.Cliente && (
           <div className={styles.infoContainer}>
             <h3 className={styles.infoTitle}>Informações Gerais</h3>
             <div className={styles.inputsContainer}>
@@ -609,7 +603,7 @@ const RGIDetailsInitial: React.FC = () => {
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
           {(cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO) &&
-            context.user.rule.name == "cliente" && (
+            context.user.rule.name == UserRoleEnum.Cliente && (
               <Button
                 type="primary"
                 danger
@@ -630,8 +624,7 @@ const RGIDetailsInitial: React.FC = () => {
             )}
         </div>
 
-        {groupedItems?.sort().map(({ codigoItem, nfReferencia }, index) => {
-          codigoItem = rgi + "." + codigoItem.split(".")[1];
+        {garantiaNfsWithItens?.sort().map((nota, index) => {
           return <div className={styles.nfsItem}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <FileOutlined
@@ -642,27 +635,27 @@ const RGIDetailsInitial: React.FC = () => {
                   color: "red",
                 }}
               />
-              <span className={styles.nfsCode}>{codigoItem}</span>
+              <span className={styles.nfsCode}>{nota.codigo}</span>
               <span className={styles.nfsDivider}> | </span>
               <span className={styles.nfsQuantity}>
                 {" "}
-                {associatedNfsWithItens?.find((value) => value.nf === nfReferencia)?.countItems}  ITENS
+                {nota.itens.length}  ITENS
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
               {cardData?.codigoStatus ==
                 GarantiasStatusEnum2.NAO_ENVIADO &&
-                context.user.rule.name == "cliente" && (
+                context.user.rule.name == UserRoleEnum.Cliente && (
                   <DeleteOutlined
                     style={{ color: "#555", fontSize: "22px" }}
                     className={styles.DeleteOutlined}
-                    onClick={() => showDeleteConfirm(codigoItem)}
+                    onClick={() => showDeleteConfirm(nota.codigo)}
                   />
                 )}
               {cardData?.codigoStatus ===
                 GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
 
-                context.user.rule.name == "cliente" && (
+                context.user.rule.name == UserRoleEnum.Cliente && (
                   <label className={styles.buttonUpdateNfSale}>
                     <input
                       type="file"
@@ -681,11 +674,13 @@ const RGIDetailsInitial: React.FC = () => {
                 onClick={() =>
                   handleDetailsNavigation(
                     {
-                      itens: cardData.itens.length,
-                      nf: codigoItem,
+                      itens: nota.itens.length,
+                      nf: nota.codigo,
                     },
-                    associatedNfsWithItens[index]?.countItems,
-                    associatedNfsWithItens[index]?.nf
+                    nota.itens.length,
+                    nota.codigo,
+                    nota
+                  
                   )
                 }
               >
@@ -700,7 +695,7 @@ const RGIDetailsInitial: React.FC = () => {
         open={modalOpen.isOpen}
         onOpenChange={setModalOpen}
         onAddNF={handleAddNF}
-        itemId={cardData.itens[0].id}
+        itemId={cardData?.notas[0].itens[0].id}
         isSell={modalOpen.isSell}
         garantiaId={cardData?.id}
       />

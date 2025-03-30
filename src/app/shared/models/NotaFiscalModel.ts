@@ -6,6 +6,7 @@ garantia_id: string;
 createdAt: string;
 updatedAt: string;
 codigo: string;
+codigoRGI: string;
 tipo_nota: string;
 data_emissao: string;
 id_referencia: string;

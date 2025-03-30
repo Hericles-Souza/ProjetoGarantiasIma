@@ -123,6 +123,7 @@ interface CardCategoriasProps {
 }
 
 const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, codigoFormatado, onClick }) => {
+  
   const statusStyle = statusStyles[GarantiaItem.codigoStatus];
   const context = useContext(AuthContext);
   return (

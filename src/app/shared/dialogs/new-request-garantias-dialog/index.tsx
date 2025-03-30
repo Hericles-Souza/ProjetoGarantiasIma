@@ -142,9 +142,10 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       const notaFiscalId = crypto.randomUUID();
 
       const garantiasItem: GarantiaItem[] = [{
+        id: itemId,
         nota_fiscal_id: notaFiscalId,
         codigoItem: newRGI + ".A.1",
-        rgi: newRGI,
+        codigoRgi: newRGI,
         nfReferencia: values["N° NF de origem"],
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
         status: GarantiasItemStatusEnum.NAO_ANALISADO
@@ -154,6 +155,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         id: notaFiscalId,
         garantia_id: itemId,
         codigo: values["N° NF de origem"],
+        codigoRGI: newRGI + ".A",
         tipo_nota: "nota fiscal de origem",
         id_referencia: notaFiscalId,
         itens: garantiasItem,
@@ -165,7 +167,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
 
       // 3. Construa o objeto garantiaModel
       const garantiaPayload: GarantiasModel = {
-        rgi: newRGI,
+        codigoRGI: newRGI,
         razaoSocial: context.user.fullname,
         telefone: context.user.phone,
         email: context.user.email,
@@ -175,7 +177,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         observacao: "Garantia válida por 12 meses",
         usuarioInsercao: context.user.username,
         notas: notasFiscais,
-        id: itemId,
         
       };
 
@@ -184,7 +185,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         JSON.stringify(garantiaPayload, null, 2)
       );
 
-      // 4. Cria a garantia via API
+      // 4. Cria a garantia via API 
       const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
       console.log("Garantia criada com sucesso:", guaranteeResponse.data);
 

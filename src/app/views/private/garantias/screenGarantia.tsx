@@ -46,7 +46,7 @@ const Garantias: React.FC = () => {
         setCardData(data);
       } else {
         let status: number[] = [];
-        if (context.user.rule.name === UserRoleEnum.Técnico) {
+        if (context.user.rule.name === UserRoleEnum.Tecnico) {
           status = [
             GarantiasStatusEnum2.EM_ANALISE,
             GarantiasStatusEnum2.CONFIRMADO,
@@ -196,12 +196,12 @@ const Garantias: React.FC = () => {
                     key={item.id}
                     data={new Date(garantia.data)}
                     GarantiaItem={item}
-                    codigoFormatado={`RGI ${item.rgi}`}
+                    codigoFormatado={`RGI ${garantia.rgi}`}
                     onClick={() => {
                       console.log("use: " + context.user.rule.name);
                       if (
-                        context.user.rule.name.includes("admin") ||
-                        context.user.rule.name.includes("cliente")
+                        context.user.rule.name.includes(UserRoleEnum.Admin) ||
+                        context.user.rule.name.includes(UserRoleEnum.Cliente)
                       ) {
                         const garantiaData = garantia;
                         console.log("garantiaData: " + JSON.stringify(garantiaData));
@@ -209,8 +209,8 @@ const Garantias: React.FC = () => {
                           state: { item, garantiaData },
                         });
                       } else if (
-                        context.user.rule.name.includes("tecnico") ||
-                        context.user.rule.name.includes("supervisor")
+                        context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
+                        context.user.rule.name.includes(UserRoleEnum.Supervisor)
                       ) {
                         console.log("item: " + JSON.stringify(item));
                         console.log(
@@ -295,15 +295,15 @@ const Garantias: React.FC = () => {
                     onClick={() => {
                       console.log("use: " + context.user.rule.name);
                       if (
-                        context.user.rule.name.includes("admin") ||
-                        context.user.rule.name.includes("cliente")
+                        context.user.rule.name.includes(UserRoleEnum.Admin) ||
+                        context.user.rule.name.includes(UserRoleEnum.Cliente)
                       )
                         navigate(`garantias/aci/:id`, {
                           state: { item, garantia },
                         });
                       else if (
-                        context.user.rule.name.includes("tecnico") ||
-                        context.user.rule.name.includes("supervisor")
+                        context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
+                        context.user.rule.name.includes(UserRoleEnum.Supervisor)
                       ) {
                         console.log("item: " + JSON.stringify(item));
                         console.log(

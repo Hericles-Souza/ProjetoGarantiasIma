@@ -295,7 +295,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
           if (response.status === 200) {
             message.success("Dados salvos com sucesso!");
-            if (context.user.rule.name === UserRoleEnum.Técnico) {
+            if (context.user.rule.name === UserRoleEnum.Tecnico) {
               setIsAnalysisConcluded(true); // Atualiza o estado para "Avaliação Concluída"
             }
           } else {
@@ -327,11 +327,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   // Lógica para exibir o status dinamicamente
   const displayedStatus =
     cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-    context.user.rule.name === UserRoleEnum.Técnico &&
+    context.user.rule.name === UserRoleEnum.Tecnico &&
     isAnalysisConcluded
       ? "Avaliação Concluída"
       : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-        (context.user.rule.name === UserRoleEnum.Técnico ||
+        (context.user.rule.name === UserRoleEnum.Tecnico ||
           context.user.rule.name === UserRoleEnum.Supervisor)
       ? "Aguardando Avaliação"
       : cardData?.status;
@@ -416,7 +416,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 onClick={handleSave}
                 disabled={
                   isAnalysisConcluded &&
-                  context.user.rule.name === UserRoleEnum.Técnico
+                  context.user.rule.name === UserRoleEnum.Tecnico
                 }
               >
                 Salvar
