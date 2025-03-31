@@ -562,7 +562,7 @@ const DetailsItensNF: React.FC = () => {
             id: "",
             codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
           });
-          setItems([]);
+          setItems(location.state.nota.itens);
           setRecSellFile({ fileNameWithExtension: "", imagemUrl: "" });
         }
       } catch (error) {
@@ -614,7 +614,7 @@ const DetailsItensNF: React.FC = () => {
           torqueAplicado: 0,
           solicitarRessarcimento: false,
           anexos: "",
-          codigoRgi: newItemRgi,
+          codigoRGI: newItemRgi,
           codigoItem: newItemRgi,
           nfReferencia: location.state.nfNumber,
           loteItemOficial: "",
@@ -804,7 +804,7 @@ const DetailsItensNF: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
-        <span className={styles.RgiCode}>RGI {garantia?.codigoRgi || "N/A"}</span>
+        <span className={styles.RgiCode}>RGI {garantia?.codigoRGI || "N/A"}</span>
       </div>
       <div className={styles.ContainerHeader}>
         <div className={styles.headerLeft}>
@@ -954,7 +954,7 @@ const DetailsItensNF: React.FC = () => {
                 toggleVisibility={() => toggleSectionVisibility(item.id)}
                 showDeleteConfirm={() => showDeleteConfirm(item.id)}
                 status={item.status}
-                rgi={item.codigoRgi || ""}
+                rgi={item.codigoRGI || ""}
                 isEvaluated={
                   garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
                   context.user.rule.name === UserRoleEnum.Cliente

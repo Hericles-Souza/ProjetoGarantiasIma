@@ -198,7 +198,7 @@ const RGIDetailsInitial: React.FC = () => {
             `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
           );
           setCardData(data);
-          setRgi(data.codigoRgi);
+          setRgi(data.codigoRGI);
           const sellFile = await getSellFile(data.notas[0].itens[0].id, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
           setSellFile(sellFile);
           console.log("sellFile: " + JSON.stringify(sellFile));

@@ -24,7 +24,7 @@ export interface GarantiaItem {
   anoVeiculo?: string;
   codigoPeca?: string;
   id?: string;
-  codigoRgi?: string;
+  codigoRGI?: string;
   codigoItem: string;
   tipoDefeito?: string;
   modeloVeiculoAplicado?: string;
