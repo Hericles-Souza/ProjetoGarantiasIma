@@ -11,7 +11,7 @@ import {
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
-  StatusColors
+  StatusColors,
 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -28,17 +28,6 @@ const extractGarantiasArray = (data: any): GarantiasModel[] => {
   return Array.isArray(data) ? data : [];
 };
 
-export const getRGIByUserAsync = async (userId: string) => {
-  const response = await api.get("/garantias");
-  const allGarantias = extractGarantiasArray(response.data);
-  // Retorna a primeira garantia do usuário com status "NAO_ENVIADO"
-  return allGarantias.find(
-    (g: GarantiasModel) =>
-      g.usuarioInsercao === userId &&
-      g.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
-  );
-};
-
 export interface ModalModel {
   isOpen: boolean;
   isSell: boolean;
@@ -47,7 +36,10 @@ export interface ModalModel {
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
-  const [sellFile, setSellFile] = useState<{ fileNameWithExtension: string; imagemUrl: string }>();
+  const [sellFile, setSellFile] = useState<{
+    fileNameWithExtension: string;
+    imagemUrl: string;
+  }>();
   const { id } = useParams<{ id: string }>();
   const [date, setDate] = useState("");
   const navigate = useNavigate();
@@ -56,11 +48,13 @@ const RGIDetailsInitial: React.FC = () => {
     isOpen: false,
     isSell: false,
   });
-  const [groupedItems, setGroupedItems] = useState<{ codigoItem?: string; nfReferencia?: string }[]>();
+  const [groupedItems, setGroupedItems] =
+    useState<{ codigoItem?: string; nfReferencia?: string }[]>();
   const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
     { nf: string; countItems: number }[]
   >([]);
-  const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<NotaFiscal[]
+  const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<
+    NotaFiscal[]
   >([]);
   const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
 
@@ -113,7 +107,6 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-
   const getSellFile = async (itemId: string, field: string) => {
     const urlGetFile =
       environment.apiUrl +
@@ -136,11 +129,8 @@ const RGIDetailsInitial: React.FC = () => {
     // handleDownload(fileNameWithExtension);
     // handleDownload(fileNameWithExtension, imagemUrl);
 
-    return { fileNameWithExtension, imagemUrl }
+    return { fileNameWithExtension, imagemUrl };
   };
-
-
-
 
   const getRgiWithSuffix = (RgiCode: string, letter: string, index) => {
     return `${RgiCode}.${letter}.${index}`;
@@ -159,24 +149,25 @@ const RGIDetailsInitial: React.FC = () => {
     const associatedNfsByGarantia = await garantiaItemResponse.json();
     setGarantiaNfsWithItens(associatedNfsByGarantia.data);
     console.log("nfs associadas: ", associatedNfsByGarantia.data);
-
   };
 
   // Função para agrupar itens por nfReferencia e pegar somente 1 item de cada grupo
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const groupByNfReferencia = (itens: GarantiaItem[]): { codigoItem?: string; nfReferencia?: string }[] => {
+  const groupByNfReferencia = (
+    itens: GarantiaItem[]
+  ): { codigoItem?: string; nfReferencia?: string }[] => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const grouped: { codigoItem?: string; nfReferencia?: string }[] = [];
 
     itens?.forEach((item) => {
       if (!grouped[item.nfReferencia]) {
-        const formatCodigoItem = item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1];
+        const formatCodigoItem =
+          item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1];
 
         grouped[item.nfReferencia] = {
           nfReferencia: item.nfReferencia,
-          codigoItem: formatCodigoItem
+          codigoItem: formatCodigoItem,
         };
-
       }
     });
 
@@ -198,17 +189,22 @@ const RGIDetailsInitial: React.FC = () => {
             `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
           );
           setCardData(data);
-          setRgi(data.codigoRGI);
-          const sellFile = await getSellFile(data.notas[0].itens[0].id, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
+          setRgi(data.codigoRGI || data.rgi);
+          const sellFile = (await getSellFile(
+            data.notas[0].itens[0].id,
+            "nfVenda"
+          )) as { fileNameWithExtension: string; imagemUrl: string };
           setSellFile(sellFile);
           console.log("sellFile: " + JSON.stringify(sellFile));
           if (cardData?.notas?.length > 0) {
             const itensAgrupados = groupByNfReferencia(cardData?.itens);
             console.log("itensAgrupados: ", cardData?.notas);
-            setGroupedItems(cardData?.notas.map(nota => ({
-              codigoItem: nota.codigo,
-              nfReferencia: nota.id_referencia
-            })));
+            setGroupedItems(
+              cardData?.notas.map((nota) => ({
+                codigoItem: nota.codigo,
+                nfReferencia: nota.id_referencia,
+              }))
+            );
             ordenarItens();
           }
           // console.log("garantia: " + JSON.stringify(data));
@@ -261,7 +257,7 @@ const RGIDetailsInitial: React.FC = () => {
   const postOrPutGarantiaItemAsync = async (
     itemCodeCompare: string,
     nfReference: string,
-    itemId: string,
+    itemId: string
   ) => {
     console.log("salvamento: " + cardData);
     if (!cardData?.id) {
@@ -314,16 +310,25 @@ const RGIDetailsInitial: React.FC = () => {
       return;
     }
 
-    console.log("codigoitem: ", nf.nf);
-    console.log("cardData.itens: ", cardData.itens);
+    console.log("codigoitem: ", nota.rgi);
+    console.log("cardData.itens: ", nota);
 
+    const itemId = nota.itens?.find(
+      (item) =>
+        item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1] ===
+        nota.rgi
+    ).id;
 
-    const itemId = cardData.itens?.find((item) => item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1] === nf.nf).id;
-
-    const sellFile = await getSellFile(itemId, "nfVenda") as { fileNameWithExtension: string; imagemUrl: string };
+    const sellFile = (await getSellFile(itemId, "nfVenda")) as {
+      fileNameWithExtension: string;
+      imagemUrl: string;
+    };
     setSellFile(sellFile);
+    console.log("sellFile: ", sellFile);
 
-    if (sellFile)
+    if (sellFile) {
+      console.log("nota: ", nota);
+
       navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
         state: {
           garantiaData: cardData,
@@ -331,22 +336,24 @@ const RGIDetailsInitial: React.FC = () => {
           currentNf: nf,
           countItems: countItems,
           nfNumber: nfNumber,
-          sellFile: sellFile
+          sellFile: sellFile,
+          nota: nota,
         },
       });
+    }
   };
 
   const handleAddNF = async (nfNumber: string) => {
     const ultimoItem = groupedItems[groupedItems.length - 1];
 
     // Extrai a parte numérica e a letra do último item
-    const [numero, letra] = ultimoItem.codigoItem.split('.');
-    console.log(numero, letra)
-    
+    const [numero, letra] = ultimoItem.codigoItem.split(".");
+    console.log(numero, letra);
+
     // Calcula a próxima letra do alfabeto
     const proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
     const itemCode = getRgiWithSuffix(rgi, proximaLetra, 1);
-    const itemId = crypto.randomUUID()
+    const itemId = crypto.randomUUID();
     console.log("nfNumber" + nfNumber);
     setAssociatedNfsWithItens((prevassociatedNfsWithItens) => [
       ...prevassociatedNfsWithItens,
@@ -372,35 +379,67 @@ const RGIDetailsInitial: React.FC = () => {
     try {
       console.log(nfToDelete);
       // Chamada à API para deletar a NF
-      const itensToDelete = cardData?.itens.filter((item) => item.codigoItem.split(".")[0] + "."+ item.codigoItem.split(".")[1] === nfToDelete)
-      
+      const itensToDelete = cardData?.itens.filter(
+        (item) =>
+          item.codigoItem.split(".")[0] +
+            "." +
+            item.codigoItem.split(".")[1] ===
+          nfToDelete
+      );
 
       itensToDelete?.forEach(async (itemToDelete) => {
-        const response = await api.delete(`/garantias/item/delete/${itemToDelete.id}`);
-      if (response.status === 200) {
-        // Atualiza os estados locais
-        const groupedItemToDelete = groupedItems.find((groupedItem) => groupedItem.codigoItem === itemToDelete.codigoItem);
-      console.log("asdasdasdas", groupedItems.filter((item) => item.codigoItem !== itemToDelete.codigoItem.split(".")[0] + "." + itemToDelete.codigoItem.split(".")[1]));
-        setGroupedItems((prevGroupedItems) =>
-          prevGroupedItems?.filter((item) => item.codigoItem !== itemToDelete.codigoItem.split(".")[0] + "." + itemToDelete.codigoItem.split(".")[1])
+        const response = await api.delete(
+          `/garantias/item/delete/${itemToDelete.id}`
         );
-        ordenarItens();
-        console.log("55165153", associatedNfsWithItens.filter((nf) => nf.nf !== itemToDelete.nfReferencia));
-        
-        setAssociatedNfsWithItens((prevAssociatedNfs) =>
-          prevAssociatedNfs.filter((nf) => nf.nf !== itemToDelete.nfReferencia)
-        );  
-        setCardData((prevCardData) => ({
-          ...prevCardData,
-          itens: prevCardData.itens.filter((item) => item.codigoItem !== itemToDelete.codigoItem),
-        }));
-        setModalDeleteOpen(false);
-        message.success("NF excluída com sucesso!");
-      } else {
-        message.error("Erro ao excluir a NF.");
-      }
+        if (response.status === 200) {
+          // Atualiza os estados locais
+          const groupedItemToDelete = groupedItems.find(
+            (groupedItem) => groupedItem.codigoItem === itemToDelete.codigoItem
+          );
+          console.log(
+            "asdasdasdas",
+            groupedItems.filter(
+              (item) =>
+                item.codigoItem !==
+                itemToDelete.codigoItem.split(".")[0] +
+                  "." +
+                  itemToDelete.codigoItem.split(".")[1]
+            )
+          );
+          setGroupedItems((prevGroupedItems) =>
+            prevGroupedItems?.filter(
+              (item) =>
+                item.codigoItem !==
+                itemToDelete.codigoItem.split(".")[0] +
+                  "." +
+                  itemToDelete.codigoItem.split(".")[1]
+            )
+          );
+          ordenarItens();
+          console.log(
+            "55165153",
+            associatedNfsWithItens.filter(
+              (nf) => nf.nf !== itemToDelete.nfReferencia
+            )
+          );
+
+          setAssociatedNfsWithItens((prevAssociatedNfs) =>
+            prevAssociatedNfs.filter(
+              (nf) => nf.nf !== itemToDelete.nfReferencia
+            )
+          );
+          setCardData((prevCardData) => ({
+            ...prevCardData,
+            itens: prevCardData.itens.filter(
+              (item) => item.codigoItem !== itemToDelete.codigoItem
+            ),
+          }));
+          setModalDeleteOpen(false);
+          message.success("NF excluída com sucesso!");
+        } else {
+          message.error("Erro ao excluir a NF.");
+        }
       });
-      
     } catch (error) {
       console.error("Erro ao excluir a NF:", error);
       message.error("Erro ao excluir a NF.");
@@ -428,7 +467,9 @@ const RGIDetailsInitial: React.FC = () => {
     let garantia: GarantiasModel = {};
 
     try {
-      if (cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) {
+      if (
+        cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+      ) {
         garantia = {
           razaoSocial: cardData?.razaoSocial,
           telefone: cardData?.telefone,
@@ -441,13 +482,12 @@ const RGIDetailsInitial: React.FC = () => {
           status: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         };
-      }
-      else {
+      } else {
         garantia = {
           razaoSocial: socialReason,
           telefone: phone,
           email: context.user.email,
-          nf: cardData.nf,
+          nf: cardData.notas[0].codigo,
           fornecedor: context.user.fullname,
           codigoStatus:
             cardData.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO
@@ -458,8 +498,10 @@ const RGIDetailsInitial: React.FC = () => {
           status: cardData.status,
           dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         };
-
       }
+
+      console.log("garantiaUpdateHeader: ", garantia);
+      
 
       const responseHeader = await api.put(
         `/garantias/garantiasHeader/${id}/UpdateHeader`,
@@ -518,10 +560,16 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
           <h1 className={styles.rgiTitle}>RGI {rgi}</h1>
-          <div style={{
-            color: StatusColors[cardData?.codigoStatus],
-            backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
-          }} className={styles.statusTag}>{ converterStatusGarantia(cardData?.codigoStatus) || "Status não disponível"}</div>
+          <div
+            style={{
+              color: StatusColors[cardData?.codigoStatus],
+              backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
+            }}
+            className={styles.statusTag}
+          >
+            {converterStatusGarantia(cardData?.codigoStatus) ||
+              "Status não disponível"}
+          </div>
         </div>
         <div className={styles.buttonsContainer}>
           {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
@@ -538,7 +586,8 @@ const RGIDetailsInitial: React.FC = () => {
           {(cardData?.codigoStatus ==
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
             cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ||
-            cardData?.codigoStatus == GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
+            cardData?.codigoStatus ==
+              GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
             context.user.rule.name == UserRoleEnum.Cliente && (
               <>
                 <Button
@@ -602,7 +651,7 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.nfsContainer}>
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-          {(cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO) &&
+          {cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO &&
             context.user.rule.name == UserRoleEnum.Cliente && (
               <Button
                 type="primary"
@@ -625,69 +674,66 @@ const RGIDetailsInitial: React.FC = () => {
         </div>
 
         {garantiaNfsWithItens?.sort().map((nota, index) => {
-          return <div className={styles.nfsItem}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <FileOutlined
-                style={{
-                  marginRight: "10px",
-                  marginLeft: "20px",
-                  fontSize: "20px",
-                  color: "red",
-                }}
-              />
-              <span className={styles.nfsCode}>{nota.codigo}</span>
-              <span className={styles.nfsDivider}> | </span>
-              <span className={styles.nfsQuantity}>
-                {" "}
-                {nota.itens.length}  ITENS
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              {cardData?.codigoStatus ==
-                GarantiasStatusEnum2.NAO_ENVIADO &&
-                context.user.rule.name == UserRoleEnum.Cliente && (
-                  <DeleteOutlined
-                    style={{ color: "#555", fontSize: "22px" }}
-                    className={styles.DeleteOutlined}
-                    onClick={() => showDeleteConfirm(nota.codigo)}
-                  />
-                )}
-              {cardData?.codigoStatus ===
-                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-
-                context.user.rule.name == UserRoleEnum.Cliente && (
-                  <label className={styles.buttonUpdateNfSale}>
-                    <input
-                      type="file"
-                      style={{ display: "none" }}
-                      onChange={(e) => {
-                  
-                      }}
+          return (
+            <div className={styles.nfsItem}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <FileOutlined
+                  style={{
+                    marginRight: "10px",
+                    marginLeft: "20px",
+                    fontSize: "20px",
+                    color: "red",
+                  }}
+                />
+                <span className={styles.nfsCode}>{nota.codigo}</span>
+                <span className={styles.nfsDivider}> | </span>
+                <span className={styles.nfsQuantity}>
+                  {" "}
+                  {nota.itens.length} ITENS
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO &&
+                  context.user.rule.name == UserRoleEnum.Cliente && (
+                    <DeleteOutlined
+                      style={{ color: "#555", fontSize: "22px" }}
+                      className={styles.DeleteOutlined}
+                      onClick={() => showDeleteConfirm(nota.codigo)}
                     />
-                    Adicionar Anexo
-                  </label>
-                )}
+                  )}
+                {cardData?.codigoStatus ===
+                  GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+                  context.user.rule.name == UserRoleEnum.Cliente && (
+                    <label className={styles.buttonUpdateNfSale}>
+                      <input
+                        type="file"
+                        style={{ display: "none" }}
+                        onChange={(e) => {}}
+                      />
+                      Adicionar Anexo
+                    </label>
+                  )}
 
-              <Button
-                type="text"
-                className={styles.nextButton}
-                onClick={() =>
-                  handleDetailsNavigation(
-                    {
-                      itens: nota.itens.length,
-                      nf: nota.codigo,
-                    },
-                    nota.itens.length,
-                    nota.codigo,
-                    nota
-                  
-                  )
-                }
-              >
-                &gt;
-              </Button>
+                <Button
+                  type="text"
+                  className={styles.nextButton}
+                  onClick={() =>
+                    handleDetailsNavigation(
+                      {
+                        itens: nota.itens.length,
+                        nf: nota.codigo,
+                      },
+                      nota.itens.length,
+                      nota.codigo,
+                      nota
+                    )
+                  }
+                >
+                  &gt;
+                </Button>
+              </div>
             </div>
-          </div>
+          );
         })}
       </div>
 

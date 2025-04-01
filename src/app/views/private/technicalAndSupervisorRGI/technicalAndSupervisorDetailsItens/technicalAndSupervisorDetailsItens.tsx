@@ -29,19 +29,17 @@ import {
 import environment from "@env/environment.ts";
 import MyPDF from "../../clientProcessRGI/GeneratePDF";
 import { pdf } from "@react-pdf/renderer";
+import { NotaFiscal } from "@shared/models/NotaFiscalModel";
+import React from "react";
 
 // Componente FileAttachment (mantido igual)
-const FileAttachment = ({
-  label,
-  backgroundColor,
-  itemId,
-  isRessarcimento,
-}: {
+const FileAttachment = React.memo(({ label, backgroundColor, itemId, isRessarcimento }: {
   label: string;
   backgroundColor?: string;
   itemId: string;
   isRessarcimento: boolean;
 }) => {
+
   const [imagemUrl, setImagemUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const context = useContext(AuthContext);
@@ -63,7 +61,7 @@ const FileAttachment = ({
 
       fetchImagem(itemId, fieldFile);
     }
-  });
+  }, [itemId, label, isRessarcimento]);
 
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
@@ -149,7 +147,7 @@ const FileAttachment = ({
       )}
     </div>
   );
-};
+});
 
 // Componente CollapsibleSection (mantido igual)
 const CollapsibleSection = ({
@@ -193,6 +191,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const context = useContext(AuthContext);
   const [items, setItems] = useState<NfItem[]>();
   const [cardData, setCardData] = useState<GarantiasModel | null>(null);
+  const [notaFiscal, setNotaFiscal] = useState<NotaFiscal>();
   const { id } = useParams<{ id: string }>();
   const [recRgiLetter, setRecRgiLetter] = useState("");
   const [loading, setLoading] = useState(true);
@@ -206,14 +205,15 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     const fetchUserData = async () => {
       try {
         if (location.state) {
-          const itemsResponse = await getItemsByNfAsync(location.state.nf.nf);
+          const itemsResponse = await getItemsByNfAsync(location.state.nota.id);
           itemsResponse.data.forEach((item) => {
             if (item.tipoDefeito == null) item.tipoDefeito = "";
           });
-          setItems(itemsResponse.data);
+          setItems(itemsResponse.data); 
 
           const updatedCardData = { ...location.state.garantia };
           setCardData(updatedCardData);
+          setNotaFiscal(location.state.nota);
           setRecRgiLetter(location.state.nf.split(".")[1]);
         }
       } catch (error) {
@@ -224,7 +224,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     };
 
     fetchUserData();
-  }, [location.state]);
+  });
 
   const toggleContentVisibility = (itemId: string) => {
     setIsContentVisible((prev) => ({
@@ -266,9 +266,9 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     }
   };
   const handleSave = async () => {
-    if (!cardData?.itens) return;
+    if (!cardData?.notas) return;
 
-    const hasInvalidDefect = cardData.itens.some(
+    const hasInvalidDefect = notaFiscal.itens.some(
       (item) =>
         item.codigoItem?.split(".")[1] === recRgiLetter && !item.tipoDefeito
     );
@@ -278,8 +278,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       return;
     }
 
-    const promises = cardData.itens
-      .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
+    const promises = notaFiscal.itens
       .map(async (item) => {
         const dataToSend = {
           ItemId: item.id,
@@ -292,6 +291,9 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             `/garantias/analisetecnica/`,
             dataToSend
           );
+
+          console.log("response: ", response);
+          
 
           if (response.status === 200) {
             message.success("Dados salvos com sucesso!");
@@ -307,7 +309,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         }
       });
     await Promise.all(promises);
-    const notAuthorizeItems = cardData.itens.filter(
+    const notAuthorizeItems = notaFiscal.itens.filter(
       (value) =>
         value.codigoItem?.split(".")[1] === recRgiLetter &&
         value.codigoStatus == GarantiasItemStatusEnum2.NAO_AUTORIZADO
@@ -317,8 +319,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
   const updateItemDefect = (itemId: string, newDefect: string) => {
     if (cardData) {
-      const updatedItems = cardData.itens.map((item) =>
-        item.id === itemId ? { ...item, tipoDefeito: newDefect } : item
+      const updatedItems = notaFiscal.itens.map((item) =>
+        item.id === itemId ? { ...item, tipfoDefeito: newDefect } : item
       );
       setCardData({ ...cardData, itens: updatedItems });
     }
@@ -370,14 +372,14 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           className={styles.ButtonBack}
           onClick={() =>
             navigate(`/garantias/technical-and-supervisor/${cardData.id}`, {
-              state: { item: cardData.itens[0], garantia: cardData },
+              state: { item: cardData.notas[0].itens[0], garantia: cardData },
             })
           }
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA RGI
         </Button>
         <span className={styles.RgiCode}>
-          RGI N° {location.state.garantia.itens[0]?.rgi}
+          RGI N° {location.state.nota.codigoRGI || location.state.nota.rgi}
         </span>
       </div>
 
@@ -433,8 +435,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         </h3>
       </div>
 
-      {cardData.itens
-        .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
+      {notaFiscal.itens
         .map((item) => (
           <div className={styles.containerInformacoes} key={item.id}>
             <CollapsibleSection

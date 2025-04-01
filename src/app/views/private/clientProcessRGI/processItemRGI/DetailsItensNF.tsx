@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useContext } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button, message, Modal, Spin } from "antd";
 import {
   DownOutlined,
@@ -31,6 +31,7 @@ import { updateGarantiasHeaderByIdAsync } from "@shared/services/GarantiasServic
 import ReportPDF from "../GeneratePDF";
 import { pdf } from "@react-pdf/renderer";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
+import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 
 const formatItemRgi = (letter: string, sequence: number) => {
   const letterWithoutDot = letter.split(".");
@@ -466,7 +467,6 @@ const CollapsibleSection = ({
 };
 
 const DetailsItensNF: React.FC = () => {
-  const { id: guaranteeId } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const [items, setItems] = useState<GarantiaItem[]>([]);
@@ -475,6 +475,7 @@ const DetailsItensNF: React.FC = () => {
   const [recRgiLetter, setRecRgiLetter] = useState("A");
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
+  const [notaFiscal, setNotaFiscal] = useState<NotaFiscal | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [recSellFile, setRecSellFile] = useState<{
     fileNameWithExtension: string;
@@ -537,7 +538,9 @@ const DetailsItensNF: React.FC = () => {
         }
         if (data) {
           setGarantia(data);
+          setNotaFiscal(location.state.nota);
           console.log("garantia received: ", garantia);
+          console.log("nota received: ", notaFiscal);
 
           const transformedItems = await getItemsByNotaId(location.state.notaId);
           setRecSellFile(
@@ -553,9 +556,7 @@ const DetailsItensNF: React.FC = () => {
           console.log("transformedItemsReceved: ", location.state.nota);
           console.log(
             "itemsReceved: ",
-            items.filter(
-              (value) => value.codigoItem?.split(".")[1] === recRgiLetter
-            )
+            location.state.nota
           );
         } else {
           setGarantia({
@@ -576,22 +577,23 @@ const DetailsItensNF: React.FC = () => {
     };
 
     loadGarantiaData();
-  }, [location.state, guaranteeId, garantia]);
+  }, [location.state]);
 
   const addNewItem = async () => {
     const newItemId = crypto.randomUUID();
     const sequence = (location.state.countItems =
       location.state.countItems + 1);
     const newItemRgi = garantia
-      ? formatItemRgi(location.state.currentNf.nf, sequence)
+      ? formatItemRgi(location.state.nota.codigoRGI || location.state.nota.rgi, sequence)
       : "";
 
-    const payloadPost = {
+    const payloadPost = { 
       id: newItemId,
-      garantiaId: garantia?.id,
       codigoItem: newItemRgi,
-      nfReferencia: location.state.nfNumber,
+      codigoRGI: newItemRgi,
+      nfReferencia: notaFiscal.codigo,
       codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+      nota_fiscal_id: notaFiscal.id
     };
     const responsePost = await api.post(
       environment.apiUrl + "/garantias/item/create",
@@ -601,28 +603,28 @@ const DetailsItensNF: React.FC = () => {
       message.error("Erro ao criar a garantia.");
     } else {
       message.success("Item criado com sucesso.");
-      setItems([
-        ...items,
-        {
-          id: newItemId,
-          codigoPeca: "",
-          loteItem: "",
-          status: GarantiasItemStatusEnum.NAO_ANALISADO,
-          tipoDefeito: "",
-          anoVeiculo: "",
-          modeloVeiculoAplicado: "",
-          torqueAplicado: 0,
-          solicitarRessarcimento: false,
-          anexos: "",
-          codigoRGI: newItemRgi,
-          codigoItem: newItemRgi,
-          nfReferencia: location.state.nfNumber,
-          loteItemOficial: "",
-          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-        },
-      ]);
+      console.log("responsePost: ", responsePost);
+      
+      notaFiscal.itens.push({
+        id: newItemId,
+        codigoPeca: "",
+        loteItem: "",
+        status: GarantiasItemStatusEnum.NAO_ANALISADO,
+        tipoDefeito: "",
+        anoVeiculo: "",
+        modeloVeiculoAplicado: "",
+        torqueAplicado: 0,
+        solicitarRessarcimento: false,
+        anexos: "",
+        codigoRGI: newItemRgi,
+        codigoItem: newItemRgi,
+        nfReferencia: location.state.nfNumber,
+        loteItemOficial: "",
+        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+      })
+      
       if (garantia) {
-        garantia.itens.push({
+        notaFiscal.itens.push({
           id: newItemId,
           codigoItem: newItemRgi,
           nfReferencia: location.state.nfNumber,
@@ -700,10 +702,12 @@ const DetailsItensNF: React.FC = () => {
     let isError: boolean = false;
     const garantiaItensAPI = await getItemsByNotaId(location.state.notaId);
 
-    for (const item of items.filter(
+    for (const item of notaFiscal.itens.filter(
       (value) => value.codigoItem?.split(".")[1] === recRgiLetter
     )) {
       try {
+        console.log("garantiaItensAPI: ", garantiaItensAPI);
+        
         if (
           garantiaItensAPI.some(
             (apiItem) => apiItem.codigoItem === item.codigoItem
@@ -711,6 +715,7 @@ const DetailsItensNF: React.FC = () => {
         ) {
           const payloadPut = {
             codigoItem: item.codigoItem,
+            codigoRGI: notaFiscal.codigoRGI,
             tipoDefeito: item.tipoDefeito,
             modeloVeiculoAplicado: item.modeloVeiculoAplicado,
             torqueAplicado: Number(item.torqueAplicado) || 0,
@@ -721,6 +726,7 @@ const DetailsItensNF: React.FC = () => {
             anoVeiculo: item.anoVeiculo,
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
             solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
+            nota_fiscal_id: notaFiscal.id,
           };
           const responsePut = await api.put(
             `/garantias/garantiasItem/${item.id}/UpdateItem`,
@@ -732,7 +738,8 @@ const DetailsItensNF: React.FC = () => {
           }
         } else {
           const payloadPost = {
-            garantiaId: garantia.id,
+            nota_fiscal_id: notaFiscal.id,
+            codigoRGI: notaFiscal.codigoRGI,
             codigoItem: item.codigoItem,
             tipoDefeito: item.tipoDefeito,
             modeloVeiculoAplicado: item.modeloVeiculoAplicado,
@@ -810,7 +817,7 @@ const DetailsItensNF: React.FC = () => {
         <div className={styles.headerLeft}>
           <h1 className={styles.tituloRgi}>
             NF{" "}
-            {(location.state as any)?.currentNf?.nf ||
+            {notaFiscal?.codigoRGI || notaFiscal?.rgi ||
               "Código da NF não disponível"}
           </h1>
           <div
@@ -943,9 +950,8 @@ const DetailsItensNF: React.FC = () => {
           preenchido com “Não contém”
         </span>
       </div>
-      {items?.length > 0 && recRgiLetter ? (
-        items
-          .filter((value) => value.codigoItem?.split(".")[1] === recRgiLetter)
+      {notaFiscal?.itens.length > 0 && recRgiLetter ? (
+        notaFiscal?.itens
           .map((item) => (
             <div className={styles.containerInformacoes} key={item.id}>
               <CollapsibleSection
@@ -976,12 +982,15 @@ const DetailsItensNF: React.FC = () => {
                         label="Código da peça"
                         fullWidth
                         value={item.codigoPeca || ""}
-                        onChange={(e) =>
+                        onChange={(e) =>{
                           handleInputChange(
                             item.id,
                             "codigoPeca",
                             e.target.value
-                          )
+                          );
+                          item.codigoPeca = e.target.value;
+                        }
+                          
                         }
                       />
                     </div>
@@ -994,8 +1003,11 @@ const DetailsItensNF: React.FC = () => {
                         label="Lote da peça"
                         fullWidth
                         value={item.loteItem || ""}
-                        onChange={(e) =>
+                        onChange={(e) =>{
                           handleInputChange(item.id, "loteItem", e.target.value)
+                          item.loteItem = e.target.value;
+
+                        }
                         }
                       />
                     </div>
@@ -1016,11 +1028,14 @@ const DetailsItensNF: React.FC = () => {
                         ]}
                         value={item.tipoDefeito || ""}
                         onChange={(e) =>
-                          handleInputChange(
-                            item.id,
-                            "tipoDefeito",
-                            e.target.value
-                          )
+                        {handleInputChange(
+                          item.id,
+                          "tipoDefeito",
+                          e.target.value
+                        )
+                        item.tipoDefeito = e.target.value;
+                      }
+                          
                         }
                       />
                     </div>
@@ -1033,12 +1048,14 @@ const DetailsItensNF: React.FC = () => {
                         label="Modelo do veículo que aplicou"
                         fullWidth
                         value={item.modeloVeiculoAplicado || ""}
-                        onChange={(e) =>
+                        onChange={(e) =>{
                           handleInputChange(
                             item.id,
                             "modeloVeiculoAplicado",
                             e.target.value
                           )
+                          item.modeloVeiculoAplicado = e.target.value;
+                        }
                         }
                       />
                     </div>
@@ -1051,12 +1068,14 @@ const DetailsItensNF: React.FC = () => {
                         label="Ano do veículo"
                         fullWidth
                         value={item.anoVeiculo || ""}
-                        onChange={(e) =>
+                        onChange={(e) =>{
                           handleInputChange(
                             item.id,
                             "anoVeiculo",
                             e.target.value
                           )
+                        item.anoVeiculo = e.target.value;
+                        }
                         }
                       />
                     </div>
@@ -1072,12 +1091,14 @@ const DetailsItensNF: React.FC = () => {
                         label="Torque aplicado à peça"
                         fullWidth
                         value={item.torqueAplicado?.toString() || ""}
-                        onChange={(e) =>
+                        onChange={(e) =>{
                           handleInputChange(
                             item.id,
                             "torqueAplicado",
                             Number(e.target.value)
                           )
+                          item.torqueAplicado = Number(e.target.value);
+                        }
                         }
                       />
                     </div>

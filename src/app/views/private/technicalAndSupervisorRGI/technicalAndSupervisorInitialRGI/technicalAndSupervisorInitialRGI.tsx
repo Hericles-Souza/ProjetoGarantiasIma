@@ -4,7 +4,7 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import { Button, message, Spin } from "antd";
 import { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
@@ -16,6 +16,7 @@ import {
 import api from "@shared/Interceptors";
 import environment from "@env/environment";
 import stylesDetails from "../technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI.module.css";
+import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 
 const TechnicalAndSupervisorInitialRGI = () => {
   const location = useLocation();
@@ -29,22 +30,21 @@ const TechnicalAndSupervisorInitialRGI = () => {
   const [razaoSocial, setRazaoSocial] = useState("");
   const [telefone, setTelefone] = useState("");
   const [dataSolicitacao, setDataSolicitacao] = useState("");
-  const [groupedItems, setGroupedItems] = useState<string[]>();
-  const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
-    { nf: string; countItems: number }[]
+  const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<
+    NotaFiscal[]
   >([]);
   const [, setNfs] = useState<
     { itemId: string; nf: string; itens: number; sequence: number }[]
   >(
     nfOrigem
       ? [
-        {
-          itemId: location.state.item.id,
-          nf: nfOrigem,
-          itens: 0,
-          sequence: 0,
-        },
-      ]
+          {
+            itemId: location.state.item.id,
+            nf: nfOrigem,
+            itens: 0,
+            sequence: 0,
+          },
+        ]
       : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
@@ -61,7 +61,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
   const getAssciatedNfs = async (garantiaId: string) => {
     const garantiaItemResponse = await fetch(
-      `${environment.apiUrl}/garantias/item/associated-nf/${garantiaId}`,
+      `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
       {
         method: "GET",
         headers: {
@@ -70,19 +70,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
       }
     );
     const associatedNfs = await garantiaItemResponse.json();
-    setAssociatedNfsWithItens(associatedNfs.data);
-  };
-
-  const groupByNfReferencia = (itens: GarantiaItem[]) => {
-    const grouped: { codigoItem?: string } = {};
-    itens?.forEach((item) => {
-      if (!grouped[item.nfReferencia]) {
-        const formatCodigoItem = item.codigoItem;
-        grouped[item.nfReferencia] =
-          formatCodigoItem.split(".")[0] + "." + formatCodigoItem.split(".")[1];
-      }
-    });
-    return Object.values(grouped);
+    setGarantiaNfsWithItens(associatedNfs.data);
   };
 
   useEffect(() => {
@@ -106,10 +94,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
               sequence: 1,
             },
           ]);
-          if (data?.itens?.length > 0) {
-            const itensAgrupados = groupByNfReferencia(data?.itens);
-            setGroupedItems(itensAgrupados);
-          }
         }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
@@ -134,7 +118,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
       razaoSocial: location.state.garantia.razaoSocial,
       telefone: location.state.garantia.telefone,
       email: context.user.email,
-      nf: cardData.nf,
+      nf: cardData.notas[0].codigo,
+      codigoRGI: cardData.codigoRGI || cardData.rgi,
       fornecedor: context.user.fullname,
       codigoStatus: GarantiasStatusEnum2.CONFIRMADO,
       observacao: "teste",
@@ -142,6 +127,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
       status: GarantiasStatusEnum.CONFIRMADO,
       dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
     };
+
+    console.log("garantiaupdate: ", garantia);
 
     const responseHeader = await api.put(
       `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
@@ -197,7 +184,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
           razaoSocial: razaoSocial,
           telefone: telefone,
           email: context.user.email,
-          nf: cardData.nf,
+          nf: cardData.notas[0].codigo,
+          codigoRGI: cardData.codigoRGI || cardData.rgi,
           fornecedor: context.user.fullname,
           codigoStatus: statusGarantia,
           observacao: "teste",
@@ -205,6 +193,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
           status: converterStatusGarantia(statusGarantia),
           dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         };
+
+        console.log("garantiaupdate: ", garantia);
 
         const responseHeader = await api.put(
           `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
@@ -224,7 +214,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
   const handleConcludeAnalysis = async () => {
     // Check if all items have required fields filled
-    const allItemsFilled = cardData?.itens?.every(
+    const allItemsFilled = cardData?.notas[0].itens?.every(
       (item) =>
         item.tipoDefeito &&
         item.conclusao &&
@@ -236,7 +226,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
     );
 
     if (!allItemsFilled) {
-      message.error("Todos os itens devem estar preenchidos para concluir a análise.");
+      message.error(
+        "Todos os itens devem estar preenchidos para concluir a análise."
+      );
       return;
     }
 
@@ -253,16 +245,19 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
   const displayedStatus =
     cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-      context.user.rule.name === UserRoleEnum.Tecnico &&
-      isAnalysisConcluded
+    context.user.rule.name === UserRoleEnum.Tecnico &&
+    isAnalysisConcluded
       ? "Avaliação Concluída"
       : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-        (context.user.rule.name === UserRoleEnum.Tecnico || context.user.rule.name === UserRoleEnum.Supervisor)
-        ? "Aguardando Avaliação"
-        : cardData?.status;
+        (context.user.rule.name === UserRoleEnum.Tecnico ||
+          context.user.rule.name === UserRoleEnum.Supervisor)
+      ? "Aguardando Avaliação"
+      : cardData?.status;
 
   const statusColor =
-    displayedStatus === "Avaliação Concluída" ? "#00FF00" : StatusColors[cardData?.codigoStatus];
+    displayedStatus === "Avaliação Concluída"
+      ? "#00FF00"
+      : StatusColors[cardData?.codigoStatus];
 
   if (loading || !cardData) {
     return (
@@ -335,16 +330,19 @@ const TechnicalAndSupervisorInitialRGI = () => {
             </div>
           )} */}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+            cardData.codigoStatus !==
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             cardData.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO && (
               <div className="ButtonHeader">
-                <Button type="default" className="ButtonDelete" 
-                // onClick={() =>
-                //     navigate("/view-pre-invoice", {
-                //       state: { cardData },
-                //     })
-                //   }
-                  >
+                <Button
+                  type="default"
+                  className="ButtonDelete"
+                  // onClick={() =>
+                  //     navigate("/view-pre-invoice", {
+                  //       state: { cardData },
+                  //     })
+                  //   }
+                >
                   Visualizar Pré Nota
                 </Button>
                 <Button
@@ -355,7 +353,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   Não autorizo
                 </Button>
                 <Button
-                  onClick={async () => handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)}
+                  onClick={async () =>
+                    handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
+                  }
                   type="primary"
                   className="ButonToSend"
                 >
@@ -364,9 +364,14 @@ const TechnicalAndSupervisorInitialRGI = () => {
               </div>
             )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+            cardData.codigoStatus ===
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
               <>
-                <Button onClick={handleRefuse} type="primary" className={stylesDetails.ButonToSend}>
+                <Button
+                  onClick={handleRefuse}
+                  type="primary"
+                  className={stylesDetails.ButonToSend}
+                >
                   Recusar NF de Devolução
                 </Button>
                 <Button
@@ -416,15 +421,19 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
       <section className="nf-section">
         <div className="headerNF">
-          <h2 className={stylesDetails.titleNf}>NFs associadas a este acordo</h2>
+          <h2 className={stylesDetails.titleNf}>
+            NFs associadas a este acordo
+          </h2>
         </div>
-        {groupedItems?.sort().map((codigoItem, index) => (
+        {garantiaNfsWithItens?.sort().map((nota, index) => (
           <div key={index} className={stylesDetails.nfsItem}>
             <div>
-              <span className={stylesDetails.nfsCode}>{codigoItem}</span>
+              <span className={stylesDetails.nfsCode}>
+                {nota.codigoRGI || nota.rgi}
+              </span>
               <span className="nf-divider"> | </span>
               <span className={stylesDetails.nfsQuantity}>
-                {associatedNfsWithItens[index]?.countItems} ITENS
+                {nota.itens.length} ITENS
               </span>
             </div>
             <div>
@@ -434,9 +443,12 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 onClick={() => {
                   navigate("/technical-and-supervisor/details-itens", {
                     state: {
-                      nf: codigoItem,
+                      nf: nota.codigoRGI || nota.rgi,
                       garantia: cardData,
-                      isAnalysisConcluded: context.user.rule.name === UserRoleEnum.Tecnico && isAnalysisConcluded,
+                      isAnalysisConcluded:
+                        context.user.rule.name === UserRoleEnum.Tecnico &&
+                        isAnalysisConcluded,
+                      nota: nota,
                     },
                   });
                 }}

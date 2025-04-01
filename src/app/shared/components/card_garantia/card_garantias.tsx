@@ -130,7 +130,7 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, cod
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
         <Status style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}>
-          {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin ? converterStatusGarantia(GarantiaItem.codigoStatus) : (GarantiaItem.itens.find((value) => value.codigoStatus >= 1)) ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true) : converterStatusGarantia(GarantiaItem.codigoStatus)}
+          {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin ? converterStatusGarantia(GarantiaItem.codigoStatus) : (GarantiaItem.notas.find((value) => value.itens.find((item) => item.codigoStatus >= 1) )) ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true) : converterStatusGarantia(GarantiaItem.codigoStatus)}
         </Status>
         <RightOutlined />
       </Header>
