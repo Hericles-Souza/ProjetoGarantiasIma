@@ -145,7 +145,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         id: itemId,
         nota_fiscal_id: notaFiscalId,
         codigoItem: newRGI + ".A.1",
-        codigoRGI: newRGI,
+        codigoRGI: newRGI + ".A",
         nfReferencia: values["N° NF de origem"],
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
         status: GarantiasItemStatusEnum.NAO_ANALISADO

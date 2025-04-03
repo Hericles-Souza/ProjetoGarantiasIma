@@ -40,6 +40,7 @@ export interface GarantiaItem {
   anexos?: string;
   autorizado?: string;
   nota_fiscal_id?: string;
+  rgi?: string;
 }
 
 export interface UpdateItemRequest {

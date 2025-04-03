@@ -40,9 +40,7 @@ const Garantias: React.FC = () => {
     try {
       if (context.user!.rule!.name === UserRoleEnum.Cliente) {
         const response = await getGarantiasPaginationAsync(1, 100);
-        const data = await response.data.data.data;
-        console.log("Data: ", data);
-        
+        const data = await response.data.data.data;        
         setCardData(data);
       } else {
         let status: number[] = [];

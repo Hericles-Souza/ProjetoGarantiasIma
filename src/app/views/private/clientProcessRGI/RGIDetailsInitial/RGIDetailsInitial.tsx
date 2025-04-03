@@ -8,6 +8,7 @@ import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import NFModal from "../addNewNF/modalAddNewNF";
 import {
   converterStatusGarantia,
+  GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
@@ -147,8 +148,18 @@ const RGIDetailsInitial: React.FC = () => {
       }
     );
     const associatedNfsByGarantia = await garantiaItemResponse.json();
-    setGarantiaNfsWithItens(associatedNfsByGarantia.data);
-    console.log("nfs associadas: ", associatedNfsByGarantia.data);
+    console.log("associatedNfsByGarantia: ", associatedNfsByGarantia.data);
+
+    const newAssociatedNfsByGarantia: NotaFiscal[] = [];
+
+    associatedNfsByGarantia.data.map(async (nfAssociated, index) => {
+      newAssociatedNfsByGarantia[index] = nfAssociated;
+      const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
+      newAssociatedNfsByGarantia[index].recSellFile = returnedSellFile;
+    });
+    console.log("newAssociatedNfsByGarantia: ", newAssociatedNfsByGarantia);
+    // Depois de todas as promessas resolvidas, agora pode chamar o setGarantiaNfsWithItens
+    setGarantiaNfsWithItens(newAssociatedNfsByGarantia);
   };
 
   // Função para agrupar itens por nfReferencia e pegar somente 1 item de cada grupo
@@ -180,7 +191,6 @@ const RGIDetailsInitial: React.FC = () => {
       let data: GarantiasModel = null;
       try {
         if (location.state) {
-          console.log("locaton.state: " + JSON.stringify(location.state));
           data = location.state.garantiaData;
           await getAssciatedNfs(data.id);
           setSocialReason(data.razaoSocial);
@@ -189,12 +199,9 @@ const RGIDetailsInitial: React.FC = () => {
             `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
           );
           setCardData(data);
+          console.log("cardData: ", cardData);
+          console.log("data: ", data);
           setRgi(data.codigoRGI || data.rgi);
-          const sellFile = (await getSellFile(
-            data.notas[0].itens[0].id,
-            "nfVenda"
-          )) as { fileNameWithExtension: string; imagemUrl: string };
-          setSellFile(sellFile);
           console.log("sellFile: " + JSON.stringify(sellFile));
           if (cardData?.notas?.length > 0) {
             const itensAgrupados = groupByNfReferencia(cardData?.itens);
@@ -218,7 +225,7 @@ const RGIDetailsInitial: React.FC = () => {
     };
 
     fetchData();
-  }, [location.state, cardData]);
+  }, [location.state, cardData, sellFile]);
 
   // Função para excluir a garantia
   const handleDeleteGuarantee = async () => {
@@ -255,43 +262,47 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const postOrPutGarantiaItemAsync = async (
-    itemCodeCompare: string,
+    paylaodPost: NotaFiscal,
+    nfCodeCompare: string,
     nfReference: string,
-    itemId: string
+    notaId: string
   ) => {
     console.log("salvamento: " + cardData);
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
       return;
     }
-    if (!itemId) {
+    if (!notaId) {
       message.error("ID do item não encontrado");
       return;
     }
 
     const responseGetItens = await api.get(
-      `/garantias/item/by-garantia/${cardData.id}`
+      `/nota-fiscal/by-garantia/${cardData.id}`
     );
-    const garantiaItensAPI = responseGetItens.data.data as GarantiaItem[];
+    const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
 
     if (
-      garantiaItensAPI.filter((value) => value.codigoItem == itemCodeCompare)
-        .length <= 0
+      notasFiscaisAPI.filter((value) => value.codigo == nfCodeCompare).length <=
+      0
     ) {
-      const paylaodPost = {
-        id: itemId,
-        garantiaId: cardData.id,
-        codigoItem: itemCodeCompare,
-        nfReferencia: nfReference,
-        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-        index: cardData.itens.length.toString(),
-      };
       console.log("paylaodPost: ", JSON.stringify(paylaodPost));
-      const endpoint = environment.apiUrl + "/garantias/item/create";
+      const endpoint = environment.apiUrl + "/nota-fiscal/create";
 
       const responsePost = await api.post(endpoint, paylaodPost);
       if (responsePost.status === 200 || responsePost.status === 201) {
         message.success("Garantia atualizada com sucesso!");
+        paylaodPost.id = responsePost.data.data;
+
+        setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => [
+          ...prevGarantiaNfsWithItens,
+          paylaodPost,
+        ]);
+
+        cardData?.notas.push(paylaodPost);
+
+        setCardData(cardData);
+        console.log("nfadicionada: " + JSON.stringify(cardData.itens));
       } else {
         message.error("Erro ao atualizar a garantia.");
       }
@@ -313,9 +324,11 @@ const RGIDetailsInitial: React.FC = () => {
     console.log("codigoitem: ", nota.rgi);
     console.log("cardData.itens: ", nota);
 
+
+
     const itemId = nota.itens?.find(
       (item) =>
-        item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1] ===
+        item.rgi ===
         nota.rgi
     ).id;
 
@@ -344,35 +357,41 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleAddNF = async (nfNumber: string) => {
-    const ultimoItem = groupedItems[groupedItems.length - 1];
+    const ultimoItem = garantiaNfsWithItens[garantiaNfsWithItens.length - 1];
 
     // Extrai a parte numérica e a letra do último item
-    const [numero, letra] = ultimoItem.codigoItem.split(".");
-    console.log(numero, letra);
+    const [letra] = ultimoItem.rgi.split(".")[1];
+    console.log(letra);
 
     // Calcula a próxima letra do alfabeto
     const proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
     const itemCode = getRgiWithSuffix(rgi, proximaLetra, 1);
+    const notaId = crypto.randomUUID();
     const itemId = crypto.randomUUID();
     console.log("nfNumber" + nfNumber);
-    setAssociatedNfsWithItens((prevassociatedNfsWithItens) => [
-      ...prevassociatedNfsWithItens,
-      { nf: nfNumber, countItems: 1 },
-    ]);
-    cardData.itens.push({
-      id: itemId,
-      codigoItem: itemCode,
-      nfReferencia: nfNumber,
-    } as GarantiaItem);
 
-    setCardData(cardData);
-    const itensAgrupados = groupByNfReferencia(cardData?.itens);
-    setGroupedItems(itensAgrupados);
-    ordenarItens();
-
-    console.log("nfadicionada: " + JSON.stringify(cardData.itens));
-
-    await postOrPutGarantiaItemAsync(itemCode, nfNumber, itemId);
+    const garantiasItem: GarantiaItem[] = [
+      {
+        id: itemId,
+        nota_fiscal_id: notaId,
+        codigoItem: rgi + "." + proximaLetra + ".1",
+        codigoRGI: rgi + "." + proximaLetra,
+        nfReferencia: nfNumber,
+        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+        status: GarantiasItemStatusEnum.NAO_ANALISADO,
+      },
+    ];
+    const newNotaFiscal = {
+      codigoRGI: rgi + "." + proximaLetra,
+      codigo: nfNumber,
+      garantiaId: cardData.id,
+      id_referencia: cardData.id,
+      tipo_nota: "Nota fiscal de origem",
+      data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      itens: garantiasItem,
+    } as NotaFiscal;
+    await postOrPutGarantiaItemAsync(newNotaFiscal, itemCode, nfNumber, itemId);
   };
 
   const handleDeleteNF = async () => {
@@ -451,6 +470,47 @@ const RGIDetailsInitial: React.FC = () => {
     setModalDeleteOpen(true);
   };
 
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    nfId: string
+  ) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+
+      const endpoint = environment.apiUrl + "/files/upload-private-file-item";
+      const fileData = new FormData();
+      fileData.append("file", file);
+      fileData.append("itemId", nfId);
+      fileData.append("field", "nfDev");
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${context.user.token}`,
+            accept: "*/*",
+          },
+          body: fileData,
+        });
+        if (response.status === 201) {
+          message.success("Arquivo enviado com sucesso!");
+        } else {
+          message.error("Erro ao enviar arquivo.");
+        }
+      } catch (error) {
+        console.error("Erro no upload do arquivo:", error);
+        message.error("Erro ao enviar arquivo.");
+      }
+    }
+  };
+
+  const handleDownloadFile = (recNota: NotaFiscal) => {
+    const link = document.createElement("a");
+    link.href = recNota.recSellFile?.imagemUrl || "#";
+    link.download = recNota.recSellFile?.fileNameWithExtension || "download";
+    link.click();
+  };
+
   const send = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
@@ -501,7 +561,6 @@ const RGIDetailsInitial: React.FC = () => {
       }
 
       console.log("garantiaUpdateHeader: ", garantia);
-      
 
       const responseHeader = await api.put(
         `/garantias/garantiasHeader/${id}/UpdateHeader`,
@@ -622,7 +681,7 @@ const RGIDetailsInitial: React.FC = () => {
                 <OutlinedInputWithLabel
                   InputProps={{ readOnly: true }}
                   label="Razão social"
-                  value={cardData.razaoSocial}
+                  value={cardData?.razaoSocial}
                   fullWidth
                   disabled
                 />
@@ -631,7 +690,7 @@ const RGIDetailsInitial: React.FC = () => {
                 <OutlinedInputWithLabel
                   InputProps={{ readOnly: true }}
                   label="Telefone"
-                  value={cardData.telefone}
+                  value={cardData?.telefone}
                   fullWidth
                   disabled
                 />
@@ -673,7 +732,7 @@ const RGIDetailsInitial: React.FC = () => {
             )}
         </div>
 
-        {garantiaNfsWithItens?.sort().map((nota, index) => {
+        {garantiaNfsWithItens?.map((nota, index) => {
           return (
             <div className={styles.nfsItem}>
               <div style={{ display: "flex", alignItems: "center" }}>
@@ -685,7 +744,9 @@ const RGIDetailsInitial: React.FC = () => {
                     color: "red",
                   }}
                 />
-                <span className={styles.nfsCode}>{nota.codigo}</span>
+                <span className={styles.nfsCode}>
+                  {nota.codigoRGI || nota.rgi}
+                </span>
                 <span className={styles.nfsDivider}> | </span>
                 <span className={styles.nfsQuantity}>
                   {" "}
@@ -703,12 +764,27 @@ const RGIDetailsInitial: React.FC = () => {
                   )}
                 {cardData?.codigoStatus ===
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-                  context.user.rule.name == UserRoleEnum.Cliente && (
+                  context.user.rule.name == UserRoleEnum.Cliente &&
+                  sellFile != undefined && (
+                    <label className={styles.buttonUpdateNfSale}>
+                      <button
+                        style={{ display: "none" }}
+                        onClick={() => handleDownloadFile(nota)}
+                      />
+                      Baixar Arquivo
+                    </label>
+                  )}
+                {cardData?.codigoStatus ===
+                  GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+                  context.user.rule.name == UserRoleEnum.Cliente &&
+                  sellFile == undefined && (
                     <label className={styles.buttonUpdateNfSale}>
                       <input
                         type="file"
                         style={{ display: "none" }}
-                        onChange={(e) => {}}
+                        onChange={(e) => {
+                          handleFileUpload(e, nota.id);
+                        }}
                       />
                       Adicionar Anexo
                     </label>

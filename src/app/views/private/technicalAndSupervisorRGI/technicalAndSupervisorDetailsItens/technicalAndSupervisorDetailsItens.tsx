@@ -499,7 +499,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
                     <OutlinedInputWithLabel
                       label="Torque aplicado à peça"
-                      value={item.torqueAplicado.toString()}
+                      value={item?.torqueAplicado?.toString()}
                       fullWidth
                       disabled
                     />
@@ -510,8 +510,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               <FileAttachment
                 label="Anexo da NF de Referência"
                 backgroundColor="white"
-                itemId={item.id}
-                isRessarcimento={item.solicitarRessarcimento}
+                itemId={item?.id}
+                isRessarcimento={item?.solicitarRessarcimento}
               />
               {cardData.codigoStatus ===
                 GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
@@ -520,8 +520,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     <FileAttachment
                       label="Anexo da NF de devolução"
                       backgroundColor="white"
-                      itemId={item.id}
-                      isRessarcimento={item.solicitarRessarcimento}
+                      itemId={item?.id}
+                      isRessarcimento={item?.solicitarRessarcimento}
                     />
                   </div>
                 )}
@@ -671,7 +671,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
                   <h3 className={styles.tituloA}>Conclusão</h3>
                   <MultilineTextFields
-                    value={item.conclusao}
+                    value={item?.conclusao}
                     onChange={(e) => {
                       item.conclusao = e.target.value;
                       setConclusao(e.target.value);
