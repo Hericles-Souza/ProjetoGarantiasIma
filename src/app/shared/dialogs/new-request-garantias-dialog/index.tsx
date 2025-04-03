@@ -1,19 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useContext, useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Divider, Form, Upload } from "antd";
+import { Button, Divider, Form } from "antd";
 import { Input } from "@shared/components/input/index.tsx";
 import styles from "./new-request-garantias.module.css";
 import { GarantiasItemStatusEnum, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
-import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
+import { GarantiasModel, GarantiaItem } from "@shared/models/GarantiasModel";
 import {
   createGarantiaAsync,
   getGarantiaByIdAsync,
 } from "@shared/services/GarantiasService";
 import api from "@shared/Interceptors";
-import { FileOutlined, InboxOutlined } from "@ant-design/icons";
-import environment from "@env/environment";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 
 // Enum para controlar as abas
@@ -21,60 +20,6 @@ enum FilterStatus {
   GARANTIAS = "garantias",
   ACORDO = "acordo",
 }
-
-// Componente FileAttachment – permite selecionar um arquivo
-interface FileAttachmentProps {
-  label: string;
-  backgroundColor?: string;
-  onFileSelect?: (file: File) => void;
-  required?: boolean;
-}
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FileAttachment: React.FC<FileAttachmentProps> = ({
-  label,
-  backgroundColor,
-  onFileSelect,
-}) => {
-  const [fileName, setFileName] = useState<string | null>(null);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      setFileName(file.name);
-      if (onFileSelect) {
-        onFileSelect(file);
-      }
-    }
-  };
-
-  return (
-    <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
-      <span className={styles.labelAnexo}>{label}</span>
-      <div className={styles.fileUpdateContent}>
-        {fileName && (
-          <span className={styles.fileName}>
-            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-            {fileName}
-            <button
-              className={styles.buttonRemoveUpload}
-              onClick={() => setFileName(null)}
-            >
-              x
-            </button>
-          </span>
-        )}
-        <label className={styles.buttonUpdateNfSale}>
-          <input
-            type="file"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-          Adicionar Anexo
-        </label>
-      </div>
-    </div>
-  );
-};
 
 const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
   onClose,
@@ -84,7 +29,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
   const [currentTab, setCurrentTab] = useState(FilterStatus.GARANTIAS);
   const [indicatorWidth, setIndicatorWidth] = useState(0);
   const [garantiasFieldsFilled, setGarantiasFieldsFilled] = useState(false);
-  const [fileList, setFileList] = useState<any[]>([]);
   const garantiaButtonRef = useRef<HTMLButtonElement>(null);
   const acordoButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
@@ -106,16 +50,12 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         .map((rgi: string) => parseInt(rgi.split("-")[1]));
       const lastNumber = Math.max(0, ...existingRGIs);
       const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
-      console.log("newrGi: " + `${nextNumber}`);
       return `${context.user.codigoCigam}-${nextNumber}`;
     } catch (error) {
       console.error("Erro ao gerar RGI:", error);
     }
   };
 
-  // Estado para armazenar o arquivo selecionado
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let numNota: string = "";
 
   const handleSubmit = async (values: Record<string, any>) => {
@@ -149,7 +89,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         nfReferencia: values["N° NF de origem"],
         codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
         status: GarantiasItemStatusEnum.NAO_ANALISADO
-      }]
+      }];
 
       const notasFiscais: NotaFiscal[] = [{
         id: notaFiscalId,
@@ -162,10 +102,9 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-        updatedAt:`${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        updatedAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       }];
 
-      // 3. Construa o objeto garantiaModel
       const garantiaPayload: GarantiasModel = {
         codigoRGI: newRGI,
         razaoSocial: context.user.fullname,
@@ -177,7 +116,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         observacao: "Garantia válida por 12 meses",
         usuarioInsercao: context.user.username,
         notas: notasFiscais,
-        
       };
 
       console.log(
@@ -185,12 +123,10 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         JSON.stringify(garantiaPayload, null, 2)
       );
 
-      // 4. Cria a garantia via API 
       const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
       console.log("Garantia criada com sucesso:", guaranteeResponse.data);
 
       let createdGarantia: any = guaranteeResponse.data.data;
-      // Se a resposta for uma string, extraia o id
       if (typeof createdGarantia === "string") {
         const match = createdGarantia.match(/id:([^\s]+)/);
         if (match && match[1]) {
@@ -205,73 +141,23 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         console.error("Invalid response:", guaranteeResponse);
         throw new Error("Resposta inválida da API ao criar garantia");
       }
-      console.log("idItem: ", createdGarantia.id);
 
-      const garantiaItemResponse = await fetch(
-        `${environment.apiUrl}/garantias/item/by-garantia/${createdGarantia.id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${context.user.token}`,
+      navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
+        state: {
+          garantiaData: { ...garantiaPayload, id: createdGarantia.id },
+          garantiaId: createdGarantia.id,
+          currentNf: {
+            nf: newRGI + ".A.1",
+            itens: garantiaPayload.notas?.length || 0,
+            sequence: 1,
           },
-        }
-      );
+          countItems: 1,
+          nfNumber: values["N° NF de origem"],
+          rgiLetter: "A",
+          nota: garantiaPayload.notas[0]
+        },
+      });
 
-      if (selectedFile) {
-        const endpoint = environment.apiUrl + "/files/upload-private-file-item";
-
-        const fileData = new FormData();
-        fileData.append("file", selectedFile);
-        fileData.append("itemId", itemId);
-        fileData.append("field", "nfVenda");
-
-        fileData.forEach((item, key) => {
-          console.log(key + ": " + item);
-        });
-
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${context.user.token}`,
-            accept: "*/*",
-          },
-          body: fileData,
-        });
-
-        if (response.ok) {
-          console.log(
-            "Arquivo enviado com sucesso:",
-            JSON.stringify(response.body)
-          );
-          navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
-            state: {
-              garantiaData: { ...garantiaPayload, id: createdGarantia.id },
-              garantiaId: createdGarantia.id,
-              currentNf: {
-                nf: newRGI + ".A.1",
-                itens: garantiaPayload.notas?.length || 0,
-                sequence: 1,
-              },
-              countItems: 1,
-              nfNumber: values["N° NF de origem"],
-              rgiLetter: "A",
-              nota: garantiaPayload.notas[0]
-            },
-          });
-        } else
-          console.log(
-            "erro na inserção do arquivo:",
-            JSON.stringify(response.json())
-          );
-
-        // const uploadResponse = await api.post("/files/upload-private-file-item", fileData);
-      }
-
-      console.log("garantiaItemResponse:", garantiaItemResponse);
-
-      // 5. Se houver arquivo selecionado, faça o upload
-
-      // Redireciona para a tela de detalhes, passando os dados via state
     } catch (error: any) {
       console.error("Erro ao criar garantia:", error.response?.data || error);
     } finally {
@@ -304,7 +190,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
     }
   }, [currentTab]);
 
-  // Se necessário, carregue dados previamente salvos (opcional)
   useEffect(() => {
     const loadGarantiaData = async () => {
       try {
@@ -335,18 +220,16 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           <div className={styles.tabsContainer}>
             <button
               ref={garantiaButtonRef}
-              className={`${styles.tabButton} ${
-                currentTab === FilterStatus.GARANTIAS ? styles.active : ""
-              }`}
+              className={`${styles.tabButton} ${currentTab === FilterStatus.GARANTIAS ? styles.active : ""
+                }`}
               onClick={() => handleTabChange(FilterStatus.GARANTIAS)}
             >
               Garantia
             </button>
             <button
               ref={acordoButtonRef}
-              className={`${styles.tabButton} ${
-                currentTab === FilterStatus.ACORDO ? styles.active : ""
-              }`}
+              className={`${styles.tabButton} ${currentTab === FilterStatus.ACORDO ? styles.active : ""
+                }`}
               onClick={() => handleTabChange(FilterStatus.ACORDO)}
             >
               Acordo
@@ -399,55 +282,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
                   className={styles.input}
                 />
               </Form.Item>
-              <Upload.Dragger
-                name="file"
-                multiple={false}
-                fileList={fileList}
-                showUploadList={{
-                  showRemoveIcon: true,
-                  showDownloadIcon: false,
-                }}
-                onRemove={() => {
-                  setFileList([]);
-                  setSelectedFile(null);
-                }}
-                beforeUpload={(file) => {
-                  setSelectedFile(file);
-                  setFileList([
-                    {
-                      uid: "-1",
-                      name: file.name,
-                      status: "done",
-                      url: URL.createObjectURL(file),
-                    },
-                  ]);
-                  return false;
-                }}
-                style={{
-                  background: "#f5f5f5",
-                  border: "2px dashed #d9d9d9",
-                  borderRadius: "8px",
-                  padding: "20px",
-                  transition: "all 0.3s",
-                  cursor: "pointer",
-                }}
-              >
-                {fileList.length === 0 && (
-                  <>
-                    <p className="ant-upload-drag-icon">
-                      <InboxOutlined
-                        style={{ color: "#ff0000", fontSize: "32px" }}
-                      />
-                    </p>
-                    <p className="ant-upload-text" style={{ color: "#595959" }}>
-                      Anexo da NF de venda *
-                    </p>
-                    <p className="ant-upload-hint" style={{ color: "#8c8c8c" }}>
-                      Clique ou arraste o arquivo para esta área
-                    </p>
-                  </>
-                )}
-              </Upload.Dragger>
             </div>
           )}
           {currentTab === FilterStatus.ACORDO && (

@@ -367,7 +367,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   return (
     <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
-        <Button
+        <Button style={{color: "grey"}}
           type="link"
           className={styles.ButtonBack}
           onClick={() =>
