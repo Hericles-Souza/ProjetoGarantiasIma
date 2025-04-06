@@ -169,13 +169,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
     fetchUserData();
   }, [location.state]);
 
-  const handleUpdateNote = async  (notaFiscal: NotaFiscal, refuse: boolean) => {
+  const handleUpdateNote = async (notaFiscal: NotaFiscal, refuse: boolean) => {
+    if (refuse) notaFiscal.tipo_nota = "Recusada";
+    else notaFiscal.tipo_nota = "Aprovada";
 
-    if(refuse)
-      notaFiscal.tipo_nota = "Recusada";
-    else
-      notaFiscal.tipo_nota = "Aprovada";
-    
     const payloadNotaFiscal: NotaFiscal = {
       garantiaId: notaFiscal.garantia_id,
       codigo: notaFiscal.codigo,
@@ -185,8 +182,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
       id_referencia: notaFiscal.id_referencia,
       data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       itens: notaFiscal.itens,
-      id: notaFiscal.id
-    }
+      id: notaFiscal.id,
+    };
 
     console.log("notaFiscalUpdate: ", payloadNotaFiscal);
     const responseUpdate = await api.put(
@@ -196,45 +193,53 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
     if (responseUpdate.status === 200) {
       message.success("Nota " + notaFiscal.tipo_nota + " com sucesso");
-
     }
   };
 
-    const handleConfirm = async () => {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
-      const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
-  
-      const garantia: GarantiasModel = {
-        razaoSocial: location.state.garantia.razaoSocial,
-        telefone: location.state.garantia.telefone,
-        email: context.user.email,
-        nf: garantiaNfsWithItens.filter((nota) => nota.tipo_nota == "Aprovada")[0].codigo || garantiaNfsWithItens[0].codigo,
-        fornecedor: context.user.fullname,
-        codigoStatus:  garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada").length > 0 ? GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE : GarantiasStatusEnum2.CONFIRMADO,
-        observacao: "teste",
-        usuarioAtualizacao: context.user.username,
-        status: garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada").length > 0 ? GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE : GarantiasStatusEnum.CONFIRMADO,
-        dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-      };
+  const handleConfirm = async () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
-      console.log("updateGarantia: ", garantia);
-      
-  
-      const responseHeader = await api.put(
-        `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
-        garantia
-      );
-  
-      if (responseHeader.status === 200) {
-        message.success("Garantia atualizada com sucesso");
-      }
+    const garantia: GarantiasModel = {
+      razaoSocial: location.state.garantia.razaoSocial,
+      telefone: location.state.garantia.telefone,
+      email: context.user.email,
+      nf:
+        garantiaNfsWithItens.filter((nota) => nota.tipo_nota == "Aprovada")[0]
+          .codigo || garantiaNfsWithItens[0].codigo,
+      fornecedor: context.user.fullname,
+      codigoStatus:
+        garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
+          .length > 0
+          ? GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+          : GarantiasStatusEnum2.CONFIRMADO,
+      observacao: "teste",
+      usuarioAtualizacao: context.user.username,
+      status:
+        garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
+          .length > 0
+          ? GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE
+          : GarantiasStatusEnum.CONFIRMADO,
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
     };
+
+    console.log("updateGarantia: ", garantia);
+
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
+      garantia
+    );
+
+    if (responseHeader.status === 200) {
+      message.success("Garantia atualizada com sucesso");
+    }
+  };
 
   const handleSave = async (
     statusGarantia: GarantiasStatusEnum2 = GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
@@ -380,24 +385,41 @@ const TechnicalAndSupervisorInitialRGI = () => {
             </div>
           )}
           {context.user.rule.name !== UserRoleEnum.Tecnico &&
-          cardData.codigoStatus ==
-          GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
-            <div className="ButtonHeader">
-              <Button
-                onClick={async () => 
-                    handleConfirm() 
-                }
-                type="primary"
-                className="ButonToSend"
-              >
-                Enviar
-              </Button>
-            </div>
-          )}
-          {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus ==
-              GarantiasStatusEnum2.EM_ANALISE &&(
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
               <div className="ButtonHeader">
+                <Button
+                  onClick={async () => handleConfirm()}
+                  type="primary"
+                  className="ButonToSend"
+                >
+                  Enviar
+                </Button>
+              </div>
+            )}
+          {context.user.rule.name === UserRoleEnum.Supervisor &&
+            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
+              <div className="ButtonHeader">
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <Button
+                    onClick={async () =>
+                      handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
+                    }
+                    type="primary"
+                    className={stylesDetails.buttonSendRgi}
+                  >
+                    Recusar NF de Devolução
+                  </Button>
+                  <Button
+                    type="primary"
+                    className={stylesDetails.buttonSendRgi}
+                    onClick={async () =>
+                      handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
+                    }
+                  >
+                    Autorizar Envio
+                  </Button>
+                </div>
                 <Button
                   type="default"
                   className="ButtonDelete"
@@ -409,45 +431,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 >
                   Visualizar Pré Nota
                 </Button>
-                <Button
-                  onClick={async () => handleSave()}
-                  type="primary"
-                  className="ButonToSend"
-                >
-                  Não autorizo
-                </Button>
-                <Button
-                  onClick={async () =>
-                    handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
-                  }
-                  type="primary"
-                  className="ButonToSend"
-                >
-                  Autorizar Envio
-                </Button>
               </div>
-            )}
-          {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus ===
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
-              <>
-              <div style={{ display: "flex", gap: "10px" }}>
-              <Button
-                  onClick={handleRefuse}
-                  type="primary"
-                  className={stylesDetails.buttonSendRgi}
-                >
-                  Recusar NF de Devolução
-                </Button>
-                <Button
-                  type="primary"
-                  className={stylesDetails.buttonSendRgi}
-                  onClick={handleConfirm}
-                >
-                  Autorizar
-                </Button>
-              </div>
-              </>
             )}
         </div>
       </header>
@@ -463,7 +447,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
               fullWidth
               disabled
             />
-
           </div>
           <div className="info-row">
             <OutlinedInputWithLabel
@@ -504,45 +487,63 @@ const TechnicalAndSupervisorInitialRGI = () => {
               </span>
             </div>
             <div
-            style={{
-              color: StatusColors[nota.tipo_nota == "Recusada" ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA : nota.tipo_nota == "Aprovada" ? GarantiasStatusEnum2.CONFIRMADO :"#8C8C8C"] ,
-              backgroundColor: `${
-                StatusColors[nota.tipo_nota == "Recusada" ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA : nota.tipo_nota == "Aprovada" ? GarantiasStatusEnum2.CONFIRMADO :"#8C8C8C"]
-              }15`,
-            }}
-            className={stylesDetails.statusTag}
-          >
-            { nota.tipo_nota == "Recusada" || nota.tipo_nota == "Aprovada" ? nota.tipo_nota :
-              "Não analisado"}
-          </div>
+              style={{
+                color:
+                  StatusColors[
+                    nota.tipo_nota == "Recusada"
+                      ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                      : nota.tipo_nota == "Aprovada"
+                      ? GarantiasStatusEnum2.CONFIRMADO
+                      : "#8C8C8C"
+                  ],
+                backgroundColor: `${
+                  StatusColors[
+                    nota.tipo_nota == "Recusada"
+                      ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                      : nota.tipo_nota == "Aprovada"
+                      ? GarantiasStatusEnum2.CONFIRMADO
+                      : "#8C8C8C"
+                  ]
+                }15`,
+              }}
+              className={stylesDetails.statusTag}
+            >
+              {nota.tipo_nota == "Recusada" || nota.tipo_nota == "Aprovada"
+                ? nota.tipo_nota
+                : "Não analisado"}
+            </div>
             {context.user.rule.name === UserRoleEnum.Supervisor &&
               cardData.codigoStatus ===
                 GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
-              nota.recSellFile?.fileNameWithExtension != "" && 
+              nota.recSellFile?.fileNameWithExtension != "" &&
               nota.recSellFile?.imagemUrl != "" && (
                 <>
-                  <label className={stylesDetails.buttonUpdateNfSale}>
-                    <button
-                      style={{ display: "none" }}
-                      onClick={() => handleDownloadFile(nota)}
-                    />
-                    Baixar Arquivo
-                  </label>
-
-                  <Button
-                    onClick={()=> handleUpdateNote(nota, true)}
-                    type="primary"
-                    className={stylesDetails.ButonToSend}
-                  >
-                    Recusar NF de Devolução
-                  </Button>
-                  <Button
-                    type="primary"
-                    className={stylesDetails.ButonToSend}
-                    onClick={()=> handleUpdateNote(nota, false)}
-                  >
-                    Autorizar
-                  </Button>
+                <label className={stylesDetails.buttonUpdateNfSale}>
+                        <button
+                          style={{ display: "none" }}
+                          onClick={() => handleDownloadFile(nota)}
+                        />
+                        Baixar Arquivo
+                      </label>
+                  <div className="ButtonHeader">
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      
+                      <Button
+                        onClick={() => handleUpdateNote(nota, true)}
+                        type="primary"
+                        className={stylesDetails.buttonSendRgi}
+                      >
+                        Recusar NF de Devolução
+                      </Button>
+                      <Button
+                        type="primary"
+                        className={stylesDetails.buttonSendRgi}
+                        onClick={() => handleUpdateNote(nota, false)}
+                      >
+                        Autorizar Envio
+                      </Button>
+                    </div>
+                  </div>
                 </>
               )}
             <div>

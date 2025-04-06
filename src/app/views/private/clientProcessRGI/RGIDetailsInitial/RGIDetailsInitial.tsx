@@ -20,6 +20,7 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import environment from "@env/environment";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
+import { isUndefined } from "lodash";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -459,7 +460,8 @@ const RGIDetailsInitial: React.FC = () => {
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
-    nfId: string
+    nfId: string,
+    notaFiscal: NotaFiscal
   ) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
@@ -482,6 +484,19 @@ const RGIDetailsInitial: React.FC = () => {
         if (response.status === 201) {
           message.success("Arquivo enviado com sucesso!");
           const fileExtension = getFileExtensionFromBlob(blob);
+          const fileNameWithExtension = "nfDev" + fileExtension;
+          const imagemUrl = URL.createObjectURL(blob);
+          notaFiscal.recSellFile.fileNameWithExtension = fileNameWithExtension;
+          notaFiscal.recSellFile.imagemUrl = imagemUrl;
+          setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => {
+            // Verifica se o item já existe e atualiza o valor
+            const updatedList = prevGarantiaNfsWithItens.map(item => 
+              item.id === notaFiscal.id ? { ...item, ...notaFiscal } : item
+            );
+          
+            return updatedList;
+          });
+          
         } else {
           message.error("Erro ao enviar arquivo.");
         }
@@ -753,8 +768,7 @@ const RGIDetailsInitial: React.FC = () => {
                 {cardData?.codigoStatus ===
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                   context.user.rule.name == UserRoleEnum.Cliente &&
-                  nota.recSellFile?.fileNameWithExtension != "" && 
-                  nota.recSellFile?.imagemUrl != "" && (
+                  !isUndefined(nota.recSellFile) && (
                     <label className={styles.buttonUpdateNfSale}>
                       <button
                         style={{ display: "none" }}
@@ -766,14 +780,13 @@ const RGIDetailsInitial: React.FC = () => {
                 {cardData?.codigoStatus ===
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                   context.user.rule.name == UserRoleEnum.Cliente &&
-                  nota.recSellFile?.fileNameWithExtension == "" && 
-                  nota.recSellFile?.imagemUrl == "" && (
+                  isUndefined(nota.recSellFile) && (
                     <label className={styles.buttonUpdateNfSale}>
                       <input
                         type="file"
                         style={{ display: "none" }}
                         onChange={(e) => {
-                          handleFileUpload(e, nota.id);
+                          handleFileUpload(e, nota.id, nota);
                         }}
                       />
                       Adicionar Anexo

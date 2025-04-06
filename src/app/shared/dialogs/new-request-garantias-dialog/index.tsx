@@ -18,7 +18,6 @@ import {
 } from "@shared/services/GarantiasService";
 import api from "@shared/Interceptors";
 import { FileOutlined, InboxOutlined } from "@ant-design/icons";
-import environment from "@env/environment";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import environment from "@env/environment";
 
