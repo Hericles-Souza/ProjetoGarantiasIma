@@ -280,7 +280,7 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("ID do item não encontrado");
       return;
     }
-
+    
     const responseGetItens = await api.get(
       `/nota-fiscal/by-garantia/${cardData.id}`
     );

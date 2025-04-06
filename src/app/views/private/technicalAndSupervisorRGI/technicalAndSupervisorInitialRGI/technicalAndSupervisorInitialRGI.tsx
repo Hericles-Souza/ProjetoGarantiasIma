@@ -285,10 +285,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
         item.tipoDefeito &&
         item.conclusao &&
         item.status &&
-        item.codigoStatus &&
-        item.modeloVeiculoAplicado &&
-        item.torqueAplicado !== null &&
-        item.loteItem
+        item.codigoStatus
     );
 
     if (!allItemsFilled) {
@@ -551,6 +548,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 type="text"
                 className={stylesDetails.nextButton}
                 onClick={() => {
+                  console.log("nota: ", nota);
                   navigate("/technical-and-supervisor/details-itens", {
                     state: {
                       nf: nota.codigoRGI || nota.rgi,

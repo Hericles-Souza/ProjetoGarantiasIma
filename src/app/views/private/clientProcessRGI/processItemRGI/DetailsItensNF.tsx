@@ -721,7 +721,13 @@ const DetailsItensNF: React.FC = () => {
     }
 
     let isError: boolean = false;
-    const garantiaItensAPI = await getItemsByNotaId(notaFiscal.id);
+    
+    const responseGetItens = await api.get(
+      `/nota-fiscal/by-garantia/${garantia.id}`
+    );
+    const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
+    
+    const garantiaItensAPI = await getItemsByNotaId(notasFiscaisAPI.find((nota) => nota.codigo == notaFiscal.codigo).id);
 
     for (const item of notaFiscal.itens.filter(
       (value) => value.codigoItem?.split(".")[1] === recRgiLetter

@@ -214,6 +214,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           const updatedCardData = { ...location.state.garantia };
           setCardData(updatedCardData);
           setNotaFiscal(location.state.nota);
+          console.log("nota fiscal received: ", notaFiscal);
+          
           setRecRgiLetter(location.state.nf.split(".")[1]);
         }
       } catch (error) {
@@ -224,7 +226,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     };
 
     fetchUserData();
-  });
+  }, [location.state]);
 
   const toggleContentVisibility = (itemId: string) => {
     setIsContentVisible((prev) => ({
