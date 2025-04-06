@@ -125,8 +125,6 @@ const RGIDetailsInitial: React.FC = () => {
     const fileExtension = getFileExtensionFromBlob(blob);
     const fileNameWithExtension = field + fileExtension;
     const imagemUrl = URL.createObjectURL(blob);
-    console.log(fileNameWithExtension);
-
     // handleDownload(fileNameWithExtension);
     // handleDownload(fileNameWithExtension, imagemUrl);
 
@@ -137,7 +135,7 @@ const RGIDetailsInitial: React.FC = () => {
     return `${RgiCode}.${letter}.${index}`;
   };
 
-  const getAssciatedNfs = async (garantiaId: string) => {
+  const getAssciatedNfs = async (garantiaId: string, statusGarantia: number) => {
     const garantiaItemResponse = await fetch(
       `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
       {
@@ -154,8 +152,13 @@ const RGIDetailsInitial: React.FC = () => {
 
     associatedNfsByGarantia.data.map(async (nfAssociated, index) => {
       newAssociatedNfsByGarantia[index] = nfAssociated;
-      const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
-      newAssociatedNfsByGarantia[index].recSellFile = returnedSellFile;
+      if(statusGarantia > 3){
+        const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
+        newAssociatedNfsByGarantia[index].recSellFile = returnedSellFile;
+      }
+      else
+        newAssociatedNfsByGarantia[index].recSellFile = null;
+
     });
     console.log("newAssociatedNfsByGarantia: ", newAssociatedNfsByGarantia);
     // Depois de todas as promessas resolvidas, agora pode chamar o setGarantiaNfsWithItens
@@ -192,7 +195,7 @@ const RGIDetailsInitial: React.FC = () => {
       try {
         if (location.state) {
           data = location.state.garantiaData;
-          await getAssciatedNfs(data.id);
+          await getAssciatedNfs(data.id, data.codigoStatus);
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
           setDate(
@@ -324,36 +327,20 @@ const RGIDetailsInitial: React.FC = () => {
     console.log("codigoitem: ", nota.rgi);
     console.log("cardData.itens: ", nota);
 
+    const itemId = nota.itens?.find((item) => item.rgi === nota.rgi).id;
+    console.log("nota: ", nota);
 
-
-    const itemId = nota.itens?.find(
-      (item) =>
-        item.rgi ===
-        nota.rgi
-    ).id;
-
-    const sellFile = (await getSellFile(itemId, "nfVenda")) as {
-      fileNameWithExtension: string;
-      imagemUrl: string;
-    };
-    setSellFile(sellFile);
-    console.log("sellFile: ", sellFile);
-
-    if (sellFile) {
-      console.log("nota: ", nota);
-
-      navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
-        state: {
-          garantiaData: cardData,
-          notaId: nota.id,
-          currentNf: nf,
-          countItems: countItems,
-          nfNumber: nfNumber,
-          sellFile: sellFile,
-          nota: nota,
-        },
-      });
-    }
+    navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
+      state: {
+        garantiaData: cardData,
+        notaId: nota.id,  
+        currentNf: nf,
+        countItems: countItems,
+        nfNumber: nfNumber,
+        sellFile: sellFile,
+        nota: nota,
+      },
+    });
   };
 
   const handleAddNF = async (nfNumber: string) => {
@@ -476,7 +463,7 @@ const RGIDetailsInitial: React.FC = () => {
   ) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-
+      const blob = new Blob([file], { type: file.type });
       const endpoint = environment.apiUrl + "/files/upload-private-file-item";
       const fileData = new FormData();
       fileData.append("file", file);
@@ -494,6 +481,7 @@ const RGIDetailsInitial: React.FC = () => {
         });
         if (response.status === 201) {
           message.success("Arquivo enviado com sucesso!");
+          const fileExtension = getFileExtensionFromBlob(blob);
         } else {
           message.error("Erro ao enviar arquivo.");
         }
@@ -765,7 +753,8 @@ const RGIDetailsInitial: React.FC = () => {
                 {cardData?.codigoStatus ===
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                   context.user.rule.name == UserRoleEnum.Cliente &&
-                  sellFile != undefined && (
+                  nota.recSellFile?.fileNameWithExtension != "" && 
+                  nota.recSellFile?.imagemUrl != "" && (
                     <label className={styles.buttonUpdateNfSale}>
                       <button
                         style={{ display: "none" }}
@@ -777,7 +766,8 @@ const RGIDetailsInitial: React.FC = () => {
                 {cardData?.codigoStatus ===
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                   context.user.rule.name == UserRoleEnum.Cliente &&
-                  sellFile == undefined && (
+                  nota.recSellFile?.fileNameWithExtension == "" && 
+                  nota.recSellFile?.imagemUrl == "" && (
                     <label className={styles.buttonUpdateNfSale}>
                       <input
                         type="file"

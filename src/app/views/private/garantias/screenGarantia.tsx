@@ -210,11 +210,6 @@ const Garantias: React.FC = () => {
                         context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
                         context.user.rule.name.includes(UserRoleEnum.Supervisor)
                       ) {
-                        console.log("item: " + JSON.stringify(item));
-                        console.log(
-                          "associatedCardData: " + JSON.stringify(garantia)
-                        );
-
                         navigate(
                           `/garantias/technical-and-supervisor/${garantia.id}`,
                           {
@@ -303,10 +298,6 @@ const Garantias: React.FC = () => {
                         context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
                         context.user.rule.name.includes(UserRoleEnum.Supervisor)
                       ) {
-                        console.log("item: " + JSON.stringify(item));
-                        console.log(
-                          "associatedCardData: " + JSON.stringify(garantia)
-                        );
                         navigate(
                           `/garantias/technical-and-supervisor/${garantia.id}`,
                           {

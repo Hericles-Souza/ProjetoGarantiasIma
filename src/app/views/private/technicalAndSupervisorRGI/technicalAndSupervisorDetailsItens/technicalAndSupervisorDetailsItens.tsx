@@ -399,30 +399,23 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         <div className={styles.botoesCabecalho}>
           {cardData.codigoStatus === GarantiasStatusEnum2.EM_ANALISE && (
             <>
-              {context.user.rule.name === UserRoleEnum.Supervisor && (
-                <Button
+              {context.user.rule.name === UserRoleEnum.Tecnico && (
+                <><Button
                   type="default"
                   className={styles.ButtonDelete}
-                  onClick={() =>
-                    navigate("/view-pre-invoice", {
-                      state: { cardData },
-                    })
-                  }
+                  onClick={() => navigate("/view-pre-invoice", {
+                    state: { cardData },
+                  })}
                 >
                   Visualizar Pré-Nota
-                </Button>
+                </Button><Button
+                  type="primary"
+                  className={styles.ButonToSend}
+                  onClick={handleSave}
+                >
+                    Salvar
+                  </Button></>
               )}
-              <Button
-                type="primary"
-                className={styles.ButonToSend}
-                onClick={handleSave}
-                disabled={
-                  isAnalysisConcluded &&
-                  context.user.rule.name === UserRoleEnum.Tecnico
-                }
-              >
-                Salvar
-              </Button>
             </>
           )}
         </div>
@@ -445,16 +438,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               handleConfirm={handleConfirm}
               statusGarantia={cardData.codigoStatus}
             >
-              {context.user.rule.name !== UserRoleEnum.Supervisor && (
-                <div style={{ marginTop: "20px" }}>
-                  <FileAttachment
-                    label="Anexo da NF de venda"
-                    backgroundColor="white"
-                    itemId={item.id}
-                    isRessarcimento={item.solicitarRessarcimento}
-                  />
-                </div>
-              )}
 
               <h3 className={styles.tituloSecao}>Informações Gerais</h3>
               <div className={styles.inputsContainer}>

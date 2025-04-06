@@ -4,8 +4,8 @@ export interface NotaFiscal{
 id: string;
 garantia_id?: string;
 garantiaId?: string;
-createdAt: string;
-updatedAt: string;
+createdAt?: string;
+updatedAt?: string;
 codigo: string;
 codigoRGI: string;
 rgi?: string;

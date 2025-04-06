@@ -80,8 +80,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     imagemUrl: string;
   }>();
   useEffect(() => {
-    console.log("itemID: ", garantiaItemId);
-
     if (garantiaItemId) {
       let fieldFile: string = "";
       const matchField = label.match(/^\d+/);
@@ -128,7 +126,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       const urlGetFile =
         environment.apiUrl +
         `/files/files/download-private-file-item/${itemId}/${field}`;
-      console.log(urlGetFile);
 
       const response = await fetch(urlGetFile, {
         method: "GET",
@@ -142,10 +139,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         const fileExtension = getFileExtensionFromBlob(blob);
         const fileNameWithExtension = field + fileExtension;
         const imagemUrl = URL.createObjectURL(blob);
-        console.log("buscou arquivo: ", fileNameWithExtension);
-        console.log("itemid: ", itemId);
-        console.log("field: ", field);
-        console.log("field: ", { fileNameWithExtension, imagemUrl });
 
         setRecFile({ fileNameWithExtension, imagemUrl });
       } else {
@@ -334,7 +327,6 @@ const CollapsibleSection = ({
       const urlGetFile =
         environment.apiUrl +
         `/files/files/download-private-file-item/${itemId}/${field}`;
-      console.log(urlGetFile);
 
       const response = await fetch(urlGetFile, {
         method: "GET",
@@ -423,7 +415,8 @@ const CollapsibleSection = ({
           className={styles.statusTag}
         >
           {converterStatusItemGarantia(
-            garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO || garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
+            garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO ||
+              garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
               ? GarantiasItemStatusEnum2.NAO_ANALISADO
               : garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO
               ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
@@ -469,14 +462,14 @@ const CollapsibleSection = ({
 const DetailsItensNF: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [items, setItems] = useState<GarantiaItem[]>([]);
   const [visibleSectionId, setVisibleSectionId] = useState<string | null>(null);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [recRgiLetter, setRecRgiLetter] = useState("A");
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
-  const [notaFiscal, setNotaFiscal] = useState<NotaFiscal | null>(null);
+  const [notaFiscal, setNotaFiscal] = useState<NotaFiscal>();
   const [loading, setLoading] = useState<boolean>(true);
+  
   const [recSellFile, setRecSellFile] = useState<{
     fileNameWithExtension: string;
     imagemUrl: string;
@@ -486,15 +479,22 @@ const DetailsItensNF: React.FC = () => {
   // const rgiLetter = (location.state as any)?.rgiLetter || "A";
 
   const handleInputChange = (itemId: string, field: string, value: any) => {
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId
-          ? field === "solicitarRessarcimento"
-            ? { ...item, solicitarRessarcimento: value }
-            : { ...item, [field]: value }
-          : item
-      )
-    );
+    
+    setNotaFiscal((prevNotaFiscal) => {
+      if (prevNotaFiscal) {
+        return {
+          ...prevNotaFiscal,
+          itens: prevNotaFiscal.itens.map(
+            (item) =>
+              item.id === itemId
+                ? field === "solicitarRessarcimento"
+                  ? { ...item, solicitarRessarcimento: value } // Atualiza o campo 'solicitarRessarcimento'
+                  : { ...item, [field]: value } // Atualiza o campo dinâmico
+                : item // Mantém o item intacto se não for o correto
+          ),
+        };
+      }
+    });
   };
 
   const handleDeleteGuarantee = async () => {
@@ -537,39 +537,48 @@ const DetailsItensNF: React.FC = () => {
           setRecRgiLetter(actualNf.split(".")[1] || "A");
         }
         if (data) {
-          setGarantia(data);
-          setNotaFiscal(location.state.nota);
+          if (data && JSON.stringify(data) !== JSON.stringify(garantia)) {
+            setGarantia(data);
+          }
+
+          if (
+            location.state.nota &&
+            JSON.stringify(location.state.nota) !== JSON.stringify(notaFiscal)
+          ) {
+          console.log("nota received: ", location.state.nota);
+
+            setNotaFiscal(location.state.nota);
+          }
+
           console.log("garantia received: ", garantia);
           console.log("nota received: ", notaFiscal);
 
-          const transformedItems = await getItemsByNotaId(location.state.notaId);
+          const transformedItems = await getItemsByNotaId(
+            location.state.notaId
+          );
           setRecSellFile(
             location.state?.sellFile || {
               fileNameWithExtension: "",
               imagemUrl: "",
             }
           );
-          setItems(transformedItems);
-          if (transformedItems?.length > 0) {
+          if (
+            transformedItems?.length > 0 &&
+            transformedItems[0].id !== visibleSectionId
+          ) {
             setVisibleSectionId(transformedItems[0].id);
           }
           console.log("transformedItemsReceved: ", location.state.nota);
-          console.log(
-            "itemsReceved: ",
-            location.state.nota
-          );
         } else {
           setGarantia({
             id: "",
             codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
           });
-          setItems(location.state.nota.itens);
           setRecSellFile({ fileNameWithExtension: "", imagemUrl: "" });
         }
       } catch (error) {
         console.error("Error loading garantia data:", error);
         setGarantia({ id: "", codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO });
-        setItems([]);
         setRecSellFile({ fileNameWithExtension: "", imagemUrl: "" });
       } finally {
         setLoading(false);
@@ -577,23 +586,26 @@ const DetailsItensNF: React.FC = () => {
     };
 
     loadGarantiaData();
-  }, [location.state]);
+  }, [location.state.nota]);
 
   const addNewItem = async () => {
     const newItemId = crypto.randomUUID();
     const sequence = (location.state.countItems =
       location.state.countItems + 1);
     const newItemRgi = garantia
-      ? formatItemRgi(location.state.nota.codigoRGI || location.state.nota.rgi, sequence)
+      ? formatItemRgi(
+          location.state.nota.codigoRGI || location.state.nota.rgi,
+          sequence
+        )
       : "";
 
-    const payloadPost = { 
+    const payloadPost = {
       id: newItemId,
       codigoItem: newItemRgi,
       codigoRGI: newItemRgi,
       nfReferencia: notaFiscal.codigo,
       codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-      nota_fiscal_id: notaFiscal.id
+      nota_fiscal_id: notaFiscal.id,
     };
     const responsePost = await api.post(
       environment.apiUrl + "/garantias/item/create",
@@ -604,39 +616,41 @@ const DetailsItensNF: React.FC = () => {
     } else {
       message.success("Item criado com sucesso.");
       console.log("responsePost: ", responsePost);
-      
-      notaFiscal.itens.push({
-        id: newItemId,
-        codigoPeca: "",
-        loteItem: "",
-        status: GarantiasItemStatusEnum.NAO_ANALISADO,
-        tipoDefeito: "",
-        anoVeiculo: "",
-        modeloVeiculoAplicado: "",
-        torqueAplicado: 0,
-        solicitarRessarcimento: false,
-        anexos: "",
-        codigoRGI: newItemRgi,
-        codigoItem: newItemRgi,
-        nfReferencia: location.state.nfNumber,
-        loteItemOficial: "",
-        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-      })
-      
+
       if (garantia) {
-        notaFiscal.itens.push({
-          id: newItemId,
-          codigoItem: newItemRgi,
-          nfReferencia: location.state.nfNumber,
-          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+        setNotaFiscal((prevNotaFiscal) => {
+          if (prevNotaFiscal) {
+            return {
+              ...prevNotaFiscal,
+              itens: [
+                ...prevNotaFiscal.itens,
+                {
+                  id: newItemId,
+                  codigoItem: newItemRgi,
+                  nfReferencia: location.state.nfNumber,
+                  codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+                  status: GarantiasItemStatusEnum.NAO_ANALISADO,
+                },
+              ],
+            };
+          }
         });
+        console.log("notaFiscal push: ", notaFiscal);
       }
       setVisibleSectionId(newItemId);
     }
   };
 
   const handleDeleteItem = (itemId: string) => {
-    setItems(items.filter((item) => item.id !== itemId));
+
+    setNotaFiscal((prevNotaFiscal) => {
+      if (prevNotaFiscal) {
+        return {
+          ...prevNotaFiscal, // Mantém todos os campos da nota fiscal
+          itens: prevNotaFiscal.itens.filter((item) => item.id !== itemId), // Filtra os itens para remover o item com o id correspondente
+        };
+      }
+    });
     setModalDeleteOpen(false);
   };
 
@@ -700,14 +714,14 @@ const DetailsItensNF: React.FC = () => {
     }
 
     let isError: boolean = false;
-    const garantiaItensAPI = await getItemsByNotaId(location.state.notaId);
+    const garantiaItensAPI = await getItemsByNotaId(notaFiscal.id);
 
     for (const item of notaFiscal.itens.filter(
       (value) => value.codigoItem?.split(".")[1] === recRgiLetter
     )) {
       try {
         console.log("garantiaItensAPI: ", garantiaItensAPI);
-        
+
         if (
           garantiaItensAPI.some(
             (apiItem) => apiItem.codigoItem === item.codigoItem
@@ -725,13 +739,15 @@ const DetailsItensNF: React.FC = () => {
             loteItem: item.loteItem,
             anoVeiculo: item.anoVeiculo,
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-            solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
+            solicitarRessarcimento: true,
             nota_fiscal_id: notaFiscal.id,
           };
           const responsePut = await api.put(
             `/garantias/garantiasItem/${item.id}/UpdateItem`,
             payloadPut
           );
+          console.log("payloadPut: ", payloadPut);
+
           if (responsePut.status !== 200 && responsePut.status !== 201) {
             message.error("Erro ao atualizar o item.");
             isError = true;
@@ -756,6 +772,8 @@ const DetailsItensNF: React.FC = () => {
             environment.apiUrl + "/garantias/item/create",
             payloadPost
           );
+          console.log("payloadPost: ", payloadPost);
+
           if (responsePost.status !== 200 && responsePost.status !== 201) {
             message.error("Erro ao criar a garantia.");
             isError = true;
@@ -811,13 +829,16 @@ const DetailsItensNF: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
-        <span className={styles.RgiCode}>RGI {garantia?.codigoRGI || "N/A"}</span>
+        <span className={styles.RgiCode}>
+          RGI {garantia?.codigoRGI || "N/A"}
+        </span>
       </div>
       <div className={styles.ContainerHeader}>
         <div className={styles.headerLeft}>
           <h1 className={styles.tituloRgi}>
             NF{" "}
-            {notaFiscal?.codigoRGI || notaFiscal?.rgi ||
+            {notaFiscal?.codigoRGI ||
+              notaFiscal?.rgi ||
               "Código da NF não disponível"}
           </h1>
           <div
@@ -884,19 +905,6 @@ const DetailsItensNF: React.FC = () => {
         </div>
       </div>
       <hr className={styles.divisor} />
-      <FileAttachment
-        label="Anexo da NF de venda"
-        backgroundColor="#f5f5f5"
-        garantiaItemId={""}
-        isRessarcimento={false}
-        initialFileData={
-          garantia?.anexos
-            ? { id: garantia.anexos, fileName: garantia.anexos }
-            : undefined
-        }
-        recGarantia={garantia}
-        recSellFile={recSellFile}
-      />
       {(garantia?.codigoStatus ===
         GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
         garantia?.codigoStatus === GarantiasStatusEnum2.CONFIRMADO ||
@@ -950,255 +958,244 @@ const DetailsItensNF: React.FC = () => {
           preenchido com “Não contém”
         </span>
       </div>
-      {notaFiscal?.itens.length > 0 && recRgiLetter ? (
-        notaFiscal?.itens
-          .map((item) => (
-            <div className={styles.containerInformacoes} key={item.id}>
-              <CollapsibleSection
-                title={item.codigoItem || "Item sem código"}
-                isVisible={visibleSectionId === item.id}
-                toggleVisibility={() => toggleSectionVisibility(item.id)}
-                showDeleteConfirm={() => showDeleteConfirm(item.id)}
-                status={item.status}
-                rgi={item.codigoRGI || ""}
-                isEvaluated={
-                  garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
-                  context.user.rule.name === UserRoleEnum.Cliente
-                    ? false
-                    : true
-                }
-                garantia={garantia}
-                garantiaItem={item}
-              >
-                <h3 className={styles.tituloSecao}>Informações Gerais</h3>
-                <div className={styles.inputsContainer}>
-                  <div className={styles.inputsConjun}>
-                    <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                      <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
-                        label="Código da peça"
-                        fullWidth
-                        value={item.codigoPeca || ""}
-                        onChange={(e) =>{
-                          handleInputChange(
-                            item.id,
-                            "codigoPeca",
-                            e.target.value
-                          );
-                          item.codigoPeca = e.target.value;
-                        }
-                          
-                        }
-                      />
-                    </div>
-                    <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                      <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
-                        label="Lote da peça"
-                        fullWidth
-                        value={item.loteItem || ""}
-                        onChange={(e) =>{
-                          handleInputChange(item.id, "loteItem", e.target.value)
-                          item.loteItem = e.target.value;
-
-                        }
-                        }
-                      />
-                    </div>
+      {notaFiscal?.itens?.length > 0 && recRgiLetter ? (
+        notaFiscal?.itens?.map((item) => (
+          <div className={styles.containerInformacoes} key={item.id}>
+            <CollapsibleSection
+              title={item.codigoItem || "Item sem código"}
+              isVisible={visibleSectionId === item.id}
+              toggleVisibility={() => toggleSectionVisibility(item.id)}
+              showDeleteConfirm={() => showDeleteConfirm(item.id)}
+              status={item.status}
+              rgi={item.codigoRGI || ""}
+              isEvaluated={
+                garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
+                context.user.rule.name === UserRoleEnum.Cliente
+                  ? false
+                  : true
+              }
+              garantia={garantia}
+              garantiaItem={item}
+            >
+              <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+              <div className={styles.inputsContainer}>
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
+                      label="Código da peça"
+                      fullWidth
+                      value={item.codigoPeca || ""}
+                      onChange={(e) => {
+                        handleInputChange(
+                          item.id,
+                          "codigoPeca",
+                          e.target.value
+                        );
+                        item.codigoPeca = e.target.value;
+                      }}
+                    />
                   </div>
-                  <div className={styles.inputsConjun}>
-                    <div className={styles.inputGroup} style={{ flex: 0.4 }}>
-                      <OutlinedSelectWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
-                        label="Defeito"
-                        fullWidth
-                        options={[
-                          { value: "defeito1", label: "Opção 1" },
-                          { value: "defeito2", label: "Opção 2" },
-                          { value: "defeito3", label: "Opção 3" },
-                        ]}
-                        value={item.tipoDefeito || ""}
-                        onChange={(e) =>
-                        {handleInputChange(
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
+                      label="Lote da peça"
+                      fullWidth
+                      value={item.loteItem || ""}
+                      onChange={(e) => {
+                        handleInputChange(item.id, "loteItem", e.target.value);
+                        item.loteItem = e.target.value;
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 0.4 }}>
+                    <OutlinedSelectWithLabel
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
+                      label="Defeito"
+                      fullWidth
+                      options={[
+                        { value: "defeito1", label: "Opção 1" },
+                        { value: "defeito2", label: "Opção 2" },
+                        { value: "defeito3", label: "Opção 3" },
+                      ]}
+                      value={item.tipoDefeito || ""}
+                      onChange={(e) => {
+                        handleInputChange(
                           item.id,
                           "tipoDefeito",
                           e.target.value
-                        )
+                        );
                         item.tipoDefeito = e.target.value;
+                      }}
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 1 }}>
+                    <OutlinedInputWithLabel
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
                       }
-                          
-                        }
-                      />
-                    </div>
-                    <div className={styles.inputGroup} style={{ flex: 1 }}>
-                      <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
-                        label="Modelo do veículo que aplicou"
-                        fullWidth
-                        value={item.modeloVeiculoAplicado || ""}
-                        onChange={(e) =>{
-                          handleInputChange(
-                            item.id,
-                            "modeloVeiculoAplicado",
-                            e.target.value
-                          )
-                          item.modeloVeiculoAplicado = e.target.value;
-                        }
-                        }
-                      />
-                    </div>
-                    <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                      <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
-                        label="Ano do veículo"
-                        fullWidth
-                        value={item.anoVeiculo || ""}
-                        onChange={(e) =>{
-                          handleInputChange(
-                            item.id,
-                            "anoVeiculo",
-                            e.target.value
-                          )
+                      label="Modelo do veículo que aplicou"
+                      fullWidth
+                      value={item.modeloVeiculoAplicado || ""}
+                      onChange={(e) => {
+                        handleInputChange(
+                          item.id,
+                          "modeloVeiculoAplicado",
+                          e.target.value
+                        );
+                        item.modeloVeiculoAplicado = e.target.value;
+                      }}
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 0.3 }}>
+                    <OutlinedInputWithLabel
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
+                      label="Ano do veículo"
+                      fullWidth
+                      value={item.anoVeiculo || ""}
+                      onChange={(e) => {
+                        handleInputChange(
+                          item.id,
+                          "anoVeiculo",
+                          e.target.value
+                        );
                         item.anoVeiculo = e.target.value;
-                        }
-                        }
-                      />
-                    </div>
+                      }}
+                    />
                   </div>
-                  <div className={styles.inputsConjun}>
-                    <div className={styles.inputGroup} style={{ flex: 1 }}>
-                      <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
-                        type="number"
-                        label="Torque aplicado à peça"
-                        fullWidth
-                        value={item.torqueAplicado?.toString() || ""}
-                        onChange={(e) =>{
-                          handleInputChange(
-                            item.id,
-                            "torqueAplicado",
-                            Number(e.target.value)
-                          )
-                          item.torqueAplicado = Number(e.target.value);
-                        }
-                        }
-                      />
-                    </div>
-                  </div>
-                  {garantia?.codigoStatus ===
-                    GarantiasStatusEnum2.NAO_ENVIADO && (
-                    <div className={styles.checkboxContainer}>
-                      <ColorCheckboxes
-                        checked={item.solicitarRessarcimento || false}
-                        onChange={(e) => {
-                          item.solicitarRessarcimento = e.target.checked;
-                          handleInputChange(
-                            item.id,
-                            "solicitarRessarcimento",
-                            e.target.checked
-                          );
-                        }}
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
-                      />
-                      <label className={styles.checkboxDanger}>
-                        Solicitar ressarcimento
-                      </label>
-                    </div>
-                  )}
                 </div>
-                {item.solicitarRessarcimento && (
-                  <div className={styles.contentReimbursement}>
-                    <h3 className={styles.tituloA}>
-                      Anexo de dados adicionais para ressarcimento
-                    </h3>
-                    {[
-                      "1. Documento de identificação (RG ou CNH):",
-                      "2. Documentação do veículo:",
-                      "3. NF do guincho:",
-                      "4. NF de outras despesa/produtos pertinentes:",
-                    ].map((itemInside, idx) => (
-                      <FileAttachment
-                        key={idx}
-                        label={itemInside}
-                        garantiaItemId={item.id}
-                        isRessarcimento={true}
-                        backgroundColor="#f5f5f5"
-                        recGarantia={garantia}
-                        recSellFile={{
-                          fileNameWithExtension: "",
-                          imagemUrl: "",
-                        }}
-                        item={item}
-                      />
-                    ))}
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 1 }}>
+                    <OutlinedInputWithLabel
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
+                      type="number"
+                      label="Torque aplicado à peça"
+                      fullWidth
+                      value={item.torqueAplicado?.toString() || ""}
+                      onChange={(e) => {
+                        handleInputChange(
+                          item.id,
+                          "torqueAplicado",
+                          Number(e.target.value)
+                        );
+                        item.torqueAplicado = Number(e.target.value);
+                      }}
+                    />
+                  </div>
+                </div>
+                {garantia?.codigoStatus ===
+                  GarantiasStatusEnum2.NAO_ENVIADO && (
+                  <div className={styles.checkboxContainer}>
+                    <ColorCheckboxes
+                      checked={item.solicitarRessarcimento || false}
+                      onChange={(e) => {
+                        item.solicitarRessarcimento = e.target.checked;
+                        handleInputChange(
+                          item.id,
+                          "solicitarRessarcimento",
+                          e.target.checked
+                        );
+                      }}
+                      disabled={
+                        garantia?.codigoStatus !==
+                        GarantiasStatusEnum2.NAO_ENVIADO
+                      }
+                    />
+                    <label className={styles.checkboxDanger}>
+                      Solicitar ressarcimento
+                    </label>
                   </div>
                 )}
-                {item.solicitarRessarcimento === false &&
-                  garantia?.codigoStatus !==
-                    GarantiasStatusEnum2.NAO_ENVIADO && (
-                    <div className={styles.dialoginfoRessarcimento}>
-                      <InfoCircleOutlined style={{ color: "#bd0502" }} />
-                      <span style={{ color: "#bd0502" }}>
-                        Item Não Possui Ressarcimento.
-                      </span>
-                    </div>
-                  )}
-                {context.user.rule.name === UserRoleEnum.Cliente && (
+              </div>
+              {item.solicitarRessarcimento && (
+                <div className={styles.contentReimbursement}>
+                  <h3 className={styles.tituloA}>
+                    Anexo de dados adicionais para ressarcimento
+                  </h3>
+                  {[
+                    "1. Documento de identificação (RG ou CNH):",
+                    "2. Documentação do veículo:",
+                    "3. NF do guincho:",
+                    "4. NF de outras despesa/produtos pertinentes:",
+                  ].map((itemInside, idx) => (
+                    <FileAttachment
+                      key={idx}
+                      label={itemInside}
+                      garantiaItemId={item.id}
+                      isRessarcimento={true}
+                      backgroundColor="#f5f5f5"
+                      recGarantia={garantia}
+                      recSellFile={{
+                        fileNameWithExtension: "",
+                        imagemUrl: "",
+                      }}
+                      item={item}
+                    />
+                  ))}
+                </div>
+              )}
+              {item.solicitarRessarcimento === false &&
+                garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO && (
+                  <div className={styles.dialoginfoRessarcimento}>
+                    <InfoCircleOutlined style={{ color: "#bd0502" }} />
+                    <span style={{ color: "#bd0502" }}>
+                      Item Não Possui Ressarcimento.
+                    </span>
+                  </div>
+                )}
+              {context.user.rule.name === UserRoleEnum.Cliente && (
+                <FileAttachment
+                  label="Anexo da NF de Referência"
+                  garantiaItemId={item.id}
+                  isRessarcimento={false}
+                  backgroundColor="white"
+                  recGarantia={garantia}
+                  recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
+                />
+              )}
+              {context.user.rule.name === UserRoleEnum.Cliente && (
+                <h3 className={styles.tituloA}>Anexos de Imagens</h3>
+              )}
+              {context.user.rule.name === UserRoleEnum.Cliente &&
+                [
+                  "1. Foto do lado onde está a gravação IMA:",
+                  "2. Foto da parte danificada/amassada-quebrada:",
+                  "3. Foto marcações suspeitas na peça:",
+                  "4. Foto da peça completa:",
+                  "5. Outras fotos pertinentes:",
+                ].map((label, idx) => (
                   <FileAttachment
-                    label="Anexo da NF de Referência"
+                    key={idx}
                     garantiaItemId={item.id}
+                    label={label}
                     isRessarcimento={false}
                     backgroundColor="white"
                     recGarantia={garantia}
                     recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
+                    item={item} // Passando o item, embora não seja necessário aqui
                   />
-                )}
-                {context.user.rule.name === UserRoleEnum.Cliente && (
-                  <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-                )}
-                {context.user.rule.name === UserRoleEnum.Cliente &&
-                  [
-                    "1. Foto do lado onde está a gravação IMA:",
-                    "2. Foto da parte danificada/amassada-quebrada:",
-                    "3. Foto marcações suspeitas na peça:",
-                    "4. Foto da peça completa:",
-                    "5. Outras fotos pertinentes:",
-                  ].map((label, idx) => (
-                    <FileAttachment
-                      key={idx}
-                      garantiaItemId={item.id}
-                      label={label}
-                      isRessarcimento={false}
-                      backgroundColor="white"
-                      recGarantia={garantia}
-                      recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
-                      item={item} // Passando o item, embora não seja necessário aqui
-                    />
-                  ))}
-              </CollapsibleSection>
-            </div>
-          ))
+                ))}
+            </CollapsibleSection>
+          </div>
+        ))
       ) : (
         <p>Nenhum item disponível para esta NF.</p>
       )}
