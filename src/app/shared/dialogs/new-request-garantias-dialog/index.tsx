@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useContext, useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,13 +11,14 @@ import {
   GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
-import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel";
+import { GarantiasModel, GarantiaItem } from "@shared/models/GarantiasModel";
 import {
   createGarantiaAsync,
   getGarantiaByIdAsync,
 } from "@shared/services/GarantiasService";
 import api from "@shared/Interceptors";
-import { FileOutlined } from "@ant-design/icons";
+import { FileOutlined, InboxOutlined } from "@ant-design/icons";
+import environment from "@env/environment";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import environment from "@env/environment";
 
@@ -25,60 +27,6 @@ enum FilterStatus {
   GARANTIAS = "garantias",
   ACORDO = "acordo",
 }
-
-// Componente FileAttachment – permite selecionar um arquivo
-interface FileAttachmentProps {
-  label: string;
-  backgroundColor?: string;
-  onFileSelect?: (file: File) => void;
-  required?: boolean;
-}
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FileAttachment: React.FC<FileAttachmentProps> = ({
-  label,
-  backgroundColor,
-  onFileSelect,
-}) => {
-  const [fileName, setFileName] = useState<string | null>(null);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      setFileName(file.name);
-      if (onFileSelect) {
-        onFileSelect(file);
-      }
-    }
-  };
-
-  return (
-    <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
-      <span className={styles.labelAnexo}>{label}</span>
-      <div className={styles.fileUpdateContent}>
-        {fileName && (
-          <span className={styles.fileName}>
-            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-            {fileName}
-            <button
-              className={styles.buttonRemoveUpload}
-              onClick={() => setFileName(null)}
-            >
-              x
-            </button>
-          </span>
-        )}
-        <label className={styles.buttonUpdateNfSale}>
-          <input
-            type="file"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-          Adicionar Anexo
-        </label>
-      </div>
-    </div>
-  );
-};
 
 const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
   onClose,
@@ -109,7 +57,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         .map((rgi: string) => parseInt(rgi.split("-")[1]));
       const lastNumber = Math.max(0, ...existingRGIs);
       const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
-      console.log("newrGi: " + `${nextNumber}`);
       return `${context.user.codigoCigam}-${nextNumber}`;
     } catch (error) {
       console.error("Erro ao gerar RGI:", error);
@@ -117,6 +64,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
   };
 
   // Estado para armazenar o arquivo selecionado
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let numNota: string = "";
 
@@ -143,35 +91,30 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       const itemId = crypto.randomUUID();
       const notaFiscalId = crypto.randomUUID();
 
-      const garantiasItem: GarantiaItem[] = [
-        {
-          id: itemId,
-          nota_fiscal_id: notaFiscalId,
-          codigoItem: newRGI + ".A.1",
-          codigoRGI: newRGI + ".A",
-          nfReferencia: values["N° NF de origem"],
-          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-          status: GarantiasItemStatusEnum.NAO_ANALISADO,
-        },
-      ];
+      const garantiasItem: GarantiaItem[] = [{
+        id: itemId,
+        nota_fiscal_id: notaFiscalId,
+        codigoItem: newRGI + ".A.1",
+        codigoRGI: newRGI + ".A",
+        nfReferencia: values["N° NF de origem"],
+        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+        status: GarantiasItemStatusEnum.NAO_ANALISADO
+      }]
 
-      const notasFiscais: NotaFiscal[] = [
-        {
-          id: notaFiscalId,
-          garantia_id: itemId,
-          codigo: values["N° NF de origem"],
-          codigoRGI: newRGI + ".A",
-          tipo_nota: "nota fiscal de origem",
-          id_referencia: notaFiscalId,
-          itens: garantiasItem,
-          data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-          data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-          createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-          updatedAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-        },
-      ];
+      const notasFiscais: NotaFiscal[] = [{
+        id: notaFiscalId,
+        garantia_id: itemId,
+        codigo: values["N° NF de origem"],
+        codigoRGI: newRGI + ".A",
+        tipo_nota: "nota fiscal de origem",
+        id_referencia: notaFiscalId,
+        itens: garantiasItem,
+        data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        updatedAt:`${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      }];
 
-      // 3. Construa o objeto garantiaModel
       const garantiaPayload: GarantiasModel = {
         codigoRGI: newRGI,
         razaoSocial: context.user.fullname,
@@ -190,12 +133,11 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         JSON.stringify(garantiaPayload, null, 2)
       );
 
-      // 4. Cria a garantia via API
+      // 4. Cria a garantia via API 
       const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
       console.log("Garantia criada com sucesso:", guaranteeResponse.data);
 
       let createdGarantia: any = guaranteeResponse.data.data;
-      // Se a resposta for uma string, extraia o id
       if (typeof createdGarantia === "string") {
         const match = createdGarantia.match(/id:([^\s]+)/);
         if (match && match[1]) {
@@ -211,19 +153,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         throw new Error("Resposta inválida da API ao criar garantia");
       }
 
-      const garantiaItemResponse = await fetch(
-        `${environment.apiUrl}/garantias/item/by-garantia/${createdGarantia.id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${context.user.token}`,
-          },
-        }
-      );
-
-      console.log("garantiaItemResponse: ", garantiaItemResponse);
-      
-
       navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
         state: {
           garantiaData: { ...garantiaPayload, id: createdGarantia.id },
@@ -236,11 +165,10 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           countItems: 1,
           nfNumber: values["N° NF de origem"],
           rgiLetter: "A",
-          nota: garantiaPayload.notas[0],
+          nota: garantiaPayload.notas[0]
         },
       });
 
-      // const uploadResponse = await api.post("/files/upload-private-file-item", fileData);
     } catch (error: any) {
       console.error("Erro ao criar garantia:", error.response?.data || error);
     } finally {
@@ -273,7 +201,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
     }
   }, [currentTab]);
 
-  // Se necessário, carregue dados previamente salvos (opcional)
   useEffect(() => {
     const loadGarantiaData = async () => {
       try {
@@ -304,18 +231,16 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           <div className={styles.tabsContainer}>
             <button
               ref={garantiaButtonRef}
-              className={`${styles.tabButton} ${
-                currentTab === FilterStatus.GARANTIAS ? styles.active : ""
-              }`}
+              className={`${styles.tabButton} ${currentTab === FilterStatus.GARANTIAS ? styles.active : ""
+                }`}
               onClick={() => handleTabChange(FilterStatus.GARANTIAS)}
             >
               Garantia
             </button>
             <button
               ref={acordoButtonRef}
-              className={`${styles.tabButton} ${
-                currentTab === FilterStatus.ACORDO ? styles.active : ""
-              }`}
+              className={`${styles.tabButton} ${currentTab === FilterStatus.ACORDO ? styles.active : ""
+                }`}
               onClick={() => handleTabChange(FilterStatus.ACORDO)}
             >
               Acordo

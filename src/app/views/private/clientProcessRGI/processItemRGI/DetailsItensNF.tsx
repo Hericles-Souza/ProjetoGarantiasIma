@@ -53,7 +53,7 @@ interface FileAttachmentProps {
   onFileSelect?: (file: File) => void;
   recGarantia: GarantiasModel;
   recSellFile: { fileNameWithExtension: string; imagemUrl: string };
-  item?: GarantiaItem; // Adicionado para acessar solicitarRessarcimento
+  item?: GarantiaItem;
 }
 
 const FileAttachment: React.FC<FileAttachmentProps> = ({
@@ -65,8 +65,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   onFileSelect,
   recGarantia,
   recSellFile = { fileNameWithExtension: "", imagemUrl: "" },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  item,
 }) => {
   const [fileData, setFileData] = useState<FileData | null>(
     initialFileData || null
@@ -109,14 +107,13 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
-      // Adicione outros tipos MIME conforme necessário
     };
 
-    return mimeTypes[mimeType] || ""; // Retorna a extensão ou uma string vazia se não encontrado
+    return mimeTypes[mimeType] || "";
   }
 
   function getFileExtensionFromBlob(blob: Blob): string {
-    const mimeType = blob.type; // Pega o tipo MIME do Blob
+    const mimeType = blob.type;
     const extension = getExtensionFromMimeType(mimeType);
     return extension;
   }
@@ -130,7 +127,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       const response = await fetch(urlGetFile, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${authContext.user.token}`, // Token de autenticação
+          Authorization: `Bearer ${authContext.user.token}`,
         },
       });
 
@@ -230,12 +227,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     setFileName(null);
   };
 
-  // const canAddAttachment =
-  //   (recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
-  //     label === "Anexo da NF de devolução") &&
-  //   !fileData &&
-  //   !recSellFile.imagemUrl;
-
   const canRemoveAttachment =
     (recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
       label === "Anexo da NF de devolução") &&
@@ -251,7 +242,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             <label className={styles.buttonUpdateNfSale}>
               <button
                 style={{ display: "none" }}
-                onClick={handleDownloadFile} // quero que esse botão apareça se o status for diferente de NAO_ENVIADO
+                onClick={handleDownloadFile}
               />
               Baixar Arquivo
             </label>
@@ -296,11 +287,11 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
 };
 
 const CollapsibleSection = ({
+  title,
   isVisible,
   toggleVisibility,
   showDeleteConfirm,
   children,
-  title,
   garantia,
   garantiaItem,
 }: {
@@ -331,7 +322,7 @@ const CollapsibleSection = ({
       const response = await fetch(urlGetFile, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${authContext.user.token}`, // Token de autenticação
+          Authorization: `Bearer ${authContext.user.token}`,
         },
       });
 
@@ -366,16 +357,14 @@ const CollapsibleSection = ({
         else fieldFile = `${matchField[0]}.img`;
       } else fieldFile = "nfRef";
 
-      // Esperar pela resolução de getFieldFile
       await getFieldFile(garantiaItem.id, fieldFile, tempRecFiles);
     });
 
-    // Espera todas as promessas de getFieldFile terminarem
     await Promise.all(promises);
 
     setRecFile(tempRecFiles);
 
-    console.log("imagensItens: ", tempRecFiles); // Exibe as imagens carregadas
+    console.log("imagensItens: ", tempRecFiles);
 
     const item = {
       codigo: garantiaItem.codigoItem,
@@ -388,40 +377,60 @@ const CollapsibleSection = ({
       images: tempRecFiles,
     };
 
-    // Gerar o PDF e iniciar o download
     pdf(<ReportPDF item={item} />)
-      .toBlob() // Gera o PDF como Blob
+      .toBlob()
       .then((blob) => {
-        const url = URL.createObjectURL(blob); // Cria uma URL para o Blob
-        const link = document.createElement("a"); // Cria um link para download
-        link.href = url; // Define o link com a URL gerada
-        link.download = "laudo_tecnico.pdf"; // Define o nome do arquivo
-        link.click(); // Clica no link para iniciar o download
-        URL.revokeObjectURL(url); // Limpa a URL do Blob
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "laudo_tecnico.pdf";
+        link.click();
+        URL.revokeObjectURL(url);
       });
   };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case GarantiasItemStatusEnum.AUTORIZADO:
+        return { color: "#00CC00", backgroundColor: "#00CC0015" }; // Verde
+      case GarantiasItemStatusEnum.NAO_ANALISADO:
+      case GarantiasItemStatusEnum.NAO_ENVIADO:
+        return { color: "#808080", backgroundColor: "#80808015" }; // Cinza
+      case GarantiasItemStatusEnum.NAO_AUTORIZADO:
+        return { color: "#FF0000", backgroundColor: "#FF000015" }; // Vermelho
+      default:
+        return { color: "#000", backgroundColor: "#00000015" };
+    }
+  };
+
+  const itemStatus = converterStatusItemGarantia(
+    garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO ||
+      garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
+      ? GarantiasItemStatusEnum2.NAO_ANALISADO
+      : garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO
+        ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
+        : GarantiasItemStatusEnum2.AUTORIZADO
+  ) || "Status não disponível";
+
+  const statusStyle = getStatusColor(garantiaItem?.status || "");
 
   return (
     <div>
       <div className={styles.tituloSecaoContainer}>
-        <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
-        <div
-          style={{
-            color: StatusColors[garantia?.codigoStatus] || "#000",
-            backgroundColor: `${
-              StatusColors[garantia?.codigoStatus] || "#000"
-            }15`,
-          }}
-          className={styles.statusTag}
-        >
-          {converterStatusItemGarantia(
-            garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO ||
-              garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
-              ? GarantiasItemStatusEnum2.NAO_ANALISADO
-              : garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO
-              ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
-              : GarantiasItemStatusEnum2.AUTORIZADO
-          ) || "Status não disponível"}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
+          <div
+            style={{
+              ...statusStyle,
+              marginLeft: "10px",
+              padding: "2px 8px",
+              borderRadius: "4px",
+              fontSize: "14px",
+            }}
+            className={styles.statusTag}
+          >
+            {itemStatus}
+          </div>
         </div>
         <div className={styles.iconAndArrow}>
           {garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO &&
@@ -429,7 +438,7 @@ const CollapsibleSection = ({
               <label className={styles.buttonUpdateNfSale}>
                 <button
                   style={{ display: "none" }}
-                  onClick={handleDownloadPDF} // quero que esse botão apareça se o status for diferente de NAO_ENVIADO
+                  onClick={handleDownloadPDF}
                 />
                 Baixar Laudo
               </label>
@@ -475,8 +484,6 @@ const DetailsItensNF: React.FC = () => {
     imagemUrl: string;
   }>({ fileNameWithExtension: "", imagemUrl: "" });
   const context = useContext(AuthContext);
-
-  // const rgiLetter = (location.state as any)?.rgiLetter || "A";
 
   const handleInputChange = (itemId: string, field: string, value: any) => {
     
@@ -844,9 +851,8 @@ const DetailsItensNF: React.FC = () => {
           <div
             style={{
               color: StatusColors[garantia?.codigoStatus] || "#000",
-              backgroundColor: `${
-                StatusColors[garantia?.codigoStatus] || "#000"
-              }15`,
+              backgroundColor: `${StatusColors[garantia?.codigoStatus] || "#000"
+                }15`,
             }}
             className={styles.statusTag}
           >
@@ -860,9 +866,9 @@ const DetailsItensNF: React.FC = () => {
             garantia.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO &&
             garantia.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE &&
             garantia.codigoStatus !==
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             garantia.codigoStatus !==
-              GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA &&
+            GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA &&
             context.user.rule.name === UserRoleEnum.Cliente && (
               <>
                 <Button
@@ -909,9 +915,9 @@ const DetailsItensNF: React.FC = () => {
         GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
         garantia?.codigoStatus === GarantiasStatusEnum2.CONFIRMADO ||
         garantia?.codigoStatus ===
-          GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
         garantia?.codigoStatus ===
-          GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
+        GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
         context.user.rule.name === UserRoleEnum.Cliente && (
           <div style={{ marginTop: "15px" }}>
             <FileAttachment
@@ -1220,6 +1226,24 @@ const DetailsItensNF: React.FC = () => {
       >
         <p>Você tem certeza de que deseja excluir este Item?</p>
       </Modal>
+      {/* <Modal
+        title="Conclusão de Análise"
+        onCancel={() => setModalDeleteOpen(false)}
+        cancelText="Fechar"
+        okButtonProps={{
+          style: {
+            backgroundColor: "red",
+            borderColor: "red",
+            color: "white",
+            outline: "none",
+          },
+        }}
+        cancelButtonProps={{
+          style: { borderColor: "#dadada", color: "#5F5A56", outline: "none" },
+        }}
+      >
+        <p>Aqui o texto da conclusao do tecnico</p>
+      </Modal> */}
     </div>
   );
 };

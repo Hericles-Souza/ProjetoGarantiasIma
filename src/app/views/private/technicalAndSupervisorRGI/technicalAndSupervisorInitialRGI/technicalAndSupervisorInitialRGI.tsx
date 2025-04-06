@@ -427,6 +427,28 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 </Button>
               </div>
             )}
+          {context.user.rule.name === UserRoleEnum.Supervisor &&
+            cardData.codigoStatus ===
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+              <>
+              <div style={{ display: "flex", gap: "10px" }}>
+              <Button
+                  onClick={handleRefuse}
+                  type="primary"
+                  className={stylesDetails.buttonSendRgi}
+                >
+                  Recusar NF de Devolução
+                </Button>
+                <Button
+                  type="primary"
+                  className={stylesDetails.buttonSendRgi}
+                  onClick={handleConfirm}
+                >
+                  Autorizar
+                </Button>
+              </div>
+              </>
+            )}
         </div>
       </header>
 
