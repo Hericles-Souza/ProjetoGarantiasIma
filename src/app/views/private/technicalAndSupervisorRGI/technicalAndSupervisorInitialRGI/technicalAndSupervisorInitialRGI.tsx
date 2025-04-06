@@ -9,6 +9,7 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
   converterStatusGarantia,
+  GarantiasItemStatusEnum,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
   StatusColors,
@@ -395,7 +396,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
               </div>
             )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
+            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && 
+            garantiaNfsWithItens.some(nota => 
+              nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)
+            ) && (
               <div className="ButtonHeader">
                 <div style={{ display: "flex", gap: "10px" }}>
                   <Button
