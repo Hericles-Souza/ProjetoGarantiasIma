@@ -209,13 +209,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           itemsResponse.data.forEach((item) => {
             if (item.tipoDefeito == null) item.tipoDefeito = "";
           });
-          setItems(itemsResponse.data); 
+          setItems(itemsResponse.data);
 
           const updatedCardData = { ...location.state.garantia };
           setCardData(updatedCardData);
           setNotaFiscal(location.state.nota);
           console.log("nota fiscal received: ", notaFiscal);
-          
+
           setRecRgiLetter(location.state.nf.split(".")[1]);
         }
       } catch (error) {
@@ -295,7 +295,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           );
 
           console.log("response: ", response);
-          
+
 
           if (response.status === 200) {
             message.success("Dados salvos com sucesso!");
@@ -331,14 +331,14 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   // Lógica para exibir o status dinamicamente
   const displayedStatus =
     cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-    context.user.rule.name === UserRoleEnum.Tecnico &&
-    isAnalysisConcluded
+      context.user.rule.name === UserRoleEnum.Tecnico &&
+      isAnalysisConcluded
       ? "Avaliação Concluída"
       : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
         (context.user.rule.name === UserRoleEnum.Tecnico ||
           context.user.rule.name === UserRoleEnum.Supervisor)
-      ? "Aguardando Avaliação"
-      : cardData?.status;
+        ? "Aguardando Avaliação"
+        : cardData?.status;
 
   const statusColor =
     displayedStatus === "Avaliação Concluída"
@@ -369,7 +369,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   return (
     <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
-        <Button style={{color: "grey"}}
+        <Button style={{ color: "grey" }}
           type="link"
           className={styles.ButtonBack}
           onClick={() =>
@@ -423,7 +423,17 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         </div>
       </div>
       <hr className={styles.divisor} />
-
+      <FileAttachment
+        label="Anexo da NF de devolução"
+        backgroundColor="#f5f5f5"
+        
+        isRessarcimento={false}
+        initialFileData={
+        cardData
+        }
+        recGarantia={cardData}
+        recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
+      />
       <div className={styles.TitleItens}>
         <h3 className={styles.nfsTitle}>
           Itens desta NF associados a esta garantia

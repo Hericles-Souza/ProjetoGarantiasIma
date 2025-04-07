@@ -39,13 +39,13 @@ const TechnicalAndSupervisorInitialRGI = () => {
   >(
     nfOrigem
       ? [
-          {
-            itemId: location.state.item.id,
-            nf: nfOrigem,
-            itens: 0,
-            sequence: 0,
-          },
-        ]
+        {
+          itemId: location.state.item.id,
+          nf: nfOrigem,
+          itens: 0,
+          sequence: 0,
+        },
+      ]
       : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
@@ -309,14 +309,14 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
   const displayedStatus =
     cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-    context.user.rule.name === UserRoleEnum.Tecnico &&
-    isAnalysisConcluded
+      context.user.rule.name === UserRoleEnum.Tecnico &&
+      isAnalysisConcluded
       ? "Avaliação Concluída"
       : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
         (context.user.rule.name === UserRoleEnum.Tecnico ||
           context.user.rule.name === UserRoleEnum.Supervisor)
-      ? "Aguardando Avaliação"
-      : cardData?.status;
+        ? "Aguardando Avaliação"
+        : cardData?.status;
 
   const statusColor =
     displayedStatus === "Avaliação Concluída"
@@ -384,7 +384,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
           )}
           {context.user.rule.name !== UserRoleEnum.Tecnico &&
             cardData.codigoStatus ==
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
               <div className="ButtonHeader">
                 <Button
                   onClick={async () => handleConfirm()}
@@ -396,8 +396,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
               </div>
             )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && 
-            garantiaNfsWithItens.some(nota => 
+            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE &&
+            garantiaNfsWithItens.some(nota =>
               nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)
             ) && (
               <div className="ButtonHeader">
@@ -424,11 +424,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 <Button
                   type="default"
                   className="ButtonDelete"
-                  // onClick={() =>
-                  //     navigate("/view-pre-invoice", {
-                  //       state: { cardData },
-                  //     })
-                  //   }
+                // onClick={() =>
+                //     navigate("/view-pre-invoice", {
+                //       state: { cardData },
+                //     })
+                //   }
                 >
                   Visualizar Pré Nota
                 </Button>
@@ -473,62 +473,63 @@ const TechnicalAndSupervisorInitialRGI = () => {
       <section className="nf-section">
         <div className="headerNF">
           <h2 className={stylesDetails.titleNf}>
-            NFs associadas a este acordo
+            NFs associadas a esta RGI
           </h2>
         </div>
         {garantiaNfsWithItens?.sort().map((nota, index) => (
           <div key={index} className={stylesDetails.nfsItem}>
-            <div>
-              <span className={stylesDetails.nfsCode}>
-                {nota.codigoRGI || nota.rgi}
-              </span>
-              <span className="nf-divider"> | </span>
-              <span className={stylesDetails.nfsQuantity}>
-                {nota.itens.length} ITENS
-              </span>
-            </div>
-            <div
-              style={{
-                color:
-                  StatusColors[
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <div>
+                <span className={stylesDetails.nfsCode}>
+                  {nota.codigoRGI || nota.rgi}
+                </span>
+                <span className="nf-divider"> | </span>
+                <span className={stylesDetails.nfsQuantity}>
+                  {nota.itens.length} ITENS
+                </span>
+              </div>
+              <div
+                style={{
+                  color:
+                    StatusColors[
                     nota.tipo_nota == "Recusada"
                       ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
                       : nota.tipo_nota == "Aprovada"
-                      ? GarantiasStatusEnum2.CONFIRMADO
-                      : "#8C8C8C"
-                  ],
-                backgroundColor: `${
-                  StatusColors[
+                        ? GarantiasStatusEnum2.CONFIRMADO
+                        : "#8C8C8C"
+                    ],
+                  backgroundColor: `${StatusColors[
                     nota.tipo_nota == "Recusada"
                       ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
                       : nota.tipo_nota == "Aprovada"
-                      ? GarantiasStatusEnum2.CONFIRMADO
-                      : "#8C8C8C"
-                  ]
-                }15`,
-              }}
-              className={stylesDetails.statusTag}
-            >
-              {nota.tipo_nota == "Recusada" || nota.tipo_nota == "Aprovada"
-                ? nota.tipo_nota
-                : "Não analisado"}
+                        ? GarantiasStatusEnum2.CONFIRMADO
+                        : "#8C8C8C"
+                    ]
+                    }15`,
+                }}
+                className={stylesDetails.statusTag}
+              >
+                {nota.tipo_nota == "Recusada" || nota.tipo_nota == "Aprovada"
+                  ? nota.tipo_nota
+                  : "Não analisado"}
+              </div>
             </div>
             {context.user.rule.name === UserRoleEnum.Supervisor &&
               cardData.codigoStatus ===
-                GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
               nota.recSellFile?.fileNameWithExtension != "" &&
               nota.recSellFile?.imagemUrl != "" && (
                 <>
-                <label className={stylesDetails.buttonUpdateNfSale}>
-                        <button
-                          style={{ display: "none" }}
-                          onClick={() => handleDownloadFile(nota)}
-                        />
-                        Baixar Arquivo
-                      </label>
+                  <label className={stylesDetails.buttonUpdateNfSale}>
+                    <button
+                      style={{ display: "none" }}
+                      onClick={() => handleDownloadFile(nota)}
+                    />
+                    Baixar Arquivo
+                  </label>
                   <div className="ButtonHeader">
                     <div style={{ display: "flex", gap: "10px" }}>
-                      
+
                       <Button
                         onClick={() => handleUpdateNote(nota, true)}
                         type="primary"
