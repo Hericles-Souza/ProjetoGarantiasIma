@@ -1037,9 +1037,66 @@ const DetailsItensNF: React.FC = () => {
                       label="Defeito"
                       fullWidth
                       options={[
-                        { value: "defeito1", label: "Opção 1" },
-                        { value: "defeito2", label: "Opção 2" },
-                        { value: "defeito3", label: "Opção 3" },
+                        {
+                          value: "CONJUNTO_NAO_FOI_AJUSTADO_CORRETAMENTE",
+                          label: "CONJUNTO NÃO FOI AJUSTADO CORRETAMENTE",
+                        },
+                        {
+                          value: "DIVERGENCIA_ENTRE_PECA_FISICA_E_NF",
+                          label: "DIVERGÊNCIA ENTRE PEÇA FÍSICA E NF",
+                        },
+                        {
+                          value: "FORA_DO_PRAZO_DE_GARANTIA",
+                          label: "FORA DO PRAZO DE GARANTIA",
+                        },
+                        {
+                          value: "MANCAL_COLOCADO_FORA_DO_ESQUADRO",
+                          label: "MANCAL COLOCADO FORA DO ESQUADRO",
+                        },
+                        {
+                          value: "MONTADO_COM_ROLD_DIAMETRO_INCORRETO",
+                          label: "MONTADO C/ ROLD. DIÂMETRO INCORRETO",
+                        },
+                        {
+                          value: "MONTADO_COM_ROLAMENTO_DEFEITUOSO",
+                          label: "MONTADO COM ROLAMENTO DEFEITUOSO",
+                        },
+                        {
+                          value: "NAO_E_DE_NOSSA_FABRICACAO",
+                          label: "NÃO É DE NOSSA FABRICAÇÃO",
+                        },
+                        {
+                          value: "PECA_MODIFICADA_PELO_CLIENTE",
+                          label: "PEÇA MODIFICADA PELO CLIENTE",
+                        },
+                        {
+                          value: "PECA_NAO_FOI_AJUSTADA_CORRETAMENTE",
+                          label: "PEÇA NÃO FOI AJUSTADA CORRETAMENTE",
+                        },
+                        {
+                          value: "ROLAMENTO_COLOCADO_FORA_DO_ESQUADRO",
+                          label: "ROLAMENTO COLOCADO FORA DO ESQUADRO",
+                        },
+                        {
+                          value: "ROLAMENTO_RONCANDO_TRAVOU_ROLAMENTO",
+                          label: "ROLAMENTO RONCANDO (TRAVOU ROLAMENTO)",
+                        },
+                        {
+                          value: "ROLAMENTO_RONCANDO_SUPERAQUECIMENTO",
+                          label: "ROLAMENTO RONCANDO (SUPERAQUECIMENTO)",
+                        },
+                        {
+                          value: "SUPER_DEFEITO_DE_FABRICACAO",
+                          label: "SUPER DEFEITO DE FABRICAÇÃO",
+                        },
+                        {
+                          value: "TRABALHOU_SEM_LUBRIFICACAO",
+                          label: "TRABALHOU SEM LUBRIFICAÇÃO",
+                        },
+                        {
+                          value: "TRABALHOU_SEM_O_CHICOTE_ABS",
+                          label: "TRABALHOU SEM O CHICOTE ABS",
+                        },
                       ]}
                       value={item.tipoDefeito || ""}
                       onChange={(e) => {

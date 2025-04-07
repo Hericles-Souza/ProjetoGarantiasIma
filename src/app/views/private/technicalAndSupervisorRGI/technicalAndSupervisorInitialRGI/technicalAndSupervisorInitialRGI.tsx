@@ -160,6 +160,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
               sequence: 1,
             },
           ]);
+          
         }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
@@ -193,7 +194,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
     );
 
     if (responseUpdate.status === 200) {
+      setGarantiaNfsWithItens(garantiaNfsWithItens);
       message.success("Nota " + notaFiscal.tipo_nota + " com sucesso");
+      
     }
   };
 
@@ -280,8 +283,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
   };
 
   const handleConcludeAnalysis = async () => {
+    console.log("cardData?.notas[0].itens: ", cardData?.notas[0].itens);
     // Check if all items have required fields filled
-    const allItemsFilled = cardData?.notas[0].itens?.every(
+    const allItemsFilled = garantiaNfsWithItens[0].itens?.every(
       (item) =>
         item.tipoDefeito &&
         item.conclusao &&
@@ -397,9 +401,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
             )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE &&
-            garantiaNfsWithItens.some(nota =>
+            garantiaNfsWithItens.filter(nota =>
               nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)
-            ) && (
+            ).length == 0 && (
               <div className="ButtonHeader">
                 <div style={{ display: "flex", gap: "10px" }}>
                   <Button
@@ -409,7 +413,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                     type="primary"
                     className={stylesDetails.buttonSendRgi}
                   >
-                    Recusar NF de Devolução
+                    Recusar Envio
                   </Button>
                   <Button
                     type="primary"
@@ -518,7 +522,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
               cardData.codigoStatus ===
               GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
               nota.recSellFile?.fileNameWithExtension != "" &&
-              nota.recSellFile?.imagemUrl != "" && (
+              nota.recSellFile?.imagemUrl != "" &&
+              !nota.tipo_nota.includes("Aprovada") && 
+              !nota.tipo_nota.includes("Recusada") && 
+              (
                 <>
                   <label className={stylesDetails.buttonUpdateNfSale}>
                     <button
@@ -542,7 +549,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                         className={stylesDetails.buttonSendRgi}
                         onClick={() => handleUpdateNote(nota, false)}
                       >
-                        Autorizar Envio
+                        Autorizar
                       </Button>
                     </div>
                   </div>

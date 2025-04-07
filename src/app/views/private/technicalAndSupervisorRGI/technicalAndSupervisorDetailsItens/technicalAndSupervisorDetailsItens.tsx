@@ -33,121 +33,133 @@ import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import React from "react";
 
 // Componente FileAttachment (mantido igual)
-const FileAttachment = React.memo(({ label, backgroundColor, itemId, isRessarcimento }: {
-  label: string;
-  backgroundColor?: string;
-  itemId: string;
-  isRessarcimento: boolean;
-}) => {
+const FileAttachment = React.memo(
+  ({
+    label,
+    backgroundColor,
+    itemId,
+    isRessarcimento,
+  }: {
+    label: string;
+    backgroundColor?: string;
+    itemId: string;
+    isRessarcimento: boolean;
+  }) => {
+    const [imagemUrl, setImagemUrl] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const context = useContext(AuthContext);
+    const [recFile, setRecFile] = useState<{
+      fileNameWithExtension: string;
+      imagemUrl: string;
+    }>();
 
-  const [imagemUrl, setImagemUrl] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const context = useContext(AuthContext);
-  const [recFile, setRecFile] = useState<{
-    fileNameWithExtension: string;
-    imagemUrl: string;
-  }>();
+    useEffect(() => {
+      if (itemId) {
+        let fieldFile: string = "";
+        const matchField = label.match(/^\d+/);
 
-  useEffect(() => {
-    if (itemId) {
-      let fieldFile: string = "";
-      const matchField = label.match(/^\d+/);
+        if (label.includes("devolução")) fieldFile = "nfDev";
+        else if (matchField) {
+          if (isRessarcimento) fieldFile = `${matchField[0]}.res`;
+          else fieldFile = `${matchField[0]}.img`;
+        } else fieldFile = "nfRef";
 
-      if (label.includes("devolução")) fieldFile = "nfDev";
-      else if (matchField) {
-        if (isRessarcimento) fieldFile = `${matchField[0]}.res`;
-        else fieldFile = `${matchField[0]}.img`;
-      } else fieldFile = "nfRef";
-
-      fetchImagem(itemId, fieldFile);
-    }
-  }, [itemId, label, isRessarcimento]);
-
-  function getExtensionFromMimeType(mimeType: string): string {
-    const mimeTypes: { [key: string]: string } = {
-      "image/jpeg": ".jpg",
-      "image/png": ".png",
-      "image/gif": ".gif",
-      "application/pdf": ".pdf",
-      "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
-      "application/zip": ".zip",
-      "audio/mpeg": ".mp3",
-      "video/mp4": ".mp4",
-    };
-    return mimeTypes[mimeType] || "";
-  }
-
-  function getFileExtensionFromBlob(blob: Blob): string {
-    const mimeType = blob.type;
-    const extension = getExtensionFromMimeType(mimeType);
-    return extension;
-  }
-
-  const fetchImagem = async (itemId: string, field: string) => {
-    try {
-      const urlGetFile =
-        environment.apiUrl +
-        `/files/files/download-private-file-item/${itemId}/${field}`;
-
-      const response = await fetch(urlGetFile, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${context.user.token}`,
-        },
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const fileExtension = getFileExtensionFromBlob(blob);
-        const fieldNameFormatted = field.replace(".", "_");
-        const fileNameWithExtension = `${fieldNameFormatted}${fileExtension}`;
-        const imagemUrl = URL.createObjectURL(blob);
-        setImagemUrl(imagemUrl);
-        setRecFile({ fileNameWithExtension, imagemUrl });
-      } else {
-        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+        fetchImagem(itemId, fieldFile);
       }
-    } catch (error) {
-      console.error("Erro na requisição", error);
+    }, [itemId, label, isRessarcimento]);
+
+    function getExtensionFromMimeType(mimeType: string): string {
+      const mimeTypes: { [key: string]: string } = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/gif": ".gif",
+        "application/pdf": ".pdf",
+        "application/msword": ".doc",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          ".docx",
+        "application/zip": ".zip",
+        "audio/mpeg": ".mp3",
+        "video/mp4": ".mp4",
+      };
+      return mimeTypes[mimeType] || "";
     }
-  };
 
-  const handleDownload = async (fileName: string, imageUrl: string) => {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = fileName;
-    link.click();
-  };
+    function getFileExtensionFromBlob(blob: Blob): string {
+      const mimeType = blob.type;
+      const extension = getExtensionFromMimeType(mimeType);
+      return extension;
+    }
 
-  return (
-    <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
-      <span className={styles.labelAnexo}>{label}</span>
-      {recFile?.fileNameWithExtension === "" && recFile?.imagemUrl === "" && (
-        <label
-          className={styles.buttonUpdateNfSale}
-          style={{ cursor: "default", opacity: 0.6 }}
-        >
-          Nenhum arquivo enviado
-        </label>
-      )}
-      {recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "" && (
-        <div className={styles.fileUpdateContent}>
-          <label className={styles.buttonUpdateNfSale}>
-            <button
-              style={{ backgroundColor: "red", display: "none" }}
-              onClick={() =>
-                handleDownload(recFile.fileNameWithExtension, recFile.imagemUrl)
-              }
-            />
-            Baixar Arquivo
+    const fetchImagem = async (itemId: string, field: string) => {
+      try {
+        const urlGetFile =
+          environment.apiUrl +
+          `/files/files/download-private-file-item/${itemId}/${field}`;
+
+        const response = await fetch(urlGetFile, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${context.user.token}`,
+          },
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const fileExtension = getFileExtensionFromBlob(blob);
+          const fieldNameFormatted = field.replace(".", "_");
+          const fileNameWithExtension = `${fieldNameFormatted}${fileExtension}`;
+          const imagemUrl = URL.createObjectURL(blob);
+          setImagemUrl(imagemUrl);
+          setRecFile({ fileNameWithExtension, imagemUrl });
+        } else {
+          setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+        }
+      } catch (error) {
+        console.error("Erro na requisição", error);
+      }
+    };
+
+    const handleDownload = async (fileName: string, imageUrl: string) => {
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = fileName;
+      link.click();
+    };
+
+    return (
+      <div
+        className={styles.fileAttachmentContainer}
+        style={{ backgroundColor }}
+      >
+        <span className={styles.labelAnexo}>{label}</span>
+        {recFile?.fileNameWithExtension === "" && recFile?.imagemUrl === "" && (
+          <label
+            className={styles.buttonUpdateNfSale}
+            style={{ cursor: "default", opacity: 0.6 }}
+          >
+            Nenhum arquivo enviado
           </label>
-        </div>
-      )}
-    </div>
-  );
-});
+        )}
+        {recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "" && (
+          <div className={styles.fileUpdateContent}>
+            <label className={styles.buttonUpdateNfSale}>
+              <button
+                style={{ backgroundColor: "red", display: "none" }}
+                onClick={() =>
+                  handleDownload(
+                    recFile.fileNameWithExtension,
+                    recFile.imagemUrl
+                  )
+                }
+              />
+              Baixar Arquivo
+            </label>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
 
 // Componente CollapsibleSection (mantido igual)
 const CollapsibleSection = ({
@@ -280,43 +292,40 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       return;
     }
 
-    const promises = notaFiscal.itens
-      .map(async (item) => {
-        const dataToSend = {
-          ItemId: item.id,
-          conclusao: item.conclusao,
-          status: item.status,
-          tipoDefeitoOficial: item.tipoDefeito,
-        };
-        try {
-          const response = await api.put(
-            `/garantias/analisetecnica/`,
-            dataToSend
-          );
+    const promises = notaFiscal.itens.map(async (item) => {
+      const dataToSend = {
+        ItemId: item.id,
+        conclusao: item.conclusao,
+        status: item.status,
+        tipoDefeitoOficial: item.tipoDefeito,
+      };
+      try {
+        const response = await api.put(
+          `/garantias/analisetecnica/`,
+          dataToSend
+        );
 
-          console.log("response: ", response);
+        console.log("response: ", response);
 
-
-          if (response.status === 200) {
-            message.success("Dados salvos com sucesso!");
-            if (context.user.rule.name === UserRoleEnum.Tecnico) {
-              setIsAnalysisConcluded(true); // Atualiza o estado para "Avaliação Concluída"
-            }
-          } else {
-            message.error("Falha ao salvar os dados.");
+        if (response.status === 200) {
+          message.success("Dados salvos com sucesso!");
+          if (context.user.rule.name === UserRoleEnum.Tecnico) {
+            setIsAnalysisConcluded(true); // Atualiza o estado para "Avaliação Concluída"
           }
-        } catch (error) {
-          console.error("Erro ao tentar salvar:", error);
-          message.error("Erro ao tentar salvar.");
+        } else {
+          message.error("Falha ao salvar os dados.");
         }
-      });
+      } catch (error) {
+        console.error("Erro ao tentar salvar:", error);
+        message.error("Erro ao tentar salvar.");
+      }
+    });
     await Promise.all(promises);
     const notAuthorizeItems = notaFiscal.itens.filter(
       (value) =>
         value.codigoItem?.split(".")[1] === recRgiLetter &&
         value.codigoStatus == GarantiasItemStatusEnum2.NAO_AUTORIZADO
     );
-
   };
 
   const updateItemDefect = (itemId: string, newDefect: string) => {
@@ -331,14 +340,14 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   // Lógica para exibir o status dinamicamente
   const displayedStatus =
     cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-      context.user.rule.name === UserRoleEnum.Tecnico &&
-      isAnalysisConcluded
+    context.user.rule.name === UserRoleEnum.Tecnico &&
+    isAnalysisConcluded
       ? "Avaliação Concluída"
       : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
         (context.user.rule.name === UserRoleEnum.Tecnico ||
           context.user.rule.name === UserRoleEnum.Supervisor)
-        ? "Aguardando Avaliação"
-        : cardData?.status;
+      ? "Aguardando Avaliação"
+      : cardData?.status;
 
   const statusColor =
     displayedStatus === "Avaliação Concluída"
@@ -369,7 +378,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   return (
     <div className={styles.containerApp} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
-        <Button style={{ color: "grey" }}
+        <Button
+          style={{ color: "grey" }}
           type="link"
           className={styles.ButtonBack}
           onClick={() =>
@@ -402,283 +412,273 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           {cardData.codigoStatus === GarantiasStatusEnum2.EM_ANALISE && (
             <>
               {context.user.rule.name === UserRoleEnum.Tecnico && (
-                <><Button
-                  type="default"
-                  className={styles.ButtonDelete}
-                  onClick={() => navigate("/view-pre-invoice", {
-                    state: { cardData },
-                  })}
-                >
-                  Visualizar Pré-Nota
-                </Button><Button
-                  type="primary"
-                  className={styles.ButonToSend}
-                  onClick={handleSave}
-                >
+                <>
+                  <Button
+                    type="default"
+                    className={styles.ButtonDelete}
+                    onClick={() =>
+                      navigate("/view-pre-invoice", {
+                        state: { cardData },
+                      })
+                    }
+                  >
+                    Visualizar Pré-Nota
+                  </Button>
+                  <Button
+                    type="primary"
+                    className={styles.ButonToSend}
+                    onClick={handleSave}
+                  >
                     Salvar
-                  </Button></>
+                  </Button>
+                </>
               )}
             </>
           )}
         </div>
       </div>
-      <hr className={styles.divisor} />
-      <FileAttachment
-        label="Anexo da NF de devolução"
-        backgroundColor="#f5f5f5"
-        
-        isRessarcimento={false}
-        initialFileData={
-        cardData
-        }
-        recGarantia={cardData}
-        recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
-      />
-      <div className={styles.TitleItens}>
-        <h3 className={styles.nfsTitle}>
-          Itens desta NF associados a esta garantia
-        </h3>
-      </div>
-
-      {notaFiscal.itens
-        .map((item) => (
-          <div className={styles.containerInformacoes} key={item.id}>
-            <CollapsibleSection
-              title={item.codigoItem}
-              isVisible={isContentVisible[item.id] || false}
-              toggleVisibility={() => toggleContentVisibility(item.id)}
-              handleConfirm={handleConfirm}
-              statusGarantia={cardData.codigoStatus}
-            >
-
-              <h3 className={styles.tituloSecao}>Informações Gerais</h3>
-              <div className={styles.inputsContainer}>
-                <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                    <OutlinedInputWithLabel
-                      label="Código da peça"
-                      value={item?.codigoPeca || ""}
-                      fullWidth
-                      disabled
-                    />
-                  </div>
-                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                    <OutlinedInputWithLabel
-                      label="Lote da peça"
-                      value={item.loteItem}
-                      fullWidth
-                      disabled
-                    />
-                  </div>
+      {cardData.codigoStatus >= GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+        <>
+          <hr className={styles.divisor} />
+          <FileAttachment
+            label="Anexo da NF de devolução"
+            backgroundColor="#f5f5f5"
+            isRessarcimento={false}
+            itemId={location.state.nota.id}
+          />
+          <div className={styles.TitleItens}>
+            <h3 className={styles.nfsTitle}>
+              Itens desta NF associados a esta garantia
+            </h3>
+          </div>
+        </>
+      )}
+      {notaFiscal.itens.map((item) => (
+        <div className={styles.containerInformacoes} key={item.id}>
+          <CollapsibleSection
+            title={item.codigoItem}
+            isVisible={isContentVisible[item.id] || false}
+            toggleVisibility={() => toggleContentVisibility(item.id)}
+            handleConfirm={handleConfirm}
+            statusGarantia={cardData.codigoStatus}
+          >
+            <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+            <div className={styles.inputsContainer}>
+              <div className={styles.inputsConjun}>
+                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                  <OutlinedInputWithLabel
+                    label="Código da peça"
+                    value={item?.codigoPeca || ""}
+                    fullWidth
+                    disabled
+                  />
                 </div>
-
-                <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 1 }}>
-                    <OutlinedInputWithLabel
-                      label="Modelo do veículo que aplicou"
-                      fullWidth
-                      disabled
-                      value={item.modeloVeiculoAplicado}
-                    />
-                  </div>
-                  <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                    <OutlinedInputWithLabel
-                      label="Ano do veículo"
-                      disabled
-                      value={item.modeloVeiculoAplicado}
-                      fullWidth
-                    />
-                  </div>
-                </div>
-                <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 1 }}>
-                    <OutlinedInputWithLabel
-                      label="Torque aplicado à peça"
-                      value={item?.torqueAplicado?.toString()}
-                      fullWidth
-                      disabled
-                    />
-                  </div>
+                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                  <OutlinedInputWithLabel
+                    label="Lote da peça"
+                    value={item.loteItem}
+                    fullWidth
+                    disabled
+                  />
                 </div>
               </div>
 
-              <FileAttachment
-                label="Anexo da NF de Referência"
-                backgroundColor="white"
-                itemId={item?.id}
-                isRessarcimento={item?.solicitarRessarcimento}
-              />
-              {cardData.codigoStatus ===
-                GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
-                context.user.rule.name === UserRoleEnum.Supervisor && (
-                  <div style={{ marginTop: "20px" }}>
-                    <FileAttachment
-                      label="Anexo da NF de devolução"
-                      backgroundColor="white"
-                      itemId={item?.id}
-                      isRessarcimento={item?.solicitarRessarcimento}
-                    />
-                  </div>
-                )}
-              {item.solicitarRessarcimento &&
-                context.user.rule.name !== UserRoleEnum.Supervisor && (
-                  <div className={styles.contentReimbursement}>
-                    <h3 className={styles.tituloA}>
-                      Anexo de dados adicionais para ressarcimento
-                    </h3>
-                    {[
-                      "1. Documento de identificação (RG ou CNH):",
-                      "2. Documentação do veículo:",
-                      "3. NF do guincho:",
-                      "4. NF de outras despesa/produtos pertinentes:",
-                    ].map((itemRes, index) => (
-                      <FileAttachment
-                        key={index}
-                        label={itemRes}
-                        itemId={item.id}
-                        backgroundColor="#f5f5f5"
-                        isRessarcimento={item.solicitarRessarcimento}
-                      />
-                    ))}
-                  </div>
-                )}
+              <div className={styles.inputsConjun}>
+                <div className={styles.inputGroup} style={{ flex: 1 }}>
+                  <OutlinedInputWithLabel
+                    label="Modelo do veículo que aplicou"
+                    fullWidth
+                    disabled
+                    value={item.modeloVeiculoAplicado}
+                  />
+                </div>
+                <div className={styles.inputGroup} style={{ flex: 0.3 }}>
+                  <OutlinedInputWithLabel
+                    label="Ano do veículo"
+                    disabled
+                    value={item.modeloVeiculoAplicado}
+                    fullWidth
+                  />
+                </div>
+              </div>
+              <div className={styles.inputsConjun}>
+                <div className={styles.inputGroup} style={{ flex: 1 }}>
+                  <OutlinedInputWithLabel
+                    label="Torque aplicado à peça"
+                    value={item?.torqueAplicado?.toString()}
+                    fullWidth
+                    disabled
+                  />
+                </div>
+              </div>
+            </div>
 
-              {context.user.rule.name !== UserRoleEnum.Supervisor && (
-                <>
-                  <h3 className={styles.tituloA}>Anexos de Imagens</h3>
+            <FileAttachment
+              label="Anexo da NF de Referência"
+              backgroundColor="white"
+              itemId={item?.id}
+              isRessarcimento={item?.solicitarRessarcimento}
+            />
+
+            {item.solicitarRessarcimento &&
+              context.user.rule.name !== UserRoleEnum.Supervisor && (
+                <div className={styles.contentReimbursement}>
+                  <h3 className={styles.tituloA}>
+                    Anexo de dados adicionais para ressarcimento
+                  </h3>
                   {[
-                    "1. Foto do lado onde está a gravação IMA:",
-                    "2. Foto da parte danificada/amassada/quebrada:",
-                    "3. Foto marcações suspeitas na peça:",
-                    "4. Foto da peça completa:",
-                    "5. Outras fotos pertinentes:",
-                  ].map((itemQuestion, index) => (
+                    "1. Documento de identificação (RG ou CNH):",
+                    "2. Documentação do veículo:",
+                    "3. NF do guincho:",
+                    "4. NF de outras despesa/produtos pertinentes:",
+                  ].map((itemRes, index) => (
                     <FileAttachment
                       key={index}
-                      label={itemQuestion}
-                      backgroundColor="white"
+                      label={itemRes}
                       itemId={item.id}
+                      backgroundColor="#f5f5f5"
                       isRessarcimento={item.solicitarRessarcimento}
                     />
                   ))}
-
-                  <hr className={styles.divisor} />
-                  <div className={styles.containerSelectDefect}>
-                    <OutlinedSelectWithLabel
-                      placeholder="Selecione um defeito"
-                      label="Defeito"
-                      options={[
-                        {
-                          value: "CONJUNTO_NAO_FOI_AJUSTADO_CORRETAMENTE",
-                          label: "CONJUNTO NÃO FOI AJUSTADO CORRETAMENTE",
-                        },
-                        {
-                          value: "DIVERGENCIA_ENTRE_PECA_FISICA_E_NF",
-                          label: "DIVERGÊNCIA ENTRE PEÇA FÍSICA E NF",
-                        },
-                        {
-                          value: "FORA_DO_PRAZO_DE_GARANTIA",
-                          label: "FORA DO PRAZO DE GARANTIA",
-                        },
-                        {
-                          value: "MANCAL_COLOCADO_FORA_DO_ESQUADRO",
-                          label: "MANCAL COLOCADO FORA DO ESQUADRO",
-                        },
-                        {
-                          value: "MONTADO_COM_ROLD_DIAMETRO_INCORRETO",
-                          label: "MONTADO C/ ROLD. DIÂMETRO INCORRETO",
-                        },
-                        {
-                          value: "MONTADO_COM_ROLAMENTO_DEFEITUOSO",
-                          label: "MONTADO COM ROLAMENTO DEFEITUOSO",
-                        },
-                        {
-                          value: "NAO_E_DE_NOSSA_FABRICACAO",
-                          label: "NÃO É DE NOSSA FABRICAÇÃO",
-                        },
-                        {
-                          value: "PECA_MODIFICADA_PELO_CLIENTE",
-                          label: "PEÇA MODIFICADA PELO CLIENTE",
-                        },
-                        {
-                          value: "PECA_NAO_FOI_AJUSTADA_CORRETAMENTE",
-                          label: "PEÇA NÃO FOI AJUSTADA CORRETAMENTE",
-                        },
-                        {
-                          value: "ROLAMENTO_COLOCADO_FORA_DO_ESQUADRO",
-                          label: "ROLAMENTO COLOCADO FORA DO ESQUADRO",
-                        },
-                        {
-                          value: "ROLAMENTO_RONCANDO_TRAVOU_ROLAMENTO",
-                          label: "ROLAMENTO RONCANDO (TRAVOU ROLAMENTO)",
-                        },
-                        {
-                          value: "ROLAMENTO_RONCANDO_SUPERAQUECIMENTO",
-                          label: "ROLAMENTO RONCANDO (SUPERAQUECIMENTO)",
-                        },
-                        {
-                          value: "SUPER_DEFEITO_DE_FABRICACAO",
-                          label: "SUPER DEFEITO DE FABRICAÇÃO",
-                        },
-                        {
-                          value: "TRABALHOU_SEM_LUBRIFICACAO",
-                          label: "TRABALHOU SEM LUBRIFICAÇÃO",
-                        },
-                        {
-                          value: "TRABALHOU_SEM_O_CHICOTE_ABS",
-                          label: "TRABALHOU SEM O CHICOTE ABS",
-                        },
-                      ]}
-                      value={item.tipoDefeito || ""}
-                      defaultValue=""
-                      onChange={(e) => {
-                        console.log("defeito: ", e.target.value);
-
-                        item.tipoDefeito = e.target.value;
-                        updateItemDefect(item.id, e.target.value);
-                      }}
-                    />
-                  </div>
-                  <div className={styles.containerSelect}>
-                    <OutlinedSelectWithLabel
-                      label="Envio Autorizado"
-                      options={[
-                        {
-                          value: "Autorizado",
-                          label: "Autorizar envio da NF de devolução",
-                        },
-                        { value: "Improcedente", label: "Improcedente" },
-                      ]}
-                      value={envioAutorizado}
-                      onChange={(e) => {
-                        item.status =
-                          e.target.value === "Autorizado"
-                            ? GarantiasItemStatusEnum.AUTORIZADO
-                            : GarantiasItemStatusEnum.NAO_AUTORIZADO;
-                        item.codigoStatus =
-                          e.target.value === "Autorizado"
-                            ? GarantiasItemStatusEnum2.AUTORIZADO
-                            : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
-                        setEnvioAutorizado(e.target.value);
-                      }}
-                    />
-                  </div>
-
-                  <h3 className={styles.tituloA}>Conclusão</h3>
-                  <MultilineTextFields
-                    value={item?.conclusao}
-                    onChange={(e) => {
-                      item.conclusao = e.target.value;
-                      setConclusao(e.target.value);
-                    }}
-                    label="Conclusão"
-                    placeholder="Digite a conclusão aqui..."
-                  />
-                </>
+                </div>
               )}
-            </CollapsibleSection>
-          </div>
-        ))}
+
+            {context.user.rule.name !== UserRoleEnum.Supervisor && (
+              <>
+                <h3 className={styles.tituloA}>Anexos de Imagens</h3>
+                {[
+                  "1. Foto do lado onde está a gravação IMA:",
+                  "2. Foto da parte danificada/amassada/quebrada:",
+                  "3. Foto marcações suspeitas na peça:",
+                  "4. Foto da peça completa:",
+                  "5. Outras fotos pertinentes:",
+                ].map((itemQuestion, index) => (
+                  <FileAttachment
+                    key={index}
+                    label={itemQuestion}
+                    backgroundColor="white"
+                    itemId={item.id}
+                    isRessarcimento={item.solicitarRessarcimento}
+                  />
+                ))}
+
+                <hr className={styles.divisor} />
+                <div className={styles.containerSelectDefect}>
+                  <OutlinedSelectWithLabel
+                    placeholder="Selecione um defeito"
+                    label="Defeito"
+                    options={[
+                      {
+                        value: "CONJUNTO_NAO_FOI_AJUSTADO_CORRETAMENTE",
+                        label: "CONJUNTO NÃO FOI AJUSTADO CORRETAMENTE",
+                      },
+                      {
+                        value: "DIVERGENCIA_ENTRE_PECA_FISICA_E_NF",
+                        label: "DIVERGÊNCIA ENTRE PEÇA FÍSICA E NF",
+                      },
+                      {
+                        value: "FORA_DO_PRAZO_DE_GARANTIA",
+                        label: "FORA DO PRAZO DE GARANTIA",
+                      },
+                      {
+                        value: "MANCAL_COLOCADO_FORA_DO_ESQUADRO",
+                        label: "MANCAL COLOCADO FORA DO ESQUADRO",
+                      },
+                      {
+                        value: "MONTADO_COM_ROLD_DIAMETRO_INCORRETO",
+                        label: "MONTADO C/ ROLD. DIÂMETRO INCORRETO",
+                      },
+                      {
+                        value: "MONTADO_COM_ROLAMENTO_DEFEITUOSO",
+                        label: "MONTADO COM ROLAMENTO DEFEITUOSO",
+                      },
+                      {
+                        value: "NAO_E_DE_NOSSA_FABRICACAO",
+                        label: "NÃO É DE NOSSA FABRICAÇÃO",
+                      },
+                      {
+                        value: "PECA_MODIFICADA_PELO_CLIENTE",
+                        label: "PEÇA MODIFICADA PELO CLIENTE",
+                      },
+                      {
+                        value: "PECA_NAO_FOI_AJUSTADA_CORRETAMENTE",
+                        label: "PEÇA NÃO FOI AJUSTADA CORRETAMENTE",
+                      },
+                      {
+                        value: "ROLAMENTO_COLOCADO_FORA_DO_ESQUADRO",
+                        label: "ROLAMENTO COLOCADO FORA DO ESQUADRO",
+                      },
+                      {
+                        value: "ROLAMENTO_RONCANDO_TRAVOU_ROLAMENTO",
+                        label: "ROLAMENTO RONCANDO (TRAVOU ROLAMENTO)",
+                      },
+                      {
+                        value: "ROLAMENTO_RONCANDO_SUPERAQUECIMENTO",
+                        label: "ROLAMENTO RONCANDO (SUPERAQUECIMENTO)",
+                      },
+                      {
+                        value: "SUPER_DEFEITO_DE_FABRICACAO",
+                        label: "SUPER DEFEITO DE FABRICAÇÃO",
+                      },
+                      {
+                        value: "TRABALHOU_SEM_LUBRIFICACAO",
+                        label: "TRABALHOU SEM LUBRIFICAÇÃO",
+                      },
+                      {
+                        value: "TRABALHOU_SEM_O_CHICOTE_ABS",
+                        label: "TRABALHOU SEM O CHICOTE ABS",
+                      },
+                    ]}
+                    value={item.tipoDefeito || ""}
+                    defaultValue=""
+                    onChange={(e) => {
+                      console.log("defeito: ", e.target.value);
+
+                      item.tipoDefeito = e.target.value;
+                      updateItemDefect(item.id, e.target.value);
+                    }}
+                  />
+                </div>
+                <div className={styles.containerSelect}>
+                  <OutlinedSelectWithLabel
+                    label="Envio Autorizado"
+                    options={[
+                      {
+                        value: "Autorizado",
+                        label: "Autorizar envio da NF de devolução",
+                      },
+                      { value: "Improcedente", label: "Improcedente" },
+                    ]}
+                    value={envioAutorizado}
+                    onChange={(e) => {
+                      item.status =
+                        e.target.value === "Autorizado"
+                          ? GarantiasItemStatusEnum.AUTORIZADO
+                          : GarantiasItemStatusEnum.NAO_AUTORIZADO;
+                      item.codigoStatus =
+                        e.target.value === "Autorizado"
+                          ? GarantiasItemStatusEnum2.AUTORIZADO
+                          : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
+                      setEnvioAutorizado(e.target.value);
+                    }}
+                  />
+                </div>
+
+                <h3 className={styles.tituloA}>Conclusão</h3>
+                <MultilineTextFields
+                  value={item?.conclusao}
+                  onChange={(e) => {
+                    item.conclusao = e.target.value;
+                    setConclusao(e.target.value);
+                  }}
+                  label="Conclusão"
+                  placeholder="Digite a conclusão aqui..."
+                />
+              </>
+            )}
+          </CollapsibleSection>
+        </div>
+      ))}
     </div>
   );
 };

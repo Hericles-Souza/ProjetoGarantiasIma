@@ -153,7 +153,9 @@ const RGIDetailsInitial: React.FC = () => {
 
     associatedNfsByGarantia.data.map(async (nfAssociated, index) => {
       newAssociatedNfsByGarantia[index] = nfAssociated;
-      if(statusGarantia > 3){
+      if(statusGarantia > GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE){
+      console.log("nfAssociatedid: ", nfAssociated.id);
+
         const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
         newAssociatedNfsByGarantia[index].recSellFile = returnedSellFile;
       }
@@ -218,7 +220,7 @@ const RGIDetailsInitial: React.FC = () => {
             );
             ordenarItens();
           }
-          // console.log("garantia: " + JSON.stringify(data));
+          console.log("garantasdasdasdasdia: ", garantiaNfsWithItens);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -471,7 +473,7 @@ const RGIDetailsInitial: React.FC = () => {
       fileData.append("file", file);
       fileData.append("itemId", nfId);
       fileData.append("field", "nfDev");
-
+      console.log("nfID: ", nfId);
       try {
         const response = await fetch(endpoint, {
           method: "POST",
@@ -780,7 +782,7 @@ const RGIDetailsInitial: React.FC = () => {
                 {cardData?.codigoStatus ===
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                   context.user.rule.name == UserRoleEnum.Cliente &&
-                  isUndefined(nota.recSellFile) && (
+                  (isUndefined(nota.recSellFile)) && (
                     <label className={styles.buttonUpdateNfSale}>
                       <input
                         type="file"
