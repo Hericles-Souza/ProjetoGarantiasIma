@@ -162,6 +162,12 @@ const TechnicalAndSupervisorInitialRGI = () => {
           ]);
           
         }
+
+        if(garantiaNfsWithItens.filter(nota =>
+          nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)
+        ).length == 0)
+          setIsAnalysisConcluded(true);
+
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
       } finally {
