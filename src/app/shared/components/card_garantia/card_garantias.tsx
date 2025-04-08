@@ -123,14 +123,18 @@ interface CardCategoriasProps {
 }
 
 const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, codigoFormatado, onClick }) => {
-  
+
   const statusStyle = statusStyles[GarantiaItem.codigoStatus];
   const context = useContext(AuthContext);
   return (
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
         <Status style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}>
-          {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin ? converterStatusGarantia(GarantiaItem.codigoStatus) : (GarantiaItem.filter(nota => nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)).length == 0 ) ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true) : converterStatusGarantia(GarantiaItem.codigoStatus)}
+          {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin
+            ? converterStatusGarantia(GarantiaItem.codigoStatus)
+            : (GarantiaItem.notas.filter(nota => nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)).length == 0)
+              ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true)
+              : converterStatusGarantia(GarantiaItem.codigoStatus)}
         </Status>
         <RightOutlined />
       </Header>
