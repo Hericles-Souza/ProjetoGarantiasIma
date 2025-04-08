@@ -227,7 +227,10 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           setCardData(updatedCardData);
           setNotaFiscal(location.state.nota);
           console.log("nota fiscal received: ", notaFiscal);
-
+          
+          if(notaFiscal.itens.filter((item) => item.codigoStatus != GarantiasItemStatusEnum2.NAO_ANALISADO).length == 0)
+            setIsAnalysisConcluded(true)
+          
           setRecRgiLetter(location.state.nf.split(".")[1]);
         }
       } catch (error) {
