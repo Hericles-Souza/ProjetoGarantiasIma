@@ -20,6 +20,9 @@ import api from "@shared/Interceptors";
 import { FileOutlined, InboxOutlined } from "@ant-design/icons";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import environment from "@env/environment";
+import { AcordoComercialItem, AcordoComercialModel } from "@shared/models/AcordoComercialModel";
+import { AcordoComercialItemStatusEnum2, AcordoComercialStatusEnum2 } from "@shared/enums/AcordoComercialStatusEnum";
+import { createAcordoAsync } from "@shared/services/AcordoComercialService";
 
 // Enum para controlar as abas
 enum FilterStatus {
@@ -62,6 +65,26 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
     }
   };
 
+  const generateNextACI = async () => {
+    try {
+      const data = {
+        page: 1,
+        limit: 100
+      }
+      const response = await api.post("/acordos/ACI/getAll", data);
+      const allGarantias = response.data.data || [];
+      const existingRGIs = allGarantias
+        .map((g: any) => g.rgi)
+        .filter((rgi: string) => rgi?.startsWith(context.user.codigoCigam))
+        .map((rgi: string) => parseInt(rgi.split("-")[1]));
+      const lastNumber = Math.max(0, ...existingRGIs);
+      const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
+      return `${context.user.codigoCigam}-${nextNumber}`;
+    } catch (error) {
+      console.error("Erro ao gerar RGI:", error);
+    }
+  };
+
   // Estado para armazenar o arquivo selecionado
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -71,6 +94,60 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
     setIsSubmitting(true);
     try {
       if (currentTab === FilterStatus.ACORDO) {
+
+        const newACI = await generateNextACI();
+
+        const itemAcordoPost: AcordoComercialItem = {
+          codigoItem: "",
+          precoUnitario: "",
+          quantidade: 0,
+          codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
+          valorTotalItem: "",
+          tipoOperacao: "",
+          baseICMS: "",
+          valorICMS: "",
+          valorIPI: "",
+          ICMS: "",
+          IPI: "",
+          mva: "",
+
+        }
+
+        const payloadAcordoPost:  AcordoComercialModel = {
+          razaoSocial: "",
+          telefone: "",
+          email: "",
+          codigoStatus: AcordoComercialStatusEnum2.NAO_ENVIADO,
+          observacao: "",
+          status: "",
+          usuarioInsercao: "",
+          baseICMS: 0,
+          ICMS: "",
+          valorIPI: "",
+          ICMSSubstituicao: "",
+          nf: values["N° NF de origem"],
+          itens: [itemAcordoPost]
+        }
+
+        const aciResponse = await createAcordoAsync(payloadAcordoPost);
+        console.log("Garantia criada com sucesso:", aciResponse.data);
+
+        let createdAcordo: any = aciResponse.data.data;
+      if (typeof createdAcordo === "string") {
+        const match = createdAcordo.match(/id:([^\s]+)/);
+        if (match && match[1]) {
+          createdAcordo = { id: match[1] };
+        } else {
+          console.error("Invalid response format:", aciResponse);
+          throw new Error("Resposta inválida da API ao criar garantia");
+        }
+      }
+
+      if (!createdAcordo || !createdAcordo.id) {
+        console.error("Invalid response:", aciResponse);
+        throw new Error("Resposta inválida da API ao criar garantia");
+      }
+
         navigate("/acordo-commercial", {
           state: { "N° NF de origem": values["N° NF de origem"] },
         });
@@ -90,29 +167,33 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
       const itemId = crypto.randomUUID();
       const notaFiscalId = crypto.randomUUID();
 
-      const garantiasItem: GarantiaItem[] = [{
-        id: itemId,
-        nota_fiscal_id: notaFiscalId,
-        codigoItem: newRGI + ".A.1",
-        codigoRGI: newRGI + ".A",
-        nfReferencia: values["N° NF de origem"],
-        codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-        status: GarantiasItemStatusEnum.NAO_ANALISADO
-      }]
+      const garantiasItem: GarantiaItem[] = [
+        {
+          id: itemId,
+          nota_fiscal_id: notaFiscalId,
+          codigoItem: newRGI + ".A.1",
+          codigoRGI: newRGI + ".A",
+          nfReferencia: values["N° NF de origem"],
+          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+          status: GarantiasItemStatusEnum.NAO_ANALISADO,
+        },
+      ];
 
-      const notasFiscais: NotaFiscal[] = [{
-        id: notaFiscalId,
-        garantia_id: itemId,
-        codigo: values["N° NF de origem"],
-        codigoRGI: newRGI + ".A",
-        tipo_nota: "nota fiscal de origem",
-        id_referencia: notaFiscalId,
-        itens: garantiasItem,
-        data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-        data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-        createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-        updatedAt:`${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-      }];
+      const notasFiscais: NotaFiscal[] = [
+        {
+          id: notaFiscalId,
+          garantia_id: itemId,
+          codigo: values["N° NF de origem"],
+          codigoRGI: newRGI + ".A",
+          tipo_nota: "nota fiscal de origem",
+          id_referencia: notaFiscalId,
+          itens: garantiasItem,
+          data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          updatedAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        },
+      ];
 
       const garantiaPayload: GarantiasModel = {
         codigoRGI: newRGI,
@@ -132,7 +213,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         JSON.stringify(garantiaPayload, null, 2)
       );
 
-      // 4. Cria a garantia via API 
+      // 4. Cria a garantia via API
       const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
       console.log("Garantia criada com sucesso:", guaranteeResponse.data);
 
@@ -164,10 +245,9 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           countItems: 1,
           nfNumber: values["N° NF de origem"],
           rgiLetter: "A",
-          nota: garantiaPayload.notas[0]
+          nota: garantiaPayload.notas[0],
         },
       });
-
     } catch (error: any) {
       console.error("Erro ao criar garantia:", error.response?.data || error);
     } finally {
@@ -230,16 +310,18 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           <div className={styles.tabsContainer}>
             <button
               ref={garantiaButtonRef}
-              className={`${styles.tabButton} ${currentTab === FilterStatus.GARANTIAS ? styles.active : ""
-                }`}
+              className={`${styles.tabButton} ${
+                currentTab === FilterStatus.GARANTIAS ? styles.active : ""
+              }`}
               onClick={() => handleTabChange(FilterStatus.GARANTIAS)}
             >
               Garantia
             </button>
             <button
               ref={acordoButtonRef}
-              className={`${styles.tabButton} ${currentTab === FilterStatus.ACORDO ? styles.active : ""
-                }`}
+              className={`${styles.tabButton} ${
+                currentTab === FilterStatus.ACORDO ? styles.active : ""
+              }`}
               onClick={() => handleTabChange(FilterStatus.ACORDO)}
             >
               Acordo

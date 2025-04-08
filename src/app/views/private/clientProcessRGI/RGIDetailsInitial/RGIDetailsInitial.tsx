@@ -169,11 +169,11 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   // Função para agrupar itens por nfReferencia e pegar somente 1 item de cada grupo
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const groupByNfReferencia = (
     itens: GarantiaItem[]
   ): { codigoItem?: string; nfReferencia?: string }[] => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const grouped: { codigoItem?: string; nfReferencia?: string }[] = [];
 
     itens?.forEach((item) => {
@@ -181,6 +181,8 @@ const RGIDetailsInitial: React.FC = () => {
         const formatCodigoItem =
           item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1];
 
+
+          
         grouped[item.nfReferencia] = {
           nfReferencia: item.nfReferencia,
           codigoItem: formatCodigoItem,

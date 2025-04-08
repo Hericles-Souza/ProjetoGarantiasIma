@@ -1,6 +1,13 @@
 import api from "@shared/Interceptors";
 import { AcordoComercialModel, ResponseNfItem } from "@shared/models/AcordoComercialModel";
 
+
+export const createAcordoAsync = (data: AcordoComercialModel) => {
+  return api.post('/acordos/ACI', data);
+}
+
+
+
 export const getAllAcordosComerciaisByUser = async (data: AcordoComercialModel) => {
   try {
     const response = await api.post('/acordos/ACI/getByUserAndStatus', data);

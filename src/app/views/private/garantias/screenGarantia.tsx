@@ -20,6 +20,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
+import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
+import { getAcordosComerciaisByStatusAsync } from "@shared/services/AcordoComercialService";
+import {
+  AcordoStatusEnum,
+  converterStatusAcordoInverso,
+} from "@shared/enums/AcordoComercialStatusEnum";
 
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("rgi");
@@ -27,10 +33,14 @@ const Garantias: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const carouselRef = useRef<HTMLDivElement>(null);
   const [cardData, setCardData] = useState<GarantiasModel[]>([]);
+  const [acordoData, setAcordoData] = useState<AcordoComercialModel[]>([]);
   const navigate = useNavigate();
   const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [filteredItems, setFilteredItems] = useState<GarantiasModel[]>([]);
+  const [, setFilteredIAcordo1tems] = useState<
+    AcordoComercialModel[]
+  >([]);
 
   useEffect(() => {
     fetchCardData();
@@ -40,7 +50,15 @@ const Garantias: React.FC = () => {
     try {
       if (context.user!.rule!.name === UserRoleEnum.Cliente) {
         const response = await getGarantiasPaginationAsync(1, 100);
-        const data = await response.data.data.data;        
+        const responseACI = await getAcordosComerciaisByStatusAsync(
+          Number(context.user!.codigoCigam),
+          1,
+          1,
+          100
+        );
+        const data = await response.data.data.data;
+        const dataACI = await responseACI.data.data.data;
+        setAcordoData(dataACI);
         setCardData(data);
       } else {
         let status: number[] = [];
@@ -63,10 +81,25 @@ const Garantias: React.FC = () => {
           const responseData = await response.data.data;
           return responseData;
         });
-
         const results = await Promise.all(promises);
         const dataArray = results.flat().sort();
         setCardData(dataArray); // Atualiza o cardData com os resultados
+
+        const promisesACI = status.map(async (element) => {
+          const responseACI = await getAcordosComerciaisByStatusAsync(
+            Number(context.user!.codigoCigam),
+            element,
+            1,
+            100
+          );
+          const responseDataACI = await responseACI.data.data;
+          return responseDataACI;
+        });
+        const resultsACI = await Promise.all(promisesACI);
+        const dataArrayACI = resultsACI.flat().sort();
+        setAcordoData(dataArrayACI);
+
+        console.log("acordos: ", acordoData);
       }
     } catch (error) {
       console.error("Error fetching card data:", error);
@@ -95,7 +128,23 @@ const Garantias: React.FC = () => {
       return matchesStatus && matchesSearch;
     });
     setFilteredItems(newFilteredItems); // Atualiza o estado com os itens filtrados
-  }, [cardData, filterStatus, searchTerm]);
+    const newFilteredAcordoItems = acordoData.filter((card) => {
+      const matchesStatus =
+        filterStatus === "todos" ||
+        card.codigoStatus ===
+          converterStatusAcordoInverso(AcordoStatusEnum.NAO_ENVIADO);
+      const matchesSearch =
+        searchTerm === "" ||
+        card.cdAci.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.itens[0].codigoItem
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      return matchesStatus && matchesSearch;
+    });
+    setFilteredIAcordo1tems(newFilteredAcordoItems); // Atualiza o estado com os itens filtrados
+  }, [cardData, filterStatus, searchTerm, acordoData]);
 
   const statuses = Object.values(GarantiasStatusEnum);
 
@@ -202,7 +251,9 @@ const Garantias: React.FC = () => {
                         context.user.rule.name.includes(UserRoleEnum.Cliente)
                       ) {
                         const garantiaData = garantia;
-                        console.log("garantiaData: " + JSON.stringify(garantiaData));
+                        console.log(
+                          "garantiaData: " + JSON.stringify(garantiaData)
+                        );
                         navigate(`/garantias/rgi/${garantia.id}`, {
                           state: { item, garantiaData },
                         });
