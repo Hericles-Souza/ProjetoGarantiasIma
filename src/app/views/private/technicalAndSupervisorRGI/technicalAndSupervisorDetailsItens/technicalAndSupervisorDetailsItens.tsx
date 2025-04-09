@@ -27,8 +27,6 @@ import {
   StatusColors,
 } from "@shared/enums/GarantiasStatusEnum";
 import environment from "@env/environment.ts";
-import MyPDF from "../../clientProcessRGI/GeneratePDF";
-import { pdf } from "@react-pdf/renderer";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import React from "react";
 
@@ -212,6 +210,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(
     location.state?.isAnalysisConcluded || false
   ); // Estado para máscara de análise concluída
+  const [displayedStatus, setDisplayedStatus] = useState(""); // New state for front-end mask
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -227,10 +226,24 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           setCardData(updatedCardData);
           setNotaFiscal(location.state.nota);
           console.log("nota fiscal received: ", notaFiscal);
-          
-          if(notaFiscal.itens.filter((item) => item.codigoStatus != GarantiasItemStatusEnum2.NAO_ANALISADO).length == 0)
-            setIsAnalysisConcluded(true)
-          
+
+          if (
+            notaFiscal?.itens.some(
+              (item) =>
+                item.status == GarantiasItemStatusEnum.NAO_ENVIADO
+            )
+          ) {
+            
+            setIsAnalysisConcluded(false);
+            setDisplayedStatus("Aguardando Avaliação");
+            console.log("entrou 2");
+            
+          } else {
+            setIsAnalysisConcluded(true);
+            setDisplayedStatus("Avaliação Concluída");
+            console.log("entrou 1");
+          }
+
           setRecRgiLetter(location.state.nf.split(".")[1]);
         }
       } catch (error) {
@@ -241,7 +254,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     };
 
     fetchUserData();
-  }, [location.state]);
+  }, [location.state, notaFiscal]);
 
   const toggleContentVisibility = (itemId: string) => {
     setIsContentVisible((prev) => ({
@@ -312,9 +325,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
         if (response.status === 200) {
           message.success("Dados salvos com sucesso!");
-          if (context.user.rule.name === UserRoleEnum.Tecnico) {
-            setIsAnalysisConcluded(true); // Atualiza o estado para "Avaliação Concluída"
-          }
+          setIsAnalysisConcluded(true); // Atualiza o estado para "Avaliação Concluída"
+          setDisplayedStatus("Avaliação Concluída");
         } else {
           message.error("Falha ao salvar os dados.");
         }
@@ -339,18 +351,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       setCardData({ ...cardData, itens: updatedItems });
     }
   };
-
-  // Lógica para exibir o status dinamicamente
-  const displayedStatus =
-    cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-    context.user.rule.name === UserRoleEnum.Tecnico &&
-    isAnalysisConcluded
-      ? "Avaliação Concluída"
-      : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-        (context.user.rule.name === UserRoleEnum.Tecnico ||
-          context.user.rule.name === UserRoleEnum.Supervisor)
-      ? "Aguardando Avaliação"
-      : cardData?.status;
 
   const statusColor =
     displayedStatus === "Avaliação Concluída"
@@ -387,7 +387,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           className={styles.ButtonBack}
           onClick={() =>
             navigate(`/garantias/technical-and-supervisor/${cardData.id}`, {
-              state: { item: cardData.notas[0].itens[0], garantia: cardData },
+              state: { item: cardData.notas[0].itens[0], garantia: cardData, displayedStatus },
             })
           }
         >
@@ -440,7 +440,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           )}
         </div>
       </div>
-      {cardData.codigoStatus >= GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+      {cardData.codigoStatus >=
+        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
         <>
           <hr className={styles.divisor} />
           <FileAttachment

@@ -60,7 +60,7 @@ export function converterStatusItemGarantia(status: GarantiasItemStatusEnum2): G
 export function converterStatusGarantiaTecnicoAndSupervisor(status: GarantiasStatusEnum2, garantiaItemEvaluated: boolean): GarantiasStatusEnum | string {
   const mapping: Record<GarantiasStatusEnum2, GarantiasStatusEnum | string> = {
     [GarantiasStatusEnum2.NAO_ENVIADO]: GarantiasStatusEnum.NAO_ENVIADO,
-    [GarantiasStatusEnum2.EM_ANALISE]: garantiaItemEvaluated ? "Aguardando Avaliação" : GarantiasStatusEnum.EM_ANALISE,
+    [GarantiasStatusEnum2.EM_ANALISE]: garantiaItemEvaluated ? "Aguardando Avaliação" : "Avaliação Concluída",
     [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE,
     [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: GarantiasStatusEnum.AGUARDANDO_NF_DEVOLUCAO,
     [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,

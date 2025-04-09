@@ -784,7 +784,7 @@ const RGIDetailsInitial: React.FC = () => {
                 {cardData?.codigoStatus ===
                   GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
                   context.user.rule.name == UserRoleEnum.Cliente &&
-                  (isUndefined(nota.recSellFile)) && (
+                  isUndefined(nota.recSellFile) && (
                     <label className={styles.buttonUpdateNfSale}>
                       <input
                         type="file"

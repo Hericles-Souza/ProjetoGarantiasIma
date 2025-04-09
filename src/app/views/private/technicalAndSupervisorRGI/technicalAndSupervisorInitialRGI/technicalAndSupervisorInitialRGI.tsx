@@ -10,6 +10,8 @@ import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
   converterStatusGarantia,
   GarantiasItemStatusEnum,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
   StatusColors,
@@ -39,18 +41,19 @@ const TechnicalAndSupervisorInitialRGI = () => {
   >(
     nfOrigem
       ? [
-        {
-          itemId: location.state.item.id,
-          nf: nfOrigem,
-          itens: 0,
-          sequence: 0,
-        },
-      ]
+          {
+            itemId: location.state.item.id,
+            nf: nfOrigem,
+            itens: 0,
+            sequence: 0,
+          },
+        ]
       : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [loading, setLoading] = useState(true);
   const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(false); // New state for front-end mask
+  const [displayedStatus, setDisplayedStatus] = useState(""); // New state for front-end mask
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -137,8 +140,32 @@ const TechnicalAndSupervisorInitialRGI = () => {
     });
     console.log("newAssociatedNfsByGarantia: ", newAssociatedNfsByGarantia);
     setGarantiaNfsWithItens(associatedNfsByGarantia.data);
-  };
+    if (
+      cardData.status != GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
+    ) {
+      console.log("status garantia: ", cardData);
+      if (location.state.displayedStatus) {
+        setDisplayedStatus(location.state.displayedStatus);
+        setIsAnalysisConcluded(false);
+      } else if (
+        !newAssociatedNfsByGarantia?.some((nota) =>
+          nota.itens.some(
+            (item) => item.status == GarantiasItemStatusEnum.NAO_ENVIADO
+          )
+        )
+      ) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        setIsAnalysisConcluded(true);
+        setDisplayedStatus("Avaliação Concluída");
+      } else {
+        setIsAnalysisConcluded(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        console.log("entrou 1");
 
+        setDisplayedStatus("Aguardando Avaliação");
+      }
+    }
+  };
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -160,14 +187,45 @@ const TechnicalAndSupervisorInitialRGI = () => {
               sequence: 1,
             },
           ]);
-          
         }
 
-        if(garantiaNfsWithItens.filter(nota =>
-          nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)
-        ).length == 0)
-          setIsAnalysisConcluded(true);
+        console.log("testeasdasd: ", location.state.displayedStatus);
+        if (
+          cardData.codigoStatus !=
+          GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
+        ) {
+          console.log("status garantia: ", cardData);
 
+          if (
+            location.state.displayedStatus != undefined &&
+            context.user.rule.name == UserRoleEnum.Tecnico
+          ) {
+            if (location.state.displayedStatus == "Aguardando Avaliação") {
+              setIsAnalysisConcluded(false);
+              setDisplayedStatus(location.state.displayedStatus);
+            } else {
+              setIsAnalysisConcluded(true);
+              setDisplayedStatus(location.state.displayedStatus);
+            }
+          } else if (
+            garantiaNfsWithItens?.some((nota) =>
+              nota.itens.some(
+                (item) => item.status == GarantiasItemStatusEnum.NAO_ENVIADO
+              )
+            )
+          ) {
+            console.log("entrou 2");
+            setIsAnalysisConcluded(true);
+            setDisplayedStatus("Avaliação Concluída");
+          } else {
+            setIsAnalysisConcluded(false);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            console.log("entrou 1");
+            setDisplayedStatus("Aguardando Avaliação");
+          }
+        } else {
+          setDisplayedStatus(cardData?.status);
+        }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
       } finally {
@@ -175,7 +233,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
       }
     };
     fetchUserData();
-  }, [location.state]);
+  }, [location.state, cardData, displayedStatus]);
 
   const handleUpdateNote = async (notaFiscal: NotaFiscal, refuse: boolean) => {
     if (refuse) notaFiscal.tipo_nota = "Recusada";
@@ -201,8 +259,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
     if (responseUpdate.status === 200) {
       setGarantiaNfsWithItens(garantiaNfsWithItens);
+
       message.success("Nota " + notaFiscal.tipo_nota + " com sucesso");
-      
     }
   };
 
@@ -288,46 +346,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
     }
   };
 
-  const handleConcludeAnalysis = async () => {
-    console.log("cardData?.notas[0].itens: ", cardData?.notas[0].itens);
-    // Check if all items have required fields filled
-    const allItemsFilled = garantiaNfsWithItens[0].itens?.every(
-      (item) =>
-        item.tipoDefeito &&
-        item.conclusao &&
-        item.status &&
-        item.codigoStatus
-    );
-
-    if (!allItemsFilled) {
-      message.error(
-        "Todos os itens devem estar preenchidos para concluir a análise."
-      );
-      return;
-    }
-
-    try {
-      if (context.user.rule.name === UserRoleEnum.Tecnico) {
-        setIsAnalysisConcluded(true);
-        message.success("Análise concluída com sucesso!");
-      }
-    } catch (error) {
-      console.error("Erro ao concluir a análise:", error);
-      message.error("Erro ao concluir a análise");
-    }
-  };
-
-  const displayedStatus =
-    cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-      context.user.rule.name === UserRoleEnum.Tecnico &&
-      isAnalysisConcluded
-      ? "Avaliação Concluída"
-      : cardData?.codigoStatus === GarantiasStatusEnum2.EM_ANALISE &&
-        (context.user.rule.name === UserRoleEnum.Tecnico ||
-          context.user.rule.name === UserRoleEnum.Supervisor)
-        ? "Aguardando Avaliação"
-        : cardData?.status;
-
   const statusColor =
     displayedStatus === "Avaliação Concluída"
       ? "#00FF00"
@@ -377,24 +395,12 @@ const TechnicalAndSupervisorInitialRGI = () => {
               }}
               className={stylesDetails.statusTag}
             >
-              {displayedStatus}
+              {displayedStatus || ""}
             </div>
           </div>
-          {context.user.rule.name === UserRoleEnum.Tecnico && (
-            <div className="ButtonHeader">
-              <Button
-                onClick={handleConcludeAnalysis}
-                type="primary"
-                className="ButonToSend"
-                disabled={isAnalysisConcluded}
-              >
-                Concluir Análise
-              </Button>
-            </div>
-          )}
           {context.user.rule.name !== UserRoleEnum.Tecnico &&
             cardData.codigoStatus ==
-            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
               <div className="ButtonHeader">
                 <Button
                   onClick={async () => handleConfirm()}
@@ -407,8 +413,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
             )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
             cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE &&
-            garantiaNfsWithItens.filter(nota =>
-              nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)
+            garantiaNfsWithItens.filter((nota) =>
+              nota.itens.some(
+                (item) => item.status === GarantiasItemStatusEnum.NAO_ANALISADO
+              )
             ).length == 0 && (
               <div className="ButtonHeader">
                 <div style={{ display: "flex", gap: "10px" }}>
@@ -434,11 +442,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 <Button
                   type="default"
                   className="ButtonDelete"
-                // onClick={() =>
-                //     navigate("/view-pre-invoice", {
-                //       state: { cardData },
-                //     })
-                //   }
+                  // onClick={() =>
+                  //     navigate("/view-pre-invoice", {
+                  //       state: { cardData },
+                  //     })
+                  //   }
                 >
                   Visualizar Pré Nota
                 </Button>
@@ -482,9 +490,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
       <section className="nf-section">
         <div className="headerNF">
-          <h2 className={stylesDetails.titleNf}>
-            NFs associadas a esta RGI
-          </h2>
+          <h2 className={stylesDetails.titleNf}>NFs associadas a esta RGI</h2>
         </div>
         {garantiaNfsWithItens?.sort().map((nota, index) => (
           <div key={index} className={stylesDetails.nfsItem}>
@@ -502,20 +508,21 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 style={{
                   color:
                     StatusColors[
-                    nota.tipo_nota == "Recusada"
-                      ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                      : nota.tipo_nota == "Aprovada"
+                      nota.tipo_nota == "Recusada"
+                        ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                        : nota.tipo_nota == "Aprovada"
                         ? GarantiasStatusEnum2.CONFIRMADO
                         : "#8C8C8C"
                     ],
-                  backgroundColor: `${StatusColors[
-                    nota.tipo_nota == "Recusada"
-                      ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                      : nota.tipo_nota == "Aprovada"
+                  backgroundColor: `${
+                    StatusColors[
+                      nota.tipo_nota == "Recusada"
+                        ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                        : nota.tipo_nota == "Aprovada"
                         ? GarantiasStatusEnum2.CONFIRMADO
                         : "#8C8C8C"
                     ]
-                    }15`,
+                  }15`,
                 }}
                 className={stylesDetails.statusTag}
               >
@@ -526,12 +533,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
             </div>
             {context.user.rule.name === UserRoleEnum.Supervisor &&
               cardData.codigoStatus ===
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+                GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
               nota.recSellFile?.fileNameWithExtension != "" &&
               nota.recSellFile?.imagemUrl != "" &&
-              !nota.tipo_nota.includes("Aprovada") && 
-              !nota.tipo_nota.includes("Recusada") && 
-              (
+              !nota.tipo_nota.includes("Aprovada") &&
+              !nota.tipo_nota.includes("Recusada") && (
                 <>
                   <label className={stylesDetails.buttonUpdateNfSale}>
                     <button
@@ -542,7 +548,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   </label>
                   <div className="ButtonHeader">
                     <div style={{ display: "flex", gap: "10px" }}>
-
                       <Button
                         onClick={() => handleUpdateNote(nota, true)}
                         type="primary"

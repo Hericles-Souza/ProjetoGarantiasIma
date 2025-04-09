@@ -57,9 +57,13 @@ const Garantias: React.FC = () => {
           100
         );
         const data = await response.data.data.data;
-        const dataACI = await responseACI.data.data.data;
-        setAcordoData(dataACI);
-        setCardData(data);
+        const dataACI = await responseACI?.data?.data?.data;
+
+        if(dataACI != undefined)
+          setAcordoData(dataACI);
+        
+        if(data)
+          setCardData(data);
       } else {
         let status: number[] = [];
         if (context.user.rule.name === UserRoleEnum.Tecnico) {
@@ -92,14 +96,17 @@ const Garantias: React.FC = () => {
             1,
             100
           );
-          const responseDataACI = await responseACI.data.data;
+          const responseDataACI = await responseACI?.data?.data;
           return responseDataACI;
         });
         const resultsACI = await Promise.all(promisesACI);
-        const dataArrayACI = resultsACI.flat().sort();
-        setAcordoData(dataArrayACI);
+        if(resultsACI){
+          const dataArrayACI = resultsACI.flat().sort();
+          setAcordoData(dataArrayACI);
+          console.log("acordos: ", acordoData);
 
-        console.log("acordos: ", acordoData);
+        }
+
       }
     } catch (error) {
       console.error("Error fetching card data:", error);

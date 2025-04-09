@@ -1,12 +1,12 @@
 import { CalendarOutlined, RightOutlined } from '@ant-design/icons';
 import React, { useContext } from 'react';
 import styled from 'styled-components';
-import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
+import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from 'dayjs';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
-import { GarantiasItemStatusEnum } from '@shared/enums/GarantiasStatusEnum.ts';
+
 const CardContainer = styled.div<{ clickable: boolean }>`
   flex: 0 0 calc(25% - 12px);
   max-width: 100%;
@@ -132,9 +132,9 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, cod
         <Status style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}>
           {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin
             ? converterStatusGarantia(GarantiaItem.codigoStatus)
-            : (GarantiaItem.notas.filter(nota => nota.itens.some(item => item.status === GarantiasItemStatusEnum.NAO_ANALISADO)).length == 0)
+            : (GarantiaItem.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
               ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true)
-              : converterStatusGarantia(GarantiaItem.codigoStatus)}
+              : converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, false)}
         </Status>
         <RightOutlined />
       </Header>
