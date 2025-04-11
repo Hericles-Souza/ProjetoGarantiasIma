@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import styled from 'styled-components';
 import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
-import dayjs from 'dayjs';
+  import dayjs from 'dayjs';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
 
@@ -116,7 +116,7 @@ const statusStyles = {
 };
 
 interface CardCategoriasProps {
-  GarantiaItem: GarantiasModel;
+  GarantiaItem?: GarantiasModel;
   data: Date;
   codigoFormatado: string; // Código já formatado (ex: "RGI 1234567" ou "ACI 98765432")
   onClick?: () => void;
@@ -124,17 +124,17 @@ interface CardCategoriasProps {
 
 const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, codigoFormatado, onClick }) => {
 
-  const statusStyle = statusStyles[GarantiaItem.codigoStatus];
+  const statusStyle = statusStyles[GarantiaItem.codigoStatus] ;
   const context = useContext(AuthContext);
   return (
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
-        <Status style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}>
+        <Status style={{ backgroundColor: statusStyle?.backgroundColor ? statusStyle?.backgroundColor : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
           {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin
-            ? converterStatusGarantia(GarantiaItem.codigoStatus)
-            : (GarantiaItem.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
-              ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, true)
-              : converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem.codigoStatus, false)}
+            ? converterStatusGarantia(GarantiaItem?.codigoStatus)
+            : (GarantiaItem?.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
+              ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, true)
+              : converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, false)}
         </Status>
         <RightOutlined />
       </Header>

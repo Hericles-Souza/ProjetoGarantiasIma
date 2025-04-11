@@ -58,19 +58,22 @@ export enum AcordoItemStatusEnum {
     NAO_ANALISADO = "Nao analisado",
     AUTORIZADO = 'Autorizado',
     NAO_AUTORIZADO = 'Não Autorizado',
+    NAO_ENVIADO = "Não enviado"
 }
 
 export enum AcordoComercialItemStatusEnum2 {
     NAO_ANALISADO = 1, 
     AUTORIZADO = 2,
-    NAO_AUTORIZADO = 3
+    NAO_AUTORIZADO = 3,
+    NAO_ENVIADO = 4
 }
 
 export function converterStatusAcordoItem(status: AcordoComercialItemStatusEnum2): AcordoItemStatusEnum {
     const mapping: Record<AcordoComercialItemStatusEnum2, AcordoItemStatusEnum> = {
         [AcordoComercialItemStatusEnum2.NAO_ANALISADO]: AcordoItemStatusEnum.NAO_ANALISADO,
         [AcordoComercialItemStatusEnum2.AUTORIZADO]: AcordoItemStatusEnum.AUTORIZADO,
-        [AcordoComercialItemStatusEnum2.NAO_AUTORIZADO]: AcordoItemStatusEnum.NAO_AUTORIZADO
+        [AcordoComercialItemStatusEnum2.NAO_AUTORIZADO]: AcordoItemStatusEnum.NAO_AUTORIZADO,
+        [AcordoComercialItemStatusEnum2.NAO_ENVIADO]: AcordoItemStatusEnum.NAO_ENVIADO
     };
 
     return mapping[status];
@@ -80,7 +83,9 @@ export function converterStatusAcordoItemInverso(status: AcordoItemStatusEnum): 
     const mapping: Record<AcordoItemStatusEnum, AcordoComercialItemStatusEnum2> = {
         [AcordoItemStatusEnum.NAO_ANALISADO]: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
         [AcordoItemStatusEnum.AUTORIZADO]: AcordoComercialItemStatusEnum2.AUTORIZADO,
-        [AcordoItemStatusEnum.NAO_AUTORIZADO]: AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
+        [AcordoItemStatusEnum.NAO_AUTORIZADO]: AcordoComercialItemStatusEnum2.NAO_AUTORIZADO,
+        [AcordoItemStatusEnum.NAO_ENVIADO]: AcordoComercialItemStatusEnum2.NAO_ENVIADO
+
     };
 
     return mapping[status];

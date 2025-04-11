@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
-import { getAcordosComerciaisByStatusAsync } from "@shared/services/AcordoComercialService";
+import { getAcordosByUser } from "@shared/services/AcordoComercialService";
 import {
   AcordoStatusEnum,
   converterStatusAcordoInverso,
@@ -38,7 +38,7 @@ const Garantias: React.FC = () => {
   const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [filteredItems, setFilteredItems] = useState<GarantiasModel[]>([]);
-  const [, setFilteredIAcordo1tems] = useState<
+  const [filteredAcordoItems, setFilteredIAcordo1tems] = useState<
     AcordoComercialModel[]
   >([]);
 
@@ -50,17 +50,16 @@ const Garantias: React.FC = () => {
     try {
       if (context.user!.rule!.name === UserRoleEnum.Cliente) {
         const response = await getGarantiasPaginationAsync(1, 100);
-        const responseACI = await getAcordosComerciaisByStatusAsync(
-          Number(context.user!.codigoCigam),
-          1,
-          1,
-          100
-        );
+        const responseDataACI = await getAcordosByUser(1, 100);
+        
+        console.log("acordos: ", responseDataACI.data.data.data);
+        
+        if(responseDataACI){
+          setAcordoData(responseDataACI.data.data.data);
+          console.log("acordos: ", acordoData);
+          
+        }
         const data = await response.data.data.data;
-        const dataACI = await responseACI?.data?.data?.data;
-
-        if(dataACI != undefined)
-          setAcordoData(dataACI);
         
         if(data)
           setCardData(data);
@@ -88,24 +87,6 @@ const Garantias: React.FC = () => {
         const results = await Promise.all(promises);
         const dataArray = results.flat().sort();
         setCardData(dataArray); // Atualiza o cardData com os resultados
-
-        const promisesACI = status.map(async (element) => {
-          const responseACI = await getAcordosComerciaisByStatusAsync(
-            Number(context.user!.codigoCigam),
-            element,
-            1,
-            100
-          );
-          const responseDataACI = await responseACI?.data?.data;
-          return responseDataACI;
-        });
-        const resultsACI = await Promise.all(promisesACI);
-        if(resultsACI){
-          const dataArrayACI = resultsACI.flat().sort();
-          setAcordoData(dataArrayACI);
-          console.log("acordos: ", acordoData);
-
-        }
 
       }
     } catch (error) {
@@ -135,7 +116,7 @@ const Garantias: React.FC = () => {
       return matchesStatus && matchesSearch;
     });
     setFilteredItems(newFilteredItems); // Atualiza o estado com os itens filtrados
-    const newFilteredAcordoItems = acordoData.filter((card) => {
+    const newFilteredAcordoItems = acordoData?.filter((card) => {
       const matchesStatus =
         filterStatus === "todos" ||
         card.codigoStatus ===
@@ -334,15 +315,15 @@ const Garantias: React.FC = () => {
             </div>
           </div>
           <div className={styled.containerGrid}>
-            {filteredItems.length > 0 ? (
-              filteredItems.map((item) => {
-                const garantia = cardData.find((card) => card.rgi === item.rgi);
+            {filteredAcordoItems.length > 0 ? (
+              filteredAcordoItems.map((item) => {
+                const acordo = acordoData.find((card) => card.cdAci === item.cdAci);
 
                 return (
                   <CardCategorias
                     key={item.id}
-                    data={new Date(garantia.data)}
-                    GarantiaItem={item}
+                    data={new Date(item.data)}
+                    GarantiaItem={{}}
                     onClick={() => {
                       console.log("use: " + context.user.rule.name);
                       if (
@@ -350,21 +331,21 @@ const Garantias: React.FC = () => {
                         context.user.rule.name.includes(UserRoleEnum.Cliente)
                       )
                         navigate(`garantias/aci/:id`, {
-                          state: { item, garantia },
+                          state: { item, acordo },
                         });
                       else if (
                         context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
                         context.user.rule.name.includes(UserRoleEnum.Supervisor)
                       ) {
                         navigate(
-                          `/garantias/technical-and-supervisor/${garantia.id}`,
+                          `/garantias/technical-and-supervisor/${acordo.id}`,
                           {
-                            state: { item, garantia },
+                            state: { item, acordo },
                           }
                         );
                       }
                     }}
-                    codigoFormatado={""}
+                    codigoFormatado={item.cdAci}
                   />
                 );
               })

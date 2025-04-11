@@ -49,3 +49,18 @@ export const getItemsByNfAsync = async (nfCode: string): Promise<ResponseNfItem>
     throw error;
   }
 }
+
+export const getAcordosByUser = async (page: number, limit: number) => {
+  try {
+    const data = {
+      page, 
+      limit
+    }
+    const acordos = await api.post(`acordos/ACI/getAllByUser`, data);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return acordos as any;
+  } catch (error) {
+    console.error('Error fetching acordos comerciais by status:', error);
+    throw error;
+  }
+}

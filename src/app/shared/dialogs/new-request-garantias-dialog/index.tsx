@@ -20,8 +20,16 @@ import api from "@shared/Interceptors";
 import { FileOutlined, InboxOutlined } from "@ant-design/icons";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import environment from "@env/environment";
-import { AcordoComercialItem, AcordoComercialModel } from "@shared/models/AcordoComercialModel";
-import { AcordoComercialItemStatusEnum2, AcordoComercialStatusEnum2 } from "@shared/enums/AcordoComercialStatusEnum";
+import {
+  AcordoComercialItem,
+  AcordoComercialModel,
+} from "@shared/models/AcordoComercialModel";
+import {
+  AcordoComercialItemStatusEnum2,
+  AcordoComercialStatusEnum2,
+  AcordoItemStatusEnum,
+  AcordoStatusEnum,
+} from "@shared/enums/AcordoComercialStatusEnum";
 import { createAcordoAsync } from "@shared/services/AcordoComercialService";
 
 // Enum para controlar as abas
@@ -69,17 +77,33 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
     try {
       const data = {
         page: 1,
-        limit: 100
-      }
+        limit: 100,
+      };
       const response = await api.post("/acordos/ACI/getAll", data);
-      const allGarantias = response.data.data || [];
-      const existingRGIs = allGarantias
-        .map((g: any) => g.rgi)
-        .filter((rgi: string) => rgi?.startsWith(context.user.codigoCigam))
-        .map((rgi: string) => parseInt(rgi.split("-")[1]));
-      const lastNumber = Math.max(0, ...existingRGIs);
+      
+      const allGarantias = response.data.data.data || [];
+      let existingACIs = allGarantias
+        .map((g: any) => g.cdAci)
+        .filter((cdAci: string) => cdAci?.startsWith(context.user.codigoCigam))
+      if(existingACIs){
+        console.log("responseACI: ", existingACIs);
+        existingACIs = existingACIs.map((cdAci: string) => parseInt(cdAci.split("-")[1]));
+      }
+      else{
+        console.log("asdasdasdsa");
+
+      }
+        
+      
+        console.log("responseACI: ", existingACIs);
+        const lastNumber = Math.max(0, ...existingACIs);
       const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
-      return `${context.user.codigoCigam}-${nextNumber}`;
+      const newAci = `${context.user.codigoCigam}-${nextNumber}`;
+      console.log(newAci);
+
+      if (newAci.includes("undefined"))
+        return `${context.user.codigoCigam}-0001`;
+      else return `${context.user.codigoCigam}-${nextNumber}`;
     } catch (error) {
       console.error("Erro ao gerar RGI:", error);
     }
@@ -94,160 +118,161 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
     setIsSubmitting(true);
     try {
       if (currentTab === FilterStatus.ACORDO) {
-
         const newACI = await generateNextACI();
+        
+        console.log("user: ", context.user.codigoCigam);
 
         const itemAcordoPost: AcordoComercialItem = {
-          codigoItem: "",
-          precoUnitario: "",
+          codigoItem: newACI + ".A.1",
+          precoUnitario: 0,
           quantidade: 0,
-          codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
-          valorTotalItem: "",
-          tipoOperacao: "",
-          baseICMS: "",
-          valorICMS: "",
-          valorIPI: "",
-          ICMS: "",
-          IPI: "",
-          mva: "",
-
-        }
-
-        const payloadAcordoPost:  AcordoComercialModel = {
-          razaoSocial: "",
-          telefone: "",
-          email: "",
-          codigoStatus: AcordoComercialStatusEnum2.NAO_ENVIADO,
-          observacao: "",
-          status: "",
-          usuarioInsercao: "",
+          codigoStatus: AcordoComercialItemStatusEnum2.NAO_ENVIADO,
+          valorTotalItem: 0,
+          tipoOperacao: "CIF",
           baseICMS: 0,
-          ICMS: "",
-          valorIPI: "",
-          ICMSSubstituicao: "",
+          valorICMS: 0,
+          valorIPI: 0,
+          ICMS: 0,
+          IPI: 0,
+          mva: 0,
+        };
+
+        const payloadAcordoPost: AcordoComercialModel = {
+          razaoSocial: context.user.fullname,
+          telefone: context.user.phone,
+          email: context.user.email,
+          codigoStatus: AcordoComercialStatusEnum2.NAO_ENVIADO,
+          observacao: "ACI para tratamento de acordos",
+          status: AcordoStatusEnum.NAO_ENVIADO,
+          usuarioInsercao: context.user.username,
+          baseICMS: 0,
+          ICMS: 0,
+          valorIPI: 0,
+          ICMSSubstituicao: 0,
           nf: values["N° NF de origem"],
-          itens: [itemAcordoPost]
-        }
+          itens: [itemAcordoPost],
+        };
+        console.log("payloadAcordoPost:", payloadAcordoPost);
 
         const aciResponse = await createAcordoAsync(payloadAcordoPost);
         console.log("Garantia criada com sucesso:", aciResponse.data);
 
         let createdAcordo: any = aciResponse.data.data;
-      if (typeof createdAcordo === "string") {
-        const match = createdAcordo.match(/id:([^\s]+)/);
-        if (match && match[1]) {
-          createdAcordo = { id: match[1] };
-        } else {
-          console.error("Invalid response format:", aciResponse);
+        if (typeof createdAcordo === "string") {
+          const match = createdAcordo.match(/id:([^\s]+)/);
+          if (match && match[1]) {
+            createdAcordo = { id: match[1] };
+          } else {
+            console.error("Invalid response format:", aciResponse);
+            throw new Error("Resposta inválida da API ao criar garantia");
+          }
+        }
+
+        if (!createdAcordo || !createdAcordo.id) {
+          console.error("Invalid response:", aciResponse);
           throw new Error("Resposta inválida da API ao criar garantia");
         }
-      }
-
-      if (!createdAcordo || !createdAcordo.id) {
-        console.error("Invalid response:", aciResponse);
-        throw new Error("Resposta inválida da API ao criar garantia");
-      }
 
         navigate("/acordo-commercial", {
           state: { "N° NF de origem": values["N° NF de origem"] },
         });
         return;
-      }
+      } else {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
+        const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
-      const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+        const newRGI = await generateNextRGI();
+        const itemId = crypto.randomUUID();
+        const notaFiscalId = crypto.randomUUID();
 
-      const newRGI = await generateNextRGI();
-      const itemId = crypto.randomUUID();
-      const notaFiscalId = crypto.randomUUID();
+        const garantiasItem: GarantiaItem[] = [
+          {
+            id: itemId,
+            nota_fiscal_id: notaFiscalId,
+            codigoItem: newRGI + ".A.1",
+            codigoRGI: newRGI + ".A",
+            nfReferencia: values["N° NF de origem"],
+            codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
+            status: GarantiasItemStatusEnum.NAO_ANALISADO,
+          },
+        ];
 
-      const garantiasItem: GarantiaItem[] = [
-        {
-          id: itemId,
-          nota_fiscal_id: notaFiscalId,
-          codigoItem: newRGI + ".A.1",
-          codigoRGI: newRGI + ".A",
-          nfReferencia: values["N° NF de origem"],
-          codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-          status: GarantiasItemStatusEnum.NAO_ANALISADO,
-        },
-      ];
+        const notasFiscais: NotaFiscal[] = [
+          {
+            id: notaFiscalId,
+            garantia_id: itemId,
+            codigo: values["N° NF de origem"],
+            codigoRGI: newRGI + ".A",
+            tipo_nota: "nota fiscal de origem",
+            id_referencia: notaFiscalId,
+            itens: garantiasItem,
+            data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+            data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+            createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+            updatedAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          },
+        ];
 
-      const notasFiscais: NotaFiscal[] = [
-        {
-          id: notaFiscalId,
-          garantia_id: itemId,
-          codigo: values["N° NF de origem"],
-          codigoRGI: newRGI + ".A",
-          tipo_nota: "nota fiscal de origem",
-          id_referencia: notaFiscalId,
-          itens: garantiasItem,
-          data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-          data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-          createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-          updatedAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-        },
-      ];
+        const garantiaPayload: GarantiasModel = {
+          codigoRGI: newRGI,
+          razaoSocial: context.user.fullname,
+          telefone: context.user.phone,
+          email: context.user.email,
+          nf: values["N° NF de origem"],
+          fornecedor: context.user.codigoCigam,
+          codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+          observacao: "Garantia válida por 12 meses",
+          usuarioInsercao: context.user.username,
+          notas: notasFiscais,
+        };
 
-      const garantiaPayload: GarantiasModel = {
-        codigoRGI: newRGI,
-        razaoSocial: context.user.fullname,
-        telefone: context.user.phone,
-        email: context.user.email,
-        nf: values["N° NF de origem"],
-        fornecedor: context.user.codigoCigam,
-        codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
-        observacao: "Garantia válida por 12 meses",
-        usuarioInsercao: context.user.username,
-        notas: notasFiscais,
-      };
+        console.log(
+          "Enviando garantiaModel:",
+          JSON.stringify(garantiaPayload, null, 2)
+        );
 
-      console.log(
-        "Enviando garantiaModel:",
-        JSON.stringify(garantiaPayload, null, 2)
-      );
+        // 4. Cria a garantia via API
+        const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
+        console.log("Garantia criada com sucesso:", guaranteeResponse.data);
 
-      // 4. Cria a garantia via API
-      const guaranteeResponse = await createGarantiaAsync(garantiaPayload);
-      console.log("Garantia criada com sucesso:", guaranteeResponse.data);
+        let createdGarantia: any = guaranteeResponse.data.data;
+        if (typeof createdGarantia === "string") {
+          const match = createdGarantia.match(/id:([^\s]+)/);
+          if (match && match[1]) {
+            createdGarantia = { id: match[1] };
+          } else {
+            console.error("Invalid response format:", guaranteeResponse);
+            throw new Error("Resposta inválida da API ao criar garantia");
+          }
+        }
 
-      let createdGarantia: any = guaranteeResponse.data.data;
-      if (typeof createdGarantia === "string") {
-        const match = createdGarantia.match(/id:([^\s]+)/);
-        if (match && match[1]) {
-          createdGarantia = { id: match[1] };
-        } else {
-          console.error("Invalid response format:", guaranteeResponse);
+        if (!createdGarantia || !createdGarantia.id) {
+          console.error("Invalid response:", guaranteeResponse);
           throw new Error("Resposta inválida da API ao criar garantia");
         }
-      }
 
-      if (!createdGarantia || !createdGarantia.id) {
-        console.error("Invalid response:", guaranteeResponse);
-        throw new Error("Resposta inválida da API ao criar garantia");
-      }
-
-      navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
-        state: {
-          garantiaData: { ...garantiaPayload, id: createdGarantia.id },
-          garantiaId: createdGarantia.id,
-          currentNf: {
-            nf: newRGI + ".A.1",
-            itens: garantiaPayload.notas?.length || 0,
-            sequence: 1,
+        navigate(`/garantias/rgi/details-itens-nf/${createdGarantia.id}`, {
+          state: {
+            garantiaData: { ...garantiaPayload, id: createdGarantia.id },
+            garantiaId: createdGarantia.id,
+            currentNf: {
+              nf: newRGI + ".A.1",
+              itens: garantiaPayload.notas?.length || 0,
+              sequence: 1,
+            },
+            countItems: 1,
+            nfNumber: values["N° NF de origem"],
+            rgiLetter: "A",
+            nota: garantiaPayload.notas[0],
           },
-          countItems: 1,
-          nfNumber: values["N° NF de origem"],
-          rgiLetter: "A",
-          nota: garantiaPayload.notas[0],
-        },
-      });
+        });
+      }
     } catch (error: any) {
       console.error("Erro ao criar garantia:", error.response?.data || error);
     } finally {
