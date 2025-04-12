@@ -140,6 +140,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         };
 
         const payloadAcordoPost: AcordoComercialModel = {
+          codigoCigam: context.user.codigoCigam,
           razaoSocial: context.user.fullname,
           telefone: context.user.phone,
           email: context.user.email,
@@ -406,7 +407,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           )}
           {currentTab === FilterStatus.ACORDO && (
             <div className={styles.requiredFieldsContainer}>
-              <h3>ACI N° 000666-00150</h3>
               <Form.Item
                 style={{ margin: 0 }}
                 name="N° NF de origem"

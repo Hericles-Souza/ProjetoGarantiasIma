@@ -3,10 +3,14 @@ import { DeleteOutlined, LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { Button, Modal } from "antd";
 import { useEffect, useState } from "react";
-import NFModal from "../../clientProcessRGI/addNewNF/modalAddNewNF";
 import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
+import {
+  AcordoComercialItem,
+  AcordoComercialModel,
+} from "@shared/models/AcordoComercialModel";
+import { AcordoComercialItemStatusEnum2 } from "@shared/enums/AcordoComercialStatusEnum";
+import { updateAciHeaderByIdAsync } from "@shared/services/AcordoComercialService";
 
 const ScreenAcordoComercial: React.FC = () => {
   const [razaoSocial, setRazaoSocial] = useState(
@@ -25,10 +29,65 @@ const ScreenAcordoComercial: React.FC = () => {
   const [nfToDelete, setNfToDelete] = useState<string>("");
   const location = useLocation();
   const navigate = useNavigate();
+  const [inputValue, setInputValue] = useState("");
 
-  const handleAddNF = (nfNumber: string) => {
-    setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, itens: 0 }]);
+  const getRgiWithSuffix = (RgiCode: string, letter: string, index) => {
+    return `${RgiCode}.${letter}.${index}`;
+  };
+
+  const handleAddNF = async (nfNumber: string) => {
+    const ultimoItem = nfs[nfs.length - 1];
+
+    // Extrai a parte numérica e a letra do último item
+    const [letra] = ultimoItem.nf.split(".")[1];
+    console.log(letra);
+
+    // Calcula a próxima letra do alfabeto
+    const proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
+    const nfCode = acordo.cdAci + "." + proximaLetra;
+    const itemCode = getRgiWithSuffix(acordo.cdAci, proximaLetra, 1);
+    console.log("nfNumber" + nfCode);
+    setNfs((prevNfs) => [...prevNfs, { nf: nfCode, itens: 1 }]);
+    setInputValue("");
     setModalOpen({ isOpen: false, isSell: false });
+
+    const itemAcordoPost: AcordoComercialItem = {
+      id: "",
+      codigoItem: itemCode,
+      precoUnitario: 0,
+      quantidade: 0,
+      codigoStatus: AcordoComercialItemStatusEnum2.NAO_ENVIADO,
+      valorTotalItem: 0,
+      tipoOperacao: "CIF",
+      baseICMS: 0,
+      valorICMS: 0,
+      valorIPI: 0,
+      ICMS: 0,
+      IPI: 0,
+      mva: 0,
+      nf: nfNumber,
+    };
+
+    acordo.itens.push(itemAcordoPost);
+
+    const payloadAcordoPut: AcordoComercialModel = {
+      usuarioAtualizacao: acordo.usuarioInsercao,
+      razaoSocial: acordo.razaoSocial,
+      telefone: acordo.telefone,
+      email: acordo.email,
+      codigoStatus: acordo.codigoStatus,
+      observacao: acordo.observacao,
+      baseICMS: 0,
+      ICMS: 0,
+      valorIPI: 0,
+      ICMSSubstituicao: 0,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      itens: acordo.itens,
+    };
+
+    console.log("payload: ", payloadAcordoPut);
+
+    await updateAciHeaderByIdAsync(payloadAcordoPut, acordo.id);
   };
 
   const handleDeleteNF = () => {
@@ -49,8 +108,13 @@ const ScreenAcordoComercial: React.FC = () => {
     if (location.state) {
       console.log("location state: ", location.state);
       const recNfs = location.state.item.itens
-      .map(value => value.nf ?? value.codigoItem.split(".")[0] + "." + value.codigoItem.split(".")[1]) // substitui null/undefined por 'sem_nf'
-      .filter(nf => nf !== '')      
+        .map(
+          (value) =>
+            value.codigoItem.split(".")[0] +
+            "." +
+            value.codigoItem.split(".")[1]
+        ) // substitui null/undefined por 'sem_nf'
+        .filter((nf) => nf !== "");
       console.log("correctedNfs: ", recNfs);
 
       // Contar as ocorrências
@@ -82,9 +146,7 @@ const ScreenAcordoComercial: React.FC = () => {
           >
             <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO ACI
           </Button>
-          <span className="RgiCode">
-            ACI N° {acordo?.cdAci}
-          </span>
+          <span className="RgiCode">ACI N° {acordo?.cdAci}</span>
         </div>
         <div className="ContainerHeader">
           <h1 className="tituloRgi"> ACI {acordo?.cdAci}</h1>
@@ -154,12 +216,15 @@ const ScreenAcordoComercial: React.FC = () => {
                 style={{ color: "#555", fontSize: "22px" }}
                 onClick={() => showDeleteConfirm(nf.nf)}
               />
-              <Button type="text" className="nextButton"
-              onClick={() => {
-                navigate("/garantias/aci/details-itens", {
-                  state: {acordo, nf}
-                })
-              }}>
+              <Button
+                type="text"
+                className="nextButton"
+                onClick={() => {
+                  navigate("/garantias/aci/details-itens", {
+                    state: { acordo, nf },
+                  });
+                }}
+              >
                 &gt;
               </Button>
             </div>
@@ -167,14 +232,47 @@ const ScreenAcordoComercial: React.FC = () => {
         ))}
       </section>
 
-      <NFModal
-        open={modalOpen.isOpen}
-        onOpenChange={setModalOpen}
-        onAddNF={handleAddNF}
-        isSell={false}
-        itemId={""}
-        garantiaId={""}
-      />
+      <Modal
+        title="NOVA NF ASSOCIADA"
+        visible={modalOpen.isOpen}
+        footer={null}
+        className="nf-modal"
+        width={600}
+      >
+        <div className="nf-content">
+          <div className="nf-rgi">ACI N° {acordo?.cdAci}</div>
+          <div className="nf-field">
+            <OutlinedInputWithLabel
+              label={"N° NF de origem *"}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              fullWidth
+            />
+          </div>
+
+          <div className="nf-footer">
+            <Button
+              onClick={() => {
+                setModalOpen({ isOpen: false, isSell: false });
+              }}
+              className="cancel-button"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="primary"
+              danger
+              className="creating-button"
+              onClick={() => {
+                setInputValue("");
+                handleAddNF(inputValue);
+              }}
+            >
+              Criar
+            </Button>
+          </div>
+        </div>
+      </Modal>
       <Modal
         title="Confirmar Exclusão"
         visible={modalDeleteOpen}

@@ -64,3 +64,10 @@ export const getAcordosByUser = async (page: number, limit: number) => {
     throw error;
   }
 }
+
+export const updateAciHeaderByIdAsync = async (data: AcordoComercialModel, acordoId: string) => {
+  const teste = await api.put(`acordos/ACI/${acordoId}/UpdateHeader`, data);
+  console.log("Teste: ", teste);
+  
+  return teste;
+}

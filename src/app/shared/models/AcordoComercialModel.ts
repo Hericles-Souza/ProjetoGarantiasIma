@@ -25,15 +25,16 @@ export interface AcordoComercialItem {
 
 export interface AcordoComercialModel {
   id?: string;
+  codigoCigam?: string;
   cdAci?: string;
   razaoSocial: string;
   telefone: string;
   email: string;
-  status: string;
+  status?: string;
   codigoStatus: AcordoComercialStatusEnum2;
   observacao: string;
   data?: string;
-  usuarioInsercao: string;
+  usuarioInsercao?: string;
   baseICMS: number;
   ICMS: number;
   valorIPI: number;
