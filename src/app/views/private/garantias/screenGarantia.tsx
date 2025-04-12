@@ -317,7 +317,6 @@ const Garantias: React.FC = () => {
           <div className={styled.containerGrid}>
             {filteredAcordoItems.length > 0 ? (
               filteredAcordoItems.map((item) => {
-                const acordo = acordoData.find((card) => card.cdAci === item.cdAci);
 
                 return (
                   <CardCategorias
@@ -325,22 +324,28 @@ const Garantias: React.FC = () => {
                     data={new Date(item.data)}
                     GarantiaItem={{}}
                     onClick={() => {
-                      console.log("use: " + context.user.rule.name);
+                      
+                      console.log("use: " , item);
                       if (
                         context.user.rule.name.includes(UserRoleEnum.Admin) ||
                         context.user.rule.name.includes(UserRoleEnum.Cliente)
                       )
-                        navigate(`garantias/aci/:id`, {
-                          state: { item, acordo },
+                      {
+                        console.log("entro");
+                        
+                        navigate(`/garantias/aci/${item.id}`, {
+                          state: { item },
                         });
+
+                      }
                       else if (
                         context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
                         context.user.rule.name.includes(UserRoleEnum.Supervisor)
                       ) {
                         navigate(
-                          `/garantias/technical-and-supervisor/${acordo.id}`,
+                          `/garantias/technical-and-supervisor/${item.id}`,
                           {
-                            state: { item, acordo },
+                            state: { item },
                           }
                         );
                       }

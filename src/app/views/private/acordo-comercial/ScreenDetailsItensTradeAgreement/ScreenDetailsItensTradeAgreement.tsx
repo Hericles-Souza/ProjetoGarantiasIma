@@ -1,11 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Modal } from "antd";
-import { DownOutlined, DeleteOutlined, LeftOutlined, FileOutlined, RightOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  DeleteOutlined,
+  LeftOutlined,
+  FileOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
 import styles from "./ScreenDetailsItensTradeAgreement.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
 
-const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundColor?: string }) => {
+const FileAttachment = ({
+  label,
+  backgroundColor,
+}: {
+  label: string;
+  backgroundColor?: string;
+}) => {
   const [fileName, setFileName] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,14 +33,22 @@ const FileAttachment = ({ label, backgroundColor }: { label: string; backgroundC
       <div className={styles.fileUpdateContent}>
         {fileName && (
           <span className={styles.fileName}>
-            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} /> {fileName}
-            <button className={styles.buttonRemoveUpload} onClick={() => setFileName(null)}>
+            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
+            {fileName}
+            <button
+              className={styles.buttonRemoveUpload}
+              onClick={() => setFileName(null)}
+            >
               x
             </button>
           </span>
         )}
         <label className={styles.buttonUpdateNfSale}>
-          <input type="file" style={{ display: "none" }} onChange={handleFileChange} />
+          <input
+            type="file"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
           Adicionar Anexo
         </label>
       </div>
@@ -54,14 +75,25 @@ const CollapsibleSection = ({
     <div className={styles.tituloSecaoContainer}>
       <h3 className={styles.tituloSecaoVermelho}>
         {title}{" "}
-        <span className={status === "Autorizado" ? styles.statusAuthorized  : styles.statusRejected }>
+        <span
+          className={
+            status === "Autorizado"
+              ? styles.statusAuthorized
+              : styles.statusRejected
+          }
+        >
           {status}
         </span>
       </h3>
       <div className={styles.iconAndArrow}>
         <DeleteOutlined
           className={styles.DeleteOutlined}
-          style={{ color: "#555", fontSize: "22px", cursor: "pointer", marginRight: "15px" }}
+          style={{
+            color: "#555",
+            fontSize: "22px",
+            cursor: "pointer",
+            marginRight: "15px",
+          }}
           onClick={showDeleteConfirm}
         />
         <Button
@@ -78,39 +110,54 @@ const CollapsibleSection = ({
 );
 
 const ScreenDetailsItensTradeAgreement: React.FC = () => {
-  const [items, setItems] = useState<{ id: number; title: string; status: "Autorizado" | "Recusado" }[]>([
-    { id: 1, title: "000666-00147.A.01", status: "Autorizado" },
-  ]);
-  const [visibleSectionId, setVisibleSectionId] = useState<number | null>(1); 
+  const [items, setItems] = useState<
+    { id: number; title: string; status: "Autorizado" | "Recusado" }[]
+  >([{ id: 1, title: "000666-00147.A.01", status: "Autorizado" }]);
+  const [visibleSectionId, setVisibleSectionId] = useState<number | null>(1);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null); 
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const navigate = useNavigate();
+  const [nf, SetNf] = useState<string>();
+  const [acordo, SetAcordo] = useState<AcordoComercialModel>();
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state) {
+      SetAcordo(location.state.acordo);
+      console.log("acordo: ", acordo);
+      SetNf(location.state.nf.nf);
+      console.log("nf: ", nf);
+    }
+  });
 
   const addNewItem = () => {
     const newItemId = items.length + 1;
-    const newItemTitle = `000666-00147.A.${newItemId.toString().padStart(2, "0")}`;
-    setItems([...items, { id: newItemId, title: newItemTitle, status: "Autorizado" }]);
-    setVisibleSectionId(newItemId); 
+    const newItemTitle = `000666-00147.A.${newItemId
+      .toString()
+      .padStart(2, "0")}`;
+    setItems([
+      ...items,
+      { id: newItemId, title: newItemTitle, status: "Autorizado" },
+    ]);
+    setVisibleSectionId(newItemId);
   };
 
   const handleDeleteItem = (itemId: number) => {
-    setItems(items.filter((item) => item.id !== itemId)); 
-    setModalDeleteOpen(false); 
+    setItems(items.filter((item) => item.id !== itemId));
+    setModalDeleteOpen(false);
   };
 
   const showDeleteConfirm = (itemId: number) => {
-    setItemToDelete(itemId); 
-    setModalDeleteOpen(true); 
+    setItemToDelete(itemId);
+    setModalDeleteOpen(true);
   };
 
   const handleDeleteNF = () => {
     if (itemToDelete !== null) {
-      handleDeleteItem(itemToDelete); 
+      handleDeleteItem(itemToDelete);
     }
   };
-
-
 
   const toggleSectionVisibility = (id: number) => {
     if (visibleSectionId === id) {
@@ -130,13 +177,15 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA ACI
         </Button>
-        <span className={styles.RgiCode}>ACI N° 000666-0001 / NF 000666-00147.A</span> 
+        <span className={styles.RgiCode}>
+          ACI N° {acordo?.cdAci} / NF {nf}
+        </span>
       </div>
 
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>000666-00147.A</h1>
+        <h1 className={styles.tituloRgi}>{acordo?.cdAci}</h1>
         <div className={styles.botoesCabecalho}>
-        <Button type="default" className={styles.ButtonDelete}>
+          <Button type="default" className={styles.ButtonDelete}>
             Visualizar Pré-Nota
           </Button>
           <Button type="default" className={styles.ButtonDelete}>
@@ -148,12 +197,21 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </div>
       </div>
       <hr className={styles.divisor} />
-     
+
       <div className={styles.TitleItens}>
-        <h3 className={styles.nfsTitle}>Itens desta NF associados a esta garantia</h3>
+        <h3 className={styles.nfsTitle}>
+          Itens desta NF associados a esta garantia
+        </h3>
         <Button
           className={styles.buttonRed}
-          style={{ backgroundColor: "red", borderRadius: "10px", height: "45px", padding: "0px 25px", fontSize: "16px", outline: "none" }}
+          style={{
+            backgroundColor: "red",
+            borderRadius: "10px",
+            height: "45px",
+            padding: "0px 25px",
+            fontSize: "16px",
+            outline: "none",
+          }}
           type="primary"
           onClick={addNewItem}
         >
@@ -181,17 +239,25 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             <div className={styles.inputsContainer}>
               <div className={styles.inputsConjun}>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Código da peça *" fullWidth value="" />
+                  <OutlinedInputWithLabel
+                    label="Código da peça *"
+                    fullWidth
+                    value=""
+                  />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel label="Quantidade *"  fullWidth value="" />
+                  <OutlinedInputWithLabel
+                    label="Quantidade *"
+                    fullWidth
+                    value=""
+                  />
                 </div>
               </div>
-              
             </div>
-            <FileAttachment label="Anexo da NF de devolução" backgroundColor="#ffffff" />
-
-           
+            <FileAttachment
+              label="Anexo da NF de devolução"
+              backgroundColor="#ffffff"
+            />
           </CollapsibleSection>
         </div>
       ))}
@@ -204,7 +270,12 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         okText="Excluir"
         cancelText="Cancelar"
         okButtonProps={{
-          style: { backgroundColor: "red", borderColor: "red", color: "white", outline: "none" },
+          style: {
+            backgroundColor: "red",
+            borderColor: "red",
+            color: "white",
+            outline: "none",
+          },
         }}
         cancelButtonProps={{
           style: { borderColor: "#dadada", color: "#5F5A56", outline: "none" },

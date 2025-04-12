@@ -11,6 +11,7 @@ import Dashboard from "./dashboard/dashboard";
 import TechnicalAndSupervisorDetailsItens from "./technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
 import TechnicalAndSupervisorInitialRGI from "./technicalAndSupervisorRGI/technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI";
 import RGIDetailsInitial from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
+import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -43,6 +44,7 @@ export const appRoutingPrivate: RouteConfig[] = [
         path: "garantias/aci/:id",
         element: <ScreenAcordoComercial />,
         private: true,
+        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Tecnico, UserRoleEnum.Cliente]
       },
       //admin
       {
@@ -78,7 +80,11 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
         allowedRoles: [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor]
       },
-
+      {
+        path: "/garantias/aci/details-itens",
+        element: <ScreenDetailsItensTradeAgreement />,
+        private: true,
+      },
 
     ]
   }

@@ -1,24 +1,34 @@
-import "./ScreenInitiaTradeAgreement.style.css"
-import { DeleteOutlined, LeftOutlined } from '@ant-design/icons';
-import OutlinedInputWithLabel from '@shared/components/input-outlined-with-label/OutlinedInputWithLabel';
-import { Button, Modal } from 'antd';
-import { useState } from 'react';
+import "./ScreenInitiaTradeAgreement.style.css";
+import { DeleteOutlined, LeftOutlined } from "@ant-design/icons";
+import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
+import { Button, Modal } from "antd";
+import { useEffect, useState } from "react";
 import NFModal from "../../clientProcessRGI/addNewNF/modalAddNewNF";
 import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
+import { useLocation, useNavigate } from "react-router-dom";
+import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
 
-
-const ScreenAcordoComercial = () => {
-  const [razaoSocial, setRazaoSocial] = useState('Magnetis Consultoria de Investimentos Ltda.');
-  const [telefone, setTelefone] = useState('(31) 99847-5278');
-  const [dataSolicitacao, setDataSolicitacao] = useState('12/07/2008');
+const ScreenAcordoComercial: React.FC = () => {
+  const [razaoSocial, setRazaoSocial] = useState(
+    "Magnetis Consultoria de Investimentos Ltda."
+  );
+  const [telefone, setTelefone] = useState("(31) 99847-5278");
+  const [acordo, setAcordo] = useState<AcordoComercialModel>();
+  const [dataSolicitacao, setDataSolicitacao] = useState("12/07/2008");
   const [nfs, setNfs] = useState<{ nf: string; itens: number }[]>([]);
-  const [modalOpen, setModalOpen] = useState<ModalModel>({isOpen: false, isSell: false});
+  const [modalOpen, setModalOpen] = useState<ModalModel>({
+    isOpen: false,
+    isSell: false,
+  });
+
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [nfToDelete, setNfToDelete] = useState<string>("");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleAddNF = (nfNumber: string) => {
     setNfs((prevNfs) => [...prevNfs, { nf: nfNumber, itens: 0 }]);
-    setModalOpen({isOpen: false, isSell: false});
+    setModalOpen({ isOpen: false, isSell: false });
   };
 
   const handleDeleteNF = () => {
@@ -31,30 +41,62 @@ const ScreenAcordoComercial = () => {
     setModalDeleteOpen(true);
   };
 
+  useEffect(() => {
+    console.log("new page: ", location.state);
+
+    console.log(location.state.item);
+
+    if (location.state) {
+      console.log("location state: ", location.state);
+      const recNfs = location.state.item.itens
+      .map(value => value.nf ?? value.codigoItem.split(".")[0] + "." + value.codigoItem.split(".")[1]) // substitui null/undefined por 'sem_nf'
+      .filter(nf => nf !== '')      
+      console.log("correctedNfs: ", recNfs);
+
+      // Contar as ocorrências
+      const nfCountMap = recNfs.reduce((acc, nf) => {
+        acc[nf] = (acc[nf] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Gerar o array de objetos com nf e quantidade
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const nfsFormatted = Object.entries(nfCountMap).map(([nf, itens]) => ({
+        nf: nf,
+        itens: 1,
+      }));
+      setNfs(nfsFormatted);
+      setAcordo(location.state.item);
+      console.log(nfsFormatted);
+    }
+  }, [location.state]);
+
   return (
     <div className="acordo-container">
       <header className="header">
-      <div className="ContainerButtonBack">
-        <Button
-          type="link"
-          className="ButtonBack"
-          // onClick={() => navigator(`/garantias/rgi/${id}`)}
-        >
-          <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO ACI
-        </Button>
-        <span className="RgiCode">ACI N° 000666-0001 / NF 000666-00147.A</span> 
-      </div>
-      <div className="ContainerHeader">
-        <h1 className="tituloRgi"> ACI 000666-00147.A</h1>
-        <div className="ButtonHeader">
-          <Button type="default" className="ButtonDelete">
-            EXCLUIR
+        <div className="ContainerButtonBack">
+          <Button
+            type="link"
+            className="ButtonBack"
+            onClick={() => navigate(`/garantias`)}
+          >
+            <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO ACI
           </Button>
-          <Button type="primary" className="ButonToSend">
-            SALVAR
-          </Button>
+          <span className="RgiCode">
+            ACI N° {acordo?.cdAci}
+          </span>
         </div>
-      </div>
+        <div className="ContainerHeader">
+          <h1 className="tituloRgi"> ACI {acordo?.cdAci}</h1>
+          <div className="ButtonHeader">
+            <Button type="default" className="ButtonDelete">
+              EXCLUIR
+            </Button>
+            <Button type="primary" className="ButonToSend">
+              SALVAR
+            </Button>
+          </div>
+        </div>
       </header>
 
       <section className="general-info">
@@ -66,6 +108,7 @@ const ScreenAcordoComercial = () => {
               value={razaoSocial}
               onChange={(e) => setRazaoSocial(e.target.value)}
               fullWidth
+              disabled
             />
           </div>
           <div className="info-row">
@@ -74,6 +117,7 @@ const ScreenAcordoComercial = () => {
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
               fullWidth
+              disabled
             />
           </div>
           <div className="info-row">
@@ -82,6 +126,7 @@ const ScreenAcordoComercial = () => {
               value={dataSolicitacao}
               onChange={(e) => setDataSolicitacao(e.target.value)}
               fullWidth
+              disabled
             />
           </div>
         </div>
@@ -90,7 +135,12 @@ const ScreenAcordoComercial = () => {
       <section className="nf-section">
         <div className="headerNF">
           <h2 className="title-nf">NFs associadas a este acordo</h2>
-          <button className="add-nf-btn" onClick={() => setModalOpen({isOpen: true, isSell: false})}>ADICIONAR NF DE ORIGEM</button>
+          <button
+            className="add-nf-btn"
+            onClick={() => setModalOpen({ isOpen: true, isSell: false })}
+          >
+            ADICIONAR NF DE ORIGEM
+          </button>
         </div>
         {nfs.map((nf, index) => (
           <div key={index} className="nf-item">
@@ -104,7 +154,12 @@ const ScreenAcordoComercial = () => {
                 style={{ color: "#555", fontSize: "22px" }}
                 onClick={() => showDeleteConfirm(nf.nf)}
               />
-              <Button type="text" className="nextButton">
+              <Button type="text" className="nextButton"
+              onClick={() => {
+                navigate("/garantias/aci/details-itens", {
+                  state: {acordo, nf}
+                })
+              }}>
                 &gt;
               </Button>
             </div>
@@ -112,7 +167,14 @@ const ScreenAcordoComercial = () => {
         ))}
       </section>
 
-      <NFModal open={modalOpen.isOpen} onOpenChange={setModalOpen} onAddNF={handleAddNF} isSell={false} itemId={""} garantiaId={""} />
+      <NFModal
+        open={modalOpen.isOpen}
+        onOpenChange={setModalOpen}
+        onAddNF={handleAddNF}
+        isSell={false}
+        itemId={""}
+        garantiaId={""}
+      />
       <Modal
         title="Confirmar Exclusão"
         visible={modalDeleteOpen}

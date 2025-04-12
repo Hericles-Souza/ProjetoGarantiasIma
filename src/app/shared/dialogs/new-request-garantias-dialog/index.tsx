@@ -135,6 +135,8 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           ICMS: 0,
           IPI: 0,
           mva: 0,
+          nf: values["N° NF de origem"],
+
         };
 
         const payloadAcordoPost: AcordoComercialModel = {
@@ -149,7 +151,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           ICMS: 0,
           valorIPI: 0,
           ICMSSubstituicao: 0,
-          nf: values["N° NF de origem"],
           itens: [itemAcordoPost],
         };
         console.log("payloadAcordoPost:", payloadAcordoPost);
@@ -296,6 +297,8 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
   };
 
   useEffect(() => {
+    console.log(currentTab);
+    
     const activeButtonRef =
       currentTab === FilterStatus.GARANTIAS
         ? garantiaButtonRef

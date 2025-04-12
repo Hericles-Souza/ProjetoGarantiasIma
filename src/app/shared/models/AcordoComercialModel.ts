@@ -15,6 +15,7 @@ export interface AcordoComercialItem {
   ICMS: number;
   IPI: number;
   mva: number;
+  nf: string;
   sequencia?: string;
   data?: string;
   usuarioInsercao?: string;
@@ -37,7 +38,6 @@ export interface AcordoComercialModel {
   ICMS: number;
   valorIPI: number;
   ICMSSubstituicao: number;
-  nf: string;
   itens: AcordoComercialItem[];
   createdAt?: string;
   updatedAt?: string;
