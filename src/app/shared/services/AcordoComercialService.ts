@@ -71,3 +71,7 @@ export const updateAciHeaderByIdAsync = async (data: AcordoComercialModel, acord
   
   return teste;
 }
+
+export const getAcordoByIdAsync = (id: string) => {
+  return api.get(`/acordos/${id}`);
+}

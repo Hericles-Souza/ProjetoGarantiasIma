@@ -52,13 +52,11 @@ const Garantias: React.FC = () => {
         const response = await getGarantiasPaginationAsync(1, 100);
         const responseDataACI = await getAcordosByUser(1, 100);
         
-        console.log("acordos: ", responseDataACI.data.data.data);
         
         if(responseDataACI){
-          setAcordoData(responseDataACI.data.data.data);
-          console.log("acordos: ", acordoData);
-          
+          setAcordoData(responseDataACI.data.data.data);          
         }
+        console.log("acordos: ", responseDataACI.data.data.data);
         const data = await response.data.data.data;
         
         if(data)

@@ -10,7 +10,18 @@ import {
 import styles from "./ScreenDetailsItensTradeAgreement.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
+import {
+  AcordoComercialItem,
+  AcordoComercialModel,
+} from "@shared/models/AcordoComercialModel";
+import {
+  AcordoComercialItemStatusEnum2,
+  AcordoItemStatusEnum,
+} from "@shared/enums/AcordoComercialStatusEnum";
+import {
+  getAcordoByIdAsync,
+  updateAciHeaderByIdAsync,
+} from "@shared/services/AcordoComercialService";
 
 const FileAttachment = ({
   label,
@@ -69,7 +80,7 @@ const CollapsibleSection = ({
   toggleVisibility: () => void;
   showDeleteConfirm: () => void;
   children: React.ReactNode;
-  status: "Autorizado" | "Recusado";
+  status: string;
 }) => (
   <div>
     <div className={styles.tituloSecaoContainer}>
@@ -110,12 +121,9 @@ const CollapsibleSection = ({
 );
 
 const ScreenDetailsItensTradeAgreement: React.FC = () => {
-  const [items, setItems] = useState<
-    { id: number; title: string; status: "Autorizado" | "Recusado" }[]
-  >([{ id: 1, title: "000666-00147.A.01", status: "Autorizado" }]);
-  const [visibleSectionId, setVisibleSectionId] = useState<number | null>(1);
+  const [visibleSectionId, setVisibleSectionId] = useState<string | null>();
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
   const [nf, SetNf] = useState<string>();
   const [acordo, SetAcordo] = useState<AcordoComercialModel>();
@@ -126,29 +134,98 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
     if (location.state) {
       SetAcordo(location.state.acordo);
       console.log("acordo: ", acordo);
-      SetNf(location.state.nf.nf);
+      SetNf(location.state.nf);
       console.log("nf: ", nf);
     }
-  });
 
-  const addNewItem = () => {
-    const newItemId = items.length + 1;
-    const newItemTitle = `000666-00147.A.${newItemId
-      .toString()
-      .padStart(2, "0")}`;
-    setItems([
-      ...items,
-      { id: newItemId, title: newItemTitle, status: "Autorizado" },
-    ]);
-    setVisibleSectionId(newItemId);
+    // if(location.state.nf);
+    //   console.log(
+    //     "123123213123213: ",
+    //     location.state.acordo as AcordoComercialModel
+    //   );
+    //   const acordoOriginal = location.state.acordo as AcordoComercialModel;
+    //   const itensFiltrados = acordoOriginal.itens.filter(
+    //     (value) => value.nf === nf
+    //   );
+
+    //   SetAcordo({
+    //     ...acordoOriginal,
+    //     itens: itensFiltrados,
+    //   });
+    //   console.log("acordo: ", acordo);
+    //   console.log("nf: ", nf);
+  }, [acordo, nf]);
+
+  const addNewItem = async () => {
+    const response = await getAcordoByIdAsync(acordo.id);
+    console.log("response: ", response);
+    
+    const recAcordo = await response.data.data as AcordoComercialModel;
+
+    const sequence =
+      recAcordo?.itens.filter((value) => value.nf == nf).length + 1;
+    const newItemCode = nf + "." + sequence;
+    console.log("newItemCode: ", newItemCode);
+
+    const newItem: AcordoComercialItem = {
+      id: "",
+      codigoItem: newItemCode,
+      precoUnitario: 0,
+      quantidade: 0,
+      codigoStatus: AcordoComercialItemStatusEnum2.NAO_ENVIADO,
+      status: AcordoItemStatusEnum.NAO_ENVIADO,
+      valorTotalItem: 0,
+      tipoOperacao: "CIF",
+      baseICMS: 0,
+      valorICMS: 0,
+      valorIPI: 0,
+      ICMS: 0,
+      IPI: 0,
+      mva: 0,
+      nf: nf,
+    };
+
+
+    recAcordo?.itens.push(newItem);
+
+    SetAcordo((prev) => {
+      return {
+        ...prev,
+        itens: [...prev.itens, newItem],
+      };
+    });
+
+    const payloadAcordoPut: AcordoComercialModel = {
+      usuarioAtualizacao: recAcordo.usuarioInsercao,
+      razaoSocial: recAcordo.razaoSocial,
+      telefone: recAcordo.telefone,
+      email: recAcordo.email,
+      codigoStatus: recAcordo.codigoStatus,
+      observacao: recAcordo.observacao,
+      baseICMS: 0,
+      ICMS: 0,
+      valorIPI: 0,
+      ICMSSubstituicao: 0,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      itens: recAcordo.itens,
+    };
+    console.log("payloadAcordoPut: ", payloadAcordoPut)
+    await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
   };
 
-  const handleDeleteItem = (itemId: number) => {
-    setItems(items.filter((item) => item.id !== itemId));
+  const handleDeleteItem = (itemId: string) => {
+    SetAcordo((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        itens: prev.itens.filter((item) => item.id !== itemId),
+      };
+    });
     setModalDeleteOpen(false);
   };
 
-  const showDeleteConfirm = (itemId: number) => {
+  const showDeleteConfirm = (itemId: string) => {
     setItemToDelete(itemId);
     setModalDeleteOpen(true);
   };
@@ -159,7 +236,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
     }
   };
 
-  const toggleSectionVisibility = (id: number) => {
+  const toggleSectionVisibility = (id: string) => {
     if (visibleSectionId === id) {
       setVisibleSectionId(null);
     } else {
@@ -173,7 +250,11 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         <Button
           type="link"
           className={styles.ButtonBack}
-          onClick={() => navigate(`/garantias/rgi/${id}`)}
+          onClick={() =>
+            navigate(`/garantias/aci/${id}`, {
+              state: { item: acordo },
+            })
+          }
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DA ACI
         </Button>
@@ -183,7 +264,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       </div>
 
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>{acordo?.cdAci}</h1>
+        <h1 className={styles.tituloRgi}>{nf}</h1>
         <div className={styles.botoesCabecalho}>
           <Button type="default" className={styles.ButtonDelete}>
             Visualizar Pré-Nota
@@ -225,42 +306,43 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </span>
       </div> */}
 
-      {items.map((item) => (
-        <div className={styles.containerInformacoes} key={item.id}>
-          <CollapsibleSection
-            title={item.title}
-            isVisible={visibleSectionId === item.id}
-            toggleVisibility={() => toggleSectionVisibility(item.id)}
-            showDeleteConfirm={() => showDeleteConfirm(item.id)}
-            status={item.status}
-          >
-            <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+      {acordo?.itens
+        .map((item) => (
+          <div className={styles.containerInformacoes} key={item.id}>
+            <CollapsibleSection
+              title={item.codigoItem}
+              isVisible={visibleSectionId === item.id}
+              toggleVisibility={() => toggleSectionVisibility(item.id)}
+              showDeleteConfirm={() => showDeleteConfirm(item.id)}
+              status={item.status}
+            >
+              <h3 className={styles.tituloSecao}>Informações Gerais</h3>
 
-            <div className={styles.inputsContainer}>
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Código da peça *"
-                    fullWidth
-                    value=""
-                  />
-                </div>
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Quantidade *"
-                    fullWidth
-                    value=""
-                  />
+              <div className={styles.inputsContainer}>
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      label="Código da peça *"
+                      fullWidth
+                      value={item?.codigoItem}
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      label="Quantidade *"
+                      fullWidth
+                      value={item?.quantidade.toString()}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <FileAttachment
-              label="Anexo da NF de devolução"
-              backgroundColor="#ffffff"
-            />
-          </CollapsibleSection>
-        </div>
-      ))}
+              <FileAttachment
+                label="Anexo da NF de devolução"
+                backgroundColor="#ffffff"
+              />
+            </CollapsibleSection>
+          </div>
+        ))}
 
       <Modal
         title="Confirmar Exclusão"

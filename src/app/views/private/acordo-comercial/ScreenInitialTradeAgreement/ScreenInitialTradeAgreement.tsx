@@ -220,8 +220,9 @@ const ScreenAcordoComercial: React.FC = () => {
                 type="text"
                 className="nextButton"
                 onClick={() => {
+                  console.log("navigateAcordo: ", acordo);
                   navigate("/garantias/aci/details-itens", {
-                    state: { acordo, nf },
+                    state: { acordo, nf: nf.nf },
                   });
                 }}
               >
