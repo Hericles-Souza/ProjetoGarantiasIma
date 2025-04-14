@@ -4,13 +4,13 @@ import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label
 import { Button, Modal } from "antd";
 import { useEffect, useState } from "react";
 import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   AcordoComercialItem,
   AcordoComercialModel,
 } from "@shared/models/AcordoComercialModel";
 import { AcordoComercialItemStatusEnum2 } from "@shared/enums/AcordoComercialStatusEnum";
-import { updateAciHeaderByIdAsync } from "@shared/services/AcordoComercialService";
+import { getAcordoByIdAsync, updateAciHeaderByIdAsync } from "@shared/services/AcordoComercialService";
 
 const ScreenAcordoComercial: React.FC = () => {
   const [razaoSocial, setRazaoSocial] = useState(
@@ -30,6 +30,7 @@ const ScreenAcordoComercial: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
+  const { id } = useParams<{ id: string }>();
 
   const getRgiWithSuffix = (RgiCode: string, letter: string, index) => {
     return `${RgiCode}.${letter}.${index}`;
@@ -40,13 +41,11 @@ const ScreenAcordoComercial: React.FC = () => {
 
     // Extrai a parte numérica e a letra do último item
     const [letra] = ultimoItem.nf.split(".")[1];
-    console.log(letra);
 
     // Calcula a próxima letra do alfabeto
     const proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
     const nfCode = acordo.cdAci + "." + proximaLetra;
     const itemCode = getRgiWithSuffix(acordo.cdAci, proximaLetra, 1);
-    console.log("nfNumber" + nfCode);
     setNfs((prevNfs) => [...prevNfs, { nf: nfCode, itens: 1 }]);
     setInputValue("");
     setModalOpen({ isOpen: false, isSell: false });
@@ -100,38 +99,44 @@ const ScreenAcordoComercial: React.FC = () => {
     setModalDeleteOpen(true);
   };
 
+  const setAcordoByGet = async (id: string) => {
+    const response = await getAcordoByIdAsync(id);
+    if(response.status == 200 || response.status == 201){
+      const recAcordo = (await response.data.data) as AcordoComercialModel;
+      setAcordo(recAcordo);
+      const recNfs = recAcordo.itens
+      .map(
+        (value) =>
+          value.codigoItem.split(".")[0] +
+          "." +
+          value.codigoItem.split(".")[1]
+      ) // substitui null/undefined por 'sem_nf'
+      .filter((nf) => nf !== "");
+  
+    // Contar as ocorrências
+    const nfCountMap = recNfs.reduce((acc, nf) => {
+      acc[nf] = (acc[nf] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  
+    // Gerar o array de objetos com nf e quantidade
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const nfsFormatted = Object.entries(nfCountMap).map(([nf, itens]) => ({
+      nf: nf,
+      itens: itens,
+    }));
+    setNfs(nfsFormatted);
+    }
+    else{
+      console.log("Erro ao buscar ACI");
+    }
+    
+  }
+
   useEffect(() => {
-    console.log("new page: ", location.state);
-
-    console.log(location.state.item);
-
+    
     if (location.state) {
-      console.log("location state: ", location.state);
-      const recNfs = location.state.item.itens
-        .map(
-          (value) =>
-            value.codigoItem.split(".")[0] +
-            "." +
-            value.codigoItem.split(".")[1]
-        ) // substitui null/undefined por 'sem_nf'
-        .filter((nf) => nf !== "");
-      console.log("correctedNfs: ", recNfs);
-
-      // Contar as ocorrências
-      const nfCountMap = recNfs.reduce((acc, nf) => {
-        acc[nf] = (acc[nf] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Gerar o array de objetos com nf e quantidade
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const nfsFormatted = Object.entries(nfCountMap).map(([nf, itens]) => ({
-        nf: nf,
-        itens: 1,
-      }));
-      setNfs(nfsFormatted);
-      setAcordo(location.state.item);
-      console.log(nfsFormatted);
+      setAcordoByGet(id);
     }
   }, [location.state]);
 
@@ -220,7 +225,6 @@ const ScreenAcordoComercial: React.FC = () => {
                 type="text"
                 className="nextButton"
                 onClick={() => {
-                  console.log("navigateAcordo: ", acordo);
                   navigate("/garantias/aci/details-itens", {
                     state: { acordo, nf: nf.nf },
                   });

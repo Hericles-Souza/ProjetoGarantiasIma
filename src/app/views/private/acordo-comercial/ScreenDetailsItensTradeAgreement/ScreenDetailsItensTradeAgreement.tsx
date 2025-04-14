@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import styles from "./ScreenDetailsItensTradeAgreement.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   AcordoComercialItem,
   AcordoComercialModel,
@@ -127,45 +127,51 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
   const navigate = useNavigate();
   const [nf, SetNf] = useState<string>();
   const [acordo, SetAcordo] = useState<AcordoComercialModel>();
-  const { id } = useParams<{ id: string }>();
   const location = useLocation();
 
-  useEffect(() => {
-    if (location.state) {
-      SetAcordo(location.state.acordo);
-      console.log("acordo: ", acordo);
-      SetNf(location.state.nf);
-      console.log("nf: ", nf);
+  const setAcordoByGet = async (id: string, nfParam: string) => {
+    const response = await getAcordoByIdAsync(id);
+    if (response.status == 200 || response.status == 201) {
+      const recAcordoResponse = (await response.data.data) as AcordoComercialModel;
+      const itensFiltrados = recAcordoResponse.itens.filter((item) => {
+        const [itemBase, itemLetra] = item.codigoItem.split(".");
+        const [nfBase, nfLetra] = nfParam.split(".");
+      
+        const matchesBase = itemBase === nfBase;
+        const matchesLetra = itemLetra === nfLetra;
+    
+        return matchesBase && matchesLetra;
+      });
+      recAcordoResponse.itens = itensFiltrados;
+      SetAcordo(recAcordoResponse);
+    } else {
+      console.log("Erro ao buscar ACI");
     }
+  };
+  useEffect(() => {
+    const fetchData = async () => {
+      if (location.state) {
+        const nfLocal = location.state.nf;
+        SetNf(location.state.nf);
+        
+        if (nfLocal !== "") {
+          await setAcordoByGet(location.state.acordo.id, nfLocal);
+        }
+      }
+    };
+  
+    fetchData();
+  }, [location.state]);
 
-    // if(location.state.nf);
-    //   console.log(
-    //     "123123213123213: ",
-    //     location.state.acordo as AcordoComercialModel
-    //   );
-    //   const acordoOriginal = location.state.acordo as AcordoComercialModel;
-    //   const itensFiltrados = acordoOriginal.itens.filter(
-    //     (value) => value.nf === nf
-    //   );
-
-    //   SetAcordo({
-    //     ...acordoOriginal,
-    //     itens: itensFiltrados,
-    //   });
-    //   console.log("acordo: ", acordo);
-    //   console.log("nf: ", nf);
-  }, [acordo, nf]);
 
   const addNewItem = async () => {
     const response = await getAcordoByIdAsync(acordo.id);
-    console.log("response: ", response);
-    
-    const recAcordo = await response.data.data as AcordoComercialModel;
+
+    const recAcordo = (await response.data.data) as AcordoComercialModel;
 
     const sequence =
-      recAcordo?.itens.filter((value) => value.nf == nf).length + 1;
+     acordo?.itens.length + 1;
     const newItemCode = nf + "." + sequence;
-    console.log("newItemCode: ", newItemCode);
 
     const newItem: AcordoComercialItem = {
       id: "",
@@ -184,7 +190,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       mva: 0,
       nf: nf,
     };
-
 
     recAcordo?.itens.push(newItem);
 
@@ -209,7 +214,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       itens: recAcordo.itens,
     };
-    console.log("payloadAcordoPut: ", payloadAcordoPut)
+    console.log("payloadAcordoPut: ", payloadAcordoPut);
     await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
   };
 
@@ -251,7 +256,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           type="link"
           className={styles.ButtonBack}
           onClick={() =>
-            navigate(`/garantias/aci/${id}`, {
+            navigate(`/garantias/aci/${acordo?.id}`, {
               state: { item: acordo },
             })
           }
@@ -307,42 +312,42 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       </div> */}
 
       {acordo?.itens
-        .map((item) => (
-          <div className={styles.containerInformacoes} key={item.id}>
-            <CollapsibleSection
-              title={item.codigoItem}
-              isVisible={visibleSectionId === item.id}
-              toggleVisibility={() => toggleSectionVisibility(item.id)}
-              showDeleteConfirm={() => showDeleteConfirm(item.id)}
-              status={item.status}
-            >
-              <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+      .map((item) => (
+        <div className={styles.containerInformacoes} key={item.id}>
+          <CollapsibleSection
+            title={item.codigoItem}
+            isVisible={visibleSectionId === item.id}
+            toggleVisibility={() => toggleSectionVisibility(item.id)}
+            showDeleteConfirm={() => showDeleteConfirm(item.id)}
+            status={item.status}
+          >
+            <h3 className={styles.tituloSecao}>Informações Gerais</h3>
 
-              <div className={styles.inputsContainer}>
-                <div className={styles.inputsConjun}>
-                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                    <OutlinedInputWithLabel
-                      label="Código da peça *"
-                      fullWidth
-                      value={item?.codigoItem}
-                    />
-                  </div>
-                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                    <OutlinedInputWithLabel
-                      label="Quantidade *"
-                      fullWidth
-                      value={item?.quantidade.toString()}
-                    />
-                  </div>
+            <div className={styles.inputsContainer}>
+              <div className={styles.inputsConjun}>
+                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                  <OutlinedInputWithLabel
+                    label="Código da peça *"
+                    fullWidth
+                    value={item?.codigoItem}
+                  />
+                </div>
+                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                  <OutlinedInputWithLabel
+                    label="Quantidade *"
+                    fullWidth
+                    value={item?.quantidade.toString()}
+                  />
                 </div>
               </div>
-              <FileAttachment
-                label="Anexo da NF de devolução"
-                backgroundColor="#ffffff"
-              />
-            </CollapsibleSection>
-          </div>
-        ))}
+            </div>
+            <FileAttachment
+              label="Anexo da NF de devolução"
+              backgroundColor="#ffffff"
+            />
+          </CollapsibleSection>
+        </div>
+      ))}
 
       <Modal
         title="Confirmar Exclusão"
