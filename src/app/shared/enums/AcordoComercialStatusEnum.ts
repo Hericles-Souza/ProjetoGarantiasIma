@@ -1,9 +1,9 @@
 export enum AcordoStatusEnum {
-    EM_ANALISE = "Em análise",
+    EM_ANALISE = "Em Análise",
     NAO_ENVIADO = 'Não enviado',
-    AGUARDANDO_NF_DEVOLUCAO = 'Aguardando NF de Devolucao',
-    AGUARDANDO_VALIDACAO_NF_DEVOLUCAO = 'Aguardando Validacao de NF de Devolução',
-    NF_DEVOLUCAO_RECUSADA = 'NF de Devolução Recusada',
+    AGUARDANDO_NF_DEVOLUCAO = 'Aguardando NF Devolucao',
+    AGUARDANDO_VALIDACAO_NF_DEVOLUCAO = 'Aguardando Validacao NF Devolucao',
+    NF_DEVOLUCAO_RECUSADA = 'NF Devolucao Recusada',
     AUTORIZADO = 'Autorizado'
 }
 
@@ -55,17 +55,17 @@ export function converterStringParaStatusAcordo(status: string): AcordoStatusEnu
 }
 
 export enum AcordoItemStatusEnum {
-    NAO_ANALISADO = "Nao analisado",
+    NAO_ANALISADO = "Não analisado",
     AUTORIZADO = 'Autorizado',
-    NAO_AUTORIZADO = 'Não Autorizado',
+    NAO_AUTORIZADO = 'Não autorizado',
     NAO_ENVIADO = "Não enviado"
 }
 
 export enum AcordoComercialItemStatusEnum2 {
-    NAO_ANALISADO = 1, 
-    AUTORIZADO = 2,
-    NAO_AUTORIZADO = 3,
-    NAO_ENVIADO = 4
+    NAO_ANALISADO = 7, 
+    AUTORIZADO = 9,
+    NAO_AUTORIZADO = 8,
+    NAO_ENVIADO = 2
 }
 
 export function converterStatusAcordoItem(status: AcordoComercialItemStatusEnum2): AcordoItemStatusEnum {

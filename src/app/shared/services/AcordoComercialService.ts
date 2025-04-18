@@ -1,5 +1,5 @@
 import api from "@shared/Interceptors";
-import { AcordoComercialModel, ResponseNfItem } from "@shared/models/AcordoComercialModel";
+import { AcordoComercialModel, ResponseNfItem, UpdateItemResponse } from "@shared/models/AcordoComercialModel";
 
 
 export const createAcordoAsync = (data: AcordoComercialModel) => {
@@ -71,6 +71,11 @@ export const updateAciHeaderByIdAsync = async (data: AcordoComercialModel, acord
   
   return teste;
 }
+
+export const updateAciItemByIdAsync = (data: UpdateItemResponse, idItem: string ) => {
+  return api.put(`/acordos/ACI/${idItem}/UpdateItem`, data);
+}
+
 
 export const getAcordoByIdAsync = (id: string) => {
   return api.get(`/acordos/${id}`);

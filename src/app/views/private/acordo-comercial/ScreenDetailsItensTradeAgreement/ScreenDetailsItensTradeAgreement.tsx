@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Button, Modal } from "antd";
+import { useContext, useEffect, useState } from "react";
+import { Button, message, Modal } from "antd";
 import {
   DownOutlined,
   DeleteOutlined,
@@ -13,28 +13,63 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   AcordoComercialItem,
   AcordoComercialModel,
+  UpdateItemResponse,
 } from "@shared/models/AcordoComercialModel";
 import {
   AcordoComercialItemStatusEnum2,
+  AcordoComercialStatusEnum2,
   AcordoItemStatusEnum,
 } from "@shared/enums/AcordoComercialStatusEnum";
 import {
   getAcordoByIdAsync,
   updateAciHeaderByIdAsync,
+  updateAciItemByIdAsync,
 } from "@shared/services/AcordoComercialService";
+import environment from "@env/environment";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 const FileAttachment = ({
   label,
   backgroundColor,
+  itemId,
 }: {
   label: string;
   backgroundColor?: string;
+  itemId: string;
 }) => {
   const [fileName, setFileName] = useState<string | null>(null);
+  const context = useContext(AuthContext);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFileName(event.target.files[0].name);
+      const file = event.target.files[0];
+
+      const endpoint = environment.apiUrl + "/files/upload-private-file-item";
+      const fileData = new FormData();
+      fileData.append("file", file);
+      fileData.append("itemId", itemId);
+      fileData.append("field", "nfDev");
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${context.user.token}`,
+            accept: "*/*",
+          },
+          body: fileData,
+        });
+        if (response.status === 201) {
+          message.success("Arquivo enviado com sucesso!");
+        } else {
+          message.error("Erro ao enviar arquivo.");
+        }
+      } catch (error) {
+        console.log("ocorreu um erro ao enviar o arquivo: ", error);
+      }
     }
   };
 
@@ -128,18 +163,38 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
   const [nf, SetNf] = useState<string>();
   const [acordo, SetAcordo] = useState<AcordoComercialModel>();
   const location = useLocation();
+  const context = useContext(AuthContext);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleInputChange = (itemId: string, field: string, value: any) => {
+    
+    SetAcordo((prevNotaFiscal) => {
+      if (prevNotaFiscal) {
+        return {
+          ...prevNotaFiscal,
+          itens: prevNotaFiscal.itens.map(
+            (item) =>
+              item.id === itemId
+                ? { ...item, [field]: value } // Atualiza o campo dinâmico
+                : item // Mantém o item intacto se não for o correto
+          ),
+        };
+      }
+    });
+  };
 
   const setAcordoByGet = async (id: string, nfParam: string) => {
     const response = await getAcordoByIdAsync(id);
     if (response.status == 200 || response.status == 201) {
-      const recAcordoResponse = (await response.data.data) as AcordoComercialModel;
+      const recAcordoResponse = (await response.data
+        .data) as AcordoComercialModel;
       const itensFiltrados = recAcordoResponse.itens.filter((item) => {
         const [itemBase, itemLetra] = item.codigoItem.split(".");
         const [nfBase, nfLetra] = nfParam.split(".");
-      
+
         const matchesBase = itemBase === nfBase;
         const matchesLetra = itemLetra === nfLetra;
-    
+
         return matchesBase && matchesLetra;
       });
       recAcordoResponse.itens = itensFiltrados;
@@ -153,24 +208,51 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       if (location.state) {
         const nfLocal = location.state.nf;
         SetNf(location.state.nf);
-        
+
         if (nfLocal !== "") {
           await setAcordoByGet(location.state.acordo.id, nfLocal);
         }
       }
     };
-  
+
     fetchData();
   }, [location.state]);
 
+  const handleSaveClient = async () => {
+    acordo?.itens.forEach(async (item) => {
+      const itemUpdate: UpdateItemResponse = {
+        codigoItem: item.codigoItem,
+        precoUnitario: 0,
+        quantidade: item.quantidade,
+        codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
+        valorTotalItem: 0,
+        tipoOperacao: item.tipoOperacao,
+        baseICMS: 0,
+        valorICMS: 0,
+        valorIPI: 0,
+        ICMS: 0,
+        IPI: 0,
+        mva: 0,
+        nf: item.nf,
+        usuarioAtualizacao: context.user.fullname,
+      };
+
+      const response = await updateAciItemByIdAsync(itemUpdate, item.id);
+
+      if (response.status == 200 || response.status == 201) {
+        console.log("item salvo com sucesso: ", itemUpdate);
+      } else {
+        console.log("item com erro ao salvar: ", itemUpdate);
+      }
+    });
+  };
 
   const addNewItem = async () => {
     const response = await getAcordoByIdAsync(acordo.id);
 
     const recAcordo = (await response.data.data) as AcordoComercialModel;
 
-    const sequence =
-     acordo?.itens.length + 1;
+    const sequence = acordo?.itens.length + 1;
     const newItemCode = nf + "." + sequence;
 
     const newItem: AcordoComercialItem = {
@@ -268,20 +350,26 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </span>
       </div>
 
-      <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>{nf}</h1>
-        <div className={styles.botoesCabecalho}>
-          <Button type="default" className={styles.ButtonDelete}>
-            Visualizar Pré-Nota
-          </Button>
-          <Button type="default" className={styles.ButtonDelete}>
-            Excluir
-          </Button>
-          <Button type="primary" className={styles.ButonToSend}>
-            Salvar
-          </Button>
-        </div>
+      {context.user.rule.name == UserRoleEnum.Cliente && 
+      acordo?.codigoStatus == AcordoComercialStatusEnum2.NAO_ENVIADO &&  <div className={styles.ContainerHeader}>
+      <h1 className={styles.tituloRgi}>{nf}</h1>
+      <div className={styles.botoesCabecalho}>
+        <Button type="default" className={styles.ButtonDelete}>
+          Visualizar Pré-Nota
+        </Button>
+        <Button type="default" className={styles.ButtonDelete}>
+          Excluir
+        </Button>
+        <Button
+          type="primary"
+          className={styles.ButonToSend}
+          onClick={handleSaveClient}
+        >
+          Salvar
+        </Button>
       </div>
+    </div>}
+     
       <hr className={styles.divisor} />
 
       <div className={styles.TitleItens}>
@@ -311,8 +399,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </span>
       </div> */}
 
-      {acordo?.itens
-      .map((item) => (
+      {acordo?.itens.map((item) => (
         <div className={styles.containerInformacoes} key={item.id}>
           <CollapsibleSection
             title={item.codigoItem}
@@ -337,6 +424,14 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                     label="Quantidade *"
                     fullWidth
                     value={item?.quantidade.toString()}
+                    onChange={(e) => {
+                      handleInputChange(
+                        item.id,
+                        "quantidade",
+                        e.target.value
+                      );
+                      item.quantidade = Number(e.target.value);
+                    }}
                   />
                 </div>
               </div>
@@ -344,6 +439,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             <FileAttachment
               label="Anexo da NF de devolução"
               backgroundColor="#ffffff"
+              itemId={item.id}
             />
           </CollapsibleSection>
         </div>

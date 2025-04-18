@@ -71,3 +71,22 @@ export interface NfItem {
   solicitarRessarcimento: boolean;
   garantia_id: string;
 }
+
+export interface UpdateItemResponse {
+  
+    codigoItem: string,
+    precoUnitario: number,
+    quantidade: number,
+    codigoStatus: number,
+    valorTotalItem: number,
+    tipoOperacao: string,
+    baseICMS: number,
+    valorICMS: number,
+    valorIPI: number,
+    ICMS: number,
+    IPI: number,
+    mva: number,
+    nf: string,
+    usuarioAtualizacao: string
+  
+}
