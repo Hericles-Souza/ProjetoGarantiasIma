@@ -65,6 +65,21 @@ export const getAcordosByUser = async (page: number, limit: number) => {
   }
 }
 
+export const getAllAcordos  = async (page: number, limit: number) => {
+  try {
+    const data = {
+      page, 
+      limit
+    }
+    const acordos = await api.post(`acordos/ACI/getAll`, data);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return acordos as any;
+  } catch (error) {
+    console.error('Error fetching acordos comerciais by status:', error);
+    throw error;
+  }
+}
+
 export const updateAciHeaderByIdAsync = async (data: AcordoComercialModel, acordoId: string) => {
   const teste = await api.put(`acordos/ACI/${acordoId}/UpdateHeader`, data);
   console.log("Teste: ", teste);

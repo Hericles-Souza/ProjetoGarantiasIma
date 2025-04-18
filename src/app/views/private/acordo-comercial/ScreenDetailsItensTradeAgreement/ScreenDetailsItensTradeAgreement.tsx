@@ -4,7 +4,6 @@ import {
   DownOutlined,
   DeleteOutlined,
   LeftOutlined,
-  FileOutlined,
   RightOutlined,
 } from "@ant-design/icons";
 import styles from "./ScreenDetailsItensTradeAgreement.module.css";
@@ -19,6 +18,7 @@ import {
   AcordoComercialItemStatusEnum2,
   AcordoComercialStatusEnum2,
   AcordoItemStatusEnum,
+  converterStatusAcordoItem,
 } from "@shared/enums/AcordoComercialStatusEnum";
 import {
   getAcordoByIdAsync,
@@ -29,17 +29,83 @@ import environment from "@env/environment";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
+
 const FileAttachment = ({
   label,
   backgroundColor,
-  itemId,
+  item,
+  acordo,
 }: {
   label: string;
   backgroundColor?: string;
-  itemId: string;
+  item: AcordoComercialItem;
+  acordo: AcordoComercialModel;
 }) => {
-  const [fileName, setFileName] = useState<string | null>(null);
   const context = useContext(AuthContext);
+  const [recFile, setRecFile] = useState<{
+    fileNameWithExtension: string;
+    imagemUrl: string;
+  }>({ fileNameWithExtension: "", imagemUrl: "" });
+
+  useEffect(() => {
+    if (item.id) {
+      let fieldFile: string = "";
+      fieldFile = "nfDev";
+
+      getFieldFile(item.id, fieldFile);
+    }
+  });
+
+  function getExtensionFromMimeType(mimeType: string): string {
+    const mimeTypes: { [key: string]: string } = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/zip": ".zip",
+      "audio/mpeg": ".mp3",
+      "video/mp4": ".mp4",
+    };
+
+    return mimeTypes[mimeType] || "";
+  }
+
+  function getFileExtensionFromBlob(blob: Blob): string {
+    const mimeType = blob.type;
+    const extension = getExtensionFromMimeType(mimeType);
+    return extension;
+  }
+
+  const getFieldFile = async (itemId: string, field: string) => {
+    try {
+      const urlGetFile =
+        environment.apiUrl +
+        `/files/files/download-private-file-item/${itemId}/${field}`;
+
+      const response = await fetch(urlGetFile, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const fileExtension = getFileExtensionFromBlob(blob);
+        const fileNameWithExtension = field + fileExtension;
+        const imagemUrl = URL.createObjectURL(blob);
+
+        setRecFile({ fileNameWithExtension, imagemUrl });
+      } else {
+        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+      }
+    } catch (error) {
+      console.log("erro: ", error);
+    }
+  };
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -50,7 +116,7 @@ const FileAttachment = ({
       const endpoint = environment.apiUrl + "/files/upload-private-file-item";
       const fileData = new FormData();
       fileData.append("file", file);
-      fileData.append("itemId", itemId);
+      fileData.append("itemId", item.id);
       fileData.append("field", "nfDev");
 
       try {
@@ -73,30 +139,130 @@ const FileAttachment = ({
     }
   };
 
+  const handleDownloadFile = () => {
+    if (recFile) {
+      const link = document.createElement("a");
+      link.href = recFile.imagemUrl || "#";
+      link.download = recFile.fileNameWithExtension || "download";
+      link.click();
+    }
+  };
+
+  const handleSaveClient = async (refused: boolean) => {
+    const itemUpdate: UpdateItemResponse = {
+      codigoItem: item.codigoItem,
+      precoUnitario: item.precoUnitario,
+      quantidade: item.quantidade,
+      codigoStatus: refused
+        ? AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
+        : AcordoComercialItemStatusEnum2.AUTORIZADO,
+      valorTotalItem: item.valorTotalItem,
+      tipoOperacao: item.tipoOperacao,
+      baseICMS: item.baseICMS,
+      valorICMS: item.valorICMS,
+      valorIPI: item.valorIPI,
+      ICMS: item.ICMS,
+      IPI: item.IPI,
+      mva: item.mva,
+      nf: item.nf,
+      usuarioAtualizacao: context.user.fullname,
+    };
+
+    console.log("itemUpdate: ", itemUpdate);
+
+    const response = await updateAciItemByIdAsync(itemUpdate, item.id);
+
+    if (response.status == 200 || response.status == 201) {
+      item.codigoStatus = refused
+        ? AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
+        : AcordoComercialItemStatusEnum2.AUTORIZADO;
+
+      // SetAcordo((prev) => {
+      //   const updatedItens = prev.itens.map((prevItem) =>
+      //     prevItem.id === item.id
+      //       ? { ...prevItem, campoQueVaiMudar: item.codigoStatus }
+      //       : prevItem
+      //   );
+
+      //   return {
+      //     ...prev,
+      //     itens: updatedItens,
+      //   };
+      // });
+      console.log("item salvo com sucesso: ", response);
+    } else {
+      console.log("item com erro ao salvar: ", itemUpdate);
+    }
+  };
+
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
-        {fileName && (
-          <span className={styles.fileName}>
-            <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
-            {fileName}
-            <button
-              className={styles.buttonRemoveUpload}
-              onClick={() => setFileName(null)}
-            >
-              x
-            </button>
-          </span>
-        )}
-        <label className={styles.buttonUpdateNfSale}>
-          <input
-            type="file"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-          Adicionar Anexo
-        </label>
+        {recFile?.fileNameWithExtension != "" &&
+          recFile?.imagemUrl != "" &&
+          item.codigoStatus !=
+            AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
+            <label className={styles.buttonUpdateNfSale}>
+              <button
+                style={{ display: "none" }}
+                onClick={handleDownloadFile}
+              />
+              Baixar Arquivo
+            </label>
+          )}
+        {recFile?.fileNameWithExtension != "" &&
+          recFile?.imagemUrl != "" &&
+          acordo?.codigoStatus ==
+            AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+          item.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO && (
+            <div className="ButtonHeader">
+              <div style={{ display: "flex", gap: "10px" }}>
+                <Button
+                  onClick={() => handleSaveClient(true)}
+                  type="primary"
+                  className={styles.buttonSendRgi}
+                >
+                  Recusar NF de Devolução
+                </Button>
+                <Button
+                  type="primary"
+                  className={styles.buttonSendRgi}
+                  onClick={() => handleSaveClient(false)}
+                >
+                  Autorizar
+                </Button>
+              </div>
+            </div>
+          )}
+        {recFile?.fileNameWithExtension === "" &&
+          recFile?.imagemUrl === "" &&
+          (item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+            item.codigoStatus ==
+              AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
+          context.user.rule.name != UserRoleEnum.Supervisor && (
+            <label className={styles.buttonUpdateNfSale}>
+              <input
+                type="file"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+              Adicionar Anexo
+            </label>
+          )}
+        {item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
+          context.user.rule.name != UserRoleEnum.Supervisor &&
+          acordo?.codigoStatus ==
+            AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && (
+            <label className={styles.buttonUpdateNfSale}>
+              <input
+                type="file"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+              Adicionar Anexo
+            </label>
+          )}
       </div>
     </div>
   );
@@ -115,7 +281,7 @@ const CollapsibleSection = ({
   toggleVisibility: () => void;
   showDeleteConfirm: () => void;
   children: React.ReactNode;
-  status: string;
+  status: AcordoComercialItemStatusEnum2;
 }) => (
   <div>
     <div className={styles.tituloSecaoContainer}>
@@ -123,12 +289,12 @@ const CollapsibleSection = ({
         {title}{" "}
         <span
           className={
-            status === "Autorizado"
+            converterStatusAcordoItem(status) === "Autorizado"
               ? styles.statusAuthorized
               : styles.statusRejected
           }
         >
-          {status}
+          {converterStatusAcordoItem(status)}
         </span>
       </h3>
       <div className={styles.iconAndArrow}>
@@ -167,7 +333,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (itemId: string, field: string, value: any) => {
-    
     SetAcordo((prevNotaFiscal) => {
       if (prevNotaFiscal) {
         return {
@@ -219,44 +384,51 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
   }, [location.state]);
 
   const handleSaveClient = async () => {
-    acordo?.itens.forEach(async (item) => {
-      const itemUpdate: UpdateItemResponse = {
-        codigoItem: item.codigoItem,
-        precoUnitario: 0,
-        quantidade: item.quantidade,
-        codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
-        valorTotalItem: 0,
-        tipoOperacao: item.tipoOperacao,
-        baseICMS: 0,
-        valorICMS: 0,
-        valorIPI: 0,
-        ICMS: 0,
-        IPI: 0,
-        mva: 0,
-        nf: item.nf,
-        usuarioAtualizacao: context.user.fullname,
-      };
+    acordo?.itens
+      .filter(
+        (value) =>
+          value.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
+      )
+      .forEach(async (item) => {
+        const itemUpdate: UpdateItemResponse = {
+          codigoItem: item.codigoItem,
+          precoUnitario: 0,
+          quantidade: item.quantidade,
+          codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
+          valorTotalItem: 0,
+          tipoOperacao: item.tipoOperacao,
+          baseICMS: 0,
+          valorICMS: 0,
+          valorIPI: 0,
+          ICMS: 0,
+          IPI: 0,
+          mva: 0,
+          nf: item.nf,
+          usuarioAtualizacao: context.user.fullname,
+        };
 
-      const response = await updateAciItemByIdAsync(itemUpdate, item.id);
+        console.log("itemUpdate: ", itemUpdate);
 
-      if (response.status == 200 || response.status == 201) {
-        console.log("item salvo com sucesso: ", itemUpdate);
-      } else {
-        console.log("item com erro ao salvar: ", itemUpdate);
-      }
-    });
+        const response = await updateAciItemByIdAsync(itemUpdate, item.id);
+
+        if (response.status == 200 || response.status == 201) {
+          console.log("item salvo com sucesso: ", response);
+        } else {
+          console.log("item com erro ao salvar: ", itemUpdate);
+        }
+      });
   };
 
   const addNewItem = async () => {
-    const response = await getAcordoByIdAsync(acordo.id);
+    const response = await getAcordoByIdAsync(acordo?.id);
 
     const recAcordo = (await response.data.data) as AcordoComercialModel;
 
     const sequence = acordo?.itens.length + 1;
     const newItemCode = nf + "." + sequence;
-
+    const newItemId = crypto.randomUUID();
     const newItem: AcordoComercialItem = {
-      id: "",
+      id: newItemId,
       codigoItem: newItemCode,
       precoUnitario: 0,
       quantidade: 0,
@@ -350,47 +522,59 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </span>
       </div>
 
-      {context.user.rule.name == UserRoleEnum.Cliente && 
-      acordo?.codigoStatus == AcordoComercialStatusEnum2.NAO_ENVIADO &&  <div className={styles.ContainerHeader}>
-      <h1 className={styles.tituloRgi}>{nf}</h1>
-      <div className={styles.botoesCabecalho}>
-        <Button type="default" className={styles.ButtonDelete}>
-          Visualizar Pré-Nota
-        </Button>
-        <Button type="default" className={styles.ButtonDelete}>
-          Excluir
-        </Button>
-        <Button
-          type="primary"
-          className={styles.ButonToSend}
-          onClick={handleSaveClient}
-        >
-          Salvar
-        </Button>
-      </div>
-    </div>}
-     
+      {context.user.rule.name == UserRoleEnum.Cliente &&
+        acordo?.itens.some(
+          (item) =>
+            item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+            acordo.codigoStatus ==
+              AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA
+        ) &&
+        acordo?.codigoStatus !=
+          AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+          <div className={styles.ContainerHeader}>
+            <h1 className={styles.tituloRgi}>{nf}</h1>
+            <div className={styles.botoesCabecalho}>
+              <Button type="default" className={styles.ButtonDelete}>
+                Visualizar Pré-Nota
+              </Button>
+              <Button type="default" className={styles.ButtonDelete}>
+                Excluir
+              </Button>
+              <Button
+                type="primary"
+                className={styles.ButonToSend}
+                onClick={handleSaveClient}
+              >
+                Salvar
+              </Button>
+            </div>
+          </div>
+        )}
+
       <hr className={styles.divisor} />
 
       <div className={styles.TitleItens}>
         <h3 className={styles.nfsTitle}>
           Itens desta NF associados a esta garantia
         </h3>
-        <Button
-          className={styles.buttonRed}
-          style={{
-            backgroundColor: "red",
-            borderRadius: "10px",
-            height: "45px",
-            padding: "0px 25px",
-            fontSize: "16px",
-            outline: "none",
-          }}
-          type="primary"
-          onClick={addNewItem}
-        >
-          Adicionar Peça
-        </Button>
+        {context.user.rule.name == UserRoleEnum.Cliente &&
+          acordo?.itens.some((item) => item.codigoStatus == 2) && (
+            <Button
+              className={styles.buttonRed}
+              style={{
+                backgroundColor: "red",
+                borderRadius: "10px",
+                height: "45px",
+                padding: "0px 25px",
+                fontSize: "16px",
+                outline: "none",
+              }}
+              type="primary"
+              onClick={addNewItem}
+            >
+              Adicionar Peça
+            </Button>
+          )}
       </div>
       {/* <div className={styles.dialoginfo}>
         <InfoCircleOutlined style={{ color: "#0277BD" }} />
@@ -406,7 +590,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             isVisible={visibleSectionId === item.id}
             toggleVisibility={() => toggleSectionVisibility(item.id)}
             showDeleteConfirm={() => showDeleteConfirm(item.id)}
-            status={item.status}
+            status={item.codigoStatus}
           >
             <h3 className={styles.tituloSecao}>Informações Gerais</h3>
 
@@ -417,6 +601,16 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                     label="Código da peça *"
                     fullWidth
                     value={item?.codigoItem}
+                    onChange={(e) => {
+                      handleInputChange(item.id, "codigoPeca", e.target.value);
+                    }}
+                    disabled={
+                      item?.codigoStatus !=
+                        AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+                      context.user.rule.name == UserRoleEnum.Supervisor
+                        ? true
+                        : false
+                    }
                   />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
@@ -425,23 +619,27 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                     fullWidth
                     value={item?.quantidade.toString()}
                     onChange={(e) => {
-                      handleInputChange(
-                        item.id,
-                        "quantidade",
-                        e.target.value
-                      );
+                      handleInputChange(item.id, "quantidade", e.target.value);
                       item.quantidade = Number(e.target.value);
                     }}
+                    disabled={
+                      item?.codigoStatus !=
+                        AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+                      context.user.rule.name == UserRoleEnum.Supervisor
+                        ? true
+                        : false
+                    }
                   />
                 </div>
               </div>
             </div>
-            <FileAttachment
-              label="Anexo da NF de devolução"
-              backgroundColor="#ffffff"
-              itemId={item.id}
-            />
           </CollapsibleSection>
+          <FileAttachment
+            label="Anexo da NF de devolução"
+            backgroundColor="#ffffff"
+            item={item}
+            acordo={acordo}
+          />
         </div>
       ))}
 

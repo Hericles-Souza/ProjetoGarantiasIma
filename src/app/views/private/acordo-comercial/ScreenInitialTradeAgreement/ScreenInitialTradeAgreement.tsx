@@ -2,23 +2,29 @@ import "./ScreenInitiaTradeAgreement.style.css";
 import { DeleteOutlined, LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { Button, Modal } from "antd";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   AcordoComercialItem,
   AcordoComercialModel,
 } from "@shared/models/AcordoComercialModel";
-import { AcordoComercialItemStatusEnum2 } from "@shared/enums/AcordoComercialStatusEnum";
-import { getAcordoByIdAsync, updateAciHeaderByIdAsync } from "@shared/services/AcordoComercialService";
+import {
+  AcordoComercialItemStatusEnum2,
+  AcordoComercialStatusEnum2,
+} from "@shared/enums/AcordoComercialStatusEnum";
+import {
+  getAcordoByIdAsync,
+  updateAciHeaderByIdAsync,
+} from "@shared/services/AcordoComercialService";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 const ScreenAcordoComercial: React.FC = () => {
-  const [razaoSocial, setRazaoSocial] = useState(
-    "Magnetis Consultoria de Investimentos Ltda."
-  );
-  const [telefone, setTelefone] = useState("(31) 99847-5278");
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [acordo, setAcordo] = useState<AcordoComercialModel>();
-  const [dataSolicitacao, setDataSolicitacao] = useState("12/07/2008");
+  const [dataSolicitacao, setDataSolicitacao] = useState("");
   const [nfs, setNfs] = useState<{ nf: string; itens: number }[]>([]);
   const [modalOpen, setModalOpen] = useState<ModalModel>({
     isOpen: false,
@@ -31,7 +37,7 @@ const ScreenAcordoComercial: React.FC = () => {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
   const { id } = useParams<{ id: string }>();
-
+  const context = useContext(AuthContext);
   const getRgiWithSuffix = (RgiCode: string, letter: string, index) => {
     return `${RgiCode}.${letter}.${index}`;
   };
@@ -101,40 +107,83 @@ const ScreenAcordoComercial: React.FC = () => {
 
   const setAcordoByGet = async (id: string) => {
     const response = await getAcordoByIdAsync(id);
-    if(response.status == 200 || response.status == 201){
+    if (response.status == 200 || response.status == 201) {
       const recAcordo = (await response.data.data) as AcordoComercialModel;
+      console.log("recAcordo: ", recAcordo);
+
       setAcordo(recAcordo);
+      setRazaoSocial(recAcordo.razaoSocial);
+      setTelefone(recAcordo.telefone);
+      setDataSolicitacao(recAcordo.data);
       const recNfs = recAcordo.itens
-      .map(
-        (value) =>
-          value.codigoItem.split(".")[0] +
-          "." +
-          value.codigoItem.split(".")[1]
-      ) // substitui null/undefined por 'sem_nf'
-      .filter((nf) => nf !== "");
-  
-    // Contar as ocorrências
-    const nfCountMap = recNfs.reduce((acc, nf) => {
-      acc[nf] = (acc[nf] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  
-    // Gerar o array de objetos com nf e quantidade
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const nfsFormatted = Object.entries(nfCountMap).map(([nf, itens]) => ({
-      nf: nf,
-      itens: itens,
-    }));
-    setNfs(nfsFormatted);
-    }
-    else{
+        .map(
+          (value) =>
+            value.codigoItem.split(".")[0] +
+            "." +
+            value.codigoItem.split(".")[1]
+        ) // substitui null/undefined por 'sem_nf'
+        .filter((nf) => nf !== "");
+
+      // Contar as ocorrências
+      const nfCountMap = recNfs.reduce((acc, nf) => {
+        acc[nf] = (acc[nf] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Gerar o array de objetos com nf e quantidade
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const nfsFormatted = Object.entries(nfCountMap).map(([nf, itens]) => ({
+        nf: nf,
+        itens: itens,
+      }));
+      setNfs(nfsFormatted);
+    } else {
       console.log("Erro ao buscar ACI");
     }
-    
-  }
+  };
+
+  const handleSendACI = async () => {
+    const response = await getAcordoByIdAsync(acordo.id);
+
+    const recAcordo = (await response.data.data) as AcordoComercialModel;
+    let statusACI: AcordoComercialStatusEnum2;
+    if (context.user.rule.name == UserRoleEnum.Supervisor) {
+      if (
+        !recAcordo.itens.some(
+          (item) =>
+            item.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
+        )
+      )
+        statusACI = AcordoComercialStatusEnum2.AUTORIZADO;
+      else if (
+        recAcordo.itens.some(
+          (item) =>
+            item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
+        )
+      )
+        statusACI = AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA;
+    } else if (context.user.rule.name == UserRoleEnum.Cliente)
+      statusACI = AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO;
+
+    const payloadAcordoPut: AcordoComercialModel = {
+      usuarioAtualizacao: recAcordo.usuarioInsercao,
+      razaoSocial: recAcordo.razaoSocial,
+      telefone: recAcordo.telefone,
+      email: recAcordo.email,
+      codigoStatus: statusACI,
+      observacao: recAcordo.observacao,
+      baseICMS: 0,
+      ICMS: 0,
+      valorIPI: 0,
+      ICMSSubstituicao: 0,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      itens: recAcordo.itens,
+    };
+    console.log("payloadAcordoPut: ", payloadAcordoPut);
+    await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
+  };
 
   useEffect(() => {
-    
     if (location.state) {
       setAcordoByGet(id);
     }
@@ -153,17 +202,24 @@ const ScreenAcordoComercial: React.FC = () => {
           </Button>
           <span className="RgiCode">ACI N° {acordo?.cdAci}</span>
         </div>
-        <div className="ContainerHeader">
-          <h1 className="tituloRgi"> ACI {acordo?.cdAci}</h1>
-          <div className="ButtonHeader">
-            <Button type="default" className="ButtonDelete">
-              EXCLUIR
-            </Button>
-            <Button type="primary" className="ButonToSend">
-              SALVAR
-            </Button>
+        {acordo?.codigoStatus !=
+          AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && context.user.rule?.name == UserRoleEnum.Cliente && (
+          <div className="ContainerHeader">
+            <h1 className="tituloRgi"> ACI {acordo?.cdAci}</h1>
+            <div className="ButtonHeader">
+              <Button type="default" className="ButtonDelete">
+                EXCLUIR
+              </Button>
+              <Button
+                type="primary"
+                className="ButonToSend"
+                onClick={handleSendACI}
+              >
+                SALVAR
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       <section className="general-info">
@@ -198,16 +254,18 @@ const ScreenAcordoComercial: React.FC = () => {
           </div>
         </div>
       </section>
-
       <section className="nf-section">
         <div className="headerNF">
           <h2 className="title-nf">NFs associadas a este acordo</h2>
-          <button
-            className="add-nf-btn"
-            onClick={() => setModalOpen({ isOpen: true, isSell: false })}
-          >
-            ADICIONAR NF DE ORIGEM
-          </button>
+          {context.user.rule.name == UserRoleEnum.Cliente &&
+            acordo?.codigoStatus == AcordoComercialStatusEnum2.NAO_ENVIADO && (
+              <button
+                className="add-nf-btn"
+                onClick={() => setModalOpen({ isOpen: true, isSell: false })}
+              >
+                ADICIONAR NF DE ORIGEM
+              </button>
+            )}
         </div>
         {nfs.map((nf, index) => (
           <div key={index} className="nf-item">

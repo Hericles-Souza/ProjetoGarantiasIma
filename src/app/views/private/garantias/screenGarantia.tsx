@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
-import { getAcordosByUser } from "@shared/services/AcordoComercialService";
+import { getAcordosByUser, getAllAcordos } from "@shared/services/AcordoComercialService";
 import {
   AcordoStatusEnum,
   converterStatusAcordoInverso,
@@ -75,6 +75,12 @@ const Garantias: React.FC = () => {
             GarantiasStatusEnum2.CONFIRMADO,
             GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           ];
+          const responseDataACI = await getAllAcordos(1, 100);
+        
+        
+          if(responseDataACI){
+            setAcordoData(responseDataACI.data.data.data);          
+          }
         }
 
         const promises = status.map(async (element) => {
@@ -326,7 +332,8 @@ const Garantias: React.FC = () => {
                       console.log("use: " , item);
                       if (
                         context.user.rule.name.includes(UserRoleEnum.Admin) ||
-                        context.user.rule.name.includes(UserRoleEnum.Cliente)
+                        context.user.rule.name.includes(UserRoleEnum.Cliente ) ||
+                        context.user.rule.name.includes(UserRoleEnum.Supervisor)
                       )
                       {
                         console.log("entro");
@@ -335,17 +342,6 @@ const Garantias: React.FC = () => {
                           state: { item },
                         });
 
-                      }
-                      else if (
-                        context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
-                        context.user.rule.name.includes(UserRoleEnum.Supervisor)
-                      ) {
-                        navigate(
-                          `/garantias/technical-and-supervisor/${item.id}`,
-                          {
-                            state: { item },
-                          }
-                        );
                       }
                     }}
                     codigoFormatado={item.cdAci}

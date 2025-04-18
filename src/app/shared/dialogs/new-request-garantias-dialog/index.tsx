@@ -123,6 +123,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         console.log("user: ", context.user.codigoCigam);
 
         const itemAcordoPost: AcordoComercialItem = {
+          id: "",
           codigoItem: newACI + ".A.1",
           precoUnitario: 0,
           quantidade: 0,
@@ -146,7 +147,6 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           email: context.user.email,
           codigoStatus: AcordoComercialStatusEnum2.NAO_ENVIADO,
           observacao: "ACI para tratamento de acordos",
-          status: AcordoStatusEnum.NAO_ENVIADO,
           usuarioInsercao: context.user.username,
           baseICMS: 0,
           ICMS: 0,
