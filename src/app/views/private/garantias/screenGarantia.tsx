@@ -21,11 +21,10 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
-import { getAcordosByUser, getAllAcordos } from "@shared/services/AcordoComercialService";
 import {
-  AcordoStatusEnum,
-  converterStatusAcordoInverso,
-} from "@shared/enums/AcordoComercialStatusEnum";
+  getAcordosByUser,
+  getAllAcordos,
+} from "@shared/services/AcordoComercialService";
 
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("rgi");
@@ -38,7 +37,7 @@ const Garantias: React.FC = () => {
   const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [filteredItems, setFilteredItems] = useState<GarantiasModel[]>([]);
-  const [filteredAcordoItems, setFilteredIAcordo1tems] = useState<
+  const [filteredAcordoItems, setFilteredAcordoItems] = useState<
     AcordoComercialModel[]
   >([]);
 
@@ -51,16 +50,14 @@ const Garantias: React.FC = () => {
       if (context.user!.rule!.name === UserRoleEnum.Cliente) {
         const response = await getGarantiasPaginationAsync(1, 100);
         const responseDataACI = await getAcordosByUser(1, 100);
-        
-        
-        if(responseDataACI){
-          setAcordoData(responseDataACI.data.data.data);          
+
+        if (responseDataACI) {
+          setAcordoData(responseDataACI.data.data.data);
         }
         console.log("acordos: ", responseDataACI.data.data.data);
         const data = await response.data.data.data;
-        
-        if(data)
-          setCardData(data);
+
+        if (data) setCardData(data);
       } else {
         let status: number[] = [];
         if (context.user.rule.name === UserRoleEnum.Tecnico) {
@@ -76,10 +73,9 @@ const Garantias: React.FC = () => {
             GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           ];
           const responseDataACI = await getAllAcordos(1, 100);
-        
-        
-          if(responseDataACI){
-            setAcordoData(responseDataACI.data.data.data);          
+
+          if (responseDataACI) {
+            setAcordoData(responseDataACI.data.data.data);
           }
         }
 
@@ -91,7 +87,6 @@ const Garantias: React.FC = () => {
         const results = await Promise.all(promises);
         const dataArray = results.flat().sort();
         setCardData(dataArray); // Atualiza o cardData com os resultados
-
       }
     } catch (error) {
       console.error("Error fetching card data:", error);
@@ -100,43 +95,51 @@ const Garantias: React.FC = () => {
     }
   };
 
-  // 2. Filtrar os dados sempre que `cardData`, `filterStatus` ou `searchTerm` mudar
   useEffect(() => {
-    const newFilteredItems = cardData.filter((card) => {
-      const matchesStatus =
-        filterStatus === "todos" ||
-        card.codigoStatus ===
-          converterStatusGarantiaInverso(
-            converterStringParaStatusGarantia(filterStatus)
+    if (activeTab === "rgi") {
+      const filtered = cardData.filter((card) => {
+        const matchesStatus =
+          filterStatus === "todos" ||
+          card.codigoStatus ===
+            converterStatusGarantiaInverso(
+              converterStringParaStatusGarantia(filterStatus)
+            );
+
+        const matchesSearch =
+          searchTerm === "" ||
+          card.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.itens?.some((item) =>
+            item.tipoDefeito?.toLowerCase().includes(searchTerm.toLowerCase())
           );
-      const matchesSearch =
-        searchTerm === "" ||
-        card.rgi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.itens[0].tipoDefeito
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
 
-      return matchesStatus && matchesSearch;
-    });
-    setFilteredItems(newFilteredItems); // Atualiza o estado com os itens filtrados
-    const newFilteredAcordoItems = acordoData?.filter((card) => {
-      const matchesStatus =
-        filterStatus === "todos" ||
-        card.codigoStatus ===
-          converterStatusAcordoInverso(AcordoStatusEnum.NAO_ENVIADO);
-      const matchesSearch =
-        searchTerm === "" ||
-        card.cdAci.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.itens[0].codigoItem
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
+        return matchesStatus && matchesSearch;
+      });
+      setFilteredItems(filtered);
+    } else if (activeTab === "aci") {
+      const filtered = acordoData.filter((card) => {
+        const matchesStatus =
+          filterStatus === "todos" ||
+          card.status.toLowerCase() === filterStatus.toLowerCase(); // Compara diretamente com o status do item
+        
+        const matchesSearch = 
+          searchTerm === "" ||
+          card.cdAci.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.itens?.some(item => 
+            item.codigoItem?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+    
+        return matchesStatus && matchesSearch;
+      });
+      setFilteredAcordoItems(filtered);
+    }
+  }, [cardData, acordoData, filterStatus, searchTerm, activeTab]);
 
-      return matchesStatus && matchesSearch;
-    });
-    setFilteredIAcordo1tems(newFilteredAcordoItems); // Atualiza o estado com os itens filtrados
-  }, [cardData, filterStatus, searchTerm, acordoData]);
+  useEffect(() => {
+    setFilterStatus("todos");
+    setSearchTerm(""); // Reseta a busca ao trocar de tab
+  }, [activeTab]);
 
   const statuses = Object.values(GarantiasStatusEnum);
 
@@ -223,48 +226,60 @@ const Garantias: React.FC = () => {
               >
                 &gt;
               </Button>
-              <SearchField onSearchChange={setSearchTerm} />
+              <SearchField
+                onSearchChange={setSearchTerm}
+                searchTerm={searchTerm} // Passa o valor atual
+                tabKey={activeTab} // Força reset ao trocar de tab
+              />
             </div>
           </div>
           <div className={styled.containerGrid}>
             {filteredItems.length > 0 ? (
-              filteredItems.sort((a, b) => a.codigoStatus - b.codigoStatus).map((item) => {
-                const garantia = cardData.find((card) => card.rgi === item.rgi);
-                return (
-                  <CardCategorias
-                    key={item.id}
-                    data={new Date(garantia.data)}
-                    GarantiaItem={item}
-                    codigoFormatado={`RGI ${garantia.rgi}`}
-                    onClick={() => {
-                      console.log("use: " + context.user.rule.name);
-                      if (
-                        context.user.rule.name.includes(UserRoleEnum.Admin) ||
-                        context.user.rule.name.includes(UserRoleEnum.Cliente)
-                      ) {
-                        const garantiaData = garantia;
-                        console.log(
-                          "garantiaData: " + JSON.stringify(garantiaData)
-                        );
-                        navigate(`/garantias/rgi/${garantia.id}`, {
-                          state: { item, garantiaData },
-                        });
-                      } else if (
-                        context.user.rule.name.includes(UserRoleEnum.Tecnico) ||
-                        context.user.rule.name.includes(UserRoleEnum.Supervisor)
-                      ) {
-                        navigate(
-                          `/garantias/technical-and-supervisor/${garantia.id}`,
-                          {
-                            state: { item, garantia },
-                          }
-                        );
-                      }
-                    }}
-                    tab="RGI"
-                  />
-                );
-              })
+              filteredItems
+                .sort((a, b) => a.codigoStatus - b.codigoStatus)
+                .map((item) => {
+                  const garantia = cardData.find(
+                    (card) => card.rgi === item.rgi
+                  );
+                  return (
+                    <CardCategorias
+                      key={item.id}
+                      data={new Date(garantia.data)}
+                      GarantiaItem={item}
+                      codigoFormatado={`RGI ${garantia.rgi}`}
+                      onClick={() => {
+                        console.log("use: " + context.user.rule.name);
+                        if (
+                          context.user.rule.name.includes(UserRoleEnum.Admin) ||
+                          context.user.rule.name.includes(UserRoleEnum.Cliente)
+                        ) {
+                          const garantiaData = garantia;
+                          console.log(
+                            "garantiaData: " + JSON.stringify(garantiaData)
+                          );
+                          navigate(`/garantias/rgi/${garantia.id}`, {
+                            state: { item, garantiaData },
+                          });
+                        } else if (
+                          context.user.rule.name.includes(
+                            UserRoleEnum.Tecnico
+                          ) ||
+                          context.user.rule.name.includes(
+                            UserRoleEnum.Supervisor
+                          )
+                        ) {
+                          navigate(
+                            `/garantias/technical-and-supervisor/${garantia.id}`,
+                            {
+                              state: { item, garantia },
+                            }
+                          );
+                        }
+                      }}
+                      tab="RGI"
+                    />
+                  );
+                })
             ) : (
               <div>Nenhum item encontrado</div>
             )}
@@ -316,40 +331,46 @@ const Garantias: React.FC = () => {
               >
                 &gt;
               </Button>
-              <SearchField onSearchChange={setSearchTerm} />
+              <SearchField
+                onSearchChange={setSearchTerm}
+                searchTerm={searchTerm} // Passa o valor atual
+                tabKey={activeTab} // Força reset ao trocar de tab
+              />
             </div>
           </div>
           <div className={styled.containerGrid}>
             {filteredAcordoItems.length > 0 ? (
-              filteredAcordoItems.sort((a, b) => a.codigoStatus - b.codigoStatus).map((item) => {
+              filteredAcordoItems
+                .sort((a, b) => a.codigoStatus - b.codigoStatus)
+                .map((item) => {
+                  return (
+                    <CardCategorias
+                      key={item.id}
+                      data={new Date(item.data)}
+                      Acordo={item}
+                      onClick={() => {
+                        console.log("use: ", item);
+                        if (
+                          context.user.rule.name.includes(UserRoleEnum.Admin) ||
+                          context.user.rule.name.includes(
+                            UserRoleEnum.Cliente
+                          ) ||
+                          context.user.rule.name.includes(
+                            UserRoleEnum.Supervisor
+                          )
+                        ) {
+                          console.log("entro");
 
-                return (
-                  <CardCategorias
-                    key={item.id}
-                    data={new Date(item.data)}
-                    Acordo={item}
-                    onClick={() => {
-                      
-                      console.log("use: " , item);
-                      if (
-                        context.user.rule.name.includes(UserRoleEnum.Admin) ||
-                        context.user.rule.name.includes(UserRoleEnum.Cliente ) ||
-                        context.user.rule.name.includes(UserRoleEnum.Supervisor)
-                      )
-                      {
-                        console.log("entro");
-                        
-                        navigate(`/garantias/aci/${item.id}`, {
-                          state: { item },
-                        });
-
-                      }
-                    }}
-                    codigoFormatado={`ACI ${item.cdAci}`}
-                    tab="ACI"
-                  />
-                );
-              })
+                          navigate(`/garantias/aci/${item.id}`, {
+                            state: { item },
+                          });
+                        }
+                      }}
+                      codigoFormatado={`ACI ${item.cdAci}`}
+                      tab="ACI"
+                    />
+                  );
+                })
             ) : (
               <div>Nenhum item encontrado</div>
             )}

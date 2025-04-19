@@ -518,7 +518,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             </div>
 
             <FileAttachment
-              label="Anexo da NF de Referência"
+              label="Anexar NF de compra com IMA"
               backgroundColor="white"
               itemId={item?.id}
               isRessarcimento={item?.solicitarRessarcimento}
@@ -533,7 +533,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   {[
                     "1. Documento de identificação (RG ou CNH):",
                     "2. Documentação do veículo:",
-                    "3. NF do guincho:",
+                    "3. NFs de serviço:",
                     "4. NF de outras despesa/produtos pertinentes:",
                   ].map((itemRes, index) => (
                     <FileAttachment

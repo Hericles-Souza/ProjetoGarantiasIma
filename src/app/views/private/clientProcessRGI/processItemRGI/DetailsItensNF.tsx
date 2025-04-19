@@ -1038,65 +1038,37 @@ const DetailsItensNF: React.FC = () => {
                       fullWidth
                       options={[
                         {
-                          value: "CONJUNTO_NAO_FOI_AJUSTADO_CORRETAMENTE",
-                          label: "CONJUNTO NÃO FOI AJUSTADO CORRETAMENTE",
+                          value: "BARULHO",
+                          label: "BARULHO",
                         },
                         {
-                          value: "DIVERGENCIA_ENTRE_PECA_FISICA_E_NF",
-                          label: "DIVERGÊNCIA ENTRE PEÇA FÍSICA E NF",
+                          value: "FALTA_DE_LUBRIFICACAO",
+                          label: "FALTA DE LUBRIFICAÇÃO",
                         },
                         {
-                          value: "FORA_DO_PRAZO_DE_GARANTIA",
-                          label: "FORA DO PRAZO DE GARANTIA",
+                          value: "SEM_LEITURA",
+                          label: "SEM LEITURA",
                         },
                         {
-                          value: "MANCAL_COLOCADO_FORA_DO_ESQUADRO",
-                          label: "MANCAL COLOCADO FORA DO ESQUADRO",
+                          value: "ESTRIA",
+                          label: "ESTRIA",
                         },
                         {
-                          value: "MONTADO_COM_ROLD_DIAMETRO_INCORRETO",
-                          label: "MONTADO C/ ROLD. DIÂMETRO INCORRETO",
+                          value: "TRAVANDO",
+                          label: "TRAVANDO",
                         },
                         {
-                          value: "MONTADO_COM_ROLAMENTO_DEFEITUOSO",
-                          label: "MONTADO COM ROLAMENTO DEFEITUOSO",
+                          value: "FOLGA",
+                          label: "FOLGA",
                         },
                         {
-                          value: "NAO_E_DE_NOSSA_FABRICACAO",
-                          label: "NÃO É DE NOSSA FABRICAÇÃO",
+                          value: "FALTA_DE_COMPONENTE",
+                          label: "FALTA DE COMPONENTE",
                         },
                         {
-                          value: "PECA_MODIFICADA_PELO_CLIENTE",
-                          label: "PEÇA MODIFICADA PELO CLIENTE",
-                        },
-                        {
-                          value: "PECA_NAO_FOI_AJUSTADA_CORRETAMENTE",
-                          label: "PEÇA NÃO FOI AJUSTADA CORRETAMENTE",
-                        },
-                        {
-                          value: "ROLAMENTO_COLOCADO_FORA_DO_ESQUADRO",
-                          label: "ROLAMENTO COLOCADO FORA DO ESQUADRO",
-                        },
-                        {
-                          value: "ROLAMENTO_RONCANDO_TRAVOU_ROLAMENTO",
-                          label: "ROLAMENTO RONCANDO (TRAVOU ROLAMENTO)",
-                        },
-                        {
-                          value: "ROLAMENTO_RONCANDO_SUPERAQUECIMENTO",
-                          label: "ROLAMENTO RONCANDO (SUPERAQUECIMENTO)",
-                        },
-                        {
-                          value: "SUPER_DEFEITO_DE_FABRICACAO",
-                          label: "SUPER DEFEITO DE FABRICAÇÃO",
-                        },
-                        {
-                          value: "TRABALHOU_SEM_LUBRIFICACAO",
-                          label: "TRABALHOU SEM LUBRIFICAÇÃO",
-                        },
-                        {
-                          value: "TRABALHOU_SEM_O_CHICOTE_ABS",
-                          label: "TRABALHOU SEM O CHICOTE ABS",
-                        },
+                          value: "FORA_DE_MEDIDA",
+                          label: "FORA DE MEDIDA",
+                        }
                       ]}
                       value={item.tipoDefeito || ""}
                       onChange={(e) => {
@@ -1202,7 +1174,7 @@ const DetailsItensNF: React.FC = () => {
                   {[
                     "1. Documento de identificação (RG ou CNH):",
                     "2. Documentação do veículo:",
-                    "3. NF do guincho:",
+                    "3. NFs de serviço:",
                     "4. NF de outras despesa/produtos pertinentes:",
                   ].map((itemInside, idx) => (
                     <FileAttachment
@@ -1232,7 +1204,7 @@ const DetailsItensNF: React.FC = () => {
                 )}
               {context.user.rule.name === UserRoleEnum.Cliente && (
                 <FileAttachment
-                  label="Anexo da NF de Referência"
+                  label="Anexar NF de compra com IMA"
                   garantiaItemId={item.id}
                   isRessarcimento={false}
                   backgroundColor="white"
