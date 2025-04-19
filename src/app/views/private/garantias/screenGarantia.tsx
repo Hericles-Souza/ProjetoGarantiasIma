@@ -228,7 +228,7 @@ const Garantias: React.FC = () => {
           </div>
           <div className={styled.containerGrid}>
             {filteredItems.length > 0 ? (
-              filteredItems.map((item) => {
+              filteredItems.sort((a, b) => a.codigoStatus - b.codigoStatus).map((item) => {
                 const garantia = cardData.find((card) => card.rgi === item.rgi);
                 return (
                   <CardCategorias
@@ -321,7 +321,7 @@ const Garantias: React.FC = () => {
           </div>
           <div className={styled.containerGrid}>
             {filteredAcordoItems.length > 0 ? (
-              filteredAcordoItems.map((item) => {
+              filteredAcordoItems.sort((a, b) => a.codigoStatus - b.codigoStatus).map((item) => {
 
                 return (
                   <CardCategorias

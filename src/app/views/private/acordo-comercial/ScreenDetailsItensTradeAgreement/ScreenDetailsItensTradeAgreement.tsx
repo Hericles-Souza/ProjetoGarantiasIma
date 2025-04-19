@@ -589,6 +589,8 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           ACI N° {acordo?.cdAci} / NF {nf}
         </span>
       </div>
+          <div className={styles.ContainerHeader}>
+            <h1 className={styles.tituloRgi}>{nf}</h1>
 
       {context.user.rule.name == UserRoleEnum.Cliente &&
         acordo?.itens.some(
@@ -598,9 +600,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
               AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA
         ) &&
         acordo?.codigoStatus !=
-          AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
-          <div className={styles.ContainerHeader}>
-            <h1 className={styles.tituloRgi}>{nf}</h1>
+          AcordoComercialStatusEnum2.CONFIRMADA  &&(
             <div className={styles.botoesCabecalho}>
               <Button type="default" className={styles.ButtonDelete}>
                 Visualizar Pré-Nota
@@ -616,8 +616,8 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                 Salvar
               </Button>
             </div>
-          </div>
         )}
+        </div>
 
       <hr className={styles.divisor} />
 

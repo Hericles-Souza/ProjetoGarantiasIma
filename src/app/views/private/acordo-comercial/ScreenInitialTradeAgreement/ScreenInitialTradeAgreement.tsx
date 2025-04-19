@@ -12,6 +12,8 @@ import {
 import {
   AcordoComercialItemStatusEnum2,
   AcordoComercialStatusEnum2,
+  converterStatusAcordo,
+  statusStylesACI,
 } from "@shared/enums/AcordoComercialStatusEnum";
 import {
   getAcordoByIdAsync,
@@ -162,6 +164,7 @@ const ScreenAcordoComercial: React.FC = () => {
         )
       )
         statusACI = AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA;
+
     } else if (context.user.rule.name == UserRoleEnum.Cliente)
       statusACI = AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO;
 
@@ -181,15 +184,17 @@ const ScreenAcordoComercial: React.FC = () => {
     };
     console.log("payloadAcordoPut: ", payloadAcordoPut);
     try {
-      const response = await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
+      const response = await updateAciHeaderByIdAsync(
+        payloadAcordoPut,
+        recAcordo.id
+      );
       recAcordo.codigoStatus = statusACI;
-      if(response.status == 200 || response.status == 201){
+      if (response.status == 200 || response.status == 201) {
         setAcordo(recAcordo);
         message.success("ACI atualizada com sucesso");
       }
     } catch (error) {
       console.log("erro ao atualizar aci: ", error);
-      
     }
   };
 
@@ -212,26 +217,60 @@ const ScreenAcordoComercial: React.FC = () => {
           </Button>
           <span className="RgiCode">ACI N° {acordo?.cdAci}</span>
         </div>
-        {acordo?.codigoStatus !=
-          AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && context.user.rule?.name == UserRoleEnum.Cliente && (
-          <div className="ContainerHeader">
-            <h1 className="tituloRgi"> ACI {acordo?.cdAci}</h1>
-            <div className="ButtonHeader">
-              <Button type="default" className="ButtonDelete">
-                EXCLUIR
-              </Button>
-              <Button
-                type="primary"
-                className="ButonToSend"
-                onClick={handleSendACI}
-              >
-                SALVAR
-              </Button>
-            </div>
-          </div>
-        )}
-      </header>
 
+        <div className="ContainerHeader">
+          <div className={"headerLeft"}>
+            <h1 className="tituloRgi">ACI {acordo?.cdAci}</h1>
+            <div
+              style={{
+                color: statusStylesACI[acordo?.codigoStatus]?.color,
+                backgroundColor: `${
+                  statusStylesACI[acordo?.codigoStatus]?.backgroundColor
+                }26`,
+              }}
+              className={"statusTag"}
+            >
+              {converterStatusAcordo(acordo?.codigoStatus)}
+            </div>
+          </div>{" "}
+          {acordo?.codigoStatus !=
+            AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+            acordo?.codigoStatus !=
+            AcordoComercialStatusEnum2.CONFIRMADA  &&
+            context.user.rule?.name == UserRoleEnum.Cliente && (
+              <div className="ButtonHeader">
+                <Button type="default" className="ButtonDelete">
+                  EXCLUIR
+                </Button>
+                <Button
+                  type="primary"
+                  className="ButonToSend"
+                  onClick={handleSendACI}
+                >
+                  SALVAR
+                </Button>
+              </div>
+            )}
+            {(acordo?.codigoStatus ==
+            AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+            acordo?.codigoStatus !=
+            AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA)  &&
+            context.user.rule?.name == UserRoleEnum.Supervisor && (
+              <div className="ButtonHeader">
+                <Button type="default" className="ButtonDelete">
+                  EXCLUIR
+                </Button>
+                <Button
+                  type="primary"
+                  className="ButonToSend"
+                  onClick={handleSendACI}
+                >
+                  SALVAR
+                </Button>
+              </div>
+            )}
+        </div>
+      </header>
       <section className="general-info">
         <h2 className="title-infos-general">Informações Gerais</h2>
         <div className="inputs-general">
