@@ -19,6 +19,7 @@ import {
   AcordoComercialStatusEnum2,
   AcordoItemStatusEnum,
   converterStatusAcordoItem,
+  statusStylesACI,
 } from "@shared/enums/AcordoComercialStatusEnum";
 import {
   getAcordoByIdAsync,
@@ -29,17 +30,22 @@ import environment from "@env/environment";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
-
-const FileAttachment = ({
-  label,
-  backgroundColor,
-  item,
-  acordo,
-}: {
+type FileAttachmentProps = {
+  acordo: AcordoComercialModel | undefined;
+  SetAcordo: React.Dispatch<
+    React.SetStateAction<AcordoComercialModel | undefined>
+  >;
   label: string;
   backgroundColor?: string;
   item: AcordoComercialItem;
-  acordo: AcordoComercialModel;
+};
+
+const FileAttachment: React.FC<FileAttachmentProps> = ({
+  acordo,
+  SetAcordo,
+  label,
+  backgroundColor,
+  item,
 }) => {
   const context = useContext(AuthContext);
   const [recFile, setRecFile] = useState<{
@@ -47,14 +53,57 @@ const FileAttachment = ({
     imagemUrl: string;
   }>({ fileNameWithExtension: "", imagemUrl: "" });
 
-  useEffect(() => {
-    if (item.id) {
-      let fieldFile: string = "";
-      fieldFile = "nfDev";
+  const [hasFileError, setHasFileError] = useState(false);
 
-      getFieldFile(item.id, fieldFile);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (item.id && !hasFileError) {
+      const fieldFile: string = "nfDev";
+      getFieldFile(item.id, fieldFile, controller.signal);
     }
-  });
+
+    return () => controller.abort();
+  }, [item.id, hasFileError]);
+
+  const getFieldFile = async (
+    itemId: string,
+    field: string,
+    signal?: AbortSignal
+  ) => {
+    try {
+      const urlGetFile =
+        environment.apiUrl +
+        `/files/files/download-private-file-item/${itemId}/${field}`;
+
+      const response = await fetch(urlGetFile, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+        signal,
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const fileExtension = getFileExtensionFromBlob(blob);
+        const fileNameWithExtension = field + fileExtension;
+        const imagemUrl = URL.createObjectURL(blob);
+
+        setRecFile({ fileNameWithExtension, imagemUrl });
+        setHasFileError(false);
+      } else if (response.status === 404) {
+        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+        setHasFileError(true); // Não tenta novamente após 404
+      } else {
+        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.log("erro: ", error);
+      }
+    }
+  };
 
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
@@ -79,34 +128,6 @@ const FileAttachment = ({
     return extension;
   }
 
-  const getFieldFile = async (itemId: string, field: string) => {
-    try {
-      const urlGetFile =
-        environment.apiUrl +
-        `/files/files/download-private-file-item/${itemId}/${field}`;
-
-      const response = await fetch(urlGetFile, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${context.user.token}`,
-        },
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const fileExtension = getFileExtensionFromBlob(blob);
-        const fileNameWithExtension = field + fileExtension;
-        const imagemUrl = URL.createObjectURL(blob);
-
-        setRecFile({ fileNameWithExtension, imagemUrl });
-      } else {
-        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
-      }
-    } catch (error) {
-      console.log("erro: ", error);
-    }
-  };
-
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -129,6 +150,14 @@ const FileAttachment = ({
           body: fileData,
         });
         if (response.status === 201) {
+          const blob: Blob = file;
+          const fileExtension = getFileExtensionFromBlob(blob);
+          const fileNameWithExtension = "nfDev" + fileExtension;
+          const imagemUrl = URL.createObjectURL(blob);
+          setRecFile({
+            fileNameWithExtension: fileNameWithExtension,
+            imagemUrl: imagemUrl,
+          });
           message.success("Arquivo enviado com sucesso!");
         } else {
           message.error("Erro ao enviar arquivo.");
@@ -177,18 +206,23 @@ const FileAttachment = ({
         ? AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
         : AcordoComercialItemStatusEnum2.AUTORIZADO;
 
-      // SetAcordo((prev) => {
-      //   const updatedItens = prev.itens.map((prevItem) =>
-      //     prevItem.id === item.id
-      //       ? { ...prevItem, campoQueVaiMudar: item.codigoStatus }
-      //       : prevItem
-      //   );
+      SetAcordo((prev) => {
+        if (!prev?.itens) return prev; // Evita erros se `itens` for undefined
 
-      //   return {
-      //     ...prev,
-      //     itens: updatedItens,
-      //   };
-      // });
+        const updatedItens = prev.itens.map((prevItem) =>
+          prevItem.id === item.id
+            ? { ...prevItem, codigoStatus: item.codigoStatus }
+            : prevItem
+        );
+
+        // Retorna um NOVO objeto com uma NOVA referência para `itens`
+        return {
+          ...prev,
+          itens: [...updatedItens], // Spread garante nova referência
+          updatedAt: new Date().toISOString(), // Opcional: força atualização
+        };
+      });
+
       console.log("item salvo com sucesso: ", response);
     } else {
       console.log("item com erro ao salvar: ", itemUpdate);
@@ -282,44 +316,50 @@ const CollapsibleSection = ({
   showDeleteConfirm: () => void;
   children: React.ReactNode;
   status: AcordoComercialItemStatusEnum2;
-}) => (
-  <div>
-    <div className={styles.tituloSecaoContainer}>
-      <h3 className={styles.tituloSecaoVermelho}>
-        {title}{" "}
-        <span
-          className={
-            converterStatusAcordoItem(status) === "Autorizado"
-              ? styles.statusAuthorized
-              : styles.statusRejected
-          }
-        >
-          {converterStatusAcordoItem(status)}
-        </span>
-      </h3>
-      <div className={styles.iconAndArrow}>
-        <DeleteOutlined
-          className={styles.DeleteOutlined}
-          style={{
-            color: "#555",
-            fontSize: "22px",
-            cursor: "pointer",
-            marginRight: "15px",
-          }}
-          onClick={showDeleteConfirm}
-        />
-        <Button
-          type="text"
-          icon={isVisible ? <DownOutlined /> : <RightOutlined />}
-          onClick={toggleVisibility}
-          className={styles.toggleButton}
-        />
+}) => {
+  const statusStyle = statusStylesACI[status];
+  return (
+    <div>
+      <div className={styles.tituloSecaoContainer}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
+          <div
+            style={{
+              ...statusStyle,
+              marginLeft: "10px",
+              padding: "2px 8px",
+              borderRadius: "4px",
+              fontSize: "14px",
+            }}
+            className={styles.statusTag}
+          >
+            {converterStatusAcordoItem(status)}
+          </div>
+        </div>
+        <div className={styles.iconAndArrow}>
+          <DeleteOutlined
+            className={styles.DeleteOutlined}
+            style={{
+              color: "#555",
+              fontSize: "22px",
+              cursor: "pointer",
+              marginRight: "15px",
+            }}
+            onClick={showDeleteConfirm}
+          />
+          <Button
+            type="text"
+            icon={isVisible ? <DownOutlined /> : <RightOutlined />}
+            onClick={toggleVisibility}
+            className={styles.toggleButton}
+          />
+        </div>
       </div>
-    </div>
 
-    {isVisible && <div className={styles.hiddenContent}>{children}</div>}
-  </div>
-);
+      {isVisible && <div className={styles.hiddenContent}>{children}</div>}
+    </div>
+  );
+};
 
 const ScreenDetailsItensTradeAgreement: React.FC = () => {
   const [visibleSectionId, setVisibleSectionId] = useState<string | null>();
@@ -384,12 +424,17 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
   }, [location.state]);
 
   const handleSaveClient = async () => {
-    acordo?.itens
-      .filter(
+    if (!acordo) return;
+
+    try {
+      // Filtra os itens não autorizados
+      const itensParaAtualizar = acordo.itens.filter(
         (value) =>
           value.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
-      )
-      .forEach(async (item) => {
+      );
+
+      // Atualiza cada item sequencialmente
+      for (const item of itensParaAtualizar) {
         const itemUpdate: UpdateItemResponse = {
           codigoItem: item.codigoItem,
           precoUnitario: 0,
@@ -407,16 +452,39 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           usuarioAtualizacao: context.user.fullname,
         };
 
-        console.log("itemUpdate: ", itemUpdate);
-
         const response = await updateAciItemByIdAsync(itemUpdate, item.id);
 
         if (response.status == 200 || response.status == 201) {
-          console.log("item salvo com sucesso: ", response);
+          // Atualiza o estado local para cada item atualizado
+          SetAcordo((prev) => {
+            if (!prev) return prev;
+
+            return {
+              ...prev,
+              itens: prev.itens.map((prevItem) =>
+                prevItem.id === item.id
+                  ? {
+                      ...prevItem,
+                      codigoStatus:
+                        AcordoComercialItemStatusEnum2.NAO_ANALISADO,
+                    }
+                  : prevItem
+              ),
+              updatedAt: new Date().toISOString(), // Força atualização
+            };
+          });
+
+          console.log("Item salvo com sucesso: ", item.codigoItem);
         } else {
-          console.log("item com erro ao salvar: ", itemUpdate);
+          console.log("Erro ao salvar item: ", item.codigoItem);
         }
-      });
+      }
+
+      message.success("Itens atualizados com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar itens:", error);
+      message.error("Ocorreu um erro ao salvar os itens");
+    }
   };
 
   const addNewItem = async () => {
@@ -639,6 +707,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             backgroundColor="#ffffff"
             item={item}
             acordo={acordo}
+            SetAcordo={SetAcordo}
           />
         </div>
       ))}

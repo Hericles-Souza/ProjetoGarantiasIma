@@ -1,11 +1,13 @@
 import { CalendarOutlined, RightOutlined } from '@ant-design/icons';
 import React, { useContext } from 'react';
 import styled from 'styled-components';
-import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasItemStatusEnum2, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
+import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasItemStatusEnum2, statusStylesRGI } from "@shared/enums/GarantiasStatusEnum.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
   import dayjs from 'dayjs';
 import { AuthContext } from '@shared/contexts/Auth/AuthContext';
 import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
+import { converterStatusAcordo, statusStylesACI } from '@shared/enums/AcordoComercialStatusEnum';
+import { AcordoComercialModel } from '@shared/models/AcordoComercialModel';
 
 const CardContainer = styled.div<{ clickable: boolean }>`
   flex: 0 0 calc(25% - 12px);
@@ -84,58 +86,37 @@ const RedContainer = styled.div`
   border-left: 5px solid #ff4d4d;
 `;
 
-const statusStyles = {
-  [GarantiasStatusEnum2.NAO_ENVIADO]: {
-    backgroundColor: '#F9F9F9',
-    color: '#5F5A56',
-  },
-  [GarantiasStatusEnum2.EM_ANALISE]: {
-    backgroundColor: '#B3E5FC',
-    color: '#0277BD',
-  },
-  [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: {
-    backgroundColor: '#9747FF1F',
-    color: '#9747FF',
-  },
-  [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: {
-    backgroundColor: '#FFE0B2',
-    color: '#EF6C00',
-  },
-  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: {
-    backgroundColor: '#FFE0B2',
-    color: '#EF6C00',
-  },
-  [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: {
-    backgroundColor: '#4A32163D',
-    color: '#4A3216',
-  },
-  [GarantiasStatusEnum2.CONFIRMADO]: {
-    backgroundColor: '#C8E6C9',
-    color: '#2E7D32',
-  },
-};
 
 interface CardCategoriasProps {
   GarantiaItem?: GarantiasModel;
+  Acordo?: AcordoComercialModel;
   data: Date;
   codigoFormatado: string; // Código já formatado (ex: "RGI 1234567" ou "ACI 98765432")
   onClick?: () => void;
+  tab: string;
 }
 
-const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, codigoFormatado, onClick }) => {
+const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, Acordo, codigoFormatado, onClick, tab }) => {
 
-  const statusStyle = statusStyles[GarantiaItem.codigoStatus] ;
+  const statusStyle = tab === "RGI" ? statusStylesRGI[GarantiaItem.codigoStatus] : statusStylesACI[Acordo.codigoStatus] ;
   const context = useContext(AuthContext);
   return (
     <CardContainer clickable={!!onClick} onClick={onClick}>
       <Header>
+        {tab === "RGI" && (
         <Status style={{ backgroundColor: statusStyle?.backgroundColor ? statusStyle?.backgroundColor : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
           {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin
             ? converterStatusGarantia(GarantiaItem?.codigoStatus)
-            : GarantiaItem?.notas == null ? converterStatusGarantia(GarantiaItem?.codigoStatus) : (GarantiaItem?.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
-            ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, true)
-            : converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, false)}
+            : (GarantiaItem?.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
+              ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, true)
+              : converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, false)}
         </Status>
+        )}
+        {tab === "ACI" && (
+           <Status style={{ backgroundColor: statusStyle?.backgroundColor ? statusStyle?.backgroundColor : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
+           {converterStatusAcordo(Acordo.codigoStatus)}
+         </Status>
+        )}
         <RightOutlined />
       </Header>
       <RedContainer>

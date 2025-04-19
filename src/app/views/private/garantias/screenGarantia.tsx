@@ -261,6 +261,7 @@ const Garantias: React.FC = () => {
                         );
                       }
                     }}
+                    tab="RGI"
                   />
                 );
               })
@@ -326,7 +327,7 @@ const Garantias: React.FC = () => {
                   <CardCategorias
                     key={item.id}
                     data={new Date(item.data)}
-                    GarantiaItem={{}}
+                    Acordo={item}
                     onClick={() => {
                       
                       console.log("use: " , item);
@@ -344,7 +345,8 @@ const Garantias: React.FC = () => {
 
                       }
                     }}
-                    codigoFormatado={item.cdAci}
+                    codigoFormatado={`ACI ${item.cdAci}`}
+                    tab="ACI"
                   />
                 );
               })

@@ -1,7 +1,7 @@
 import "./ScreenInitiaTradeAgreement.style.css";
 import { DeleteOutlined, LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import { Button, Modal } from "antd";
+import { Button, message, Modal } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -154,7 +154,7 @@ const ScreenAcordoComercial: React.FC = () => {
             item.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
         )
       )
-        statusACI = AcordoComercialStatusEnum2.AUTORIZADO;
+        statusACI = AcordoComercialStatusEnum2.CONFIRMADA;
       else if (
         recAcordo.itens.some(
           (item) =>
@@ -180,7 +180,17 @@ const ScreenAcordoComercial: React.FC = () => {
       itens: recAcordo.itens,
     };
     console.log("payloadAcordoPut: ", payloadAcordoPut);
-    await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
+    try {
+      const response = await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
+      recAcordo.codigoStatus = statusACI;
+      if(response.status == 200 || response.status == 201){
+        setAcordo(recAcordo);
+        message.success("ACI atualizada com sucesso");
+      }
+    } catch (error) {
+      console.log("erro ao atualizar aci: ", error);
+      
+    }
   };
 
   useEffect(() => {

@@ -157,7 +157,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         console.log("payloadAcordoPost:", payloadAcordoPost);
 
         const aciResponse = await createAcordoAsync(payloadAcordoPost);
-        console.log("Garantia criada com sucesso:", aciResponse.data);
+        console.log("ACI criada com sucesso:", aciResponse.data.data);
 
         let createdAcordo: any = aciResponse.data.data;
         if (typeof createdAcordo === "string") {
@@ -175,8 +175,8 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
           throw new Error("Resposta inválida da API ao criar garantia");
         }
 
-        navigate("/acordo-commercial", {
-          state: { "N° NF de origem": values["N° NF de origem"] },
+        navigate(`/garantias/aci/${createdAcordo.id}`, {
+          state: { item: createdAcordo },
         });
         return;
       } else {

@@ -110,3 +110,34 @@ export const StatusColors = {
   [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: "#FF4D4F", 
   [GarantiasStatusEnum2.CONFIRMADO]: "#52C41A", 
 } as const;
+
+export const statusStylesRGI = {
+  [GarantiasStatusEnum2.NAO_ENVIADO]: {
+    backgroundColor: '#F9F9F9',
+    color: '#5F5A56',
+  },
+  [GarantiasStatusEnum2.EM_ANALISE]: {
+    backgroundColor: '#B3E5FC',
+    color: '#0277BD',
+  },
+  [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: {
+    backgroundColor: '#9747FF1F',
+    color: '#9747FF',
+  },
+  [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: {
+    backgroundColor: '#FFE0B2',
+    color: '#EF6C00',
+  },
+  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: {
+    backgroundColor: '#FFE0B2',
+    color: '#EF6C00',
+  },
+  [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: {
+    backgroundColor: '#4A32163D',
+    color: '#4A3216',
+  },
+  [GarantiasStatusEnum2.CONFIRMADO]: {
+    backgroundColor: '#C8E6C9',
+    color: '#2E7D32',
+  },
+};
