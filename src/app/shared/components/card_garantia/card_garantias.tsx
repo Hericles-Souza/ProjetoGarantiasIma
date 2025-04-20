@@ -9,7 +9,7 @@ import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
 import { converterStatusAcordo, statusStylesACI } from '@shared/enums/AcordoComercialStatusEnum';
 import { AcordoComercialModel } from '@shared/models/AcordoComercialModel';
 
-const CardContainer = styled.div<{ clickable: boolean }>`
+const CardContainer = styled.div<{ $clickable: boolean }>`
   flex: 0 0 calc(25% - 12px);
   max-width: 100%;
   box-sizing: border-box;
@@ -17,16 +17,16 @@ const CardContainer = styled.div<{ clickable: boolean }>`
   background-color: #fff;
   border-radius: 15px;
   border: 1px solid #ddd;
-  cursor: ${(props) => (props.clickable ? 'pointer' : 'default')};
+  cursor: ${(props) => (props.$clickable ? 'pointer' : 'default')};
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
   &:hover {
-    transform: ${(props) => (props.clickable ? 'scale(1.01)' : 'none')};
+    transform: ${(props) => (props.$clickable ? 'scale(1.01)' : 'none')};
     box-shadow: ${(props) =>
-    props.clickable ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+    props.$clickable ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   }
 `;
 
@@ -101,7 +101,7 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, Aco
   const statusStyle = tab === "RGI" ? statusStylesRGI[GarantiaItem.codigoStatus] : statusStylesACI[Acordo.codigoStatus] ;
   const context = useContext(AuthContext);
   return (
-    <CardContainer clickable={!!onClick} onClick={onClick}>
+    <CardContainer key={tab === "ACI" ? Acordo.id : GarantiaItem.id} $clickable={!!onClick} onClick={onClick}>
       <Header>
         {tab === "RGI" && (
         <Status style={{ backgroundColor: statusStyle?.backgroundColor ? statusStyle?.backgroundColor : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>

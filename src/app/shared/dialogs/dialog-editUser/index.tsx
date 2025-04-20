@@ -1,7 +1,7 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState } from 'react';
-import { Modal, Button, Space, Typography, message, Form } from 'antd';
-import Warnig from '@assets/image/png/warning.png'
-import { Checkbox, InputAdornment, TextField } from '@mui/material';
+import { Modal, Button, Space, Typography, Form } from 'antd';
+import { Checkbox, TextField } from '@mui/material';
 import './dialogEditUser.style.css'
 
 interface DialogAttentionProps {
@@ -10,7 +10,7 @@ interface DialogAttentionProps {
     onConfirm: () => void;
 }
 
-const [isModalOpen, setIsModalOpen] = useState(false);
+const [, setIsModalOpen] = useState(false);
 const [value, setValue] = useState('');
 const [form] = Form.useForm();
 
@@ -53,6 +53,7 @@ const currencies = [
     },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, onConfirm, ...props }) => {
     return (
         <Modal

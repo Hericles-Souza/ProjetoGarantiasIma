@@ -589,18 +589,17 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           ACI N° {acordo?.cdAci} / NF {nf}
         </span>
       </div>
-          <div className={styles.ContainerHeader}>
-            <h1 className={styles.tituloRgi}>{nf}</h1>
+      <div className={styles.ContainerHeader}>
+        <h1 className={styles.tituloRgi}>{nf}</h1>
 
-      {context.user.rule.name == UserRoleEnum.Cliente &&
-        acordo?.itens.some(
-          (item) =>
-            item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-            acordo.codigoStatus ==
-              AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA
-        ) &&
-        acordo?.codigoStatus !=
-          AcordoComercialStatusEnum2.CONFIRMADA  &&(
+        {context.user.rule.name == UserRoleEnum.Cliente &&
+          acordo?.itens.some(
+            (item) =>
+              item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+              acordo.codigoStatus ==
+                AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA
+          ) &&
+          acordo?.codigoStatus != AcordoComercialStatusEnum2.CONFIRMADA && (
             <div className={styles.botoesCabecalho}>
               <Button type="default" className={styles.ButtonDelete}>
                 Visualizar Pré-Nota
@@ -616,8 +615,8 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                 Salvar
               </Button>
             </div>
-        )}
-        </div>
+          )}
+      </div>
 
       <hr className={styles.divisor} />
 
@@ -713,8 +712,8 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       ))}
 
       <Modal
+        open={modalDeleteOpen}
         title="Confirmar Exclusão"
-        visible={modalDeleteOpen}
         onOk={handleDeleteNF}
         onCancel={() => setModalDeleteOpen(false)}
         okText="Excluir"

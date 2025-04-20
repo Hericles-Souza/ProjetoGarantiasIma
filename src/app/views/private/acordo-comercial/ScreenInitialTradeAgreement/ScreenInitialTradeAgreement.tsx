@@ -346,7 +346,7 @@ const ScreenAcordoComercial: React.FC = () => {
 
       <Modal
         title="NOVA NF ASSOCIADA"
-        visible={modalOpen.isOpen}
+        open={modalOpen.isOpen}
         footer={null}
         className="nf-modal"
         width={600}
@@ -387,7 +387,7 @@ const ScreenAcordoComercial: React.FC = () => {
       </Modal>
       <Modal
         title="Confirmar Exclusão"
-        visible={modalDeleteOpen}
+        open={modalDeleteOpen}
         onOk={handleDeleteNF}
         onCancel={() => setModalDeleteOpen(false)}
         okText="Excluir"

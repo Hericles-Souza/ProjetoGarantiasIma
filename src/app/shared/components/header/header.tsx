@@ -24,7 +24,6 @@ const Header: React.FC<HeaderProps> = ({
   const handleDialogClose = () => {
     setIsDialogVisible(false);
   };
-  
 
   return (
     <HeaderContainer>
@@ -41,7 +40,14 @@ const Header: React.FC<HeaderProps> = ({
           className="custom-tabs"
           items={[
             { label: <span>REQUISIÇÕES DE GARANTIA (RGI)</span>, key: "rgi" },
-            { label: context.user.rule.name.includes(UserRoleEnum.Tecnico) ? <div> </div> : <span>ACORDOS COMERCIAIS (ACI)</span>, key: "aci" },
+            {
+              label: context.user.rule.name.includes(UserRoleEnum.Tecnico) ? (
+                <div> </div>
+              ) : (
+                <span>ACORDOS COMERCIAIS (ACI)</span>
+              ),
+              key: "aci",
+            },
           ]}
         />
       </div>
@@ -57,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({
         )}
 
       <Modal
-        visible={isDialogVisible}
+        open={isDialogVisible}
         onCancel={handleDialogClose}
         footer={null}
         width={600}

@@ -28,7 +28,7 @@ import api from "@shared/Interceptors";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import environment from "@env/environment";
 import { updateGarantiasHeaderByIdAsync } from "@shared/services/GarantiasService";
-import ReportPDF from "../GeneratePDF";
+import ReportPDF, { Item } from "../GeneratePDF";
 import { pdf } from "@react-pdf/renderer";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
@@ -308,6 +308,7 @@ const CollapsibleSection = ({
 }) => {
   const authContext = useContext(AuthContext);
   const [, setRecFile] = useState<Blob[]>([]);
+  const context = useContext(AuthContext);
 
   const getFieldFile = async (
     itemId: string,
@@ -366,7 +367,7 @@ const CollapsibleSection = ({
 
     console.log("imagensItens: ", tempRecFiles);
 
-    const item = {
+    const item: Item = {
       codigo: garantiaItem.codigoItem,
       lote: garantiaItem.loteItemOficial,
       modelo: garantiaItem.modeloVeiculoAplicado,
@@ -375,18 +376,28 @@ const CollapsibleSection = ({
       conclusao: garantiaItem.conclusao,
       torque: garantiaItem.torqueAplicado.toString(),
       images: tempRecFiles,
+      razaoSocial: context.user.fullname || "",
+      cnpj: context.user.cnpj || "",
+      telefone: context.user.phone || "",
+      email: context.user.email || "",
+      defeito: garantiaItem.tipoDefeito,
+      aroVeiculo: garantiaItem.anoVeiculo || "",
+      analiseTecnica: garantiaItem.conclusao || "",
+      dataEmissao: garantia.data
     };
 
-    pdf(<ReportPDF item={item} />)
-      .toBlob()
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "laudo_tecnico.pdf";
-        link.click();
-        URL.revokeObjectURL(url);
-      });
+    const pdfBlob = await pdf(<ReportPDF item={item} />).toBlob();
+
+    const url = URL.createObjectURL(pdfBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `laudo_tecnico_${item.codigo || "sem_codigo"}.pdf`;
+    link.click();
+    
+    // Limpeza
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
   };
 
   const getStatusColor = (status: string) => {
@@ -1242,7 +1253,7 @@ const DetailsItensNF: React.FC = () => {
       )}
       <Modal
         title="Confirmar Exclusão"
-        visible={modalDeleteOpen}
+        open={modalDeleteOpen}
         onOk={handleDeleteNF}
         onCancel={() => setModalDeleteOpen(false)}
         okText="Excluir"

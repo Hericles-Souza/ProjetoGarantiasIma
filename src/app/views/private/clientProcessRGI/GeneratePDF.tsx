@@ -6,27 +6,110 @@ import {
   View,
   StyleSheet,
   Image,
+  Font,
 } from "@react-pdf/renderer";
+import logoBase64 from "../../../../assets/image/png/logo-ima.png"; // Se estiver usando Vite, Webpack com file-loader ou asset modules
 
+// Não é necessário registrar Helvetica - é a fonte padrão do PDF
+// Mas podemos definir estilos com ela
 const styles = StyleSheet.create({
-  page: { padding: 20, fontSize: 12 },
+  page: {
+    padding: 20,
+    fontFamily: "Helvetica",
+    lineHeight: 1.6,
+    color: "#333",
+  },
   header: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  headerTitle: {
     textAlign: "center",
     fontSize: 16,
-    fontWeight: "bold",
+  },
+  logo: {
+    width: 100,
+    height: 50,
+  },
+  dateField: {
+    width: "15%",
+  },
+  dateInput: {
+    fontSize: 10,
+    border: "1px solid #dadada",
+    padding: "5px 10px",
+    borderRadius: 5,
+  },
+  dateLabel: {
+    fontSize: 8,
+    backgroundColor: "white",
+    paddingHorizontal: 5,
+    marginLeft: 10,
+    marginBottom: 2,
+  },
+  section: {
+    marginBottom: 20,
+    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    border: "1px solid #dadada",
+    padding: "20px 25px",
+  },
+  sectionTitle: {
+    fontSize: 14,
+    marginBottom: 15,
+  },
+  inputGroup: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 10,
     marginBottom: 10,
   },
-  section: { marginBottom: 15, padding: 10, border: "1px solid #ccc" },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
+  inputField: {
+    marginBottom: 15,
+    marginHorizontal: 5,
+    flexDirection: "column", // Coloca o label em cima do campo
   },
-  label: { fontWeight: "bold" },
-  image: { width: 200, height: 100, marginTop: 10 },
+  inputLabel: {
+    fontSize: 10,
+    backgroundColor: "white",
+    paddingHorizontal: 5,
+    marginBottom: 2, // Adiciona espaço abaixo do label
+  },
+  input: {
+    width: "100%",
+    height: 30,
+    borderRadius: 5,
+    fontSize: 10,
+    padding: "0 15px",
+    border: "1px solid #dadada",
+    color: "#000000", // Garante que o texto seja preto
+  },
+  editorContent: {
+    fontSize: 10,
+  },
+  boldText: {
+    fontFamily: "Helvetica", // Fallback para negrito
+    fontWeight: "bold", // Duplo fallback
+  },
+  italicText: {
+    fontFamily: "Helvetica",
+    fontStyle: "italic",
+  },
+  imageContainer: {
+    marginTop: 10,
+  },
+  analysisImage: {
+    width: 150,
+    height: 100,
+    marginRight: 10,
+    marginBottom: 10,
+  },
 });
 
-type Item = {
+export type Item = {
   codigo: string;
   lote: string;
   modelo: string;
@@ -35,61 +118,181 @@ type Item = {
   status: string;
   images?: Blob[];
   conclusao: string;
+  razaoSocial: string;
+  cnpj: string;
+  telefone: string;
+  email: string;
+  defeito: string;
+  aroVeiculo: string;
+  analiseTecnica: string;
+  dataEmissao: string;
 };
 
 type PDFProps = { item: Item };
 
-const ReportPDF: React.FC<PDFProps> = ({ item }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <Text style={styles.header}>
-        Laudo Técnico de Solicitação de Garantia
-      </Text>
+// Adiciona esta função para garantir o carregamento
+export const ensureFontsLoaded = async () => {
+  try {
+    const fonts = await Font.getRegisteredFontFamilies();
+    if (!fonts.includes("Helvetica")) {
+      console.log("fonts: ", fonts);
+    }
+  } catch (error) {
+    console.warn("Font warning:", error);
+  }
+};
 
-      {/* Informações da Peça */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Código da Peça:</Text>
-        <Text>{item.codigo}</Text>
+const ReportPDF: React.FC<PDFProps> = ({ item }) => {
+  const safeText = (text: string | undefined) => text || "";
 
-        <Text style={styles.label}>Lote da Peça:</Text>
-        <Text>{item.lote}</Text>
-
-        <Text style={styles.label}>Modelo Aplicado:</Text>
-        <Text>{item.modelo}</Text>
-
-        <Text style={styles.label}>Ano do Veículo:</Text>
-        <Text>{item.ano}</Text>
-
-        {item.torque && (
-          <>
-            <Text style={styles.label}>Torque Aplicado:</Text>
-            <Text>{item.torque}</Text>
-          </>
-        )}
-
-        <Text style={styles.label}>Status de Autorização:</Text>
-        <Text>{item.status}</Text>
-      </View>
-
-      {/* Análise Técnica */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Análise Técnica Visual:</Text>
-        {item.images && item.images.length > 0 && (
-          <View>
-            {item.images.map((imageBlob, index) => (
-              <Image key={index} src={URL.createObjectURL(imageBlob)} style={styles.image} />
-            ))}
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header with logo, title and date */}
+        <View style={styles.header}>
+          <Image
+            src={logoBase64}
+            style={styles.logo}
+          />
+          <Text style={styles.headerTitle}>
+            Laudo Técnico de Solicitação de Garantia
+          </Text>
+          <View style={styles.dateField}>
+            <Text style={styles.dateLabel}>Data de Emissão</Text>
+            <Text style={styles.dateInput}>
+              {new Date(safeText(item.dataEmissao)).toLocaleDateString() || "00/00/0000"}
+            </Text>
           </View>
-        )}
-      </View>
+        </View>
 
-      {/* Conclusão */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Conclusão:</Text>
-        <Text>{item.conclusao}</Text>
-      </View>
-    </Page>
-  </Document>
-);
+        {/* Customer Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informações do Cliente</Text>
+
+          <View style={styles.inputGroup}>
+            <View style={[styles.inputField, { width: "50%" }]}>
+              <Text style={styles.inputLabel}>Razão Social</Text>
+              <Text style={styles.input}>
+                {safeText(item?.razaoSocial) || "Razão Social Não Informada"}
+              </Text>
+            </View>
+            <View style={[styles.inputField, { width: "50%" }]}>
+              <Text style={styles.inputLabel}>CNPJ</Text>
+              <Text style={styles.input}>
+                CNPJ: {safeText(item?.cnpj) || "CNPJ Não Informado"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <View style={[styles.inputField, { width: "33%" }]}>
+              <Text style={styles.inputLabel}>Telefone</Text>
+              <Text style={styles.input}>{safeText(item?.telefone)}</Text>
+            </View>
+            <View style={[styles.inputField, { width: "33%" }]}>
+              <Text style={styles.inputLabel}>E-mail</Text>
+              <Text style={styles.input}>{safeText(item?.email)}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Part Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informações da Peça</Text>
+
+          <View style={styles.inputGroup}>
+            <View style={[styles.inputField, { width: "50%" }]}>
+              <Text style={styles.inputLabel}>Código da peça *</Text>
+              <Text style={styles.input}>{safeText(item?.codigo) || "ALR-84888"}</Text>
+            </View>
+            <View style={[styles.inputField, { width: "50%" }]}>
+              <Text style={styles.inputLabel}>Lote da peça *</Text>
+              <Text style={styles.input}>{safeText(item?.lote) || "2547A"}</Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <View style={[styles.inputField, { width: "33%" }]}>
+              <Text style={styles.inputLabel}>Possível defeito *</Text>
+              <Text style={styles.input}>{safeText(item?.defeito) || "Opção 1"}</Text>
+            </View>
+            <View style={[styles.inputField, { width: "33%" }]}>
+              <Text style={styles.inputLabel}>
+                Modelo do veículo que aplicou *
+              </Text>
+              <Text style={styles.input}>{safeText(item?.modelo) || "Modelo X"}</Text>
+            </View>
+            <View style={[styles.inputField, { width: "33%" }]}>
+              <Text style={styles.inputLabel}>Aro do veículo *</Text>
+              <Text style={styles.input}>{safeText(item?.aroVeiculo) || "Modelo X"}</Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <View style={[styles.inputField, { width: "50%" }]}>
+              <Text style={styles.inputLabel}>Torque aplicado na peça</Text>
+              <Text style={styles.input}>{safeText(item?.torque)}</Text>
+            </View>
+            <View style={[styles.inputField, { width: "50%" }]}>
+              <Text style={styles.inputLabel}>Status de Autorização</Text>
+              <Text style={styles.input}>{safeText(item.status)}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Technical Analysis */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Análise Técnica Visual</Text>
+          <View style={styles.editorContent}>
+            <Text style={styles.boldText}>
+              The standard Lorem Ipsum passage, used since the 1500s
+            </Text>
+            <Text style={styles.italicText}>
+              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+              reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur. Excepteur sint occaecat cupidatat non proident,
+              sunt in culpa qui officia deserunt mollit anim id est laborum."
+            </Text>
+
+            {item.images && item.images.length > 0 && (
+              <View style={styles.imageContainer}>
+                {item.images.map((imageBlob, index) => (
+                  <Image
+                    key={index}
+                    src={URL.createObjectURL(imageBlob)}
+                    style={styles.analysisImage}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Conclusion */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Conclusão</Text>
+          <View style={styles.editorContent}>
+            <Text style={styles.boldText}>
+              The standard Lorem Ipsum passage, used since the 1500s
+            </Text>
+            <Text style={styles.italicText}>
+              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+              reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur. Excepteur sint occaecat cupidatat non proident,
+              sunt in culpa qui officia deserunt mollit anim id est laborum."
+            </Text>
+            <Text>{item.conclusao || "Conclusão padrão..."}</Text>
+          </View>
+        </View>
+      </Page>
+    </Document>
+  );
+};
 
 export default ReportPDF;
