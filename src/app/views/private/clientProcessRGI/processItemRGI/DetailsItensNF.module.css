@@ -255,6 +255,7 @@
 
 .tituloSecaoContainer {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
@@ -573,4 +574,10 @@
   border-radius: 7px;
   font-weight: 500;  
   font-size: 15px;  
+}
+
+.iconAndArrow{
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }

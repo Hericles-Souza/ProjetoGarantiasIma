@@ -123,11 +123,11 @@
   border-radius: 15px;
   height: 70px;
   align-items: center;
-  background-color: white;
+  background-color: #f9f9f9;
   justify-content: space-between;
   padding: 10px;
   margin-top: 20px;
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
 }
 
 .add-nf-btn {
@@ -224,6 +224,7 @@ label {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  color: #5F5A56 !important;
   margin-top: 30px;
 }
 
@@ -233,7 +234,7 @@ label {
   gap: 4px;
   font-weight: 500;
   font-size: 14px;
-  color: #a7a7a7;
+  color: #a7a7a7 !important;
   outline: none !important;
 
 }

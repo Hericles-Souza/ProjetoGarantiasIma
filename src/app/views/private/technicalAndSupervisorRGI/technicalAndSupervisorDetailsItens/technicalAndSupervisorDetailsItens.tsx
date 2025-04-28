@@ -517,7 +517,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                   <OutlinedInputWithLabel
                     label="Defeito Oficial"
-                    value={item?.tipoDefeitoOficial.replace(/_/g, ' ') || ""}
+                    value={item?.tipoDefeitoOficial?.replace(/_/g, ' ') || ""}
                     fullWidth
                     disabled
                   />

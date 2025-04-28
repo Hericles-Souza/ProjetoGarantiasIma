@@ -240,7 +240,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
             <label className={styles.buttonUpdateNfSale}>
               <button
-                style={{ display: "none" }}
+                style={{ display: "none", cursor: "pointer", }}
                 onClick={handleDownloadFile}
               />
               Baixar Arquivo
@@ -256,13 +256,13 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
                 <Button
                   onClick={() => handleSaveClient(true)}
                   type="primary"
-                  className={styles.buttonSendRgi}
+                  className={styles.ButonToSend}
                 >
                   Recusar NF de Devolução
                 </Button>
                 <Button
                   type="primary"
-                  className={styles.buttonSendRgi}
+                  className={styles.ButonToSend}
                   onClick={() => handleSaveClient(false)}
                 >
                   Autorizar
@@ -704,6 +704,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
               </div>
             </div>
           </CollapsibleSection>
+        <div style={{height: "10px"}}></div>
           <FileAttachment
             label="Anexo da NF de devolução"
             backgroundColor="#ffffff"
