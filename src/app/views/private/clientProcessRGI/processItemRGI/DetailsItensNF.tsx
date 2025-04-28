@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -82,7 +83,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       let fieldFile: string = "";
       const matchField = label.match(/^\d+/);
 
-      if (label.includes("devolução")) fieldFile = "nfDev";
+      if(label.includes("venda")) fieldFile = "nfVenda";
+      else if (label.includes("devolução")) fieldFile = "nfDev";
       else if (matchField) {
         if (isRessarcimento) fieldFile = `${matchField[0]}.res`;
         else fieldFile = `${matchField[0]}.img`;
@@ -142,7 +144,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
       }
     } catch (error) {
-      console.log("erro: ", error);
+      //console.log("erro: ", error);
     }
   };
 
@@ -169,7 +171,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       fileData.append("file", file);
       fileData.append("itemId", garantiaItemId);
 
-      if (label.includes("devolução")) fileData.append("field", "nfDev");
+      if(label.includes("venda")) fileData.append("field", "nfVenda");
+      else if (label.includes("devolução")) fileData.append("field", "nfDev");
       else if (match) {
         if (isRessarcimento) fileData.append("field", `${match[0]}.res`);
         else fileData.append("field", `${match[0]}.img`);
@@ -332,7 +335,7 @@ const CollapsibleSection = ({
         tempRecFiles.push(blob);
       }
     } catch (error) {
-      console.log("erro: ", error);
+      //console.log("erro: ", error);
     }
   };
 
@@ -365,7 +368,7 @@ const CollapsibleSection = ({
 
     setRecFile(tempRecFiles);
 
-    console.log("imagensItens: ", tempRecFiles);
+    //console.log("imagensItens: ", tempRecFiles);
 
     const item: Item = {
       codigo: garantiaItem.codigoItem,
@@ -383,7 +386,7 @@ const CollapsibleSection = ({
       defeito: garantiaItem.tipoDefeito,
       aroVeiculo: garantiaItem.anoVeiculo || "",
       analiseTecnica: garantiaItem.conclusao || "",
-      dataEmissao: garantia.data
+      dataEmissao: garantia.data,
     };
 
     const pdfBlob = await pdf(<ReportPDF item={item} />).toBlob();
@@ -393,7 +396,7 @@ const CollapsibleSection = ({
     link.href = url;
     link.download = `laudo_tecnico_${item.codigo || "sem_codigo"}.pdf`;
     link.click();
-    
+
     // Limpeza
     setTimeout(() => {
       URL.revokeObjectURL(url);
@@ -414,14 +417,15 @@ const CollapsibleSection = ({
     }
   };
 
-  const itemStatus = converterStatusItemGarantia(
-    garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO ||
-      garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
-      ? GarantiasItemStatusEnum2.NAO_ANALISADO
-      : garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO
+  const itemStatus =
+    converterStatusItemGarantia(
+      garantiaItem?.status === GarantiasItemStatusEnum.NAO_ANALISADO ||
+        garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
+        ? GarantiasItemStatusEnum2.NAO_ANALISADO
+        : garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO
         ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
         : GarantiasItemStatusEnum2.AUTORIZADO
-  ) || "Status não disponível";
+    ) || "Status não disponível";
 
   const statusStyle = getStatusColor(garantiaItem?.status || "");
 
@@ -489,7 +493,7 @@ const DetailsItensNF: React.FC = () => {
   const [garantia, setGarantia] = useState<GarantiasModel | null>(null);
   const [notaFiscal, setNotaFiscal] = useState<NotaFiscal>();
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   const [recSellFile, setRecSellFile] = useState<{
     fileNameWithExtension: string;
     imagemUrl: string;
@@ -497,7 +501,6 @@ const DetailsItensNF: React.FC = () => {
   const context = useContext(AuthContext);
 
   const handleInputChange = (itemId: string, field: string, value: any) => {
-    
     setNotaFiscal((prevNotaFiscal) => {
       if (prevNotaFiscal) {
         return {
@@ -563,13 +566,13 @@ const DetailsItensNF: React.FC = () => {
             location.state.nota &&
             JSON.stringify(location.state.nota) !== JSON.stringify(notaFiscal)
           ) {
-          console.log("nota received: ", location.state.nota);
+            //console.log("nota received: ", location.state.nota);
 
             setNotaFiscal(location.state.nota);
           }
 
-          console.log("garantia received: ", garantia);
-          console.log("nota received: ", notaFiscal);
+          //console.log("garantia received: ", garantia);
+          //console.log("nota received: ", notaFiscal);
 
           const transformedItems = await getItemsByNotaId(
             location.state.notaId
@@ -586,7 +589,7 @@ const DetailsItensNF: React.FC = () => {
           ) {
             setVisibleSectionId(transformedItems[0].id);
           }
-          console.log("transformedItemsReceved: ", location.state.nota);
+          //console.log("transformedItemsReceved: ", location.state.nota);
         } else {
           setGarantia({
             id: "",
@@ -633,7 +636,7 @@ const DetailsItensNF: React.FC = () => {
       message.error("Erro ao criar a garantia.");
     } else {
       message.success("Item criado com sucesso.");
-      console.log("responsePost: ", responsePost);
+      //console.log("responsePost: ", responsePost);
 
       if (garantia) {
         setNotaFiscal((prevNotaFiscal) => {
@@ -653,14 +656,13 @@ const DetailsItensNF: React.FC = () => {
             };
           }
         });
-        console.log("notaFiscal push: ", notaFiscal);
+        //console.log("notaFiscal push: ", notaFiscal);
       }
       setVisibleSectionId(newItemId);
     }
   };
 
   const handleDeleteItem = (itemId: string) => {
-
     setNotaFiscal((prevNotaFiscal) => {
       if (prevNotaFiscal) {
         return {
@@ -732,19 +734,21 @@ const DetailsItensNF: React.FC = () => {
     }
 
     let isError: boolean = false;
-    
+
     const responseGetItens = await api.get(
       `/nota-fiscal/by-garantia/${garantia.id}`
     );
     const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
-    
-    const garantiaItensAPI = await getItemsByNotaId(notasFiscaisAPI.find((nota) => nota.codigo == notaFiscal.codigo).id);
+
+    const garantiaItensAPI = await getItemsByNotaId(
+      notasFiscaisAPI.find((nota) => nota.codigo == notaFiscal.codigo).id
+    );
 
     for (const item of notaFiscal.itens.filter(
       (value) => value.codigoItem?.split(".")[1] === recRgiLetter
     )) {
       try {
-        console.log("garantiaItensAPI: ", garantiaItensAPI);
+        //console.log("garantiaItensAPI: ", garantiaItensAPI);
 
         if (
           garantiaItensAPI.some(
@@ -769,7 +773,7 @@ const DetailsItensNF: React.FC = () => {
             `/garantias/garantiasItem/${item.id}/UpdateItem`,
             payloadPut
           );
-          console.log("payloadPut: ", payloadPut);
+          //console.log("payloadPut: ", payloadPut);
 
           if (responsePut.status !== 200 && responsePut.status !== 201) {
             message.error("Erro ao atualizar o item.");
@@ -795,7 +799,7 @@ const DetailsItensNF: React.FC = () => {
             environment.apiUrl + "/garantias/item/create",
             payloadPost
           );
-          console.log("payloadPost: ", payloadPost);
+          //console.log("payloadPost: ", payloadPost);
 
           if (responsePost.status !== 200 && responsePost.status !== 201) {
             message.error("Erro ao criar a garantia.");
@@ -867,8 +871,9 @@ const DetailsItensNF: React.FC = () => {
           <div
             style={{
               color: StatusColors[garantia?.codigoStatus] || "#000",
-              backgroundColor: `${StatusColors[garantia?.codigoStatus] || "#000"
-                }15`,
+              backgroundColor: `${
+                StatusColors[garantia?.codigoStatus] || "#000"
+              }15`,
             }}
             className={styles.statusTag}
           >
@@ -882,9 +887,9 @@ const DetailsItensNF: React.FC = () => {
             garantia.codigoStatus !== GarantiasStatusEnum2.CONFIRMADO &&
             garantia.codigoStatus !== GarantiasStatusEnum2.EM_ANALISE &&
             garantia.codigoStatus !==
-            GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             garantia.codigoStatus !==
-            GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA &&
+              GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA &&
             context.user.rule.name === UserRoleEnum.Cliente && (
               <>
                 <Button
@@ -927,13 +932,29 @@ const DetailsItensNF: React.FC = () => {
         </div>
       </div>
       <hr className={styles.divisor} />
+      <FileAttachment
+          label="Anexo da NF de venda"
+          backgroundColor="#f5f5f5"
+          garantiaItemId={notaFiscal?.id}
+          isRessarcimento={false}
+          initialFileData={
+            garantia?.anexos
+              ? { id: garantia.anexos, fileName: garantia.anexos }
+              : undefined
+          }
+          recGarantia={garantia}
+          recSellFile={{
+            fileNameWithExtension: "",
+            imagemUrl: "",
+          }}
+        />
       {(garantia?.codigoStatus ===
         GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
         garantia?.codigoStatus === GarantiasStatusEnum2.CONFIRMADO ||
         garantia?.codigoStatus ===
-        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+          GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
         garantia?.codigoStatus ===
-        GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
+          GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
         context.user.rule.name === UserRoleEnum.Cliente && (
           <div style={{ marginTop: "15px" }}>
             <FileAttachment
@@ -1078,7 +1099,7 @@ const DetailsItensNF: React.FC = () => {
                         {
                           value: "FORA_DE_MEDIDA",
                           label: "FORA DE MEDIDA",
-                        }
+                        },
                       ]}
                       value={item.tipoDefeito || ""}
                       onChange={(e) => {

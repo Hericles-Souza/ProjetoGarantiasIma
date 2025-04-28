@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Modal, Button, Upload, message } from "antd";
 import { FileOutlined, UploadOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useState } from "react";
@@ -32,7 +33,7 @@ const NFModal = ({
 }: NFModalProps) => {
   const [inputValue, setInputValue] = useState("");
   const [fileName, setFileName] = useState<string>("");
-  const [file, setFile] = useState(null);
+  const [, setFile] = useState(null);
   const [label, setLabel] = useState("");
   const [idGarantia, setIdGarantia] = useState(garantiaId);
   const context = useContext(AuthContext);
@@ -58,20 +59,20 @@ const NFModal = ({
         onAddNF(inputValue);
         setInputValue("");
         onOpenChange({ isOpen: false, isSell: false });
-        console.log(inputValue);
-        console.log(file);
+        //console.log(inputValue);
+        //console.log(file);
       }
     } else if (!isSell) {
       
-      console.log("garantiaId: ", garantiaId);
+      //console.log("garantiaId: ", garantiaId);
       if(!garantiaId)
         message.error("Id da garantia vazio");
 
 
       setInputValue("");
       onOpenChange({ isOpen: false, isSell: false });
-      console.log(inputValue);
-      console.log(file);
+      //console.log(inputValue);
+      //console.log(file);
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -116,16 +117,13 @@ const NFModal = ({
     const fileData = new FormData();
     fileData.append("file", info.file);
     fileData.append("itemId", itemId);
-    console.log("match: " + match);
+    //console.log("match: " + match);
 
     if (label.includes("devolução")) fileData.append("field", "nfDev");
     else if (match) {
       if (label.includes("Devolução")) fileData.append("field", `nfDev`);
       else fileData.append("field", "nfOrig");
     }
-    fileData.forEach((item, key) => {
-      console.log(key + ": " + item);
-    });
 
     try {
       const response = await fetch(endpoint, {
@@ -166,7 +164,7 @@ const NFModal = ({
             fullWidth
           />
         </div>
-        <div className="nf-field-anexo">
+        {/* <div className="nf-field-anexo">
           <label>{label}</label>
           <div className="nf-upload-container">
             {fileName && (
@@ -192,7 +190,7 @@ const NFModal = ({
               <Button icon={<UploadOutlined />}>Anexar</Button>
             </Upload>
           </div>
-        </div>
+        </div> */}
 
         <div className="nf-footer">
           <Button onClick={handleCancel} className="cancel-button">

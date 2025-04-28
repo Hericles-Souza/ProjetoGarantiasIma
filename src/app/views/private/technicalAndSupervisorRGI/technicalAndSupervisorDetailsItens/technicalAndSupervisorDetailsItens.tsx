@@ -7,7 +7,7 @@ import {
   FileOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import styles from "./TechnicalAndSupervisorDetailsItens.module.css";
+import styles from "./technicalAndSupervisorDetailsItens.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getItemsByNfAsync } from "@shared/services/AcordoComercialService";
@@ -225,23 +225,20 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           const updatedCardData = { ...location.state.garantia };
           setCardData(updatedCardData);
           setNotaFiscal(location.state.nota);
-          console.log("nota fiscal received: ", notaFiscal);
+          //console.log("nota fiscal received: ", notaFiscal);
 
           if (
             notaFiscal?.itens.some(
-              (item) =>
-                item.status == GarantiasItemStatusEnum.NAO_ENVIADO
+              (item) => item.status == GarantiasItemStatusEnum.NAO_ENVIADO
             )
           ) {
-            
             setIsAnalysisConcluded(false);
             setDisplayedStatus("Aguardando Avaliação");
-            console.log("entrou 2");
-            
+            //console.log("entrou 2");
           } else {
             setIsAnalysisConcluded(true);
             setDisplayedStatus("Avaliação Concluída");
-            console.log("entrou 1");
+            //console.log("entrou 1");
           }
 
           setRecRgiLetter(location.state.nf.split(".")[1]);
@@ -321,7 +318,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           dataToSend
         );
 
-        console.log("response: ", response);
+        //console.log("response: ", response);
 
         if (response.status === 200) {
           message.success("Dados salvos com sucesso!");
@@ -387,7 +384,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           className={styles.ButtonBack}
           onClick={() =>
             navigate(`/garantias/technical-and-supervisor/${cardData.id}`, {
-              state: { item: cardData.notas[0].itens[0], garantia: cardData, displayedStatus },
+              state: {
+                item: cardData.notas[0].itens[0],
+                garantia: cardData,
+                displayedStatus,
+              },
             })
           }
         >
@@ -440,10 +441,16 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           )}
         </div>
       </div>
+      <hr className={styles.divisor} />
+      <FileAttachment
+        label="Anexo da NF de venda"
+        backgroundColor="#f5f5f5"
+        isRessarcimento={false}
+        itemId={location.state.nota.id}
+      />
       {cardData.codigoStatus >=
         GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
         <>
-          <hr className={styles.divisor} />
           <FileAttachment
             label="Anexo da NF de devolução"
             backgroundColor="#f5f5f5"
@@ -506,23 +513,23 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 </div>
               </div>
               <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Defeito"
-                    value={item?.tipoDefeito || ""}
-                    fullWidth
-                    disabled
-                  />
-                </div>
-                {context.user.rule.name === UserRoleEnum.Supervisor && (
-                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                <OutlinedInputWithLabel
+                  label="Defeito"
+                  value={item?.tipoDefeito || ""}
+                  fullWidth
+                  disabled
+                />
+              </div>
+              {context.user.rule.name === UserRoleEnum.Supervisor && (
+                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                   <OutlinedInputWithLabel
                     label="Defeito Oficial"
-                    value={item?.tipoDefeitoOficial?.replace(/_/g, ' ') || ""}
+                    value={item?.tipoDefeitoOficial??.replace(/_/g, " ") || ""}
                     fullWidth
                     disabled
                   />
                 </div>
-                )}
+              )}
               <div className={styles.inputsConjun}>
                 <div className={styles.inputGroup} style={{ flex: 1 }}>
                   <OutlinedInputWithLabel
@@ -652,10 +659,9 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                       },
                     ]}
                     value={item.tipoDefeitoOficial || ""}
-                    
                     defaultValue=""
                     onChange={(e) => {
-                      console.log("defeito: ", e.target.value);
+                      //console.log("defeito: ", e.target.value);
 
                       item.tipoDefeitoOficial = e.target.value;
                       updateItemDefect(item.id, e.target.value);
