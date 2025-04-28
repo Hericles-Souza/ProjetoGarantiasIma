@@ -61,6 +61,7 @@ const ScreenAcordoComercial: React.FC = () => {
     const itemAcordoPost: AcordoComercialItem = {
       id: "",
       codigoItem: itemCode,
+      codigoPeca: "",
       precoUnitario: 0,
       quantidade: 0,
       codigoStatus: AcordoComercialItemStatusEnum2.NAO_ENVIADO,
