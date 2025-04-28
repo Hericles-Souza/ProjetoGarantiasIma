@@ -313,7 +313,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         ItemId: item.id,
         conclusao: item.conclusao,
         status: item.status,
-        tipoDefeitoOficial: item.tipoDefeito,
+        tipoDefeitoOficial: item.tipoDefeitoOficial,
       };
       try {
         const response = await api.put(
@@ -505,6 +505,24 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   />
                 </div>
               </div>
+              <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                  <OutlinedInputWithLabel
+                    label="Defeito"
+                    value={item?.tipoDefeito || ""}
+                    fullWidth
+                    disabled
+                  />
+                </div>
+                {context.user.rule.name === UserRoleEnum.Supervisor && (
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                  <OutlinedInputWithLabel
+                    label="Defeito Oficial"
+                    value={item?.tipoDefeitoOficial.replace(/_/g, ' ') || ""}
+                    fullWidth
+                    disabled
+                  />
+                </div>
+                )}
               <div className={styles.inputsConjun}>
                 <div className={styles.inputGroup} style={{ flex: 1 }}>
                   <OutlinedInputWithLabel
@@ -633,12 +651,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                         label: "TRABALHOU SEM O CHICOTE ABS",
                       },
                     ]}
-                    value={item.tipoDefeito || ""}
+                    value={item.tipoDefeitoOficial || ""}
+                    
                     defaultValue=""
                     onChange={(e) => {
                       console.log("defeito: ", e.target.value);
 
-                      item.tipoDefeito = e.target.value;
+                      item.tipoDefeitoOficial = e.target.value;
                       updateItemDefect(item.id, e.target.value);
                     }}
                   />

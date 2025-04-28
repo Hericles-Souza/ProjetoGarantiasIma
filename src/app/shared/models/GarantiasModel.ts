@@ -27,6 +27,7 @@ export interface GarantiaItem {
   codigoRGI?: string;
   codigoItem: string;
   tipoDefeito?: string;
+  tipoDefeitoOficial?: string;
   modeloVeiculoAplicado?: string;
   torqueAplicado?: number;
   nfReferencia: string;

@@ -125,6 +125,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
         const itemAcordoPost: AcordoComercialItem = {
           id: "",
           codigoItem: newACI + ".A.1",
+          codigoPeca: "",
           precoUnitario: 0,
           quantidade: 0,
           codigoStatus: AcordoComercialItemStatusEnum2.NAO_ENVIADO,

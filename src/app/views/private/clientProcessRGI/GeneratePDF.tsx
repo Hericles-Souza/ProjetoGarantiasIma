@@ -6,7 +6,6 @@ import {
   View,
   StyleSheet,
   Image,
-  Font,
 } from "@react-pdf/renderer";
 import logoBase64 from "../../../../assets/image/png/logo-ima.png"; // Se estiver usando Vite, Webpack com file-loader ou asset modules
 
@@ -130,17 +129,7 @@ export type Item = {
 
 type PDFProps = { item: Item };
 
-// Adiciona esta função para garantir o carregamento
-export const ensureFontsLoaded = async () => {
-  try {
-    const fonts = await Font.getRegisteredFontFamilies();
-    if (!fonts.includes("Helvetica")) {
-      console.log("fonts: ", fonts);
-    }
-  } catch (error) {
-    console.warn("Font warning:", error);
-  }
-};
+// Adiciona esta função para garantir o carregament
 
 const ReportPDF: React.FC<PDFProps> = ({ item }) => {
   const safeText = (text: string | undefined) => text || "";
@@ -244,19 +233,6 @@ const ReportPDF: React.FC<PDFProps> = ({ item }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Análise Técnica Visual</Text>
           <View style={styles.editorContent}>
-            <Text style={styles.boldText}>
-              The standard Lorem Ipsum passage, used since the 1500s
-            </Text>
-            <Text style={styles.italicText}>
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-              reprehenderit in voluptate velit esse cillum dolore eu fugiat
-              nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-              sunt in culpa qui officia deserunt mollit anim id est laborum."
-            </Text>
-
             {item.images && item.images.length > 0 && (
               <View style={styles.imageContainer}>
                 {item.images.map((imageBlob, index) => (
@@ -275,18 +251,6 @@ const ReportPDF: React.FC<PDFProps> = ({ item }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Conclusão</Text>
           <View style={styles.editorContent}>
-            <Text style={styles.boldText}>
-              The standard Lorem Ipsum passage, used since the 1500s
-            </Text>
-            <Text style={styles.italicText}>
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-              reprehenderit in voluptate velit esse cillum dolore eu fugiat
-              nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-              sunt in culpa qui officia deserunt mollit anim id est laborum."
-            </Text>
             <Text>{item.conclusao || "Conclusão padrão..."}</Text>
           </View>
         </View>

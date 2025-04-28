@@ -3,6 +3,7 @@ import { AcordoComercialItemStatusEnum2, AcordoComercialStatusEnum2 } from "@sha
 export interface AcordoComercialItem {
   id?: string;
   codigoItem: string;
+  codigoPeca: string;
   precoUnitario: number;
   quantidade: number;
   status?: string;
@@ -75,6 +76,7 @@ export interface NfItem {
 export interface UpdateItemResponse {
   
     codigoItem: string,
+    codigoPeca: string,
     precoUnitario: number,
     quantidade: number,
     codigoStatus: number,

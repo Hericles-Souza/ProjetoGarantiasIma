@@ -180,6 +180,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   const handleSaveClient = async (refused: boolean) => {
     const itemUpdate: UpdateItemResponse = {
       codigoItem: item.codigoItem,
+      codigoPeca: item.codigoPeca,
       precoUnitario: item.precoUnitario,
       quantidade: item.quantidade,
       codigoStatus: refused
@@ -437,6 +438,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       for (const item of itensParaAtualizar) {
         const itemUpdate: UpdateItemResponse = {
           codigoItem: item.codigoItem,
+          codigoPeca: item.codigoPeca,
           precoUnitario: 0,
           quantidade: item.quantidade,
           codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
@@ -498,6 +500,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
     const newItem: AcordoComercialItem = {
       id: newItemId,
       codigoItem: newItemCode,
+      codigoPeca: "",
       precoUnitario: 0,
       quantidade: 0,
       codigoStatus: AcordoComercialItemStatusEnum2.NAO_ENVIADO,
@@ -667,7 +670,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                   <OutlinedInputWithLabel
                     label="Código da peça *"
                     fullWidth
-                    value={item?.codigoItem}
+                    value={item?.codigoPeca}
                     onChange={(e) => {
                       handleInputChange(item.id, "codigoPeca", e.target.value);
                     }}

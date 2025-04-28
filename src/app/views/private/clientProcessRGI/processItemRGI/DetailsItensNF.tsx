@@ -753,7 +753,6 @@ const DetailsItensNF: React.FC = () => {
         ) {
           const payloadPut = {
             codigoItem: item.codigoItem,
-            codigoRGI: notaFiscal.codigoRGI,
             tipoDefeito: item.tipoDefeito,
             modeloVeiculoAplicado: item.modeloVeiculoAplicado,
             torqueAplicado: Number(item.torqueAplicado) || 0,
@@ -763,7 +762,7 @@ const DetailsItensNF: React.FC = () => {
             loteItem: item.loteItem,
             anoVeiculo: item.anoVeiculo,
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
-            solicitarRessarcimento: true,
+            solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
             nota_fiscal_id: notaFiscal.id,
           };
           const responsePut = await api.put(
