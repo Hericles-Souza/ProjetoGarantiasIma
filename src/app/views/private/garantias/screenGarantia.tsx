@@ -14,6 +14,7 @@ import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
   converterStringParaStatusGarantia,
+  GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum.ts";
@@ -48,8 +49,8 @@ const Garantias: React.FC = () => {
   const fetchCardData = async () => {
     try {
       if (context.user!.rule!.name === UserRoleEnum.Cliente) {
-        const response = await getGarantiasPaginationAsync(1, 100);
-        const responseDataACI = await getAcordosByUser(1, 100);
+        const response = await getGarantiasPaginationAsync(1, 10000);
+        const responseDataACI = await getAcordosByUser(1, 10000);
 
         if (responseDataACI) {
           setAcordoData(responseDataACI.data.data.data);
@@ -72,7 +73,7 @@ const Garantias: React.FC = () => {
             GarantiasStatusEnum2.CONFIRMADO,
             GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           ];
-          const responseDataACI = await getAllAcordos(1, 100);
+          const responseDataACI = await getAllAcordos(1, 10000);
 
           if (responseDataACI) {
             setAcordoData(responseDataACI.data.data.data);
@@ -80,7 +81,7 @@ const Garantias: React.FC = () => {
         }
 
         const promises = status.map(async (element) => {
-          const response = await getGarantiasByStatusAsync(1, 100, element);
+          const response = await getGarantiasByStatusAsync(1, 10000, element);
           const responseData = await response.data.data;
           return responseData;
         });
@@ -97,7 +98,19 @@ const Garantias: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === "rgi") {
-      const filtered = cardData.filter((card) => {
+      let filteredCardData = cardData;
+
+      // 👮 Pré-filtro: remove garantias com itens "NAO_ENVIADO" se for Supervisor
+      if (context.user?.rule?.name === UserRoleEnum.Supervisor) {
+        filteredCardData = cardData.filter(
+          (garantia) =>
+            !garantia.itens?.some(
+              (item) => item.codigoStatus === GarantiasItemStatusEnum2.NAO_ANALISADO
+            )
+        );
+      }
+  
+      const filtered = filteredCardData.filter((card) => {
         const matchesStatus =
           filterStatus === "todos" ||
           card.codigoStatus ===
@@ -115,21 +128,22 @@ const Garantias: React.FC = () => {
 
         return matchesStatus && matchesSearch;
       });
+      
       setFilteredItems(filtered);
     } else if (activeTab === "aci") {
       const filtered = acordoData.filter((card) => {
         const matchesStatus =
           filterStatus === "todos" ||
           card.status.toLowerCase() === filterStatus.toLowerCase(); // Compara diretamente com o status do item
-        
-        const matchesSearch = 
+
+        const matchesSearch =
           searchTerm === "" ||
           card.cdAci.toLowerCase().includes(searchTerm.toLowerCase()) ||
           card.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          card.itens?.some(item => 
+          card.itens?.some((item) =>
             item.codigoItem?.toLowerCase().includes(searchTerm.toLowerCase())
           );
-    
+
         return matchesStatus && matchesSearch;
       });
       setFilteredAcordoItems(filtered);
@@ -257,6 +271,8 @@ const Garantias: React.FC = () => {
                           console.log(
                             "garantiaData: " + JSON.stringify(garantiaData)
                           );
+                          console.log("navigateGarantiascreen:", { item, garantiaData });
+
                           navigate(`/garantias/rgi/${garantia.id}`, {
                             state: { item, garantiaData },
                           });

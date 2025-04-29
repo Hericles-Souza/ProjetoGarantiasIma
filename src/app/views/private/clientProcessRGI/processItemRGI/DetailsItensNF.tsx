@@ -90,6 +90,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         else fieldFile = `${matchField[0]}.img`;
       } else fieldFile = "nfRef";
 
+
+    if(fieldFile == "nfVenda") console.log("nota fiscal id: ", garantiaItemId)
       getFieldFile(garantiaItemId, fieldFile);
     }
 
@@ -636,7 +638,7 @@ const DetailsItensNF: React.FC = () => {
       message.error("Erro ao criar a garantia.");
     } else {
       message.success("Item criado com sucesso.");
-      //console.log("responsePost: ", responsePost);
+      console.log("responsePost: ", responsePost);
 
       if (garantia) {
         setNotaFiscal((prevNotaFiscal) => {
@@ -767,19 +769,19 @@ const DetailsItensNF: React.FC = () => {
             anoVeiculo: item.anoVeiculo,
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
             solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
-            nota_fiscal_id: notaFiscal.id,
           };
           const responsePut = await api.put(
             `/garantias/garantiasItem/${item.id}/UpdateItem`,
             payloadPut
           );
-          //console.log("payloadPut: ", payloadPut);
+          console.log("payloadPut: ", payloadPut);
 
           if (responsePut.status !== 200 && responsePut.status !== 201) {
             message.error("Erro ao atualizar o item.");
             isError = true;
           }
         } else {
+          item.id = crypto.randomUUID();
           const payloadPost = {
             nota_fiscal_id: notaFiscal.id,
             codigoRGI: notaFiscal.codigoRGI,
@@ -794,12 +796,14 @@ const DetailsItensNF: React.FC = () => {
             loteItem: item.loteItem,
             codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
             solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
+            index: notaFiscal.itens.length + 1,
+            id: item.id
           };
           const responsePost = await api.post(
             environment.apiUrl + "/garantias/item/create",
             payloadPost
           );
-          //console.log("payloadPost: ", payloadPost);
+          console.log("payloadPost: ", payloadPost);
 
           if (responsePost.status !== 200 && responsePost.status !== 201) {
             message.error("Erro ao criar a garantia.");
@@ -815,6 +819,8 @@ const DetailsItensNF: React.FC = () => {
 
     if (!isError && garantia) {
       message.success("Garantia atualizada com sucesso!");
+      console.log("navigateGarantiaDetails:", garantia);
+      
       navigate(`/garantias/rgi/${garantia.id}`, {
         state: { garantiaData: garantia, item: garantia?.nf },
       });
@@ -850,7 +856,7 @@ const DetailsItensNF: React.FC = () => {
           className={styles.ButtonBack}
           onClick={() =>
             navigate(`/garantias/rgi/${garantia.id}`, {
-              state: { garantiaData: garantia, item: garantia?.nf },
+              state: { garantiaData: garantia, item: garantia.nf },
             })
           }
         >
@@ -1002,7 +1008,15 @@ const DetailsItensNF: React.FC = () => {
         </span>
       </div>
       {notaFiscal?.itens?.length > 0 && recRgiLetter ? (
-        notaFiscal?.itens?.map((item) => (
+        notaFiscal?.itens?.sort((a, b) => {
+          const getNumeroFinal = (codigo: string): number => {
+            const partes = codigo.split('.');
+            return parseInt(partes[partes.length - 1], 10);
+          };
+      
+          return getNumeroFinal(a.codigoItem) - getNumeroFinal(b.codigoItem);
+        })
+        .map((item) => (
           <div className={styles.containerInformacoes} key={item.id}>
             <CollapsibleSection
               title={item.codigoItem || "Item sem código"}
