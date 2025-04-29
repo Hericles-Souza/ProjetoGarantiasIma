@@ -24,7 +24,7 @@ const Dashboard = () => {
 
     const barOptions = {
         chart: { 
-            type: "bar" as const, // Corrigido aqui
+            type: "bar" as const,
         },
         xaxis: { 
             categories: ["00004", "000001", "000001", "000001", "000001", "000001", "000001", "000001"] 
@@ -50,7 +50,7 @@ const Dashboard = () => {
         }],
         options: {
             chart: { 
-                type: "bar" as const, // Corrigido aqui
+                type: "bar" as const,
             },
             plotOptions: { 
                 bar: { 
@@ -71,7 +71,7 @@ const Dashboard = () => {
         }],
         options: {
             chart: { 
-                type: "bar" as const, // Corrigido aqui
+                type: "bar" as const,
             },
             plotOptions: { 
                 bar: { 
@@ -85,12 +85,40 @@ const Dashboard = () => {
         },
     };
 
+    const handleFilter = () => {
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        // Lógica de filtragem será implementada aqui
+        console.log("Filtrando dados de", startDate, "até", endDate);
+        // Exemplo: Atualizar os gráficos com base nas datas (adicionar lógica real aqui)
+    };
+
     return (
         <div style={{ padding: "20px", backgroundColor: "#fff", height: "100vh", overflowY: "scroll", color: "black" }}>
             <div className="containerDashboard">
-                {/* <h2>Dashboard Inicial</h2> */}
                 <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-                    <input type="date" id="dateFilter" className="inputSearch" />
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                        <label htmlFor="startDate">Data Inicial</label>
+                        <input type="date" id="startDate" className="inputSearch" />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                        <label htmlFor="endDate">Data Final</label>
+                        <input type="date" id="endDate" className="inputSearch" />
+                    </div>
+                    <button 
+                        onClick={handleFilter} 
+                        style={{ 
+                            padding: "13px 16px", 
+                            backgroundColor: "#FF0000", 
+                            color: "white", 
+                            border: "none", 
+                            marginTop: "25px",
+                            borderRadius: "10px", 
+                            cursor: "pointer" 
+                        }}
+                    >
+                        Realizar Analise
+                    </button>
                 </div>
             </div>
 

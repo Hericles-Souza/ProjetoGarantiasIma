@@ -34,9 +34,11 @@ const columns: TableColumnsType<DataType> = [
   { title: "Razão Social", dataIndex: "age" },
   { title: "Código Cigam", dataIndex: "cigamCode" },
   { title: "Telefone", dataIndex: "phone" },
+  { title: "CNPJ/CPF", dataIndex: "cnpj" },
   { title: "Status", dataIndex: "status" },
   { title: "E-mail", dataIndex: "email" },
   { title: "Perfil do Usuário", dataIndex: "userRole" },
+  { title: "Senha", dataIndex: "key" },
   { title: "Criado", dataIndex: "create" },
   { title: "Última Alteração", dataIndex: "lastAlteration" },
 ];
@@ -53,8 +55,8 @@ const UserRegistration: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
   const [selectedAction, setSelectedAction] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
-  
-  
+
+
 
   const openModal = (user: DataType) => {
     setSelectedUser(user);
@@ -146,7 +148,7 @@ const UserRegistration: React.FC = () => {
               else {
                 setSelectedAction(false);
                 openModal(selectedUser);
-                console.log("update " + JSON.stringify( selectedUser));
+                console.log("update " + JSON.stringify(selectedUser));
               }
             }}
           >
@@ -183,7 +185,7 @@ const UserRegistration: React.FC = () => {
           columns={columns}
           dataSource={dataSource}
           loading={loading}
-          scroll={{ y: 400 }}
+          scroll={{ y: 800 }}
           pagination={{
             current: page,
             pageSize: limit,

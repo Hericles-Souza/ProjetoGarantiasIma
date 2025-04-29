@@ -593,7 +593,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </span>
       </div>
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>{nf}</h1>
+        <h1 className={styles.tituloRgi}>{ "NF " + nf}</h1>
 
         {context.user.rule.name == UserRoleEnum.Cliente &&
           acordo?.itens.some(
@@ -625,7 +625,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
 
       <div className={styles.TitleItens}>
         <h3 className={styles.nfsTitle}>
-          Itens desta NF associados a esta garantia
+          Itens desta NF associados a este acordo
         </h3>
         {context.user.rule.name == UserRoleEnum.Cliente &&
           acordo?.itens.some((item) => item.codigoStatus == 2) && (
