@@ -174,7 +174,7 @@ export const LoginPage = () => {
                       />
                     }
                     size="large"
-                    placeholder="Digite seu usuário"
+                    placeholder="Digite seu email ou CNPJ"
                     type="text"
                     style={{
                       height: "55px",
