@@ -150,19 +150,13 @@ const TechnicalAndSupervisorInitialRGI = () => {
       } else if (
         !newAssociatedNfsByGarantia?.some((nota) =>
           nota.itens.some(
-            (item) => item.status == GarantiasItemStatusEnum.NAO_ENVIADO
+            (item) => item.status == GarantiasItemStatusEnum.NAO_ANALISADO
           )
         )
       ) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         setIsAnalysisConcluded(true);
         setDisplayedStatus("Avaliação Concluída");
-      } else {
-        setIsAnalysisConcluded(false);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        console.log("entrou 1");
-
-        setDisplayedStatus("Aguardando Avaliação");
       }
     }
   };
@@ -208,9 +202,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
               setDisplayedStatus(location.state.displayedStatus);
             }
           } else if (
-            garantiaNfsWithItens?.some((nota) =>
+            !garantiaNfsWithItens?.some((nota) =>
               nota.itens.some(
-                (item) => item.status == GarantiasItemStatusEnum.NAO_ENVIADO
+                (item) => item.status == GarantiasItemStatusEnum.NAO_ANALISADO
               )
             )
           ) {

@@ -56,7 +56,8 @@ const FileAttachment = React.memo(
         let fieldFile: string = "";
         const matchField = label.match(/^\d+/);
 
-        if (label.includes("devolução")) fieldFile = "nfDev";
+        if (label.includes("venda")) fieldFile = "nfVenda";
+        else if (label.includes("devolução")) fieldFile = "nfDev";
         else if (matchField) {
           if (isRessarcimento) fieldFile = `${matchField[0]}.res`;
           else fieldFile = `${matchField[0]}.img`;
@@ -173,13 +174,30 @@ const CollapsibleSection = ({
   toggleVisibility: () => void;
   children: React.ReactNode;
   handleConfirm: () => void;
-  statusGarantia: number;
+  statusGarantia: string;
 }) => {
   const context = useContext(AuthContext);
+  console.log(statusGarantia);
+  const statusColor =
+    statusGarantia === GarantiasItemStatusEnum.AUTORIZADO
+      ? "#00FF00" // Verde para "Avaliação Concluída"
+      : "FF4D4F";
+
   return (
     <div>
       <div className={styles.tituloSecaoContainer}>
-        <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
+        <div className={styles.headerLeft}>
+          <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
+          <div
+            style={{
+              color: statusColor,
+              backgroundColor: `${statusColor}26`,
+            }}
+            className={styles.statusTag}
+          >
+            {statusGarantia || "Carregando..."}
+          </div>
+        </div>
         <Button
           type="text"
           icon={isVisible ? <DownOutlined /> : <RightOutlined />}
@@ -229,7 +247,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
           if (
             notaFiscal?.itens.some(
-              (item) => item.status == GarantiasItemStatusEnum.NAO_ENVIADO
+              (item) => item.status == GarantiasItemStatusEnum.NAO_ANALISADO
             )
           ) {
             setIsAnalysisConcluded(false);
@@ -446,7 +464,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         label="Anexo da NF de venda"
         backgroundColor="#f5f5f5"
         isRessarcimento={false}
-        itemId={location.state.nota.id}
+        itemId={notaFiscal?.id}
       />
       {cardData.codigoStatus >=
         GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
@@ -455,7 +473,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             label="Anexo da NF de devolução"
             backgroundColor="#f5f5f5"
             isRessarcimento={false}
-            itemId={location.state.nota.id}
+            itemId={notaFiscal?.id}
           />
           <div className={styles.TitleItens}>
             <h3 className={styles.nfsTitle}>
@@ -471,7 +489,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             isVisible={isContentVisible[item.id] || false}
             toggleVisibility={() => toggleContentVisibility(item.id)}
             handleConfirm={handleConfirm}
-            statusGarantia={cardData.codigoStatus}
+            statusGarantia={item.status}
           >
             <h3 className={styles.tituloSecao}>Informações Gerais</h3>
             <div className={styles.inputsContainer}>
@@ -507,7 +525,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   <OutlinedInputWithLabel
                     label="Ano do veículo"
                     disabled
-                    value={item.modeloVeiculoAplicado}
+                    value={item.anoVeiculo}
                     fullWidth
                   />
                 </div>

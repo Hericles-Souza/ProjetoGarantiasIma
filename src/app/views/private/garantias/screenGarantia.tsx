@@ -14,6 +14,7 @@ import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import {
   converterStatusGarantiaInverso,
   converterStringParaStatusGarantia,
+  GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
 } from "@shared/enums/GarantiasStatusEnum.ts";
@@ -77,7 +78,7 @@ const Garantias: React.FC = () => {
             GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
             GarantiasStatusEnum2.NAO_ENVIADO,
           ];
-          const responseDataACI = await getAllAcordos(1, 100);
+          const responseDataACI = await getAllAcordos(1, 10000);
 
           if (responseDataACI) {
             setAcordoData(responseDataACI.data.data.data);
@@ -85,7 +86,7 @@ const Garantias: React.FC = () => {
         }
 
         const promises = status.map(async (element) => {
-          const response = await getGarantiasByStatusAsync(1, 100, element);
+          const response = await getGarantiasByStatusAsync(1, 10000, element);
           const responseData = await response.data.data;
           return responseData;
         });
@@ -107,6 +108,18 @@ const Garantias: React.FC = () => {
       const filtered = cardData.filter((card) => {
         const convertedStatus = converterStringParaStatusGarantia(filterStatus);
         const invertedStatus = converterStatusGarantiaInverso(convertedStatus);
+        let filteredCardData = cardData;
+
+        // 👮 Pré-filtro: remove garantias com itens "NAO_ENVIADO" se for Supervisor
+        if (context.user?.rule?.name === UserRoleEnum.Supervisor) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          filteredCardData = cardData.filter(
+            (garantia) =>
+              !garantia.itens?.some(
+                (item) => item.codigoStatus === GarantiasItemStatusEnum2.NAO_ANALISADO
+              )
+          );
+        }
         const matchesStatus =
           filterStatus === "todos" || card.codigoStatus === invertedStatus;
 
