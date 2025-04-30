@@ -58,8 +58,7 @@ const RGIDetailsInitial: React.FC = () => {
   const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<
     NotaFiscal[]
   >([]);
-  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
-
+  const [loading, setLoading] = useState<boolean>(true);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [nfToDelete, setNfToDelete] = useState<string>("");
   const [rgi, setRgi] = useState("");
@@ -86,23 +85,21 @@ const RGIDetailsInitial: React.FC = () => {
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
-      // Adicione outros tipos MIME conforme necessário
     };
-
-    return mimeTypes[mimeType] || ""; // Retorna a extensão ou uma string vazia se não encontrado
+    return mimeTypes[mimeType] || "";
   }
 
   function getFileExtensionFromBlob(blob: Blob): string {
-    const mimeType = blob.type; // Pega o tipo MIME do Blob
-    const extension = getExtensionFromMimeType(mimeType);
-    return extension;
+    const mimeType = blob.type;
+    return getExtensionFromMimeType(mimeType);
   }
 
   const ordenarItens = () => {
     setGroupedItems((prevItems) => {
+      if (!prevItems) return prevItems;
       return [...prevItems].sort((a, b) => {
         if (a.codigoItem && b.codigoItem) {
-          return a.codigoItem.localeCompare(b.codigoItem); // Ordena alfabeticamente
+          return a.codigoItem.localeCompare(b.codigoItem);
         }
         return 0;
       });
@@ -113,90 +110,72 @@ const RGIDetailsInitial: React.FC = () => {
     const urlGetFile =
       environment.apiUrl +
       `/files/files/download-private-file-item/${itemId}/${field}`;
-    console.log(urlGetFile);
-
     const response = await fetch(urlGetFile, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${context.user.token}`, // Token de autenticação
+        Authorization: `Bearer ${context.user.token}`,
       },
     });
-
     const blob = await response.blob();
     const fileExtension = getFileExtensionFromBlob(blob);
     const fileNameWithExtension = field + fileExtension;
     const imagemUrl = URL.createObjectURL(blob);
-    // handleDownload(fileNameWithExtension);
-    // handleDownload(fileNameWithExtension, imagemUrl);
-
     return { fileNameWithExtension, imagemUrl };
   };
 
-  const getRgiWithSuffix = (RgiCode: string, letter: string, index) => {
+  const getRgiWithSuffix = (RgiCode: string, letter: string, index: number) => {
     return `${RgiCode}.${letter}.${index}`;
   };
 
   const getAssciatedNfs = async (garantiaId: string, statusGarantia: number) => {
-    const garantiaItemResponse = await fetch(
-      `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${context.user.token}`,
-        },
+    try {
+      const garantiaItemResponse = await fetch(
+        `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${context.user.token}`,
+          },
+        }
+      );
+      const associatedNfsByGarantia = await garantiaItemResponse.json();
+      const newAssociatedNfsByGarantia: NotaFiscal[] = [];
+      for (const [index, nfAssociated] of associatedNfsByGarantia.data.entries()) {
+        newAssociatedNfsByGarantia[index] = nfAssociated;
+        if (statusGarantia > GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) {
+          const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
+          newAssociatedNfsByGarantia[index].recSellFile = returnedSellFile;
+        } else {
+          newAssociatedNfsByGarantia[index].recSellFile = null;
+        }
       }
-    );
-    const associatedNfsByGarantia = await garantiaItemResponse.json();
-    console.log("associatedNfsByGarantia: ", associatedNfsByGarantia.data);
-
-    const newAssociatedNfsByGarantia: NotaFiscal[] = [];
-
-    associatedNfsByGarantia.data.map(async (nfAssociated, index) => {
-      newAssociatedNfsByGarantia[index] = nfAssociated;
-      if(statusGarantia > GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE){
-      console.log("nfAssociatedid: ", nfAssociated.id);
-
-        const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
-        newAssociatedNfsByGarantia[index].recSellFile = returnedSellFile;
-      }
-      else
-        newAssociatedNfsByGarantia[index].recSellFile = null;
-
-    });
-    console.log("newAssociatedNfsByGarantia: ", newAssociatedNfsByGarantia);
-    // Depois de todas as promessas resolvidas, agora pode chamar o setGarantiaNfsWithItens
-    setGarantiaNfsWithItens(newAssociatedNfsByGarantia);
+      setGarantiaNfsWithItens(newAssociatedNfsByGarantia);
+    } catch (error) {
+      console.error("Erro ao buscar NFs associadas:", error);
+      message.error("Erro ao carregar NFs associadas.");
+    }
   };
 
-  // Função para agrupar itens por nfReferencia e pegar somente 1 item de cada grupo
-   
   const groupByNfReferencia = (
     itens: GarantiaItem[]
   ): { codigoItem?: string; nfReferencia?: string }[] => {
-     
-    const grouped: { codigoItem?: string; nfReferencia?: string }[] = [];
-
+    const grouped: { [key: string]: { codigoItem?: string; nfReferencia?: string } } = {};
     itens?.forEach((item) => {
       if (!grouped[item.nfReferencia]) {
         const formatCodigoItem =
           item.codigoItem.split(".")[0] + "." + item.codigoItem.split(".")[1];
-
-
-          
         grouped[item.nfReferencia] = {
           nfReferencia: item.nfReferencia,
           codigoItem: formatCodigoItem,
         };
       }
     });
-
-    // Retorna um array com os itens agrupados
     return Object.values(grouped);
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      let data: GarantiasModel = null;
+      let data: GarantiasModel | null = null;
       try {
         if (location.state) {
           data = location.state.garantiaData;
@@ -207,35 +186,28 @@ const RGIDetailsInitial: React.FC = () => {
             `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
           );
           setCardData(data);
-          console.log("cardData: ", cardData);
-          console.log("data: ", data);
           setRgi(data.codigoRGI || data.rgi);
-          console.log("sellFile: " + JSON.stringify(sellFile));
-          if (cardData?.notas?.length > 0) {
-            const itensAgrupados = groupByNfReferencia(cardData?.itens);
-            console.log("itensAgrupados: ", cardData?.notas);
+          if (data?.notas?.length > 0) {
+            const itensAgrupados = groupByNfReferencia(data.itens);
             setGroupedItems(
-              cardData?.notas.map((nota) => ({
+              data.notas.map((nota) => ({
                 codigoItem: nota.codigo,
                 nfReferencia: nota.id_referencia,
               }))
             );
             ordenarItens();
           }
-          console.log("garantasdasdasdasdia: ", garantiaNfsWithItens);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        message.error("Erro ao carregar dados da garantia.");
       } finally {
-        console.log("finalizou");
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [location.state, cardData, sellFile]);
+  }, [location.state]); // Removido cardData e sellFile das dependências
 
-  // Função para excluir a garantia
   const handleDeleteGuarantee = async () => {
     if (!cardData?.id) {
       message.error("Garantia não encontrada.");
@@ -251,7 +223,6 @@ const RGIDetailsInitial: React.FC = () => {
       },
       onOk: async () => {
         try {
-          // Supondo que o endpoint para excluir seja DELETE /garantias/{id}
           const response = await api.delete(
             `/garantias/garantias/${cardData.id}`
           );
@@ -270,12 +241,11 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const postOrPutGarantiaItemAsync = async (
-    paylaodPost: NotaFiscal,
+    payloadPost: NotaFiscal,
     nfCodeCompare: string,
     nfReference: string,
     notaId: string
   ) => {
-    console.log("salvamento: " + cardData);
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
       return;
@@ -284,37 +254,35 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("ID do item não encontrado");
       return;
     }
-    
-    const responseGetItens = await api.get(
-      `/nota-fiscal/by-garantia/${cardData.id}`
-    );
-    const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
-
-    if (
-      notasFiscaisAPI.filter((value) => value.codigo == nfCodeCompare).length <=
-      0
-    ) {
-      console.log("paylaodPost: ", JSON.stringify(paylaodPost));
-      const endpoint = environment.apiUrl + "/nota-fiscal/create";
-
-      const responsePost = await api.post(endpoint, paylaodPost);
-      if (responsePost.status === 200 || responsePost.status === 201) {
-        message.success("Garantia atualizada com sucesso!");
-        paylaodPost.id = responsePost.data.data;
-
-        setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => [
-          ...prevGarantiaNfsWithItens,
-          paylaodPost,
-        ]);
-
-        cardData?.notas.push(paylaodPost);
-
-        setCardData(cardData);
-        console.log("nfadicionada: " + JSON.stringify(cardData.itens));
-      } else {
-        message.error("Erro ao atualizar a garantia.");
+    try {
+      const responseGetItens = await api.get(
+        `/nota-fiscal/by-garantia/${cardData.id}`
+      );
+      const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
+      if (
+        notasFiscaisAPI.filter((value) => value.codigo === nfCodeCompare).length <= 0
+      ) {
+        const endpoint = environment.apiUrl + "/nota-fiscal/create";
+        const responsePost = await api.post(endpoint, payloadPost);
+        if (responsePost.status === 200 || responsePost.status === 201) {
+          message.success("Nota fiscal adicionada com sucesso!");
+          payloadPost.id = responsePost.data.data;
+          setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => [
+            ...prevGarantiaNfsWithItens,
+            payloadPost,
+          ]);
+          const updatedCardData = {
+            ...cardData,
+            notas: [...(cardData.notas || []), payloadPost],
+          };
+          setCardData(updatedCardData);
+        } else {
+          message.error("Erro ao adicionar a nota fiscal.");
+        }
       }
-      console.log("response: ", responsePost.data);
+    } catch (error) {
+      console.error("Erro ao adicionar nota fiscal:", error);
+      message.error("Erro ao adicionar nota fiscal.");
     }
   };
 
@@ -328,17 +296,11 @@ const RGIDetailsInitial: React.FC = () => {
       console.error("Dados da garantia ainda não carregados.");
       return;
     }
-
-    console.log("codigoitem: ", nota.rgi);
-    console.log("cardData.itens: ", nota);
-
-    const itemId = nota.itens?.find((item) => item.rgi === nota.rgi).id;
-    console.log("nota: ", nota);
-
+    const itemId = nota.itens?.find((item) => item.rgi === nota.rgi)?.id;
     navigate(`/garantias/rgi/details-itens-nf/${cardData.id}`, {
       state: {
         garantiaData: cardData,
-        notaId: nota.id,  
+        notaId: nota.id,
         currentNf: nf,
         countItems: countItems,
         nfNumber: nfNumber,
@@ -349,19 +311,15 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleAddNF = async (nfNumber: string) => {
-    const ultimoItem = garantiaNfsWithItens[garantiaNfsWithItens.length - 1];
-
-    // Extrai a parte numérica e a letra do último item
-    const [letra] = ultimoItem.rgi.split(".")[1];
-    console.log(letra);
-
-    // Calcula a próxima letra do alfabeto
-    const proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
+    let proximaLetra = "A"; // Letra inicial padrão
+    if (garantiaNfsWithItens.length > 0) {
+      const ultimoItem = garantiaNfsWithItens[garantiaNfsWithItens.length - 1];
+      const [letra] = ultimoItem.rgi.split(".")[1];
+      proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
+    }
     const itemCode = getRgiWithSuffix(rgi, proximaLetra, 1);
     const notaId = crypto.randomUUID();
     const itemId = crypto.randomUUID();
-    console.log("nfNumber" + nfNumber);
-
     const garantiasItem: GarantiaItem[] = [
       {
         id: itemId,
@@ -376,64 +334,44 @@ const RGIDetailsInitial: React.FC = () => {
     const newNotaFiscal = {
       codigoRGI: rgi + "." + proximaLetra,
       codigo: nfNumber,
-      garantiaId: cardData.id,
-      id_referencia: cardData.id,
+      garantiaId: cardData?.id,
+      id_referencia: cardData?.id,
       tipo_nota: "Nota fiscal de origem",
       data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       itens: garantiasItem,
     } as NotaFiscal;
-    await postOrPutGarantiaItemAsync(newNotaFiscal, itemCode, nfNumber, itemId);
+    await postOrPutGarantiaItemAsync(newNotaFiscal, itemCode, nfNumber, notaId);
   };
 
   const handleDeleteNF = async () => {
     try {
-      console.log(nfToDelete);
-      // Chamada à API para deletar a NF
       const itensToDelete = cardData?.itens.filter(
         (item) =>
           item.codigoItem.split(".")[0] +
-            "." +
-            item.codigoItem.split(".")[1] ===
+          "." +
+          item.codigoItem.split(".")[1] ===
           nfToDelete
       );
-
-      itensToDelete?.forEach(async (itemToDelete) => {
+      if (!itensToDelete || itensToDelete.length === 0) {
+        message.error("Nenhum item encontrado para exclusão.");
+        return;
+      }
+      for (const itemToDelete of itensToDelete) {
         const response = await api.delete(
           `/garantias/item/delete/${itemToDelete.id}`
         );
         if (response.status === 200) {
-          // Atualiza os estados locais
-          const groupedItemToDelete = groupedItems.find(
-            (groupedItem) => groupedItem.codigoItem === itemToDelete.codigoItem
-          );
-          console.log(
-            "asdasdasdas",
-            groupedItems.filter(
-              (item) =>
-                item.codigoItem !==
-                itemToDelete.codigoItem.split(".")[0] +
-                  "." +
-                  itemToDelete.codigoItem.split(".")[1]
-            )
-          );
           setGroupedItems((prevGroupedItems) =>
             prevGroupedItems?.filter(
               (item) =>
                 item.codigoItem !==
                 itemToDelete.codigoItem.split(".")[0] +
-                  "." +
-                  itemToDelete.codigoItem.split(".")[1]
+                "." +
+                itemToDelete.codigoItem.split(".")[1]
             )
           );
           ordenarItens();
-          console.log(
-            "55165153",
-            associatedNfsWithItens.filter(
-              (nf) => nf.nf !== itemToDelete.nfReferencia
-            )
-          );
-
           setAssociatedNfsWithItens((prevAssociatedNfs) =>
             prevAssociatedNfs.filter(
               (nf) => nf.nf !== itemToDelete.nfReferencia
@@ -445,12 +383,12 @@ const RGIDetailsInitial: React.FC = () => {
               (item) => item.codigoItem !== itemToDelete.codigoItem
             ),
           }));
-          setModalDeleteOpen(false);
-          message.success("NF excluída com sucesso!");
         } else {
           message.error("Erro ao excluir a NF.");
         }
-      });
+      }
+      setModalDeleteOpen(false);
+      message.success("NF excluída com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir a NF:", error);
       message.error("Erro ao excluir a NF.");
@@ -475,7 +413,6 @@ const RGIDetailsInitial: React.FC = () => {
       fileData.append("file", file);
       fileData.append("itemId", nfId);
       fileData.append("field", "nfDev");
-      console.log("nfID: ", nfId);
       try {
         const response = await fetch(endpoint, {
           method: "POST",
@@ -490,17 +427,12 @@ const RGIDetailsInitial: React.FC = () => {
           const fileExtension = getFileExtensionFromBlob(blob);
           const fileNameWithExtension = "nfDev" + fileExtension;
           const imagemUrl = URL.createObjectURL(blob);
-          notaFiscal.recSellFile.fileNameWithExtension = fileNameWithExtension;
-          notaFiscal.recSellFile.imagemUrl = imagemUrl;
-          setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => {
-            // Verifica se o item já existe e atualiza o valor
-            const updatedList = prevGarantiaNfsWithItens.map(item => 
-              item.id === notaFiscal.id ? { ...item, ...notaFiscal } : item
-            );
-          
-            return updatedList;
-          });
-          
+          notaFiscal.recSellFile = { fileNameWithExtension, imagemUrl };
+          setGarantiaNfsWithItens((prevGarantiaNfsWithItens) =>
+            prevGarantiaNfsWithItens.map((item) =>
+              item.id === notaFiscal.id ? { ...item, recSellFile: notaFiscal.recSellFile } : item
+            )
+          );
         } else {
           message.error("Erro ao enviar arquivo.");
         }
@@ -512,10 +444,67 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleDownloadFile = (recNota: NotaFiscal) => {
+    if (!recNota.recSellFile) return;
     const link = document.createElement("a");
-    link.href = recNota.recSellFile?.imagemUrl || "#";
-    link.download = recNota.recSellFile?.fileNameWithExtension || "download";
+    link.href = recNota.recSellFile.imagemUrl || "#";
+    link.download = recNota.recSellFile.fileNameWithExtension || "download";
     link.click();
+  };
+
+  const save = async () => {
+    if (!cardData?.id) {
+      message.error("ID da garantia não encontrado");
+      return;
+    }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+    const garantia: GarantiasModel = {
+      razaoSocial: socialReason || cardData.razaoSocial,
+      telefone: phone || cardData.telefone,
+      email: context.user.email || cardData.email,
+      nf: cardData.notas?.[0]?.codigo,
+      fornecedor: context.user.fullname || cardData.fornecedor,
+      observacao: cardData.observacao || "teste",
+      usuarioAtualizacao: context.user.username,
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
+      status: GarantiasStatusEnum.NAO_ENVIADO,
+    };
+
+    try {
+      console.log("garantiaSaveHeader: ", garantia);
+      const responseHeader = await api.put(
+        `/garantias/garantiasHeader/${id}/UpdateHeader`,
+        garantia
+      );
+      if (responseHeader.status === 200) {
+        setCardData({
+          ...cardData,
+          razaoSocial: garantia.razaoSocial,
+          telefone: garantia.telefone,
+          email: garantia.email,
+          nf: garantia.nf,
+          fornecedor: garantia.fornecedor,
+          observacao: garantia.observacao,
+          usuarioAtualizacao: garantia.usuarioAtualizacao,
+          dataAtualizacao: garantia.dataAtualizacao,
+          codigoStatus: garantia.codigoStatus,
+          status: garantia.status,
+        });
+        message.success("Garantia salva com sucesso!");
+        navigate("/garantias");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar a garantia:", error);
+      message.error("Erro ao salvar a garantia");
+    }
   };
 
   const send = async () => {
@@ -531,38 +520,40 @@ const RGIDetailsInitial: React.FC = () => {
     const minutes = String(now.getMinutes()).padStart(2, "0");
     const seconds = String(now.getSeconds()).padStart(2, "0");
     const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
     let garantia: GarantiasModel = {};
 
     try {
-      if (
-        cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-      ) {
+      if (cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) {
         garantia = {
-          razaoSocial: cardData?.razaoSocial,
-          telefone: cardData?.telefone,
-          email: cardData?.email,
-          nf: cardData?.nf,
-          fornecedor: cardData?.fornecedor,
+          razaoSocial: cardData.razaoSocial,
+          telefone: cardData.telefone,
+          email: cardData.email,
+          nf: cardData.nf,
+          fornecedor: cardData.fornecedor,
           codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-          observacao: cardData?.observacao,
+          observacao: cardData.observacao,
           usuarioAtualizacao: context.user.username,
           status: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         };
       } else {
         garantia = {
-          razaoSocial: socialReason,
-          telefone: phone,
-          email: context.user.email,
-          nf: cardData.notas[0].codigo,
-          fornecedor: context.user.fullname,
+          razaoSocial: socialReason || cardData.razaoSocial,
+          telefone: phone || cardData.telefone,
+          email: context.user.email || cardData.email,
+          nf: cardData.notas?.[0]?.codigo,
+          fornecedor: context.user.fullname || cardData.fornecedor,
           codigoStatus:
-            cardData.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO
+            cardData.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
               ? GarantiasStatusEnum2.EM_ANALISE
               : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-          observacao: "teste",
+          observacao: cardData.observacao || "teste",
           usuarioAtualizacao: context.user.username,
-          status: cardData.status,
+          status:
+            cardData.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
+              ? GarantiasStatusEnum.EM_ANALISE
+              : GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         };
       }
@@ -577,15 +568,23 @@ const RGIDetailsInitial: React.FC = () => {
       if (responseHeader.status === 200) {
         setCardData({
           ...cardData,
-          codigoStatus: GarantiasStatusEnum2.EM_ANALISE,
-          status: GarantiasStatusEnum2.EM_ANALISE.toString(),
+          razaoSocial: garantia.razaoSocial,
+          telefone: garantia.telefone,
+          email: garantia.email,
+          nf: garantia.nf,
+          fornecedor: garantia.fornecedor,
+          observacao: garantia.observacao,
+          usuarioAtualizacao: garantia.usuarioAtualizacao,
+          dataAtualizacao: garantia.dataAtualizacao,
+          codigoStatus: garantia.codigoStatus,
+          status: garantia.status,
         });
-        message.success("Garantia atualizada com sucesso!");
+        message.success("Garantia enviada com sucesso!");
         navigate("/garantias");
       }
     } catch (error) {
-      console.error("Erro ao atualizar a garantia:", error);
-      message.error("Erro ao atualizar a garantia");
+      console.error("Erro ao enviar a garantia:", error);
+      message.error("Erro ao enviar a garantia");
     }
   };
 
@@ -649,15 +648,15 @@ const RGIDetailsInitial: React.FC = () => {
                 Excluir
               </Button>
             )}
-          {(cardData?.codigoStatus ==
+          {(cardData?.codigoStatus ===
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
-            cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO ||
-            cardData?.codigoStatus ==
-              GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
-            context.user.rule.name == UserRoleEnum.Cliente && (
+            cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
+            cardData?.codigoStatus ===
+            GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
+            context.user.rule.name === UserRoleEnum.Cliente && (
               <>
                 <Button
-                  onClick={send}
+                  onClick={save}
                   type="default"
                   danger
                   className={styles.buttonSaveRgi}
@@ -679,8 +678,8 @@ const RGIDetailsInitial: React.FC = () => {
       </div>
 
       <hr className={styles.divider} />
-      {cardData?.codigoStatus != GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-        context.user.rule.name == UserRoleEnum.Cliente && (
+      {cardData?.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+        context.user.rule.name === UserRoleEnum.Cliente && (
           <div className={styles.infoContainer}>
             <h3 className={styles.infoTitle}>Informações Gerais</h3>
             <div className={styles.inputsContainer}>
@@ -717,8 +716,8 @@ const RGIDetailsInitial: React.FC = () => {
       <div className={styles.nfsContainer}>
         <div className={styles.nfcont}>
           <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-          {cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO &&
-            context.user.rule.name == UserRoleEnum.Cliente && (
+          {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
+            context.user.rule.name === UserRoleEnum.Cliente && (
               <Button
                 type="primary"
                 danger
@@ -739,92 +738,86 @@ const RGIDetailsInitial: React.FC = () => {
             )}
         </div>
 
-        {garantiaNfsWithItens?.map((nota, index) => {
-          return (
-            <div className={styles.nfsItem}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <FileOutlined
-                  style={{
-                    marginRight: "10px",
-                    marginLeft: "20px",
-                    fontSize: "20px",
-                    color: "red",
-                  }}
-                />
-                <span className={styles.nfsCode}>
-                  {nota.codigoRGI || nota.rgi}
-                </span>
-                <span className={styles.nfsDivider}> | </span>
-                <span className={styles.nfsQuantity}>
-                  {" "}
-                  {nota.itens.length} ITENS
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                {cardData?.codigoStatus == GarantiasStatusEnum2.NAO_ENVIADO &&
-                  context.user.rule.name == UserRoleEnum.Cliente && (
-                    <DeleteOutlined
-                      style={{ color: "#555", fontSize: "22px" }}
-                      className={styles.DeleteOutlined}
-                      onClick={() => showDeleteConfirm(nota.codigo)}
-                    />
-                  )}
-                {cardData?.codigoStatus ===
-                  GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-                  context.user.rule.name == UserRoleEnum.Cliente &&
-                  !isUndefined(nota.recSellFile) && (
-                    <label className={styles.buttonUpdateNfSale}>
-                      <button
-                        style={{ display: "none" }}
-                        onClick={() => handleDownloadFile(nota)}
-                      />
-                      Baixar Arquivo
-                    </label>
-                  )}
-                {cardData?.codigoStatus ===
-                  GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-                  context.user.rule.name == UserRoleEnum.Cliente &&
-                  isUndefined(nota.recSellFile) && (
-                    <label className={styles.buttonUpdateNfSale}>
-                      <input
-                        type="file"
-                        style={{ display: "none" }}
-                        onChange={(e) => {
-                          handleFileUpload(e, nota.id, nota);
-                        }}
-                      />
-                      Adicionar Anexo
-                    </label>
-                  )}
-
-                <Button
-                  type="text"
-                  className={styles.nextButton}
-                  onClick={() =>
-                    handleDetailsNavigation(
-                      {
-                        itens: nota.itens.length,
-                        nf: nota.codigo,
-                      },
-                      nota.itens.length,
-                      nota.codigo,
-                      nota
-                    )
-                  }
-                >
-                  &gt;
-                </Button>
-              </div>
+        {garantiaNfsWithItens?.map((nota) => (
+          <div className={styles.nfsItem} key={nota.id}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <FileOutlined
+                style={{
+                  marginRight: "10px",
+                  marginLeft: "20px",
+                  fontSize: "20px",
+                  color: "red",
+                }}
+              />
+              <span className={styles.nfsCode}>
+                {nota.codigoRGI || nota.rgi}
+              </span>
+              <span className={styles.nfsDivider}> | </span>
+              <span className={styles.nfsQuantity}>
+                {nota.itens.length} ITENS
+              </span>
             </div>
-          );
-        })}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
+                context.user.rule.name === UserRoleEnum.Cliente && (
+                  <DeleteOutlined
+                    style={{ color: "#555", fontSize: "22px" }}
+                    className={styles.DeleteOutlined}
+                    onClick={() => showDeleteConfirm(nota.codigo)}
+                  />
+                )}
+              {cardData?.codigoStatus ===
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+                context.user.rule.name === UserRoleEnum.Cliente &&
+                !isUndefined(nota.recSellFile) && (
+                  <label className={styles.buttonUpdateNfSale}>
+                    <button
+                      style={{ display: "none" }}
+                      onClick={() => handleDownloadFile(nota)}
+                    />
+                    Baixar Arquivo
+                  </label>
+                )}
+              {cardData?.codigoStatus ===
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+                context.user.rule.name === UserRoleEnum.Cliente &&
+                isUndefined(nota.recSellFile) && (
+                  <label className={styles.buttonUpdateNfSale}>
+                    <input
+                      type="file"
+                      style={{ display: "none" }}
+                      onChange={(e) => handleFileUpload(e, nota.id, nota)}
+                    />
+                    Adicionar Anexo
+                  </label>
+                )}
+              <Button
+                type="text"
+                className={styles.nextButton}
+                onClick={() =>
+                  handleDetailsNavigation(
+                    {
+                      itens: nota.itens.length,
+                      nf: nota.codigo,
+                    },
+                    nota.itens.length,
+                    nota.codigo,
+                    nota
+                  )
+                }
+              >
+                &gt;
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <NFModal
         open={modalOpen.isOpen}
         onOpenChange={setModalOpen}
         onAddNF={handleAddNF}
-        itemId={cardData?.notas[0].itens[0].id}
+        itemId={cardData?.notas?.[0]?.itens?.[0]?.id}
         isSell={modalOpen.isSell}
         garantiaId={cardData?.id}
       />

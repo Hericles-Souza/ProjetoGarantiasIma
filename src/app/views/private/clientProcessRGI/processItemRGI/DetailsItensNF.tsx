@@ -689,6 +689,8 @@ const DetailsItensNF: React.FC = () => {
     setVisibleSectionId(visibleSectionId === id ? null : id);
   };
 
+  
+
   const saveNfDevolcao = async () => {
     if (!garantia?.id) {
       message.error("ID da garantia não encontrado");
