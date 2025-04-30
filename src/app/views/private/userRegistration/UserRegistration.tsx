@@ -51,7 +51,7 @@ const UserRegistration: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limitGet,] = useState(1000);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(14);
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
   const [selectedAction, setSelectedAction] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>("");
@@ -93,7 +93,7 @@ const UserRegistration: React.FC = () => {
         isActive: user.isActive,
         isAdmin: user.isAdmin,
       }));
-
+    
       const filteredData = usersData.filter((user) =>
         user.companyName.toLowerCase().includes(searchValue.toLowerCase()) ||
         user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -113,8 +113,9 @@ const UserRegistration: React.FC = () => {
   }, [page, limit, searchValue]);
 
   const rowSelection = {
-    type: 'radio' as const,  // Garantindo que 'radio' seja reconhecido como o tipo fixo
-    selectedRowKeys: selectedUser ? [selectedUser.key] : [],  // Controla qual linha está selecionada
+    type: 'radio' as const,  
+    selectedRowKeys: selectedUser ? [selectedUser.key] : [], 
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
       if (selectedRowKeys.length > 1) {

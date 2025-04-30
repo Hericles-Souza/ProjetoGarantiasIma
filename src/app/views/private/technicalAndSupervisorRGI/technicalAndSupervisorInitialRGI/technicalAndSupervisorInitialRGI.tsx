@@ -392,6 +392,20 @@ const TechnicalAndSupervisorInitialRGI = () => {
               {displayedStatus || ""}
             </div>
           </div>
+          {context.user.rule.name == UserRoleEnum.Tecnico &&
+            cardData.codigoStatus ==
+              GarantiasStatusEnum2.EM_ANALISE && (
+              <div className="ButtonHeader">
+                <Button
+                    type="primary"
+                    className={stylesDetails.ButonToSend}
+                    // onClick={handleFinalizeAnalysis}
+                    // disabled={!allItemsAnalyzed}
+                  >
+                    Finalizar Análise
+                  </Button>
+              </div>
+            )}
           {context.user.rule.name !== UserRoleEnum.Tecnico &&
             cardData.codigoStatus ==
               GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (

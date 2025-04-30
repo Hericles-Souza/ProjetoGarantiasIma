@@ -70,7 +70,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
   const fetchData = async () => {
     try {
       const response = await getRules();
-      
+
       if (response.data && response.data.data) {
         setRule(response.data.data);
         console.log("response data: ", response.data);
@@ -135,30 +135,42 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
 
   const createNewUser = async () => {
     try {
+      if (!rule) {
+        message.error('Regras não carregadas!');
+        return;
+      }
+
+      const selectedRule = rule.find((r) => r.name === formik.values.userRole);
+      if (!selectedRule) {
+        message.error('Perfil selecionado inválido!');
+        return;
+      }
+
       const userRequest: CreateUserRequest = {
-        username: formik.values.cigamCode || 'defaultCigamCode',
+        username: formik.values.email,
         email: formik.values.email,
         fullname: formik.values.companyName,
-        shortname: formik.values.companyName.trim()[0],
+        shortname: formik.values.companyName.trim()[0] || 'U',
         isActive: formik.values.isActive,
-        isAdmin: selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id ? true : false,
-        phone: formik.values.phone || '+99 99 99999-9999',
+        isAdmin: formik.values.userRole === UserRoleEnum.Admin,
+        phone: formik.values.phone || '',
         password: formik.values.password,
-        CNPJ: formik.values.cnpj || '12.345.678/0001-96',
-        codigoCigam: formik.values.cigamCode || 'defaultCigamCode',
-        ruleId: rule.find((value) => value.name === formik.values.userRole).id,
+        CNPJ: formik.values.cnpj || '',
+        codigoCigam: formik.values.cigamCode,
+        ruleId: selectedRule.id,
       };
-      console.log(JSON.stringify(userRequest));
-      await createUser(userRequest, context.user.token).then(() => {
-        message.success('Cadastro criado com sucesso!')
-        selectedUser = null;
-        closeModal();
-        onSearch(); 
-      });
 
+     const response = await createUser(userRequest, context.user.token);
+
+      if (response.status == 200 || response.status == 201) {
+        message.success('Usuário criado com sucesso!');
+        closeModal();
+        onSearch();
+
+      }
     } catch (error) {
-      message.error('Erro ao cadastrar usuário!')
-      console.log(error);
+      console.error(error);
+      message.error('Erro ao criar usuário!');
     }
   };
 
@@ -166,7 +178,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
     try {
       const updateUserRequest: UpdateUserRequest = {
         id: selectedUser.id,
-        username: formik.values.cigamCode || 'defaultCigamCode',
+        username: formik.values.email,
         email: formik.values.email,
         fullname: formik.values.companyName,
         shortname: formik.values.companyName.trim()[0],
@@ -268,7 +280,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
           <span style={{ marginTop: '-22px' }}>Usuário Ativo</span>
         </div>
       </div>
-      {(!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin")) && (
+      {!['tecnico', 'supervisor', 'admin'].includes(formik.values.userRole.toLowerCase()) && (
         <div className={style.row}>
           <InputMask
             mask="99.999.999/9999-99"
@@ -315,13 +327,13 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
       )}
       <div className={style.row}>
         <TextField
-          label={(!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin")) ? "Razão Social" : "Nome"}
+          label={!['tecnico', 'supervisor', 'admin'].includes(formik.values.userRole.toLowerCase()) ? "Razão Social" : "Nome"}
           variant="outlined"
           {...formik.getFieldProps('companyName')}
           fullWidth
           required
           focused
-          placeholder={(!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin")) ? "Razão Social" : "Nome"}
+          placeholder={!['tecnico', 'supervisor', 'admin'].includes(formik.values.userRole.toLowerCase()) ? "Razão Social" : "Nome"}
           className="outlined-input-contact"
           sx={{
             '& fieldset': {
@@ -332,7 +344,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
       </div>
       <div className={style.row}>
 
-        {!selectedProfile.includes("tecnico") && !selectedProfile.includes("supervisor") && !selectedProfile.includes("admin") && (
+        {!['tecnico', 'supervisor', 'admin'].includes(formik.values.userRole.toLowerCase()) && (
           <InputMask
             mask="+99 99 99999-9999"
             value={formik.values.phone}
