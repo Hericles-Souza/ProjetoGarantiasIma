@@ -398,7 +398,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
               <div className="ButtonHeader">
                 <Button
                     type="primary"
-                    className={stylesDetails.ButonToSend}
+                    className="ButonToSend"
                     // onClick={handleFinalizeAnalysis}
                     // disabled={!allItemsAnalyzed}
                   >

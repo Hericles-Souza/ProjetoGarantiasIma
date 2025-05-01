@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Button, Spin, Tag } from "antd";
+import { Button, Spin, Tag, Pagination } from "antd";
 import Header from "@shared/components/header/header.tsx";
 import CardCategorias from "@shared/components/card_garantia/card_garantias.tsx";
 import SearchField from "@shared/components/input_search/input_search.tsx";
@@ -40,6 +40,8 @@ const Garantias: React.FC = () => {
   const [filteredAcordoItems, setFilteredAcordoItems] = useState<
     AcordoComercialModel[]
   >([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   // Verifica se o usuário é técnico ou supervisor
   const isTechnicalUser = [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor].includes(
@@ -59,17 +61,13 @@ const Garantias: React.FC = () => {
         if (responseDataACI) {
           setAcordoData(responseDataACI.data.data.data);
         }
-        console.log("acordos: ", responseDataACI.data.data.data);
         const data = await response.data.data.data;
 
         if (data) setCardData(data);
       } else {
         let status: number[] = [];
         if (context.user.rule.name === UserRoleEnum.Tecnico) {
-          status = [
-            GarantiasStatusEnum2.EM_ANALISE,
-            // GarantiasStatusEnum2.CONFIRMADO,
-          ];
+          status = [GarantiasStatusEnum2.EM_ANALISE];
         } else if (context.user.rule.name === UserRoleEnum.Supervisor) {
           status = [
             GarantiasStatusEnum2.EM_ANALISE,
@@ -90,7 +88,7 @@ const Garantias: React.FC = () => {
           return responseData;
         });
         const results = await Promise.all(promises);
-        const dataArray = results.flat().sort();
+        const dataArray = results.flat();
         setCardData(dataArray);
       }
     } catch (error) {
@@ -121,6 +119,7 @@ const Garantias: React.FC = () => {
         return matchesStatus && matchesSearch;
       });
       setFilteredItems(filtered);
+      setCurrentPage(1);
     } else if (activeTab === "aci") {
       const filtered = acordoData.filter((card) => {
         const matchesStatus =
@@ -138,13 +137,31 @@ const Garantias: React.FC = () => {
         return matchesStatus && matchesSearch;
       });
       setFilteredAcordoItems(filtered);
+      setCurrentPage(1);
     }
   }, [cardData, acordoData, filterStatus, searchTerm, activeTab]);
 
   useEffect(() => {
     setFilterStatus("todos");
     setSearchTerm("");
+    setCurrentPage(1);
   }, [activeTab]);
+
+  // Get current items for pagination - ordenado por data decrescente
+  const getCurrentItems = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    if (activeTab === "rgi") {
+      return [...filteredItems]
+        .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        .slice(startIndex, endIndex);
+    } else {
+      return [...filteredAcordoItems]
+        .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        .slice(startIndex, endIndex);
+    }
+  };
 
   const statuses = Object.values(GarantiasStatusEnum);
 
@@ -185,7 +202,6 @@ const Garantias: React.FC = () => {
 
   return (
     <>
-
       <Header filterStatus={activeTab} handleFilterChange={setActiveTab} />
 
       {activeTab === "rgi" && (
@@ -220,7 +236,6 @@ const Garantias: React.FC = () => {
                 paddingLeft: "0",
               }}
             >
-              {/* Mostrar botões de navegação apenas se não for técnico ou supervisor */}
               {!isTechnicalUser && (
                 <>
                   <Button
@@ -241,7 +256,6 @@ const Garantias: React.FC = () => {
               )}
               <div style={{ paddingLeft: "20px" }} >
                 <SearchField
-
                   onSearchChange={setSearchTerm}
                   searchTerm={searchTerm}
                   tabKey={activeTab}
@@ -250,55 +264,56 @@ const Garantias: React.FC = () => {
             </div>
           </div>
           <div className={styled.containerGrid}>
-            {filteredItems.length > 0 ? (
-              filteredItems
-                .sort((a, b) => a.codigoStatus - b.codigoStatus)
-                .map((item) => {
-                  const garantia = cardData.find(
-                    (card) => card.rgi === item.rgi
-                  );
-                  return (
-                    <CardCategorias
-                      key={item.id}
-                      data={new Date(garantia.data)}
-                      GarantiaItem={item}
-                      codigoFormatado={`RGI ${garantia.rgi}`}
-                      onClick={() => {
-                        console.log("use: " + context.user.rule.name);
-                        if (
-                          context.user.rule.name.includes(UserRoleEnum.Admin) ||
-                          context.user.rule.name.includes(UserRoleEnum.Cliente)
-                        ) {
-                          const garantiaData = garantia;
-                          console.log(
-                            "garantiaData: " + JSON.stringify(garantiaData)
-                          );
-                          navigate(`/garantias/rgi/${garantia.id}`, {
-                            state: { item, garantiaData },
-                          });
-                        } else if (
-                          context.user.rule.name.includes(
-                            UserRoleEnum.Tecnico
-                          ) ||
-                          context.user.rule.name.includes(
-                            UserRoleEnum.Supervisor
-                          )
-                        ) {
-                          navigate(
-                            `/garantias/technical-and-supervisor/${garantia.id}`,
-                            {
-                              state: { item, garantia },
-                            }
-                          );
-                        }
-                      }}
-                      tab="RGI"
-                    />
-                  );
-                })
+            {getCurrentItems().length > 0 ? (
+              getCurrentItems().map((item) => {
+                const garantia = cardData.find(
+                  (card) => card.rgi === item.rgi
+                );
+                return (
+                  <CardCategorias
+                    key={item.id}
+                    data={new Date(garantia.data)}
+                    GarantiaItem={item}
+                    codigoFormatado={`RGI ${garantia.rgi}`}
+                    onClick={() => {
+                      if (
+                        context.user.rule.name.includes(UserRoleEnum.Admin) ||
+                        context.user.rule.name.includes(UserRoleEnum.Cliente)
+                      ) {
+                        navigate(`/garantias/rgi/${garantia.id}`, {
+                          state: { item, garantiaData: garantia },
+                        });
+                      } else if (
+                        context.user.rule.name.includes(
+                          UserRoleEnum.Tecnico
+                        ) ||
+                        context.user.rule.name.includes(
+                          UserRoleEnum.Supervisor
+                        )
+                      ) {
+                        navigate(
+                          `/garantias/technical-and-supervisor/${garantia.id}`,
+                          { state: { item, garantia } }
+                        );
+                      }
+                    }}
+                    tab="RGI"
+                  />
+                );
+              })
             ) : (
               <div>Nenhum item encontrado</div>
             )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+            <Pagination
+              className={styled.pagination}
+              current={currentPage}
+              total={filteredItems.length}
+              pageSize={itemsPerPage}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger={false}
+            />
           </div>
         </div>
       )}
@@ -306,7 +321,6 @@ const Garantias: React.FC = () => {
       {activeTab === "aci" && (
         <div className={styled.container}>
           <div className={styled.content}>
-            {/* Mostrar tags apenas se não for técnico ou supervisor */}
             {!isTechnicalUser && (
               <div ref={carouselRef} className="carousel-container">
                 <div className="carousel-content">
@@ -336,7 +350,6 @@ const Garantias: React.FC = () => {
                 paddingLeft: "0",
               }}
             >
-              {/* Mostrar botões de navegação apenas se não for técnico ou supervisor */}
               {!isTechnicalUser && (
                 <>
                   <Button
@@ -357,51 +370,50 @@ const Garantias: React.FC = () => {
               )}
               <div style={{ paddingLeft: "20px" }} >
                 <SearchField
-
                   onSearchChange={setSearchTerm}
                   searchTerm={searchTerm}
                   tabKey={activeTab}
                 />
               </div>
-
             </div>
           </div>
           <div className={styled.containerGrid}>
-            {filteredAcordoItems.length > 0 ? (
-              filteredAcordoItems
-                .sort((a, b) => a.codigoStatus - b.codigoStatus)
-                .map((item) => {
-                  return (
-                    <CardCategorias
-                      key={item.id}
-                      data={new Date(item.data)}
-                      Acordo={item}
-                      onClick={() => {
-                        console.log("use: ", item);
-                        if (
-                          context.user.rule.name.includes(UserRoleEnum.Admin) ||
-                          context.user.rule.name.includes(
-                            UserRoleEnum.Cliente
-                          ) ||
-                          context.user.rule.name.includes(
-                            UserRoleEnum.Supervisor
-                          )
-                        ) {
-                          console.log("entro");
-
-                          navigate(`/garantias/aci/${item.id}`, {
-                            state: { item },
-                          });
-                        }
-                      }}
-                      codigoFormatado={`ACI ${item.cdAci}`}
-                      tab="ACI"
-                    />
-                  );
-                })
+            {getCurrentItems().length > 0 ? (
+              getCurrentItems().map((item) => {
+                return (
+                  <CardCategorias
+                    key={item.id}
+                    data={new Date(item.data)}
+                    Acordo={item}
+                    onClick={() => {
+                      if (
+                        context.user.rule.name.includes(UserRoleEnum.Admin) ||
+                        context.user.rule.name.includes(UserRoleEnum.Cliente) ||
+                        context.user.rule.name.includes(UserRoleEnum.Supervisor)
+                      ) {
+                        navigate(`/garantias/aci/${item.id}`, {
+                          state: { item },
+                        });
+                      }
+                    }}
+                    codigoFormatado={`ACI ${item.cdAci}`}
+                    tab="ACI"
+                  />
+                );
+              })
             ) : (
               <div>Nenhum item encontrado</div>
             )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+            <Pagination
+              className={styled.pagination}
+              current={currentPage}
+              total={filteredAcordoItems.length}
+              pageSize={itemsPerPage}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger={false}
+            />
           </div>
         </div>
       )}

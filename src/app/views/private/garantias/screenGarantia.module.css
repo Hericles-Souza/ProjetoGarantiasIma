@@ -18,7 +18,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* height: 100vh; */
 }
 
 .content {
@@ -32,11 +32,27 @@
 }
 .containerGrid {
   padding: 1rem;
-  padding-bottom: 4rem;
+  /* padding-bottom: 4rem; */
   height: 100%;
   display: flex;
   flex-wrap: wrap;
   overflow-y: auto;
   gap: 1rem;
-  margin-bottom: 8rem;
+  /* margin-bottom: 8rem; */
+}
+
+.pagination :global(.ant-pagination-item-active) {
+  border-color: red !important;
+}
+
+.pagination :global(.ant-pagination-item-active a) {
+  color: red !important;
+}
+
+.pagination :global(.ant-pagination-item:hover) {
+  border-color: rgba(255, 0, 0, 0.5) !important;
+}
+
+.pagination :global(.ant-pagination-item:hover a) {
+  color: rgba(255, 0, 0, 0.75) !important;
 }
