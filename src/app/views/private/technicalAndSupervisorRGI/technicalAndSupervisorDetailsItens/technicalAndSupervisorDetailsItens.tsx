@@ -246,14 +246,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           //console.log("nota fiscal received: ", notaFiscal);
 
           if (
-            notaFiscal?.itens.some(
-              (item) => item.status == GarantiasItemStatusEnum.NAO_ANALISADO
-            )
+            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE
           ) {
             setIsAnalysisConcluded(false);
             setDisplayedStatus("Aguardando Avaliação");
             //console.log("entrou 2");
-          } else {
+          } else if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR){
             setIsAnalysisConcluded(true);
             setDisplayedStatus("Avaliação Concluída");
             //console.log("entrou 1");
@@ -340,8 +338,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
         if (response.status === 200) {
           message.success("Dados salvos com sucesso!");
-          setIsAnalysisConcluded(true); // Atualiza o estado para "Avaliação Concluída"
-          setDisplayedStatus("Avaliação Concluída");
         } else {
           message.error("Falha ao salvar os dados.");
         }
@@ -405,7 +401,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               state: {
                 item: cardData.notas[0].itens[0],
                 garantia: cardData,
-                displayedStatus,
               },
             })
           }

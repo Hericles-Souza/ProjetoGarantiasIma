@@ -9,7 +9,6 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
   converterStatusGarantia,
-  GarantiasItemStatusEnum,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
@@ -144,19 +143,14 @@ const TechnicalAndSupervisorInitialRGI = () => {
       cardData.status != GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
     ) {
       console.log("status garantia: ", cardData);
-      if (location.state.displayedStatus) {
-        setDisplayedStatus(location.state.displayedStatus);
-        setIsAnalysisConcluded(false);
-      } else if (
-        !newAssociatedNfsByGarantia?.some((nota) =>
-          nota.itens.some(
-            (item) => item.status == GarantiasItemStatusEnum.NAO_ANALISADO
-          )
-        )
-      ) {
+      if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR || cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         setIsAnalysisConcluded(true);
         setDisplayedStatus("Avaliação Concluída");
+      } else if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        setIsAnalysisConcluded(true);
+        setDisplayedStatus("Aguardando Avaliação");
       }
     }
   };
@@ -183,42 +177,17 @@ const TechnicalAndSupervisorInitialRGI = () => {
           ]);
         }
 
-        console.log("testeasdasd: ", location.state.displayedStatus);
-        if (
-          cardData.codigoStatus !=
-          GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
-        ) {
-          console.log("status garantia: ", cardData);
+        console.log("status garantia: ", cardData);
 
-          if (
-            location.state.displayedStatus != undefined &&
-            context.user.rule.name == UserRoleEnum.Tecnico
-          ) {
-            if (location.state.displayedStatus == "Aguardando Avaliação") {
-              setIsAnalysisConcluded(false);
-              setDisplayedStatus(location.state.displayedStatus);
-            } else {
-              setIsAnalysisConcluded(true);
-              setDisplayedStatus(location.state.displayedStatus);
-            }
-          } else if (
-            !garantiaNfsWithItens?.some((nota) =>
-              nota.itens.some(
-                (item) => item.status == GarantiasItemStatusEnum.NAO_ANALISADO
-              )
-            )
-          ) {
-            console.log("entrou 2");
-            setIsAnalysisConcluded(true);
-            setDisplayedStatus("Avaliação Concluída");
-          } else {
-            setIsAnalysisConcluded(false);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            console.log("entrou 1");
-            setDisplayedStatus("Aguardando Avaliação");
-          }
-        } else {
-          setDisplayedStatus(cardData?.status);
+        if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
+          setIsAnalysisConcluded(false);
+          setDisplayedStatus("Aguardando Avaliação");
+        } else if (
+          cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
+          cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+        ) {
+          setIsAnalysisConcluded(true);
+          setDisplayedStatus("Avaliação Concluída");
         }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
@@ -300,6 +269,67 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
     if (responseHeader.status === 200) {
       message.success("Garantia atualizada com sucesso");
+    }
+  };
+
+  const handleSaveTec = async () => {
+    try {
+      let statusGarantia: GarantiasStatusEnum2;
+      let garantia: GarantiasModel;
+      if (context.user.rule.name === UserRoleEnum.Tecnico) {
+        if (
+          garantiaNfsWithItens.some((nota) =>
+            nota.itens.some(
+              (item) => item.codigoStatus != GarantiasItemStatusEnum2.AUTORIZADO
+            )
+          )
+        ) {
+          statusGarantia = GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE;
+          garantia = {
+            razaoSocial: razaoSocial,
+            telefone: telefone,
+            email: context.user.email,
+            nf: cardData.notas[0].codigo,
+            codigoRGI: cardData.codigoRGI || cardData.rgi,
+            fornecedor: context.user.fullname,
+            codigoStatus: statusGarantia,
+            observacao: "Em análise supervisor",
+            usuarioAtualizacao: context.user.username,
+            status: converterStatusGarantia(statusGarantia),
+            dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          };
+        } else {
+          statusGarantia = GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR;
+          garantia = {
+            razaoSocial: razaoSocial,
+            telefone: telefone,
+            email: context.user.email,
+            nf: cardData.notas[0].codigo,
+            codigoRGI: cardData.codigoRGI || cardData.rgi,
+            fornecedor: context.user.fullname,
+            codigoStatus: statusGarantia,
+            observacao: "Em análise supervisor",
+            usuarioAtualizacao: context.user.username,
+            status: converterStatusGarantia(statusGarantia),
+            dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          };
+        }
+
+        console.log("garantiaupdate: ", garantia);
+
+        const responseHeader = await api.put(
+          `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
+          garantia
+        );
+
+        if (responseHeader.status === 200) {
+          message.success("Garantia atualizada com sucesso!");
+          navigate("/garantias");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar a garantia:", error);
+      message.error("Erro ao atualizar a garantia");
     }
   };
 
@@ -393,22 +423,23 @@ const TechnicalAndSupervisorInitialRGI = () => {
             </div>
           </div>
           {context.user.rule.name == UserRoleEnum.Tecnico &&
-            cardData.codigoStatus ==
-              GarantiasStatusEnum2.EM_ANALISE && (
+            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
               <div className="ButtonHeader">
                 <Button
-                    type="primary"
-                    className="ButonToSend"
-                    // onClick={handleFinalizeAnalysis}
-                    // disabled={!allItemsAnalyzed}
-                  >
-                    Finalizar Análise
-                  </Button>
+                  type="primary"
+                  className="ButonToSend"
+                  onClick={handleSaveTec}
+                  // disabled={!allItemsAnalyzed}
+                >
+                  Finalizar Análise
+                </Button>
               </div>
             )}
           {context.user.rule.name !== UserRoleEnum.Tecnico &&
-            cardData.codigoStatus ==
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+            (cardData.codigoStatus ==
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+              cardData.codigoStatus ==
+                GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
               <div className="ButtonHeader">
                 <Button
                   onClick={async () => handleConfirm()}
@@ -420,12 +451,9 @@ const TechnicalAndSupervisorInitialRGI = () => {
               </div>
             )}
           {context.user.rule.name === UserRoleEnum.Supervisor &&
-            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE &&
-            garantiaNfsWithItens.filter((nota) =>
-              nota.itens.some(
-                (item) => item.status === GarantiasItemStatusEnum.NAO_ANALISADO
-              )
-            ).length == 0 && (
+            (cardData.codigoStatus ==
+              GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR || cardData.codigoStatus ==
+              GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
               <div className="ButtonHeader">
                 <div style={{ display: "flex", gap: "10px" }}>
                   <Button
