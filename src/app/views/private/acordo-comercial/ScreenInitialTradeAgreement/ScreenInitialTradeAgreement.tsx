@@ -2,8 +2,8 @@ import "./ScreenInitiaTradeAgreement.style.css";
 import { DeleteOutlined, LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { Button, message, Modal } from "antd";
-import { useContext, useEffect, useState } from "react";
 import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
+import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   AcordoComercialItem,
@@ -89,11 +89,8 @@ const ScreenAcordoComercial: React.FC = () => {
       ICMS: 0,
       valorIPI: 0,
       ICMSSubstituicao: 0,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       itens: acordo.itens,
     };
-
-    console.log("payload: ", payloadAcordoPut);
 
     await updateAciHeaderByIdAsync(payloadAcordoPut, acordo.id);
   };
@@ -112,7 +109,6 @@ const ScreenAcordoComercial: React.FC = () => {
     const response = await getAcordoByIdAsync(id);
     if (response.status == 200 || response.status == 201) {
       const recAcordo = (await response.data.data) as AcordoComercialModel;
-      console.log("recAcordo: ", recAcordo);
 
       setAcordo(recAcordo);
       setRazaoSocial(recAcordo.razaoSocial);
@@ -124,7 +120,7 @@ const ScreenAcordoComercial: React.FC = () => {
             value.codigoItem.split(".")[0] +
             "." +
             value.codigoItem.split(".")[1]
-        ) // substitui null/undefined por 'sem_nf'
+        )
         .filter((nf) => nf !== "");
 
       // Contar as ocorrências
@@ -134,7 +130,6 @@ const ScreenAcordoComercial: React.FC = () => {
       }, {} as Record<string, number>);
 
       // Gerar o array de objetos com nf e quantidade
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const nfsFormatted = Object.entries(nfCountMap).map(([nf, itens]) => ({
         nf: nf,
         itens: itens,
@@ -150,24 +145,37 @@ const ScreenAcordoComercial: React.FC = () => {
 
     const recAcordo = (await response.data.data) as AcordoComercialModel;
     let statusACI: AcordoComercialStatusEnum2;
+    
     if (context.user.rule.name == UserRoleEnum.Supervisor) {
       if (
         !recAcordo.itens.some(
           (item) =>
             item.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
         )
-      )
+      ) {
         statusACI = AcordoComercialStatusEnum2.CONFIRMADA;
-      else if (
+      } else if (
         recAcordo.itens.some(
           (item) =>
             item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
         )
-      )
+      ) {
         statusACI = AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA;
-
-    } else if (context.user.rule.name == UserRoleEnum.Cliente)
+      }
+    } else if (context.user.rule.name == UserRoleEnum.Cliente) {
       statusACI = AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO;
+      
+      // Atualiza o status dos itens para "NÃO ANALISADO" quando o cliente envia
+      recAcordo.itens = recAcordo.itens.map(item => {
+        if (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO) {
+          return {
+            ...item,
+            codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO
+          };
+        }
+        return item;
+      });
+    }
 
     const payloadAcordoPut: AcordoComercialModel = {
       usuarioAtualizacao: recAcordo.usuarioInsercao,
@@ -180,10 +188,9 @@ const ScreenAcordoComercial: React.FC = () => {
       ICMS: 0,
       valorIPI: 0,
       ICMSSubstituicao: 0,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       itens: recAcordo.itens,
     };
-    console.log("payloadAcordoPut: ", payloadAcordoPut);
+    
     try {
       const response = await updateAciHeaderByIdAsync(
         payloadAcordoPut,
@@ -225,19 +232,18 @@ const ScreenAcordoComercial: React.FC = () => {
             <div
               style={{
                 color: statusStylesACI[acordo?.codigoStatus]?.color,
-                backgroundColor: `${
-                  statusStylesACI[acordo?.codigoStatus]?.backgroundColor
-                }26`,
+                backgroundColor: `${statusStylesACI[acordo?.codigoStatus]?.backgroundColor
+                  }26`,
               }}
               className={"statusTag"}
             >
               {converterStatusAcordo(acordo?.codigoStatus)}
             </div>
-          </div>{" "}
+          </div>
           {acordo?.codigoStatus !=
             AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
             acordo?.codigoStatus !=
-            AcordoComercialStatusEnum2.CONFIRMADA  &&
+            AcordoComercialStatusEnum2.CONFIRMADA &&
             context.user.rule?.name == UserRoleEnum.Cliente && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
@@ -248,25 +254,23 @@ const ScreenAcordoComercial: React.FC = () => {
                   className="ButonToSend"
                   onClick={handleSendACI}
                 >
-                  SALVAR
+                  ENVIAR
                 </Button>
               </div>
             )}
-            {(acordo?.codigoStatus ==
+          {(acordo?.codigoStatus ==
             AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
             acordo?.codigoStatus !=
-            AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA)  &&
+            AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && acordo?.codigoStatus !=
+            AcordoComercialStatusEnum2.CONFIRMADA ) &&
             context.user.rule?.name == UserRoleEnum.Supervisor && (
               <div className="ButtonHeader">
-                <Button type="default" className="ButtonDelete">
-                  EXCLUIR
-                </Button>
                 <Button
                   type="primary"
                   className="ButonToSend"
                   onClick={handleSendACI}
                 >
-                  SALVAR
+                  ENVIAR
                 </Button>
               </div>
             )}
@@ -325,10 +329,12 @@ const ScreenAcordoComercial: React.FC = () => {
               <span className="nf-details">{nf.itens} ITENS</span>
             </div>
             <div>
-              <DeleteOutlined
-                style={{ color: "#555", fontSize: "22px" }}
-                onClick={() => showDeleteConfirm(nf.nf)}
-              />
+              {acordo?.codigoStatus == AcordoComercialStatusEnum2.NAO_ENVIADO && (
+                <DeleteOutlined
+                  style={{ color: "#555", fontSize: "22px" }}
+                  onClick={() => showDeleteConfirm(nf.nf)}
+                />
+              )}
               <Button
                 type="text"
                 className="nextButton"

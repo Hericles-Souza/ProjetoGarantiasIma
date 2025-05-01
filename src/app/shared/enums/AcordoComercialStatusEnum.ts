@@ -1,5 +1,4 @@
 export enum AcordoStatusEnum {
-    EM_ANALISE = "Em Análise",
     NAO_ENVIADO = 'Não enviado',
     AGUARDANDO_NF_DEVOLUCAO = 'Aguardando NF Devolucao',
     AGUARDANDO_VALIDACAO_NF_DEVOLUCAO = 'Aguardando Validacao NF Devolucao',
@@ -8,7 +7,6 @@ export enum AcordoStatusEnum {
 }
 
 export enum AcordoComercialStatusEnum2 {
-    EM_ANALISE = 1,
     NAO_ENVIADO = 2,
     AGUARDANDO_NF_DEVOLUCAO = 3,
     AGUARDANDO_VALIDACAO_NF_DEVOLUCAO = 4,
@@ -23,7 +21,6 @@ export function converterStatusAcordo(status: AcordoComercialStatusEnum2): Acord
         [AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: AcordoStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
         [AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA]: AcordoStatusEnum.NF_DEVOLUCAO_RECUSADA,
         [AcordoComercialStatusEnum2.CONFIRMADA]: AcordoStatusEnum.CONFIRMADA,
-        [AcordoComercialStatusEnum2.EM_ANALISE]: AcordoStatusEnum.EM_ANALISE
     };
 
     return mapping[status];
@@ -36,7 +33,6 @@ export function converterStatusAcordoInverso(status: AcordoStatusEnum): AcordoCo
         [AcordoStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
         [AcordoStatusEnum.NF_DEVOLUCAO_RECUSADA]: AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA,
         [AcordoStatusEnum.CONFIRMADA]: AcordoComercialStatusEnum2.CONFIRMADA,
-        [AcordoStatusEnum.EM_ANALISE]: AcordoComercialStatusEnum2.EM_ANALISE
     };
 
     return mapping[status];
@@ -110,10 +106,10 @@ export const statusStylesACI = {
         backgroundColor: '#B3E5FC',
         color: '#0277BD',
     },
-    [AcordoComercialStatusEnum2.EM_ANALISE]: {
-        backgroundColor: '#B3E5FC',
-        color: '#0277BD',
-    },
+    // [AcordoComercialStatusEnum2.EM_ANALISE]: {
+    //     backgroundColor: '#B3E5FC',
+    //     color: '#0277BD',
+    // },
     [AcordoComercialStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: {
         backgroundColor: '#FFE0B2',
         color: '#EF6C00',

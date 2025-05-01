@@ -5,6 +5,7 @@ import {
   DeleteOutlined,
   LeftOutlined,
   RightOutlined,
+  FileOutlined,
 } from "@ant-design/icons";
 import styles from "./ScreenDetailsItensTradeAgreement.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
@@ -30,29 +31,28 @@ import environment from "@env/environment";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
-type FileAttachmentProps = {
+interface FileAttachmentProps {
+  label: string;
+  backgroundColor: string;
+  item: AcordoComercialItem;
   acordo: AcordoComercialModel | undefined;
   SetAcordo: React.Dispatch<
     React.SetStateAction<AcordoComercialModel | undefined>
   >;
-  label: string;
-  backgroundColor?: string;
-  item: AcordoComercialItem;
-};
+}
 
 const FileAttachment: React.FC<FileAttachmentProps> = ({
-  acordo,
-  SetAcordo,
   label,
   backgroundColor,
   item,
+  acordo,
+  SetAcordo,
 }) => {
   const context = useContext(AuthContext);
   const [recFile, setRecFile] = useState<{
     fileNameWithExtension: string;
     imagemUrl: string;
   }>({ fileNameWithExtension: "", imagemUrl: "" });
-
   const [hasFileError, setHasFileError] = useState(false);
 
   useEffect(() => {
@@ -65,6 +65,29 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
 
     return () => controller.abort();
   }, [item.id, hasFileError]);
+
+  function getExtensionFromMimeType(mimeType: string): string {
+    const mimeTypes: { [key: string]: string } = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/zip": ".zip",
+      "audio/mpeg": ".mp3",
+      "video/mp4": ".mp4",
+    };
+
+    return mimeTypes[mimeType] || "";
+  }
+
+  function getFileExtensionFromBlob(blob: Blob): string {
+    const mimeType = blob.type;
+    const extension = getExtensionFromMimeType(mimeType);
+    return extension;
+  }
 
   const getFieldFile = async (
     itemId: string,
@@ -94,7 +117,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         setHasFileError(false);
       } else if (response.status === 404) {
         setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
-        setHasFileError(true); // Não tenta novamente após 404
+        setHasFileError(true);
       } else {
         setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
       }
@@ -105,35 +128,11 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
-  function getExtensionFromMimeType(mimeType: string): string {
-    const mimeTypes: { [key: string]: string } = {
-      "image/jpeg": ".jpg",
-      "image/png": ".png",
-      "image/gif": ".gif",
-      "application/pdf": ".pdf",
-      "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
-      "application/zip": ".zip",
-      "audio/mpeg": ".mp3",
-      "video/mp4": ".mp4",
-    };
-
-    return mimeTypes[mimeType] || "";
-  }
-
-  function getFileExtensionFromBlob(blob: Blob): string {
-    const mimeType = blob.type;
-    const extension = getExtensionFromMimeType(mimeType);
-    return extension;
-  }
-
-  const handleFileChange = async (
+  const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-
       const endpoint = environment.apiUrl + "/files/upload-private-file-item";
       const fileData = new FormData();
       fileData.append("file", file);
@@ -151,19 +150,18 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         });
         if (response.status === 201) {
           const blob: Blob = file;
-          const fileExtension = getFileExtensionFromBlob(blob);
-          const fileNameWithExtension = "nfDev" + fileExtension;
           const imagemUrl = URL.createObjectURL(blob);
           setRecFile({
-            fileNameWithExtension: fileNameWithExtension,
-            imagemUrl: imagemUrl,
+            fileNameWithExtension: file.name,
+            imagemUrl,
           });
           message.success("Arquivo enviado com sucesso!");
         } else {
           message.error("Erro ao enviar arquivo.");
         }
       } catch (error) {
-        console.log("ocorreu um erro ao enviar o arquivo: ", error);
+        console.error("Erro no upload do arquivo:", error);
+        message.error("Erro ao enviar arquivo.");
       }
     }
   };
@@ -174,6 +172,28 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       link.href = recFile.imagemUrl || "#";
       link.download = recFile.fileNameWithExtension || "download";
       link.click();
+    }
+  };
+
+  const handleRemoveFile = async () => {
+    try {
+      const endpoint = `${environment.apiUrl}/files/files/delete-private-file-item/${item.id}/nfDev`;
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+      });
+
+      if (response.ok) {
+        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+        message.success("Arquivo deletado com sucesso!");
+      } else {
+        message.error("Erro ao deletar arquivo.");
+      }
+    } catch (error) {
+      console.log("Erro ao deletar arquivo: ", error);
+      message.error("Ocorreu um erro ao deletar o arquivo.");
     }
   };
 
@@ -198,17 +218,15 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       usuarioAtualizacao: context.user.fullname,
     };
 
-    console.log("itemUpdate: ", itemUpdate);
-
     const response = await updateAciItemByIdAsync(itemUpdate, item.id);
 
-    if (response.status == 200 || response.status == 201) {
+    if (response.status === 200 || response.status === 201) {
       item.codigoStatus = refused
         ? AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
         : AcordoComercialItemStatusEnum2.AUTORIZADO;
 
       SetAcordo((prev) => {
-        if (!prev?.itens) return prev; // Evita erros se `itens` for undefined
+        if (!prev?.itens) return prev;
 
         const updatedItens = prev.itens.map((prevItem) =>
           prevItem.id === item.id
@@ -216,11 +234,10 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             : prevItem
         );
 
-        // Retorna um NOVO objeto com uma NOVA referência para `itens`
         return {
           ...prev,
-          itens: [...updatedItens], // Spread garante nova referência
-          updatedAt: new Date().toISOString(), // Opcional: força atualização
+          itens: [...updatedItens],
+          updatedAt: new Date().toISOString(),
         };
       });
 
@@ -230,27 +247,59 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
+  const canRemoveAttachment =
+    (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+      item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
+    recFile?.fileNameWithExtension &&
+    recFile?.imagemUrl &&
+    context.user.rule.name !== UserRoleEnum.Supervisor;
+
   return (
     <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
       <span className={styles.labelAnexo}>{label}</span>
       <div className={styles.fileUpdateContent}>
-        {recFile?.fileNameWithExtension != "" &&
-          recFile?.imagemUrl != "" &&
-          item.codigoStatus !=
-            AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
-            <label className={styles.buttonUpdateNfSale}>
-              <button
-                style={{ display: "none", cursor: "pointer", }}
-                onClick={handleDownloadFile}
-              />
-              Baixar Arquivo
+        {recFile?.fileNameWithExtension === "" &&
+          recFile?.imagemUrl === "" &&
+          item.codigoStatus !== AcordoComercialItemStatusEnum2.NAO_ENVIADO && (
+            <label
+              className={styles.buttonUpdateNfSale}
+              style={{ cursor: "default", opacity: 0.6 }}
+            >
+              Nenhum arquivo enviado
             </label>
           )}
-        {recFile?.fileNameWithExtension != "" &&
-          recFile?.imagemUrl != "" &&
-          acordo?.codigoStatus ==
+        {recFile?.fileNameWithExtension &&
+          recFile?.imagemUrl &&
+          item.codigoStatus !== AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
+            <div className={styles.fileActions}>
+              <span className={styles.fileName}>
+                <FileOutlined style={{ color: "red", marginRight: "5px", marginLeft: "5px" }} />
+                {recFile.fileNameWithExtension}
+              {canRemoveAttachment && (
+                <Button
+                  type="link"
+                  onClick={handleRemoveFile}
+                  className={styles.deleteButton}
+                  icon={<DeleteOutlined />}
+                  title="Remover arquivo"
+                />
+              )}
+              </span>
+              <Button
+                type="link"
+                onClick={handleDownloadFile}
+                className={styles.buttonUpdateNfSale}
+              >
+                Baixar Arquivo
+              </Button>
+            </div>
+          )}
+        {recFile?.fileNameWithExtension &&
+          recFile?.imagemUrl &&
+          acordo?.codigoStatus ===
             AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
-          item.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO && (
+          item.codigoStatus !== AcordoComercialItemStatusEnum2.AUTORIZADO &&
+          context.user.rule.name === UserRoleEnum.Supervisor && (
             <div className="ButtonHeader">
               <div style={{ display: "flex", gap: "10px" }}>
                 <Button
@@ -272,28 +321,29 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           )}
         {recFile?.fileNameWithExtension === "" &&
           recFile?.imagemUrl === "" &&
-          (item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-            item.codigoStatus ==
-              AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
-          context.user.rule.name != UserRoleEnum.Supervisor && (
+          (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+            item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
+          context.user.rule.name !== UserRoleEnum.Supervisor && (
             <label className={styles.buttonUpdateNfSale}>
               <input
                 type="file"
                 style={{ display: "none" }}
-                onChange={handleFileChange}
+                onChange={handleFileUpload}
               />
               Adicionar Anexo
             </label>
           )}
-        {item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
-          context.user.rule.name != UserRoleEnum.Supervisor &&
-          acordo?.codigoStatus ==
+        {recFile?.fileNameWithExtension === "" &&
+          recFile?.imagemUrl === "" &&
+          item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
+          context.user.rule.name !== UserRoleEnum.Supervisor &&
+          acordo?.codigoStatus ===
             AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && (
             <label className={styles.buttonUpdateNfSale}>
               <input
                 type="file"
                 style={{ display: "none" }}
-                onChange={handleFileChange}
+                onChange={handleFileUpload}
               />
               Adicionar Anexo
             </label>
@@ -319,6 +369,7 @@ const CollapsibleSection = ({
   status: AcordoComercialItemStatusEnum2;
 }) => {
   const statusStyle = statusStylesACI[status];
+  const context = useContext(AuthContext);
   return (
     <div>
       <div className={styles.tituloSecaoContainer}>
@@ -338,16 +389,19 @@ const CollapsibleSection = ({
           </div>
         </div>
         <div className={styles.iconAndArrow}>
-          <DeleteOutlined
-            className={styles.DeleteOutlined}
-            style={{
-              color: "#555",
-              fontSize: "22px",
-              cursor: "pointer",
-              marginRight: "15px",
-            }}
-            onClick={showDeleteConfirm}
-          />
+          {status === AcordoComercialItemStatusEnum2.NAO_ENVIADO &&
+            context.user.rule.name === UserRoleEnum.Cliente && (
+              <DeleteOutlined
+                className={styles.DeleteOutlined}
+                style={{
+                  color: "#555",
+                  fontSize: "22px",
+                  cursor: "pointer",
+                  marginRight: "15px",
+                }}
+                onClick={showDeleteConfirm}
+              />
+            )}
           <Button
             type="text"
             icon={isVisible ? <DownOutlined /> : <RightOutlined />}
@@ -381,8 +435,8 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           itens: prevNotaFiscal.itens.map(
             (item) =>
               item.id === itemId
-                ? { ...item, [field]: value } // Atualiza o campo dinâmico
-                : item // Mantém o item intacto se não for o correto
+                ? { ...item, [field]: value }
+                : item
           ),
         };
       }
@@ -391,15 +445,15 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
 
   const setAcordoByGet = async (id: string, nfParam: string) => {
     const response = await getAcordoByIdAsync(id);
-    if (response.status == 200 || response.status == 201) {
+    if (response.status === 200 || response.status === 201) {
       const recAcordoResponse = (await response.data
         .data) as AcordoComercialModel;
       const itensFiltrados = recAcordoResponse.itens.filter((item) => {
-        const [itemBase, itemLetra] = item.codigoItem.split(".");
+        const [itemBase, ] = item.codigoItem.split(".");
         const [nfBase, nfLetra] = nfParam.split(".");
 
         const matchesBase = itemBase === nfBase;
-        const matchesLetra = itemLetra === nfLetra;
+        const matchesLetra = nfLetra === nfLetra;
 
         return matchesBase && matchesLetra;
       });
@@ -409,6 +463,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       console.log("Erro ao buscar ACI");
     }
   };
+
   useEffect(() => {
     const fetchData = async () => {
       if (location.state) {
@@ -428,36 +483,34 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
     if (!acordo) return;
 
     try {
-      // Filtra os itens não autorizados
       const itensParaAtualizar = acordo.itens.filter(
         (value) =>
-          value.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
+          value.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+          value.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
       );
 
-      // Atualiza cada item sequencialmente
       for (const item of itensParaAtualizar) {
         const itemUpdate: UpdateItemResponse = {
           codigoItem: item.codigoItem,
           codigoPeca: item.codigoPeca,
-          precoUnitario: 0,
+          precoUnitario: item.precoUnitario,
           quantidade: item.quantidade,
-          codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
-          valorTotalItem: 0,
+          codigoStatus: item.codigoStatus, // Mantém o status atual
+          valorTotalItem: item.valorTotalItem,
           tipoOperacao: item.tipoOperacao,
-          baseICMS: 0,
-          valorICMS: 0,
-          valorIPI: 0,
-          ICMS: 0,
-          IPI: 0,
-          mva: 0,
+          baseICMS: item.baseICMS,
+          valorICMS: item.valorICMS,
+          valorIPI: item.valorIPI,
+          ICMS: item.ICMS,
+          IPI: item.IPI,
+          mva: item.mva,
           nf: item.nf,
           usuarioAtualizacao: context.user.fullname,
         };
 
         const response = await updateAciItemByIdAsync(itemUpdate, item.id);
 
-        if (response.status == 200 || response.status == 201) {
-          // Atualiza o estado local para cada item atualizado
+        if (response.status === 200 || response.status === 201) {
           SetAcordo((prev) => {
             if (!prev) return prev;
 
@@ -467,12 +520,12 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                 prevItem.id === item.id
                   ? {
                       ...prevItem,
-                      codigoStatus:
-                        AcordoComercialItemStatusEnum2.NAO_ANALISADO,
+                      codigoPeca: item.codigoPeca,
+                      quantidade: item.quantidade,
                     }
                   : prevItem
               ),
-              updatedAt: new Date().toISOString(), // Força atualização
+              updatedAt: new Date().toISOString(),
             };
           });
 
@@ -481,7 +534,9 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           console.log("Erro ao salvar item: ", item.codigoItem);
         }
       }
-
+      navigate(`/garantias/aci/${acordo?.id}`, {
+        state: { item: acordo },
+      });
       message.success("Itens atualizados com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar itens:", error);
@@ -536,10 +591,9 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       ICMS: 0,
       valorIPI: 0,
       ICMSSubstituicao: 0,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       itens: recAcordo.itens,
     };
-    console.log("payloadAcordoPut: ", payloadAcordoPut);
+    
     await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
   };
 
@@ -593,22 +647,19 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </span>
       </div>
       <div className={styles.ContainerHeader}>
-        <h1 className={styles.tituloRgi}>{ "NF " + nf}</h1>
+        <h1 className={styles.tituloRgi}>{"NF " + nf}</h1>
 
-        {context.user.rule.name == UserRoleEnum.Cliente &&
+        {context.user.rule.name === UserRoleEnum.Cliente &&
           acordo?.itens.some(
             (item) =>
-              item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-              acordo.codigoStatus ==
-                AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA
+              item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+              (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
+               acordo.codigoStatus === AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA)
           ) &&
-          acordo?.codigoStatus != AcordoComercialStatusEnum2.CONFIRMADA && (
+          acordo?.codigoStatus !== AcordoComercialStatusEnum2.CONFIRMADA && (
             <div className={styles.botoesCabecalho}>
               <Button type="default" className={styles.ButtonDelete}>
                 Visualizar Pré-Nota
-              </Button>
-              <Button type="default" className={styles.ButtonDelete}>
-                Excluir
               </Button>
               <Button
                 type="primary"
@@ -627,8 +678,10 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         <h3 className={styles.nfsTitle}>
           Itens desta NF associados a este acordo
         </h3>
-        {context.user.rule.name == UserRoleEnum.Cliente &&
-          acordo?.itens.some((item) => item.codigoStatus == 2) && (
+        {context.user.rule.name === UserRoleEnum.Cliente &&
+          acordo?.itens.some(
+            (item) => item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO
+          ) && (
             <Button
               className={styles.buttonRed}
               style={{
@@ -646,12 +699,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             </Button>
           )}
       </div>
-      {/* <div className={styles.dialoginfo}>
-        <InfoCircleOutlined style={{ color: "#0277BD" }} />
-        <span style={{ color: "#0277BD" }}>
-          Caso a peça não possua um lote, o campo Lote da peça deve ser preenchido com “Não contém”
-        </span>
-      </div> */}
 
       {acordo?.itens.map((item) => (
         <div className={styles.containerInformacoes} key={item.id}>
@@ -675,11 +722,9 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                       handleInputChange(item.id, "codigoPeca", e.target.value);
                     }}
                     disabled={
-                      item?.codigoStatus !=
+                      item?.codigoStatus !==
                         AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-                      context.user.rule.name == UserRoleEnum.Supervisor
-                        ? true
-                        : false
+                      context.user.rule.name === UserRoleEnum.Supervisor
                     }
                   />
                 </div>
@@ -693,18 +738,16 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                       item.quantidade = Number(e.target.value);
                     }}
                     disabled={
-                      item?.codigoStatus !=
+                      item?.codigoStatus !==
                         AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-                      context.user.rule.name == UserRoleEnum.Supervisor
-                        ? true
-                        : false
+                      context.user.rule.name === UserRoleEnum.Supervisor
                     }
                   />
                 </div>
               </div>
             </div>
           </CollapsibleSection>
-        <div style={{height: "10px"}}></div>
+          <div style={{ height: "10px" }}></div>
           <FileAttachment
             label="Anexo da NF de devolução"
             backgroundColor="#ffffff"

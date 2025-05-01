@@ -25,6 +25,18 @@ import {
   getAcordosByUser,
   getAllAcordos,
 } from "@shared/services/AcordoComercialService";
+import { AcordoStatusEnum } from "@shared/enums/AcordoComercialStatusEnum";
+
+// Novo enum para status de Acordos Comerciais
+// export enum AcordoComercialStatusEnum {
+//   NAO_ENVIADO = "Não enviado",
+//   EM_ANALISE = "Em análise",
+//   PECAS_AVALIADAS_PARCIALMENTE = "Peças avaliadas parcialmente",
+//   AGUARDANDO_NF_DEVOLUCAO = "Aguardando NF de Devolução",
+//   AGUARDANDO_VALIDACAO_NF_DEVOLUCAO = "Aguardando Validação de NF de Devolução",
+//   NF_DEVOLUCAO_RECUSADA = "NF de Devolução Recusada",
+//   CONFIRMADO = "Confirmado"
+// }
 
 const Garantias: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("rgi");
@@ -43,7 +55,6 @@ const Garantias: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Verifica se o usuário é técnico ou supervisor
   const isTechnicalUser = [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor].includes(
     context.user?.rule?.name as UserRoleEnum
   );
@@ -122,9 +133,13 @@ const Garantias: React.FC = () => {
       setCurrentPage(1);
     } else if (activeTab === "aci") {
       const filtered = acordoData.filter((card) => {
+        // Normaliza os status para comparação
+        const cardStatusNormalized = card.status.toLowerCase().trim();
+        const filterStatusNormalized = filterStatus.toLowerCase().trim();
+
         const matchesStatus =
           filterStatus === "todos" ||
-          card.status.toLowerCase() === filterStatus.toLowerCase();
+          cardStatusNormalized === filterStatusNormalized;
 
         const matchesSearch =
           searchTerm === "" ||
@@ -162,8 +177,6 @@ const Garantias: React.FC = () => {
         .slice(startIndex, endIndex);
     }
   };
-
-  const statuses = Object.values(GarantiasStatusEnum);
 
   const handleNext = () => {
     if (carouselRef.current) {
@@ -210,7 +223,7 @@ const Garantias: React.FC = () => {
             {!isTechnicalUser && (
               <div ref={carouselRef} className="carousel-container">
                 <div className="carousel-content">
-                  {statuses.map((status) => (
+                  {Object.values(GarantiasStatusEnum).map((status) => (
                     <Tag
                       key={status}
                       className={`carousel-tag ${styled.tab}`}
@@ -324,7 +337,7 @@ const Garantias: React.FC = () => {
             {!isTechnicalUser && (
               <div ref={carouselRef} className="carousel-container">
                 <div className="carousel-content">
-                  {statuses.map((status) => (
+                  {Object.values(AcordoStatusEnum).map((status) => (
                     <Tag
                       key={status}
                       className={`carousel-tag ${styled.tab}`}

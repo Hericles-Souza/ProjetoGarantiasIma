@@ -204,6 +204,7 @@ export const LoginPage = () => {
                       fontSize: "18px",
                       borderRadius: "15px",
                     }}
+                    
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />

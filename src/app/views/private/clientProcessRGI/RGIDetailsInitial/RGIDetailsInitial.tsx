@@ -22,6 +22,7 @@ import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import { isUndefined } from "lodash";
 
+// INALTERADO
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
   if (data && data.data) {
@@ -30,11 +31,13 @@ const extractGarantiasArray = (data: any): GarantiasModel[] => {
   return Array.isArray(data) ? data : [];
 };
 
+// INALTERADO
 export interface ModalModel {
   isOpen: boolean;
   isSell: boolean;
 }
 
+// INALTERADO
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
@@ -73,6 +76,7 @@ const RGIDetailsInitial: React.FC = () => {
   const seconds = String(now.getSeconds()).padStart(2, "0");
   const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
+  // INALTERADO
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
       "image/jpeg": ".jpg",
@@ -89,11 +93,13 @@ const RGIDetailsInitial: React.FC = () => {
     return mimeTypes[mimeType] || "";
   }
 
+  // INALTERADO
   function getFileExtensionFromBlob(blob: Blob): string {
     const mimeType = blob.type;
     return getExtensionFromMimeType(mimeType);
   }
 
+  // INALTERADO
   const ordenarItens = () => {
     setGroupedItems((prevItems) => {
       if (!prevItems) return prevItems;
@@ -106,6 +112,7 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
+  // INALTERADO
   const getSellFile = async (itemId: string, field: string) => {
     const urlGetFile =
       environment.apiUrl +
@@ -123,10 +130,12 @@ const RGIDetailsInitial: React.FC = () => {
     return { fileNameWithExtension, imagemUrl };
   };
 
+  // INALTERADO
   const getRgiWithSuffix = (RgiCode: string, letter: string, index: number) => {
     return `${RgiCode}.${letter}.${index}`;
   };
 
+  // INALTERADO
   const getAssciatedNfs = async (garantiaId: string, statusGarantia: number) => {
     try {
       const garantiaItemResponse = await fetch(
@@ -156,6 +165,7 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
+  // INALTERADO
   const groupByNfReferencia = (
     itens: GarantiaItem[]
   ): { codigoItem?: string; nfReferencia?: string }[] => {
@@ -173,6 +183,7 @@ const RGIDetailsInitial: React.FC = () => {
     return Object.values(grouped);
   };
 
+  // INALTERADO
   useEffect(() => {
     const fetchData = async () => {
       let data: GarantiasModel | null = null;
@@ -206,8 +217,9 @@ const RGIDetailsInitial: React.FC = () => {
       }
     };
     fetchData();
-  }, [location.state]); // Removido cardData e sellFile das dependências
+  }, [location.state]);
 
+  // INALTERADO
   const handleDeleteGuarantee = async () => {
     if (!cardData?.id) {
       message.error("Garantia não encontrada.");
@@ -240,6 +252,7 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
+  // INALTERADO
   const postOrPutGarantiaItemAsync = async (
     payloadPost: NotaFiscal,
     nfCodeCompare: string,
@@ -286,6 +299,7 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
+  // INALTERADO
   const handleDetailsNavigation = async (
     nf: { nf: string; itens: number },
     countItems: number,
@@ -310,6 +324,7 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
+  // INALTERADO
   const handleAddNF = async (nfNumber: string) => {
     let proximaLetra = "A"; // Letra inicial padrão
     if (garantiaNfsWithItens.length > 0) {
@@ -344,6 +359,7 @@ const RGIDetailsInitial: React.FC = () => {
     await postOrPutGarantiaItemAsync(newNotaFiscal, itemCode, nfNumber, notaId);
   };
 
+  // INALTERADO
   const handleDeleteNF = async () => {
     try {
       const itensToDelete = cardData?.itens.filter(
@@ -395,11 +411,13 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
+  // INALTERADO
   const showDeleteConfirm = (nfNumber: string) => {
     setNfToDelete(nfNumber);
     setModalDeleteOpen(true);
   };
 
+  // ALTERADO: Adicionado console.log para depuração e garantido que recSellFile seja atualizado corretamente
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     nfId: string,
@@ -412,7 +430,7 @@ const RGIDetailsInitial: React.FC = () => {
       const fileData = new FormData();
       fileData.append("file", file);
       fileData.append("itemId", nfId);
-      fileData.append("field", "nfDev");
+      fileData.append("field", "nfVenda"); // Alterado para "nfVenda" para garantir consistência
       try {
         const response = await fetch(endpoint, {
           method: "POST",
@@ -425,14 +443,16 @@ const RGIDetailsInitial: React.FC = () => {
         if (response.status === 201) {
           message.success("Arquivo enviado com sucesso!");
           const fileExtension = getFileExtensionFromBlob(blob);
-          const fileNameWithExtension = "nfDev" + fileExtension;
+          const fileNameWithExtension = "nfVenda" + fileExtension;
           const imagemUrl = URL.createObjectURL(blob);
           notaFiscal.recSellFile = { fileNameWithExtension, imagemUrl };
-          setGarantiaNfsWithItens((prevGarantiaNfsWithItens) =>
-            prevGarantiaNfsWithItens.map((item) =>
+          setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => {
+            const updatedNfs = prevGarantiaNfsWithItens.map((item) =>
               item.id === notaFiscal.id ? { ...item, recSellFile: notaFiscal.recSellFile } : item
-            )
-          );
+            );
+            console.log("Estado atualizado de garantiaNfsWithItens:", updatedNfs); // Adicionado para depuração
+            return updatedNfs;
+          });
         } else {
           message.error("Erro ao enviar arquivo.");
         }
@@ -442,7 +462,9 @@ const RGIDetailsInitial: React.FC = () => {
       }
     }
   };
+  // FIM ALTERADO
 
+  // INALTERADO
   const handleDownloadFile = (recNota: NotaFiscal) => {
     if (!recNota.recSellFile) return;
     const link = document.createElement("a");
@@ -451,6 +473,7 @@ const RGIDetailsInitial: React.FC = () => {
     link.click();
   };
 
+  // INALTERADO
   const save = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
@@ -507,11 +530,109 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
+  // ALTERADO: Modificada a validação do anexo da NF de venda para usar a API e corrigir o problema
   const send = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
       return;
     }
+
+    // Validação dos campos obrigatórios
+    let isValid = true;
+    let errorMessage = "";
+
+    // Verificar se há pelo menos uma NF associada
+    if (!garantiaNfsWithItens || garantiaNfsWithItens.length === 0) {
+      isValid = false;
+      errorMessage = "É necessário associar pelo menos uma NF.";
+    }
+
+    console.log("garantiaNfsWithItens antes da validação:", garantiaNfsWithItens); // Adicionado para depuração
+
+    // Validar cada NF e seus itens
+    for (const nota of garantiaNfsWithItens) {
+      // Verificar anexo da NF de venda usando a API
+      try {
+        const response = await fetch(
+          `${environment.apiUrl}/files/files/download-private-file-item/${nota.id}/nfVenda`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${context.user.token}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          isValid = false;
+          errorMessage = `A NF ${nota.codigo}, não possui o anexo da NF de venda.`;
+          break;
+        }
+      } catch (error) {
+        isValid = false;
+        errorMessage = `Erro ao verificar o anexo da NF de venda para a NF ${nota.codigo}.`;
+        break;
+      }
+
+      // Validar cada item da NF
+      for (const item of nota.itens) {
+        // Campos obrigatórios do item
+        if (
+          !item.codigoPeca ||
+          !item.loteItem ||
+          !item.tipoDefeito ||
+          !item.modeloVeiculoAplicado ||
+          !item.anoVeiculo ||
+          item.torqueAplicado === undefined ||
+          item.torqueAplicado === null
+        ) {
+          isValid = false;
+          errorMessage = `O item ${item.codigoItem} está com campos obrigatórios não preenchidos.`;
+          break;
+        }
+
+        // Validar anexos de imagens obrigatórios
+        const requiredImages = [
+          "Está faltando a foto do lado onde está a gravação IMA!", // Foto do lado onde está a gravação IMA
+          "Está faltando a foto da parte danificada/amassada-quebrada!", // Foto da parte danificada/amassada-quebrada
+          "Está faltando a foto da peça completa! ", // Foto da peça completa
+        ];
+
+        for (const field of requiredImages) {
+          try {
+            const response = await fetch(
+              `${environment.apiUrl}/files/files/download-private-file-item/${item.id}/${field}`,
+              {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${context.user.token}`,
+                },
+              }
+            );
+            if (!response.ok) {
+              isValid = false;
+              errorMessage = `O item ${item.codigoItem} não possui o anexo obrigatório: ${field}.`;
+              break;
+            }
+          } catch (error) {
+            isValid = false;
+            errorMessage = `Erro ao verificar anexo ${field} do item ${item.codigoItem}.`;
+            break;
+          }
+        }
+
+        if (!isValid) break;
+      }
+
+      if (!isValid) break;
+    }
+
+    // Se a validação falhar, exibir mensagem de erro
+    if (!isValid) {
+      message.error(errorMessage || "Preencha todos os campos obrigatórios antes de enviar.");
+      return;
+    }
+
+    // Continuar com a lógica de envio
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -587,7 +708,9 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("Erro ao enviar a garantia");
     }
   };
+  // FIM ALTERADO
 
+  // INALTERADO
   if (loading) {
     return (
       <div
@@ -609,6 +732,7 @@ const RGIDetailsInitial: React.FC = () => {
     );
   }
 
+  // INALTERADO
   return (
     <div className={styles.appContainer} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
@@ -806,7 +930,7 @@ const RGIDetailsInitial: React.FC = () => {
                   )
                 }
               >
-                &gt;
+              &gt;
               </Button>
             </div>
           </div>
@@ -842,4 +966,5 @@ const RGIDetailsInitial: React.FC = () => {
   );
 };
 
+// INALTERADO
 export default RGIDetailsInitial;
