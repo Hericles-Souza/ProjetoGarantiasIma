@@ -81,7 +81,7 @@ const Garantias: React.FC = () => {
           status = [GarantiasStatusEnum2.EM_ANALISE];
         } else if (context.user.rule.name === UserRoleEnum.Supervisor) {
           status = [
-            GarantiasStatusEnum2.EM_ANALISE,
+            GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR,
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
             GarantiasStatusEnum2.CONFIRMADO,
             GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
