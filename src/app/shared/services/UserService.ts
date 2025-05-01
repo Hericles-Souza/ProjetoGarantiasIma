@@ -70,7 +70,7 @@ export function createUser(user: CreateUserRequest, token: string) {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-  }).then((value) => console.log("request: ", value.request));
+  });
 }
 
 export function updateUser(user: UpdateUserRequest, token: string) {

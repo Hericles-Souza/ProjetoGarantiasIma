@@ -135,6 +135,9 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
 
   const createNewUser = async () => {
     try {
+      // Validação dos campos antes de enviar
+      await formik.validateForm();
+
       if (!rule) {
         message.error('Regras não carregadas!');
         return;
@@ -160,17 +163,64 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({ closeMo
         ruleId: selectedRule.id,
       };
 
-     const response = await createUser(userRequest, context.user.token);
+      const response = await createUser(userRequest, context.user.token);
 
-      if (response.status == 200 || response.status == 201) {
+      // Verifica se a resposta é bem-sucedida (status 2xx)
+      if (response.status >= 200) {
         message.success('Usuário criado com sucesso!');
         closeModal();
         onSearch();
-
+        return;
       }
-    } catch (error) {
-      console.error(error);
+
+      // Se chegou aqui, houve algum erro não tratado
       message.error('Erro ao criar usuário!');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error('Erro detalhado:', error);
+
+      // Erros de validação do Formik
+      if (error.name === 'ValidationError') {
+        const errorMessages = Object.keys(error.errors).map(key =>
+          `${key}: ${error.errors[key]}`
+        ).join('\n');
+        message.error(`Erros no formulário:\n${errorMessages}`);
+        return;
+      }
+
+      // Erros da API Axios
+      if (error.isAxiosError) {
+        // Erros de validação do backend (status 400)
+        if (error.response?.status === 400) {
+          const apiErrors = error.response.data?.errors || [];
+          if (apiErrors.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const errorMessages = apiErrors.map((err: any) =>
+              `${err.field || 'Erro'}: ${err.message || 'Dados inválidos'}`
+            ).join('\n');
+            message.error(`Corrija os seguintes campos:\n${errorMessages}`);
+          } else {
+            message.error(error.response.data?.message || 'Dados inválidos enviados');
+          }
+          return;
+        }
+
+        // Erros de conflito (status 409)
+        if (error.response?.status === 409) {
+          message.error(error.response.data?.message || 'Usuário já existe');
+          return;
+        }
+
+        // Outros erros da API
+        if (error.response?.data?.message) {
+          message.error(error.response.data.message);
+          return;
+        }
+      }
+
+      // Erro genérico
+      message.error('Erro ao criar usuário. Tente novamente.');
     }
   };
 
