@@ -81,3 +81,5 @@ export interface GarantiasModel {
   anexos?: string;
   itens?: GarantiaItem[];
 }
+
+export { GarantiasStatusEnum2 };

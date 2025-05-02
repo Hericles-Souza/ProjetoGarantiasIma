@@ -29,8 +29,9 @@ import {
 import environment from "@env/environment.ts";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import React from "react";
+import FileAttachmentDevolucao from "@shared/components/FileAttachmentDevolucao/FileAttachmentDevolucao";
 
-// Componente FileAttachment (mantido igual)
+// Componente FileAttachment
 const FileAttachment = React.memo(
   ({
     label,
@@ -74,8 +75,7 @@ const FileAttachment = React.memo(
         "image/gif": ".gif",
         "application/pdf": ".pdf",
         "application/msword": ".doc",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-          ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
         "application/zip": ".zip",
         "audio/mpeg": ".mp3",
         "video/mp4": ".mp4",
@@ -160,7 +160,7 @@ const FileAttachment = React.memo(
   }
 );
 
-// Componente CollapsibleSection (mantido igual)
+// Componente CollapsibleSection
 const CollapsibleSection = ({
   title,
   isVisible,
@@ -177,11 +177,10 @@ const CollapsibleSection = ({
   statusGarantia: string;
 }) => {
   const context = useContext(AuthContext);
-  console.log(statusGarantia);
   const statusColor =
     statusGarantia === GarantiasItemStatusEnum.AUTORIZADO
-      ? "#00FF00" // Verde para "Avaliação Concluída"
-      : "FF4D4F";
+      ? "#00FF00"
+      : "#FF4D4F";
 
   return (
     <div>
@@ -227,47 +226,45 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const navigate = useNavigate();
   const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(
     location.state?.isAnalysisConcluded || false
-  ); // Estado para máscara de análise concluída
-  const [displayedStatus, setDisplayedStatus] = useState(""); // New state for front-end mask
+  );
+
+  const fetchItems = async () => {
+    try {
+      if (location.state) {
+        const itemsResponse = await getItemsByNfAsync(location.state.nota.id);
+        console.log("Itens recebidos do backend:", itemsResponse.data);
+        itemsResponse.data.forEach((item) => {
+          if (item.tipoDefeito == null) item.tipoDefeito = "";
+        });
+        setItems(itemsResponse.data);
+
+        const updatedCardData = { ...location.state.garantia };
+        setCardData(updatedCardData);
+
+        setNotaFiscal((prev) => ({
+          ...prev,
+          ...location.state.nota,
+          itens: itemsResponse.data,
+        }));
+
+        if (updatedCardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
+          setIsAnalysisConcluded(false);
+        } else if (updatedCardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) {
+          setIsAnalysisConcluded(true);
+        }
+
+        setRecRgiLetter(location.state.nf.split(".")[1]);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        if (location.state) {
-          const itemsResponse = await getItemsByNfAsync(location.state.nota.id);
-          itemsResponse.data.forEach((item) => {
-            if (item.tipoDefeito == null) item.tipoDefeito = "";
-          });
-          setItems(itemsResponse.data);
-
-          const updatedCardData = { ...location.state.garantia };
-          setCardData(updatedCardData);
-          setNotaFiscal(location.state.nota);
-          //console.log("nota fiscal received: ", notaFiscal);
-
-          if (
-            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE
-          ) {
-            setIsAnalysisConcluded(false);
-            setDisplayedStatus("Aguardando Avaliação");
-            //console.log("entrou 2");
-          } else if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) {
-            setIsAnalysisConcluded(true);
-            setDisplayedStatus("Avaliação Concluída");
-            //console.log("entrou 1");
-          }
-
-          setRecRgiLetter(location.state.nf.split(".")[1]);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [location.state, notaFiscal]);
+    fetchItems();
+  }, [location.state]);
 
   const toggleContentVisibility = (itemId: string) => {
     setIsContentVisible((prev) => ({
@@ -308,10 +305,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       message.success("Garantia confirmada com sucesso");
     }
   };
+
   const handleSave = async () => {
     if (!cardData?.notas) return;
 
-    const hasInvalidDefect = notaFiscal.itens.some(
+    const hasInvalidDefect = notaFiscal?.itens?.some(
       (item) =>
         item.codigoItem?.split(".")[1] === recRgiLetter && !item.tipoDefeito
     );
@@ -321,54 +319,46 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       return;
     }
 
-    const promises = notaFiscal.itens.map(async (item) => {
+    const promises = notaFiscal?.itens?.map(async (item) => {
       const dataToSend = {
         ItemId: item.id,
-        conclusao: item.conclusao,
-        status: item.status,
-        tipoDefeitoOficial: item.tipoDefeitoOficial,
+        conclusao: item.conclusao || "",
+        status: item.status || GarantiasItemStatusEnum.NAO_ANALISADO,
+        codigoStatus: item.codigoStatus || GarantiasItemStatusEnum2.NAO_ANALISADO,
+        tipoDefeitoOficial: item.tipoDefeitoOficial || "",
       };
+
+      console.log("Dados enviados para o backend:", dataToSend);
+
       try {
-        const response = await api.put(
-          `/garantias/analisetecnica/`,
-          dataToSend
-        );
-
-        //console.log("response: ", response);
-
+        const response = await api.put(`/garantias/analisetecnica/`, dataToSend);
         if (response.status === 200) {
           message.success("Dados salvos com sucesso!");
         } else {
-          message.error("Falha ao salvar os dados.");
+          message.error(`Falha ao salvar o item ${item.codigoItem}.`);
         }
       } catch (error) {
-        console.error("Erro ao tentar salvar:", error);
-        message.error("Erro ao tentar salvar.");
+        console.error(`Erro ao salvar o item ${item.codigoItem}:`, error);
+        message.error(`Erro ao salvar o item ${item.codigoItem}.`);
       }
     });
-    await Promise.all(promises);
-    const notAuthorizeItems = notaFiscal.itens.filter(
-      (value) =>
-        value.codigoItem?.split(".")[1] === recRgiLetter &&
-        value.codigoStatus == GarantiasItemStatusEnum2.NAO_AUTORIZADO
-    );
+
+    await Promise.all(promises || []);
+
+    // Recarregar os dados do backend para atualizar os status na interface
+    await fetchItems();
   };
 
   const updateItemDefect = (itemId: string, newDefect: string) => {
     if (cardData) {
-      const updatedItems = notaFiscal.itens.map((item) =>
-        item.id === itemId ? { ...item, tipfoDefeito: newDefect } : item
+      const updatedItems = notaFiscal?.itens?.map((item) =>
+        item.id === itemId ? { ...item, tipoDefeito: newDefect } : item
       );
       setCardData({ ...cardData, itens: updatedItems });
     }
   };
 
-  const statusColor =
-    displayedStatus === "Avaliação Concluída"
-      ? "#00FF00" // Verde para "Avaliação Concluída"
-      : StatusColors[cardData?.codigoStatus || GarantiasStatusEnum2.EM_ANALISE];
-
-  if (loading || !items || !cardData) {
+  if (loading || !items || !cardData || !notaFiscal) {
     return (
       <div
         style={{
@@ -417,12 +407,12 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           <h1 className={styles.tituloRgi}>NF {location.state.nf}</h1>
           <div
             style={{
-              color: statusColor,
-              backgroundColor: `${statusColor}26`,
+              color: StatusColors[cardData?.codigoStatus],
+              backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
             }}
             className={styles.statusTag}
           >
-            {displayedStatus || "Carregando..."}
+            {cardData?.status || "Carregando..."}
           </div>
         </div>
         <div className={styles.botoesCabecalho}>
@@ -461,30 +451,31 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         isRessarcimento={false}
         itemId={notaFiscal?.id}
       />
-      {cardData.codigoStatus >=
+       {cardData.codigoStatus ===
         GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
-          <>
-            <FileAttachment
-              label="Anexo da NF de devolução"
-              backgroundColor="#f5f5f5"
-              isRessarcimento={false}
-              itemId={notaFiscal?.id}
-            />
-            <div className={styles.TitleItens}>
-              <h3 className={styles.nfsTitle}>
-                Itens desta NF associados a esta garantia
-              </h3>
-            </div>
-          </>
-        )}
+        <>
+          <FileAttachmentDevolucao
+            label="Anexo da NF de devolução"
+            backgroundColor="#f5f5f5"
+            garantiaId={cardData?.id || ""}
+            recGarantia={cardData}
+          />
+          <div className={styles.TitleItens}>
+            <h3 className={styles.nfsTitle}>
+              Itens desta NF associados a esta garantia
+            </h3>
+          </div>
+        </>
+      )}
+     
       {notaFiscal.itens.map((item) => (
         <div className={styles.containerInformacoes} key={item.id}>
           <CollapsibleSection
-            title={item.codigoItem}
+            title={item.codigoItem || ""}
             isVisible={isContentVisible[item.id] || false}
             toggleVisibility={() => toggleContentVisibility(item.id)}
             handleConfirm={handleConfirm}
-            statusGarantia={item.status}
+            statusGarantia={item.status || "Não analisado"}
           >
             <h3 className={styles.tituloSecao}>Informações Gerais</h3>
             <div className={styles.inputsContainer}>
@@ -500,7 +491,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                   <OutlinedInputWithLabel
                     label="Lote da peça"
-                    value={item.loteItem}
+                    value={item.loteItem || ""}
                     fullWidth
                     disabled
                   />
@@ -513,14 +504,14 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     label="Modelo do veículo que aplicou"
                     fullWidth
                     disabled
-                    value={item.modeloVeiculoAplicado}
+                    value={item.modeloVeiculoAplicado || ""}
                   />
                 </div>
                 <div className={styles.inputGroup} style={{ flex: 0.3 }}>
                   <OutlinedInputWithLabel
                     label="Ano do veículo"
                     disabled
-                    value={item.anoVeiculo}
+                    value={item.anoVeiculo || ""}
                     fullWidth
                   />
                 </div>
@@ -547,7 +538,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                 <div className={styles.inputGroup} style={{ flex: 1 }}>
                   <OutlinedInputWithLabel
                     label="Torque aplicado à peça"
-                    value={item?.torqueAplicado?.toString()}
+                    value={item?.torqueAplicado?.toString() || ""}
                     fullWidth
                     disabled
                   />
@@ -559,7 +550,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               label="Anexar NF de compra com IMA"
               backgroundColor="white"
               itemId={item?.id}
-              isRessarcimento={item?.solicitarRessarcimento}
+              isRessarcimento={item?.solicitarRessarcimento || false}
             />
 
             {item.solicitarRessarcimento &&
@@ -600,7 +591,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     label={itemQuestion}
                     backgroundColor="white"
                     itemId={item.id}
-                    isRessarcimento={item.solicitarRessarcimento}
+                    isRessarcimento={item.solicitarRessarcimento || false}
                   />
                 ))}
 
@@ -674,8 +665,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                     value={item.tipoDefeitoOficial || ""}
                     defaultValue=""
                     onChange={(e) => {
-                      //console.log("defeito: ", e.target.value);
-
                       item.tipoDefeitoOficial = e.target.value;
                       updateItemDefect(item.id, e.target.value);
                     }}
@@ -708,7 +697,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
                 <h3 className={styles.tituloA}>Conclusão</h3>
                 <MultilineTextFields
-                  value={item?.conclusao}
+                  value={item?.conclusao || ""}
                   onChange={(e) => {
                     item.conclusao = e.target.value;
                     setConclusao(e.target.value);

@@ -267,6 +267,16 @@
 }
 
 
+.buttonUpdate {
+  color: #5F5A56;
+  background-color: rgb(255, 255, 255) !important;
+  display: flex;
+  border: solid 1px rgb(224, 224, 224) !important;
+  align-items: center;
+  margin: 0;
+  padding: 0 20px !important;
+  height: 45px !important;
+}
 
 .buttonSendRgi {
   color: white;

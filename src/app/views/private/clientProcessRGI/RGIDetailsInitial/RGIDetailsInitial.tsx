@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useContext, useEffect, useState } from "react";
 import { Button, message, Modal, Spin } from "antd";
@@ -22,8 +23,7 @@ import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import { isUndefined } from "lodash";
 
-// INALTERADO
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Função para extrair array de garantias (inalterada)
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
   if (data && data.data) {
     return Array.isArray(data.data) ? data.data : [data.data];
@@ -31,13 +31,12 @@ const extractGarantiasArray = (data: any): GarantiasModel[] => {
   return Array.isArray(data) ? data : [];
 };
 
-// INALTERADO
+// Interface para o modelo do modal (inalterada)
 export interface ModalModel {
   isOpen: boolean;
   isSell: boolean;
 }
 
-// INALTERADO
 const RGIDetailsInitial: React.FC = () => {
   const [socialReason, setSocialReason] = useState("");
   const [phone, setPhone] = useState("");
@@ -76,7 +75,6 @@ const RGIDetailsInitial: React.FC = () => {
   const seconds = String(now.getSeconds()).padStart(2, "0");
   const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
-  // INALTERADO
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
       "image/jpeg": ".jpg",
@@ -93,13 +91,11 @@ const RGIDetailsInitial: React.FC = () => {
     return mimeTypes[mimeType] || "";
   }
 
-  // INALTERADO
   function getFileExtensionFromBlob(blob: Blob): string {
     const mimeType = blob.type;
     return getExtensionFromMimeType(mimeType);
   }
 
-  // INALTERADO
   const ordenarItens = () => {
     setGroupedItems((prevItems) => {
       if (!prevItems) return prevItems;
@@ -112,7 +108,6 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-  // INALTERADO
   const getSellFile = async (itemId: string, field: string) => {
     const urlGetFile =
       environment.apiUrl +
@@ -130,12 +125,10 @@ const RGIDetailsInitial: React.FC = () => {
     return { fileNameWithExtension, imagemUrl };
   };
 
-  // INALTERADO
   const getRgiWithSuffix = (RgiCode: string, letter: string, index: number) => {
     return `${RgiCode}.${letter}.${index}`;
   };
 
-  // INALTERADO
   const getAssciatedNfs = async (garantiaId: string, statusGarantia: number) => {
     try {
       const garantiaItemResponse = await fetch(
@@ -165,7 +158,6 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  // INALTERADO
   const groupByNfReferencia = (
     itens: GarantiaItem[]
   ): { codigoItem?: string; nfReferencia?: string }[] => {
@@ -183,7 +175,6 @@ const RGIDetailsInitial: React.FC = () => {
     return Object.values(grouped);
   };
 
-  // INALTERADO
   useEffect(() => {
     const fetchData = async () => {
       let data: GarantiasModel | null = null;
@@ -219,7 +210,6 @@ const RGIDetailsInitial: React.FC = () => {
     fetchData();
   }, [location.state]);
 
-  // INALTERADO
   const handleDeleteGuarantee = async () => {
     if (!cardData?.id) {
       message.error("Garantia não encontrada.");
@@ -252,7 +242,6 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-  // INALTERADO
   const postOrPutGarantiaItemAsync = async (
     payloadPost: NotaFiscal,
     nfCodeCompare: string,
@@ -299,7 +288,6 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  // INALTERADO
   const handleDetailsNavigation = async (
     nf: { nf: string; itens: number },
     countItems: number,
@@ -324,9 +312,8 @@ const RGIDetailsInitial: React.FC = () => {
     });
   };
 
-  // INALTERADO
   const handleAddNF = async (nfNumber: string) => {
-    let proximaLetra = "A"; // Letra inicial padrão
+    let proximaLetra = "A";
     if (garantiaNfsWithItens.length > 0) {
       const ultimoItem = garantiaNfsWithItens[garantiaNfsWithItens.length - 1];
       const [letra] = ultimoItem.rgi.split(".")[1];
@@ -359,7 +346,6 @@ const RGIDetailsInitial: React.FC = () => {
     await postOrPutGarantiaItemAsync(newNotaFiscal, itemCode, nfNumber, notaId);
   };
 
-  // INALTERADO
   const handleDeleteNF = async () => {
     try {
       const itensToDelete = cardData?.itens.filter(
@@ -411,13 +397,11 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  // INALTERADO
   const showDeleteConfirm = (nfNumber: string) => {
     setNfToDelete(nfNumber);
     setModalDeleteOpen(true);
   };
 
-  // ALTERADO: Adicionado console.log para depuração e garantido que recSellFile seja atualizado corretamente
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     nfId: string,
@@ -430,7 +414,7 @@ const RGIDetailsInitial: React.FC = () => {
       const fileData = new FormData();
       fileData.append("file", file);
       fileData.append("itemId", nfId);
-      fileData.append("field", "nfVenda"); // Alterado para "nfVenda" para garantir consistência
+      fileData.append("field", "nfVenda");
       try {
         const response = await fetch(endpoint, {
           method: "POST",
@@ -450,7 +434,7 @@ const RGIDetailsInitial: React.FC = () => {
             const updatedNfs = prevGarantiaNfsWithItens.map((item) =>
               item.id === notaFiscal.id ? { ...item, recSellFile: notaFiscal.recSellFile } : item
             );
-            console.log("Estado atualizado de garantiaNfsWithItens:", updatedNfs); // Adicionado para depuração
+            console.log("Estado atualizado de garantiaNfsWithItens:", updatedNfs);
             return updatedNfs;
           });
         } else {
@@ -462,9 +446,7 @@ const RGIDetailsInitial: React.FC = () => {
       }
     }
   };
-  // FIM ALTERADO
 
-  // INALTERADO
   const handleDownloadFile = (recNota: NotaFiscal) => {
     if (!recNota.recSellFile) return;
     const link = document.createElement("a");
@@ -473,7 +455,6 @@ const RGIDetailsInitial: React.FC = () => {
     link.click();
   };
 
-  // INALTERADO
   const save = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
@@ -637,6 +618,16 @@ const RGIDetailsInitial: React.FC = () => {
       return;
     }
 
+    // Salvar os statuses atuais dos itens antes da atualização
+    const originalItemStatuses = garantiaNfsWithItens.map((nota) => ({
+      notaId: nota.id,
+      itens: nota.itens.map((item) => ({
+        id: item.id,
+        codigoStatus: item.codigoStatus,
+        status: item.status,
+      })),
+    }));
+
     // Continuar com a lógica de envio
     const now = new Date();
     const year = now.getFullYear();
@@ -692,6 +683,33 @@ const RGIDetailsInitial: React.FC = () => {
       );
 
       if (responseHeader.status === 200) {
+        // Restaurar os statuses dos itens após a atualização
+        setGarantiaNfsWithItens((prevGarantiaNfsWithItens) =>
+          prevGarantiaNfsWithItens.map((nota) => {
+            const originalNota = originalItemStatuses.find(
+              (orig) => orig.notaId === nota.id
+            );
+            if (originalNota) {
+              return {
+                ...nota,
+                itens: nota.itens.map((item) => {
+                  const originalItem = originalNota.itens.find(
+                    (origItem) => origItem.id === item.id
+                  );
+                  return originalItem
+                    ? {
+                      ...item,
+                      codigoStatus: originalItem.codigoStatus,
+                      status: originalItem.status,
+                    }
+                    : item;
+                }),
+              };
+            }
+            return nota;
+          })
+        );
+
         setCardData({
           ...cardData,
           razaoSocial: garantia.razaoSocial,
@@ -713,9 +731,7 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("Erro ao enviar a garantia");
     }
   };
-  // FIM ALTERADO
 
-  // INALTERADO
   if (loading) {
     return (
       <div
@@ -737,7 +753,6 @@ const RGIDetailsInitial: React.FC = () => {
     );
   }
 
-  // INALTERADO
   return (
     <div className={styles.appContainer} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
@@ -781,17 +796,10 @@ const RGIDetailsInitial: React.FC = () => {
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
             cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
             cardData?.codigoStatus ===
-            GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) &&
+            GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA || cardData?.codigoStatus ===
+            GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
             context.user.rule.name === UserRoleEnum.Cliente && (
               <>
-                <Button
-                  onClick={save}
-                  type="default"
-                  danger
-                  className={styles.buttonSaveRgi}
-                >
-                  Salvar
-                </Button>
                 <Button
                   onClick={send}
                   type="primary"
@@ -935,7 +943,7 @@ const RGIDetailsInitial: React.FC = () => {
                   )
                 }
               >
-                &gt;
+                 &gt;
               </Button>
             </div>
           </div>
@@ -971,5 +979,4 @@ const RGIDetailsInitial: React.FC = () => {
   );
 };
 
-// INALTERADO
 export default RGIDetailsInitial;
