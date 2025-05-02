@@ -251,7 +251,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             setIsAnalysisConcluded(false);
             setDisplayedStatus("Aguardando Avaliação");
             //console.log("entrou 2");
-          } else if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR){
+          } else if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) {
             setIsAnalysisConcluded(true);
             setDisplayedStatus("Avaliação Concluída");
             //console.log("entrou 1");
@@ -463,20 +463,20 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       />
       {cardData.codigoStatus >=
         GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
-        <>
-          <FileAttachment
-            label="Anexo da NF de devolução"
-            backgroundColor="#f5f5f5"
-            isRessarcimento={false}
-            itemId={notaFiscal?.id}
-          />
-          <div className={styles.TitleItens}>
-            <h3 className={styles.nfsTitle}>
-              Itens desta NF associados a esta garantia
-            </h3>
-          </div>
-        </>
-      )}
+          <>
+            <FileAttachment
+              label="Anexo da NF de devolução"
+              backgroundColor="#f5f5f5"
+              isRessarcimento={false}
+              itemId={notaFiscal?.id}
+            />
+            <div className={styles.TitleItens}>
+              <h3 className={styles.nfsTitle}>
+                Itens desta NF associados a esta garantia
+              </h3>
+            </div>
+          </>
+        )}
       {notaFiscal.itens.map((item) => (
         <div className={styles.containerInformacoes} key={item.id}>
           <CollapsibleSection

@@ -530,7 +530,6 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
-  // ALTERADO: Modificada a validação do anexo da NF de venda para usar a API e corrigir o problema
   const send = async () => {
     if (!cardData?.id) {
       message.error("ID da garantia não encontrado");
@@ -547,7 +546,7 @@ const RGIDetailsInitial: React.FC = () => {
       errorMessage = "É necessário associar pelo menos uma NF.";
     }
 
-    console.log("garantiaNfsWithItens antes da validação:", garantiaNfsWithItens); // Adicionado para depuração
+    console.log("garantiaNfsWithItens antes da validação:", garantiaNfsWithItens);
 
     // Validar cada NF e seus itens
     for (const nota of garantiaNfsWithItens) {
@@ -592,10 +591,16 @@ const RGIDetailsInitial: React.FC = () => {
 
         // Validar anexos de imagens obrigatórios
         const requiredImages = [
-          "Está faltando a foto do lado onde está a gravação IMA!", // Foto do lado onde está a gravação IMA
-          "Está faltando a foto da parte danificada/amassada-quebrada!", // Foto da parte danificada/amassada-quebrada
-          "Está faltando a foto da peça completa! ", // Foto da peça completa
+          "1.img", // Foto do lado onde está a gravação IMA
+          "2.img", // Foto da parte danificada/amassada-quebrada
+          "4.img", // Foto da peça completa
         ];
+
+        const imageLabels = {
+          "1.img": "Foto do lado onde está a gravação IMA",
+          "2.img": "Foto da parte danificada/amassada-quebrada",
+          "4.img": "Foto da peça completa",
+        };
 
         for (const field of requiredImages) {
           try {
@@ -610,12 +615,12 @@ const RGIDetailsInitial: React.FC = () => {
             );
             if (!response.ok) {
               isValid = false;
-              errorMessage = `O item ${item.codigoItem} não possui o anexo obrigatório: ${field}.`;
+              errorMessage = `O item ${item.codigoItem} não possui o anexo obrigatório: ${imageLabels[field]}.`;
               break;
             }
           } catch (error) {
             isValid = false;
-            errorMessage = `Erro ao verificar anexo ${field} do item ${item.codigoItem}.`;
+            errorMessage = `Erro ao verificar anexo ${imageLabels[field]} do item ${item.codigoItem}.`;
             break;
           }
         }
@@ -930,7 +935,7 @@ const RGIDetailsInitial: React.FC = () => {
                   )
                 }
               >
-              &gt;
+                &gt;
               </Button>
             </div>
           </div>
