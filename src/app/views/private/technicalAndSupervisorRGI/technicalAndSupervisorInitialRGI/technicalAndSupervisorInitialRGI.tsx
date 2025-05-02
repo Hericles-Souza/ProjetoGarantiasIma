@@ -1,7 +1,7 @@
 import "./technicalAndSupervisorInitialRGI.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
-import { Button, message, Spin } from "antd";
+import { Button, message, Spin, Modal, Input } from "antd";
 import { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
@@ -9,7 +9,6 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
   converterStatusGarantia,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
@@ -51,8 +50,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
   const [loading, setLoading] = useState(true);
-  const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(false); // New state for front-end mask
-  // const [displayedStatus, setDisplayedStatus] = useState(""); // New state for front-end mask
+  const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(false);
+  const [modalRefuseOpen, setModalRefuseOpen] = useState(false); // State for refusal modal
+  const [currentNota, setCurrentNota] = useState<NotaFiscal | null>(null); // Track the nota being refused
+  const [conclusion, setConclusion] = useState(""); // State for conclusion input
+
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -74,14 +76,12 @@ const TechnicalAndSupervisorInitialRGI = () => {
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
-      // Adicione outros tipos MIME conforme necessário
     };
-
-    return mimeTypes[mimeType] || ""; // Retorna a extensão ou uma string vazia se não encontrado
+    return mimeTypes[mimeType] || "";
   }
 
   function getFileExtensionFromBlob(blob: Blob): string {
-    const mimeType = blob.type; // Pega o tipo MIME do Blob
+    const mimeType = blob.type;
     const extension = getExtensionFromMimeType(mimeType);
     return extension;
   }
@@ -95,7 +95,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
     const response = await fetch(urlGetFile, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${context.user.token}`, // Token de autenticação
+        Authorization: `Bearer ${context.user.token}`,
       },
     });
 
@@ -104,9 +104,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
     const fileNameWithExtension = field + fileExtension;
     const imagemUrl = URL.createObjectURL(blob);
     console.log(fileNameWithExtension);
-
-    // handleDownload(fileNameWithExtension);
-    // handleDownload(fileNameWithExtension, imagemUrl);
 
     return { fileNameWithExtension, imagemUrl };
   };
@@ -144,16 +141,13 @@ const TechnicalAndSupervisorInitialRGI = () => {
     ) {
       console.log("status garantia: ", cardData);
       if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR || cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         setIsAnalysisConcluded(true);
-        // setDisplayedStatus("Avaliação Concluída Técnico");
       } else if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         setIsAnalysisConcluded(true);
-        // setDisplayedStatus("Aguardando Avaliação");
       }
     }
   };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -181,13 +175,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
         if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
           setIsAnalysisConcluded(false);
-          // setDisplayedStatus("Aguardando Avaliação");
         } else if (
           cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
           cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
         ) {
           setIsAnalysisConcluded(true);
-          // setDisplayedStatus("Avaliação Concluída Técnico");
         }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
@@ -199,8 +191,46 @@ const TechnicalAndSupervisorInitialRGI = () => {
   }, [location.state, cardData]);
 
   const handleUpdateNote = async (notaFiscal: NotaFiscal, refuse: boolean) => {
-    if (refuse) notaFiscal.tipo_nota = "Recusada";
-    else notaFiscal.tipo_nota = "Aprovada";
+    if (refuse) {
+      // Open the modal for conclusion input
+      setCurrentNota(notaFiscal);
+      setModalRefuseOpen(true);
+      return;
+    }
+
+    // If approving, proceed without modal
+    notaFiscal.tipo_nota = "Aprovada";
+    const payloadNotaFiscal: NotaFiscal = {
+      garantiaId: notaFiscal.garantia_id,
+      codigo: notaFiscal.codigo,
+      codigoRGI: notaFiscal.rgi,
+      tipo_nota: notaFiscal.tipo_nota,
+      data_emissao: notaFiscal.data_emissao,
+      id_referencia: notaFiscal.id_referencia,
+      data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      itens: notaFiscal.itens,
+      id: notaFiscal.id,
+      conclusao: "", // No conclusion for approval
+    };
+
+    console.log("notaFiscalUpdate: ", payloadNotaFiscal);
+    const responseUpdate = await api.put(
+      `/nota-fiscal/update/${notaFiscal.id}`,
+      payloadNotaFiscal
+    );
+
+    if (responseUpdate.status === 200) {
+      setGarantiaNfsWithItens([...garantiaNfsWithItens]); // Refresh UI
+      message.success("Nota Aprovada com sucesso");
+    }
+  };
+
+  const handleConfirmRefusal = async () => {
+    if (!currentNota) return;
+
+    const notaFiscal = { ...currentNota };
+    notaFiscal.tipo_nota = "Recusada";
+    notaFiscal.conclusao = conclusion; // Add the conclusion to the payload
 
     const payloadNotaFiscal: NotaFiscal = {
       garantiaId: notaFiscal.garantia_id,
@@ -212,19 +242,26 @@ const TechnicalAndSupervisorInitialRGI = () => {
       data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       itens: notaFiscal.itens,
       id: notaFiscal.id,
+      conclusao: conclusion, // Include the conclusion
     };
 
-    console.log("notaFiscalUpdate: ", payloadNotaFiscal);
+    console.log("notaFiscalUpdate (Refused): ", payloadNotaFiscal);
     const responseUpdate = await api.put(
       `/nota-fiscal/update/${notaFiscal.id}`,
       payloadNotaFiscal
     );
 
     if (responseUpdate.status === 200) {
-      setGarantiaNfsWithItens(garantiaNfsWithItens);
-
-      message.success("Nota " + notaFiscal.tipo_nota + " com sucesso");
+      setGarantiaNfsWithItens([...garantiaNfsWithItens]); // Refresh UI
+      message.success("Nota Recusada com sucesso");
+    } else {
+      message.error("Erro ao recusar a nota");
     }
+
+    // Reset states and close modal
+    setModalRefuseOpen(false);
+    setConclusion("");
+    setCurrentNota(null);
   };
 
   const handleConfirm = async () => {
@@ -275,7 +312,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
   const handleSaveTec = async () => {
     try {
       if (context.user.rule.name === UserRoleEnum.Tecnico) {
-        const statusGarantia = GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR; // Sempre define como EM_ANALISE_SUPERVISOR para o técnico
+        const statusGarantia = GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR;
         const garantia: GarantiasModel = {
           razaoSocial: razaoSocial,
           telefone: telefone,
@@ -315,7 +352,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
       if (context.user.rule.name === UserRoleEnum.Supervisor) {
         let finalStatusGarantia = statusGarantia;
 
-        // Verifica itens autorizados e não autorizados ao autorizar a NF de devolução
         if (statusGarantia === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO) {
           const hasAuthorizedItems = garantiaNfsWithItens.some((nota) =>
             nota.itens.some(
@@ -328,7 +364,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
             )
           );
 
-          // Se houver itens autorizados e não autorizados, define o status como PECAS_AVALIADAS_PARCIAMENTE
           if (hasAuthorizedItems && hasNonAuthorizedItems) {
             finalStatusGarantia = GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE;
           }
@@ -364,11 +399,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
       console.error("Erro ao atualizar a garantia:", error);
       message.error("Erro ao atualizar a garantia");
     }
-  }
-
-
-
-
+  };
 
   if (loading || !cardData) {
     return (
@@ -424,7 +455,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   type="primary"
                   className="ButonToSend"
                   onClick={handleSaveTec}
-                // disabled={!allItemsAnalyzed}
                 >
                   Finalizar Análise
                 </Button>
@@ -473,11 +503,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 <Button
                   type="default"
                   className="ButtonDelete"
-                // onClick={() =>
-                //     navigate("/view-pre-invoice", {
-                //       state: { cardData },
-                //     })
-                //   }
                 >
                   Visualizar Pré Nota
                 </Button>
@@ -551,50 +576,46 @@ const TechnicalAndSupervisorInitialRGI = () => {
                       : nota.tipo_nota == "Aprovada"
                         ? GarantiasStatusEnum2.CONFIRMADO
                         : "#8C8C8C"
-                    ]
+                  ]
                     }15`,
                 }}
                 className={stylesDetails.statusTag}
               >
-                {/* {nota.tipo_nota == "Recusada" || nota.tipo_nota == "Aprovada"
-                  ? nota.tipo_nota
-                  : "Não analisado"} */}
               </div>
             </div>
-            <div style={{display: "flex", gap: "10px", alignItems: "center"}} >
-            {context.user.rule.name === UserRoleEnum.Supervisor &&
-              cardData.codigoStatus ===
-              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
-              nota.recSellFile?.fileNameWithExtension != "" &&
-              nota.recSellFile?.imagemUrl != "" &&
-              !nota.tipo_nota.includes("Aprovada") &&
-              !nota.tipo_nota.includes("Recusada") && (
-                <>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }} >
+              {context.user.rule.name === UserRoleEnum.Supervisor &&
+                cardData.codigoStatus ===
+                GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+                nota.recSellFile?.fileNameWithExtension != "" &&
+                nota.recSellFile?.imagemUrl != "" &&
+                !nota.tipo_nota.includes("Aprovada") &&
+                !nota.tipo_nota.includes("Recusada") && (
+                  <>
                     <button
-                    className={stylesDetails.buttonUpdate}
+                      className={stylesDetails.buttonUpdate}
                       onClick={() => handleDownloadFile(nota)}
                     >Baixar Arquivo</button>
-                 
-                  <div className="ButtonHeader">
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <Button
-                        onClick={() => handleUpdateNote(nota, true)}
-                        type="primary"
-                        className={stylesDetails.buttonSendRgi}
-                      >
-                        Recusar NF de Devolução
-                      </Button>
-                      <Button
-                        type="primary"
-                        className={stylesDetails.buttonSendRgi}
-                        onClick={() => handleUpdateNote(nota, false)}
-                      >
-                        Autorizar
-                      </Button>
+                    <div className="ButtonHeader">
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <Button
+                          onClick={() => handleUpdateNote(nota, true)}
+                          type="primary"
+                          className={stylesDetails.buttonSendRgi}
+                        >
+                          Recusar NF de Devolução
+                        </Button>
+                        <Button
+                          type="primary"
+                          className={stylesDetails.buttonSendRgi}
+                          onClick={() => handleUpdateNote(nota, false)}
+                        >
+                          Autorizar
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
               <Button
                 type="text"
                 className={stylesDetails.nextButton}
@@ -618,6 +639,34 @@ const TechnicalAndSupervisorInitialRGI = () => {
           </div>
         ))}
       </section>
+
+      {/* Modal for Refusal Conclusion */}
+      <Modal
+        title="Motivo da Recusa"
+        open={modalRefuseOpen}
+        onOk={handleConfirmRefusal}
+        onCancel={() => {
+          setModalRefuseOpen(false);
+          setConclusion("");
+          setCurrentNota(null);
+        }}
+        okText="Confirmar Recusa"
+        cancelText="Cancelar"
+        okButtonProps={{
+          style: { backgroundColor: "red", borderColor: "red", color: "white" },
+        }}
+        cancelButtonProps={{
+          style: { borderColor: "#dadada", color: "#5F5A56" },
+        }}
+      >
+        <p>Por favor, informe o motivo da recusa da NF de devolução:</p>
+        <Input.TextArea
+          rows={4}
+          value={conclusion}
+          onChange={(e) => setConclusion(e.target.value)}
+          placeholder="Digite a conclusão aqui..."
+        />
+      </Modal>
     </div>
   );
 };
