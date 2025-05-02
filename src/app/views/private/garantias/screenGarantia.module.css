@@ -56,3 +56,21 @@
 .pagination :global(.ant-pagination-item:hover a) {
   color: rgba(255, 0, 0, 0.75) !important;
 }
+
+.ButonToSend {
+  background-color: rgb(255, 255, 255) !important;
+  border-radius: 10px !important;
+  height: 40px !important;
+  color: grey !important;
+  outline: none !important;
+  border: solid 1px hsl(0, 0%, 85%) !important;
+}
+
+.ButonToSend:hover {
+  background-color: rgb(255, 255, 255) !important;
+  border-radius: 10px !important;
+  height: 40px !important;
+  color: grey !important;
+  outline: none !important;
+  border: solid 1px hsl(0, 0%, 85%) !important;
+}

@@ -249,17 +249,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             Nenhum arquivo enviado
           </label>
         )}
-        {recFile?.fileNameWithExtension != "" &&
-          recFile?.imagemUrl != "" &&
-          recGarantia?.codigoStatus >= 1 && (
-            <label className={styles.buttonUpdateNfSale}>
-              <button
-                style={{ display: "none" }}
-                onClick={handleDownloadFile}
-              />
-              Baixar Arquivo
-            </label>
-          )}
+
         {(fileData ||
           (recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "")) &&
           recGarantia?.codigoStatus <= 1 && (
@@ -278,6 +268,17 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
                 />
               )}
             </span>
+          )}
+        {recFile?.fileNameWithExtension != "" &&
+          recFile?.imagemUrl != "" &&
+          recGarantia?.codigoStatus >= 1 && (
+            <label className={styles.buttonUpdateNfSale}>
+              <button
+                style={{ display: "none" }}
+                onClick={handleDownloadFile}
+              />
+              Baixar Arquivo
+            </label>
           )}
         {recFile?.fileNameWithExtension === "" &&
           recFile?.imagemUrl === "" &&

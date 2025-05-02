@@ -2,22 +2,29 @@ import React, { useContext, useEffect, useState } from "react";
 import {
   ConfigProvider,
   Dropdown,
-  DropdownProps,
   Layout,
   Menu,
-  MenuProps,
   message,
   Spin,
+  Avatar,
+  // Badge,
+  // Tooltip,
+  DropdownProps,
+  MenuProps,
 } from "antd";
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { Link, Outlet, useLocation,  } from "react-router-dom";
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  SettingOutlined,
+  UserOutlined,
+  LogoutOutlined
+} from "@ant-design/icons";
 import styles from "./styles.ts";
 import LogoIma from "@assets/image/png/logo-ima.png";
 import IconGarantia from "@assets/image/svg/icon_garantia.svg";
 import IconUser from "@assets/image/svg/user.svg";
 import IconInitial from "@assets/image/svg/initial.svg";
-import { FaCog, FaUser } from "react-icons/fa";
-import { PiBuildingApartment } from "react-icons/pi";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext.tsx";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum.ts";
 
@@ -81,34 +88,80 @@ const menuData: MenuItem[] = [
   },
 ];
 
+interface CustomDropdownProps extends DropdownProps {
+  menu: MenuProps;
+  children: React.ReactNode;
+  placement?: 'bottom' | 'top' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
+  trigger?: ('click' | 'hover' | 'contextMenu')[];
+}
+
+const DropdownWithRef = React.forwardRef<HTMLDivElement, CustomDropdownProps>(
+  ({ children, menu, placement = 'bottomRight', trigger = ['click'], ...restProps }, ref) => {
+    const [open, setOpen] = useState(false);
+
+    const handleOpenChange = (flag: boolean) => {
+      setOpen(flag);
+    };
+
+    const handleMenuClick: MenuProps['onClick'] = (e) => {
+      if (menu.onClick) {
+        menu.onClick(e);
+      }
+      setOpen(false);
+    };
+
+    return (
+      <div ref={ref} style={{ display: 'inline-block' }}>
+        <Dropdown
+          {...restProps}
+          menu={{
+            ...menu,
+            onClick: handleMenuClick,
+            style: {
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            },
+            items: menu.items?.map(item => ({
+              ...item,
+              style: {
+                padding: '8px 16px',
+                margin: 0,
+              },
+            }))
+          }}
+          trigger={trigger}
+          placement={placement}
+          open={open}
+          onOpenChange={handleOpenChange}
+          overlayClassName="custom-dropdown-overlay"
+        >
+          {React.cloneElement(children as React.ReactElement, {
+            onClick: (e: React.MouseEvent) => {
+              e.preventDefault();
+              setOpen(!open);
+            },
+            style: {
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              ...(children as React.ReactElement).props.style,
+              ...(open ? { color: '#FF0000', transform: 'rotate(45deg)' } : {})
+            }
+          })}
+        </Dropdown>
+      </div>
+    );
+  }
+);
+
 const LayoutPrivate: React.FC = () => {
   const [collapsed, setCollapsed] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string | undefined>(undefined);
   const location = useLocation();
+  // const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext) || {};
   const [loading, setLoading] = useState<boolean>(true);
-  const menuRef = React.useRef(null);
+  // const [setHasNotifications] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-
-  interface CustomDropdownProps extends DropdownProps {
-    menu: MenuProps;
-    children: React.ReactElement;
-  }
-  
-  // 2. Implemente o componente com forwardRef
-  const DropdownWithRef = React.forwardRef<HTMLDivElement, CustomDropdownProps>(
-    (props, ref) => {
-      const { children, menu, ...restProps } = props;
-      
-      return (
-        <div ref={ref}>
-          <Dropdown menu={menu} {...restProps}>
-            {children}
-          </Dropdown>
-        </div>
-      );
-    }
-  );
 
   useEffect(() => {
     try {
@@ -116,6 +169,9 @@ const LayoutPrivate: React.FC = () => {
         location.pathname.startsWith(item.path)
       );
       setSelectedKey(currentItem?.key);
+
+      // Simulação de verificação de notificações
+      // setHasNotifications(Math.random() > 0.5);
     } catch (error) {
       message.error(String(error));
     } finally {
@@ -133,16 +189,6 @@ const LayoutPrivate: React.FC = () => {
     if (logout) {
       logout();
     }
-  };
-
-  const menuProps: MenuProps = {
-    items: [
-      {
-        key: "logout",
-        label: "Logout",
-        onClick: handleLogout,
-      },
-    ],
   };
 
   if (loading || !user || !user.rule || !user.rule.name) {
@@ -172,7 +218,6 @@ const LayoutPrivate: React.FC = () => {
       item.allowedRoles.includes(user.rule.name as UserRoleEnum)
   );
 
-  // Converte o menu para o formato items do Ant Design
   const menuItems = filteredMenu.map((item) => ({
     key: item.key,
     label: (
@@ -211,7 +256,16 @@ const LayoutPrivate: React.FC = () => {
   }
 
   return (
-    <ConfigProvider>
+    <ConfigProvider
+      theme={{
+        components: {
+          Dropdown: {
+            borderRadiusLG: 8,
+            paddingBlock: 8,
+          },
+        },
+      }}
+    >
       <Layout style={styles.layout}>
         <Sider collapsed={collapsed} style={styles.sider} width={280}>
           <div style={styles.siderHeader(collapsed)}>
@@ -225,7 +279,6 @@ const LayoutPrivate: React.FC = () => {
             />
           </div>
           <Menu
-            ref={menuRef}
             style={{ backgroundColor: "#ffffff", overflowY: "auto" }}
             defaultSelectedKeys={["1"]}
             selectedKeys={selectedKey ? [selectedKey] : []}
@@ -255,7 +308,6 @@ const LayoutPrivate: React.FC = () => {
                 alignItems: "center",
                 gap: "1rem",
                 marginLeft: "auto",
-                fontSize: "1rem",
               }}
             >
               <div>
@@ -271,36 +323,57 @@ const LayoutPrivate: React.FC = () => {
                   }}
                 >
                   {user.rule.name === UserRoleEnum.Cliente ||
-                  user.rule.name === UserRoleEnum.Admin ? (
-                    <PiBuildingApartment
-                      style={{ color: "#FF0000", fontSize: "1.2rem" }}
+                    user.rule.name === UserRoleEnum.Admin ? (
+                    <Avatar
+                      icon={<UserOutlined />}
+                      style={{ backgroundColor: '#FF0000' }}
                     />
                   ) : (
-                    <FaUser style={{ color: "#FF0000", fontSize: "1.2rem" }} />
+                    <Avatar
+                      icon={<UserOutlined />}
+                      style={{ backgroundColor: '#FF0000' }}
+                    />
                   )}
                   <span style={{ fontWeight: "500" }}>
                     {user.rule.name === UserRoleEnum.Cliente ||
-                    user.rule.name === UserRoleEnum.Admin
+                      user.rule.name === UserRoleEnum.Admin
                       ? user.cnpj
                       : user.username}
                   </span>
                 </div>
               </div>
+
               <DropdownWithRef
                 ref={dropdownRef}
-                menu={menuProps}
-                trigger={["click"]}
+                menu={{
+                  items: [
+                 
+                    {
+                      key: 'logout',
+                      label: 'Sair',
+                      icon: <LogoutOutlined />,
+                      danger: true,
+                      onClick: handleLogout
+                    }
+                  ]
+                }}
+                trigger={['click', 'hover']}
               >
-                {/* Elemento único obrigatório */}
-                <div>
-                  <FaCog
-                    style={{
-                      color: "#5f5a56",
-                      fontSize: "18px",
-                      cursor: "pointer",
-                    }}
-                  />
-                </div>
+                {/* <Badge dot={hasNotifications}> */}
+                  {/* <Tooltip title="Configurações"> */}
+                    <SettingOutlined
+                      style={{
+                        fontSize: '20px',
+                        color: '#5f5a56',
+                        padding: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: '#f0f0f0',
+                        transition: 'all 0.3s',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  {/* </Tooltip> */}
+                {/* </Badge> */}
               </DropdownWithRef>
             </div>
           </Header>
