@@ -109,9 +109,7 @@ const InvoicePage = () => {
         >
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.RgiCode}>
-          RGI N° {location.state.cardData.rgi}
-        </span>
+        <span className={styles.RgiCode}>RGI N° {location.state.cardData.rgi}</span>
       </div>
 
       <div className={styles.headerContainer}>
@@ -162,14 +160,9 @@ const InvoicePage = () => {
         </Row>
       </Card>
 
-      {cardData?.notas.map((nota) => {
-        return (
-          <Title className={styles.titleNF} level={4}>
-            NF {nota?.rgi}
-          </Title>
-        );
-      })}
-
+      <Title className={styles.titleNF} level={4}>
+        NF {cardData?.rgi}
+      </Title>
       <Row gutter={16}>
         <Col span={12}>
           <OutlinedInputWithLabel
