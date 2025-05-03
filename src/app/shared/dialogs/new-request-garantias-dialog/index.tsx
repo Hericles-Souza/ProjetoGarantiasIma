@@ -219,6 +219,7 @@ const NewRequestGarantiasDialog: React.FC<{ onClose: () => void }> = ({
             data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
             createdAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
             updatedAt: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+            observacao: ""
           },
         ];
 

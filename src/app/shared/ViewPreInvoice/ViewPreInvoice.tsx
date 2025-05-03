@@ -161,7 +161,7 @@ const InvoicePage = () => {
       </Card>
 
       <Title className={styles.titleNF} level={4}>
-        NF {cardData?.rgi}
+        NF {cardData?.nf}
       </Title>
       <Row gutter={16}>
         <Col span={12}>
