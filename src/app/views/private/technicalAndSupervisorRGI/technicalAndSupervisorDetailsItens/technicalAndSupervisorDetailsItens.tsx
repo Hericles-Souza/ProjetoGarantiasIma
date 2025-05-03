@@ -75,7 +75,8 @@ const FileAttachment = React.memo(
         "image/gif": ".gif",
         "application/pdf": ".pdf",
         "application/msword": ".doc",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          ".docx",
         "application/zip": ".zip",
         "audio/mpeg": ".mp3",
         "video/mp4": ".mp4",
@@ -249,7 +250,10 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
         if (updatedCardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
           setIsAnalysisConcluded(false);
-        } else if (updatedCardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) {
+        } else if (
+          updatedCardData.codigoStatus ==
+          GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR
+        ) {
           setIsAnalysisConcluded(true);
         }
 
@@ -272,7 +276,23 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       [itemId]: !prev[itemId],
     }));
   };
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleInputChange = (itemId: string, field: string, value: any) => {
+    setNotaFiscal((prevNotaFiscal) => {
+      if (prevNotaFiscal) {
+        return {
+          ...prevNotaFiscal,
+          itens: prevNotaFiscal.itens.map((item) =>
+            item.id === itemId
+              ? field === "solicitarRessarcimento"
+                ? { ...item, solicitarRessarcimento: value }
+                : { ...item, [field]: value }
+              : item
+          ),
+        };
+      }
+    });
+  };
   const handleConfirm = async () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -324,14 +344,18 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         ItemId: item.id,
         conclusao: item.conclusao || "",
         status: item.status || GarantiasItemStatusEnum.NAO_ANALISADO,
-        codigoStatus: item.codigoStatus || GarantiasItemStatusEnum2.NAO_ANALISADO,
+        codigoStatus:
+          item.codigoStatus || GarantiasItemStatusEnum2.NAO_ANALISADO,
         tipoDefeitoOficial: item.tipoDefeitoOficial || "",
       };
 
       console.log("Dados enviados para o backend:", dataToSend);
 
       try {
-        const response = await api.put(`/garantias/analisetecnica/`, dataToSend);
+        const response = await api.put(
+          `/garantias/analisetecnica/`,
+          dataToSend
+        );
         if (response.status === 200) {
           message.success("Dados salvos com sucesso!");
         } else {
@@ -451,13 +475,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         isRessarcimento={false}
         itemId={notaFiscal?.id}
       />
-       {cardData.codigoStatus ===
+      {cardData.codigoStatus ===
         GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
         <>
           <FileAttachmentDevolucao
             label="Anexo da NF de devolução"
             backgroundColor="#f5f5f5"
-            garantiaId={cardData?.id || ""}
+            garantiaId={notaFiscal?.id || ""}
             recGarantia={cardData}
           />
           <div className={styles.TitleItens}>
@@ -467,7 +491,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
           </div>
         </>
       )}
-     
+
       {notaFiscal.itens.map((item) => (
         <div className={styles.containerInformacoes} key={item.id}>
           <CollapsibleSection
@@ -678,9 +702,9 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                         value: "Autorizado",
                         label: "Autorizar envio da NF de devolução",
                       },
-                      { value: "Improcedente", label: "Improcedente" },
+                      { value: "Não autorizado", label: "Improcedente" },
                     ]}
-                    value={envioAutorizado}
+                    value={item?.status}
                     onChange={(e) => {
                       item.status =
                         e.target.value === "Autorizado"
@@ -690,7 +714,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                         e.target.value === "Autorizado"
                           ? GarantiasItemStatusEnum2.AUTORIZADO
                           : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
-                      setEnvioAutorizado(e.target.value);
+                      handleInputChange(item.id, "statusItem", e.target.value);
                     }}
                   />
                 </div>

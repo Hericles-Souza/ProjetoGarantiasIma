@@ -3,7 +3,10 @@ import { Button, message, Spin } from "antd";
 import { FileOutlined, DeleteOutlined } from "@ant-design/icons";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import environment from "@env/environment";
-import { GarantiasModel, GarantiasStatusEnum2 } from "@shared/models/GarantiasModel";
+import {
+  GarantiasModel,
+  GarantiasStatusEnum2,
+} from "@shared/models/GarantiasModel";
 
 interface FileData {
   id: string;
@@ -17,7 +20,9 @@ interface FileAttachmentDevolucaoProps {
   recGarantia: GarantiasModel;
   initialFileData?: FileData;
   onFileSelect?: (file: File) => void;
-  onFileChange?: (fileData: { fileNameWithExtension: string; imagemUrl: string } | null) => void;
+  onFileChange?: (
+    fileData: { fileNameWithExtension: string; imagemUrl: string } | null
+  ) => void;
 }
 
 const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
@@ -29,9 +34,16 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
   onFileSelect,
   onFileChange,
 }) => {
-  const [fileData, setFileData] = useState<FileData | null>(initialFileData || null);
-  const [, setFileName] = useState<string | null>(initialFileData ? initialFileData.fileName : null);
-  const [recFile, setRecFile] = useState<{ fileNameWithExtension: string; imagemUrl: string }>({
+  const [fileData, setFileData] = useState<FileData | null>(
+    initialFileData || null
+  );
+  const [, setFileName] = useState<string | null>(
+    initialFileData ? initialFileData.fileName : null
+  );
+  const [recFile, setRecFile] = useState<{
+    fileNameWithExtension: string;
+    imagemUrl: string;
+  }>({
     fileNameWithExtension: "",
     imagemUrl: "",
   });
@@ -50,9 +62,13 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
         });
         if (response.ok) {
           const blob = await response.blob();
-          const fileNameWithExtension = `nfDev${getFileExtensionFromBlob(blob)}`;
+          const fileNameWithExtension = `nfDev${getFileExtensionFromBlob(
+            blob
+          )}`;
           const imagemUrl = URL.createObjectURL(blob);
           const newFileData = { fileNameWithExtension, imagemUrl };
+          console.log("newFileData: ", newFileData);
+          
           setRecFile(newFileData);
           setFileData({ id: garantiaId, fileName: fileNameWithExtension });
           setFileName(fileNameWithExtension);
@@ -72,7 +88,7 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
       }
     };
     if (garantiaId) fetchFile();
-  }, [garantiaId, authContext.user.token, onFileChange]);
+  }, [garantiaId, authContext.user.token]);
 
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
@@ -81,7 +97,8 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
       "image/gif": ".gif",
       "application/pdf": ".pdf",
       "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
@@ -104,7 +121,9 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     try {
       setLoading(true);
       const file = event.target.files?.[0];
@@ -115,14 +134,17 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
       formData.append("itemId", garantiaId);
       formData.append("field", "nfDev");
 
-      const response = await fetch(`${environment.apiUrl}/files/upload-private-file-item`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authContext.user.token}`,
-          accept: "*/*",
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `${environment.apiUrl}/files/upload-private-file-item`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${authContext.user.token}`,
+            accept: "*/*",
+          },
+          body: formData,
+        }
+      );
 
       if (response.ok) {
         const blob = new Blob([file], { type: file.type });
@@ -192,11 +214,14 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
   ].includes(recGarantia?.codigoStatus);
 
   const canRemoveAttachment = canUpload && (fileData || recFile.imagemUrl);
-  const canDownload = recFile.imagemUrl && [
-    GarantiasStatusEnum2.CONFIRMADO,
-    GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-    GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE,
-  ].includes(recGarantia?.codigoStatus);
+  const canDownload =
+    recFile.imagemUrl &&
+    [
+      GarantiasStatusEnum2.CONFIRMADO,
+      GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+      GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE,
+      GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO,
+    ].includes(recGarantia?.codigoStatus);
 
   return (
     <div
@@ -225,12 +250,15 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
           <Spin />
         ) : (
           <>
-            {recFile.fileNameWithExtension === "" && recFile.imagemUrl === "" && !canUpload && (
-              <label style={{ cursor: "default", opacity: 0.6 }}>
-                Nenhum arquivo enviado
-              </label>
-            )}
-            {(fileData || (recFile.fileNameWithExtension && recFile.imagemUrl)) && (
+            {recFile.fileNameWithExtension === "" &&
+              recFile.imagemUrl === "" &&
+              !canUpload && (
+                <label style={{ cursor: "default", opacity: 0.6 }}>
+                  Nenhum arquivo enviado
+                </label>
+              )}
+            {(fileData ||
+              (recFile.fileNameWithExtension && recFile.imagemUrl)) && (
               <span>
                 <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
                 {recFile.fileNameWithExtension}
@@ -244,36 +272,42 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
                 )}
               </span>
             )}
-            {recFile.fileNameWithExtension && canDownload && (
+            {recFile.fileNameWithExtension != "" && recFile.imagemUrl != ""  && canDownload && (
               <Button
-                style={{ height: "45px", borderRadius: "10px", fontSize: "16px" }}
+                style={{
+                  height: "45px",
+                  borderRadius: "10px",
+                  fontSize: "16px",
+                }}
                 onClick={handleDownloadFile}
               >
                 Baixar Arquivo
               </Button>
             )}
-            {recFile.fileNameWithExtension === "" && recFile.imagemUrl === "" && canUpload && (
-              <label
-                style={{
-                  cursor: "pointer",
-                  color: "#1890ff",
-                  padding: "10px 20px",
-                  backgroundColor: "#fff",
-                  border: "solid 0.5px #d9d9d9",
-                  borderRadius: "10px",
-                }}
-              >
-                <input
-                  type="file"
-                  style={{ display: "none" }}
-                  onChange={(e) => {
-                    handleFileChange(e);
-                    handleFileUpload(e);
+            {recFile.fileNameWithExtension === "" &&
+              recFile.imagemUrl === "" &&
+              canUpload && (
+                <label
+                  style={{
+                    cursor: "pointer",
+                    color: "#1890ff",
+                    padding: "10px 20px",
+                    backgroundColor: "#fff",
+                    border: "solid 0.5px #d9d9d9",
+                    borderRadius: "10px",
                   }}
-                />
-                Adicionar Anexo
-              </label>
-            )}
+                >
+                  <input
+                    type="file"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      handleFileChange(e);
+                      handleFileUpload(e);
+                    }}
+                  />
+                  Adicionar Anexo
+                </label>
+              )}
           </>
         )}
       </div>

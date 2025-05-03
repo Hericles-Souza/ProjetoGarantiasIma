@@ -722,12 +722,10 @@ const DetailsItensNF: React.FC = () => {
         usuarioAtualizacao: context.user.fullname,
         usuarioInsercao: context.user.fullname,
         telefone: context.user.phone,
-        codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
+        codigoStatus: garantia.codigoStatus,
         anexos: nfDevolucaoFile.fileNameWithExtension,
       };
-      await updateGarantiasHeaderByIdAsync(garantiaModel);
       message.success("NF de devolução salva com sucesso!");
-      setGarantia(garantiaModel);
       navigate(`/garantias/rgi/${garantia.id}`, {
         state: { garantiaData: garantiaModel, item: garantia?.nf },
       });

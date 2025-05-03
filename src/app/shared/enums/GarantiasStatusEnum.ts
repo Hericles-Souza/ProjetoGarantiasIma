@@ -6,7 +6,8 @@ export enum GarantiasStatusEnum {
   AGUARDANDO_VALIDACAO_NF_DEVOLUCAO = 'Aguardando Validação de NF de Devolução',
   NF_DEVOLUCAO_RECUSADA = 'NF de Devolução Recusada',
   CONFIRMADO = 'Confirmado',
-  EM_ANALISE_SUPERVISOR = "Em Análise Supervisor"
+  EM_ANALISE_SUPERVISOR = "Em Análise Supervisor",
+  RECUSADA = "Recusada"
 }
 
 export enum GarantiasStatusEnum2 {
@@ -17,7 +18,8 @@ export enum GarantiasStatusEnum2 {
   AGUARDANDO_VALIDACAO_NF_DEVOLUCAO = 5,
   NF_DEVOLUCAO_RECUSADA = 6,
   CONFIRMADO = 7,
-  EM_ANALISE_SUPERVISOR = 8
+  EM_ANALISE_SUPERVISOR = 8,
+  RECUSADA = 9
 }
 
 export enum GarantiasItemStatusEnum {
@@ -43,6 +45,7 @@ export function converterStatusGarantia(status: GarantiasStatusEnum2): Garantias
     [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA,
     [GarantiasStatusEnum2.CONFIRMADO]: GarantiasStatusEnum.CONFIRMADO,
     [GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR]: GarantiasStatusEnum.EM_ANALISE_SUPERVISOR,
+    [GarantiasStatusEnum2.RECUSADA]: GarantiasStatusEnum.RECUSADA,
 
   };
 
@@ -70,6 +73,7 @@ export function converterStatusGarantiaTecnicoAndSupervisor(status: GarantiasSta
     [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA,
     [GarantiasStatusEnum2.CONFIRMADO]: GarantiasStatusEnum.CONFIRMADO,
     [GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR]: GarantiasStatusEnum.EM_ANALISE_SUPERVISOR,
+    [GarantiasStatusEnum2.RECUSADA]: GarantiasStatusEnum.RECUSADA,
 
   };
 
@@ -86,6 +90,7 @@ export function converterStatusGarantiaInverso(status: GarantiasStatusEnum): Gar
     [GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA]: GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA,
     [GarantiasStatusEnum.CONFIRMADO]: GarantiasStatusEnum2.CONFIRMADO,
     [GarantiasStatusEnum.EM_ANALISE_SUPERVISOR]: GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR,
+    [GarantiasStatusEnum.RECUSADA]: GarantiasStatusEnum2.RECUSADA,
   };
 
   return mapping[status];
@@ -102,6 +107,7 @@ export function converterStringParaStatusGarantia(status: string): GarantiasStat
     'NF de Devolução Recusada': GarantiasStatusEnum.NF_DEVOLUCAO_RECUSADA,
     'Confirmado': GarantiasStatusEnum.CONFIRMADO,
     'Em Análise Supervisor': GarantiasStatusEnum.EM_ANALISE_SUPERVISOR,
+    'Recusada': GarantiasStatusEnum.RECUSADA,
   };
 
   return mapping[status] || undefined;
@@ -116,6 +122,7 @@ export const StatusColors = {
   [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: "#FF4D4F", 
   [GarantiasStatusEnum2.CONFIRMADO]: "#52C41A", 
   [GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR]: "#1890FF", 
+  [GarantiasStatusEnum2.RECUSADA]: "#FF4D4F", 
 } as const;
 
 export const statusStylesRGI = {
@@ -150,5 +157,9 @@ export const statusStylesRGI = {
   [GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR]: {
     backgroundColor: '#B3E5FC',
     color: '#0277BD',
+  },
+  [GarantiasStatusEnum2.RECUSADA]: {
+    backgroundColor: '#FF4D4F',
+    color: '#4A3216',
   },
 };

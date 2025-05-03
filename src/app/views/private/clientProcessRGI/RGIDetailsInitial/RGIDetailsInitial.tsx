@@ -903,31 +903,6 @@ const RGIDetailsInitial: React.FC = () => {
                     onClick={() => showDeleteConfirm(nota.codigo)}
                   />
                 )}
-              {cardData?.codigoStatus ===
-                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-                context.user.rule.name === UserRoleEnum.Cliente &&
-                !isUndefined(nota.recSellFile) && (
-                  <label className={styles.buttonUpdateNfSale}>
-                    <button
-                      style={{ display: "none" }}
-                      onClick={() => handleDownloadFile(nota)}
-                    />
-                    Baixar Arquivo
-                  </label>
-                )}
-              {cardData?.codigoStatus ===
-                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
-                context.user.rule.name === UserRoleEnum.Cliente &&
-                isUndefined(nota.recSellFile) && (
-                  <label className={styles.buttonUpdateNfSale}>
-                    <input
-                      type="file"
-                      style={{ display: "none" }}
-                      onChange={(e) => handleFileUpload(e, nota.id, nota)}
-                    />
-                    Adicionar Anexo
-                  </label>
-                )}
               <Button
                 type="text"
                 className={styles.nextButton}

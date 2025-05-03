@@ -9,6 +9,7 @@ updatedAt?: string;
 codigo: string;
 codigoRGI: string;
 rgi?: string;
+observacao: string;
 tipo_nota: string;
 data_emissao: string;
 id_referencia: string;

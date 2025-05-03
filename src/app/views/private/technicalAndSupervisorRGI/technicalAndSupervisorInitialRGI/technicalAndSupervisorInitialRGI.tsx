@@ -9,6 +9,7 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import {
   converterStatusGarantia,
+  GarantiasItemStatusEnum,
   GarantiasItemStatusEnum2,
   GarantiasStatusEnum,
   GarantiasStatusEnum2,
@@ -210,7 +211,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
       data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       itens: notaFiscal.itens,
       id: notaFiscal.id,
-      conclusao: "", // No conclusion for approval
+      observacao: ""
     };
 
     console.log("notaFiscalUpdate: ", payloadNotaFiscal);
@@ -230,7 +231,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
     const notaFiscal = { ...currentNota };
     notaFiscal.tipo_nota = "Recusada";
-    notaFiscal.conclusao = conclusion; // Add the conclusion to the payload
+    // notaFiscal.conclusao = conclusion; // Add the conclusion to the payload
 
     const payloadNotaFiscal: NotaFiscal = {
       garantiaId: notaFiscal.garantia_id,
@@ -242,7 +243,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
       data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       itens: notaFiscal.itens,
       id: notaFiscal.id,
-      conclusao: conclusion, // Include the conclusion
+      observacao: conclusion
     };
 
     console.log("notaFiscalUpdate (Refused): ", payloadNotaFiscal);
@@ -274,26 +275,22 @@ const TechnicalAndSupervisorInitialRGI = () => {
     const seconds = String(now.getSeconds()).padStart(2, "0");
     const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
+    const statusGarantia = garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
+    .length > 0
+    ? GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+    : GarantiasStatusEnum2.CONFIRMADO;
+
     const garantia: GarantiasModel = {
       razaoSocial: location.state.garantia.razaoSocial,
       telefone: location.state.garantia.telefone,
       email: context.user.email,
       nf:
-        garantiaNfsWithItens.filter((nota) => nota.tipo_nota == "Aprovada")[0]
-          .codigo || garantiaNfsWithItens[0].codigo,
+        garantiaNfsWithItens?.filter((nota) => nota.tipo_nota == "Aprovada")[0]?.codigo || garantiaNfsWithItens[0].codigo,
       fornecedor: context.user.fullname,
-      codigoStatus:
-        garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
-          .length > 0
-          ? GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
-          : GarantiasStatusEnum2.CONFIRMADO,
+      codigoStatus: statusGarantia,
       observacao: "teste",
       usuarioAtualizacao: context.user.username,
-      status:
-        garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
-          .length > 0
-          ? GarantiasStatusEnum.PECAS_AVALIADAS_PARCIAMENTE
-          : GarantiasStatusEnum.CONFIRMADO,
+      status: converterStatusGarantia(statusGarantia),
       dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
     };
 
@@ -306,13 +303,20 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
     if (responseHeader.status === 200) {
       message.success("Garantia atualizada com sucesso");
+      navigate("/garantias");
     }
   };
 
   const handleSaveTec = async () => {
     try {
       if (context.user.rule.name === UserRoleEnum.Tecnico) {
-        const statusGarantia = GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR;
+        let statusGarantia; 
+        if(garantiaNfsWithItens?.some((nota) => nota.itens.some((item) => item.status != GarantiasItemStatusEnum.NAO_AUTORIZADO))){
+          statusGarantia = GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR;
+        }
+        else{
+          statusGarantia = GarantiasStatusEnum2.RECUSADA;
+        }
         const garantia: GarantiasModel = {
           razaoSocial: razaoSocial,
           telefone: telefone,
@@ -391,6 +395,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
         );
 
         if (responseHeader.status === 200) {
+
           message.success("Garantia atualizada com sucesso!");
           navigate("/garantias");
         }
