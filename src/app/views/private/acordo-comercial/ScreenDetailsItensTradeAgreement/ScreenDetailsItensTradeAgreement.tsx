@@ -270,20 +270,27 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           )}
         {recFile?.fileNameWithExtension &&
           recFile?.imagemUrl &&
-          item.codigoStatus !== AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
+          item.codigoStatus !==
+            AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
             <div className={styles.fileActions}>
               <span className={styles.fileName}>
-                <FileOutlined style={{ color: "red", marginRight: "5px", marginLeft: "5px" }} />
-                {recFile.fileNameWithExtension}
-              {canRemoveAttachment && (
-                <Button
-                  type="link"
-                  onClick={handleRemoveFile}
-                  className={styles.deleteButton}
-                  icon={<DeleteOutlined />}
-                  title="Remover arquivo"
+                <FileOutlined
+                  style={{
+                    color: "red",
+                    marginRight: "5px",
+                    marginLeft: "5px",
+                  }}
                 />
-              )}
+                {recFile.fileNameWithExtension}
+                {canRemoveAttachment && (
+                  <Button
+                    type="link"
+                    onClick={handleRemoveFile}
+                    className={styles.deleteButton}
+                    icon={<DeleteOutlined />}
+                    title="Remover arquivo"
+                  />
+                )}
               </span>
               <Button
                 type="link"
@@ -322,7 +329,8 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         {recFile?.fileNameWithExtension === "" &&
           recFile?.imagemUrl === "" &&
           (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-            item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
+            item.codigoStatus ===
+              AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
           context.user.rule.name !== UserRoleEnum.Supervisor && (
             <label className={styles.buttonUpdateNfSale}>
               <input
@@ -432,11 +440,8 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       if (prevNotaFiscal) {
         return {
           ...prevNotaFiscal,
-          itens: prevNotaFiscal.itens.map(
-            (item) =>
-              item.id === itemId
-                ? { ...item, [field]: value }
-                : item
+          itens: prevNotaFiscal.itens.map((item) =>
+            item.id === itemId ? { ...item, [field]: value } : item
           ),
         };
       }
@@ -449,7 +454,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       const recAcordoResponse = (await response.data
         .data) as AcordoComercialModel;
       const itensFiltrados = recAcordoResponse.itens.filter((item) => {
-        const [itemBase, ] = item.codigoItem.split(".");
+        const [itemBase] = item.codigoItem.split(".");
         const [nfBase, nfLetra] = nfParam.split(".");
 
         const matchesBase = itemBase === nfBase;
@@ -593,7 +598,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       ICMSSubstituicao: 0,
       itens: recAcordo.itens,
     };
-    
+
     await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
   };
 
@@ -652,13 +657,24 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         {context.user.rule.name === UserRoleEnum.Cliente &&
           acordo?.itens.some(
             (item) =>
-              item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-              (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
-               acordo.codigoStatus === AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA)
+              item.codigoStatus ===
+                AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+              (item.codigoStatus ===
+                AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
+                acordo.codigoStatus ===
+                  AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA)
           ) &&
           acordo?.codigoStatus !== AcordoComercialStatusEnum2.CONFIRMADA && (
             <div className={styles.botoesCabecalho}>
-              <Button type="default" className={styles.ButtonDelete}>
+              <Button
+                type="default"
+                className={styles.ButtonDelete}
+                onClick={() =>
+                  navigate("/view-pre-invoice", {
+                    state: { acordo },
+                  })
+                }
+              >
                 Visualizar Pré-Nota
               </Button>
               <Button
@@ -680,7 +696,8 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         </h3>
         {context.user.rule.name === UserRoleEnum.Cliente &&
           acordo?.itens.some(
-            (item) => item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO
+            (item) =>
+              item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO
           ) && (
             <Button
               className={styles.buttonRed}

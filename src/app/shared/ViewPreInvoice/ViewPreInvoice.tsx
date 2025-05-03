@@ -5,6 +5,7 @@ import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate } from "react-router-dom";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
 
 const { Title } = Typography;
 
@@ -25,6 +26,7 @@ const InvoicePage = () => {
   });
 
   const [data, setData] = useState([]);
+  const [cardData, setCardData] = useState<GarantiasModel>();
 
   const columns = [
     { title: "CÓDIGO", dataIndex: "codigo", key: "codigo" },
@@ -44,6 +46,7 @@ const InvoicePage = () => {
     try {
       if (location.state) {
         console.log("garantia: " + location.state.cardData);
+        setCardData(location.state.cardData);
         const response = await api.get("/pedidos/pedidos"); // Coloque a URL da sua API aqui
         const apiData = await response.data.data;
         console.log("pedidos: " + JSON.stringify(apiData));
@@ -62,8 +65,8 @@ const InvoicePage = () => {
         });
 
         // Preenchendo a tabela com os dados dos pedidos
-        const tableData = apiData.data.garantiaPedidos.map((item) => ({
-          key: item.cdPedido,
+        const tableData = apiData?.map((item, index) => ({
+          key: index,
           codigo: item.cdMaterial,
           vlUnitario: `R$ ${item.precoUnitario}`,
           quantidade: item.quantidade,
@@ -90,7 +93,7 @@ const InvoicePage = () => {
   }, [data]);
 
   return (
-    <div style={{ padding: 24, backgroundColor: "#fff" }}>
+    <div className={styles.Container}>
       <div className={styles.ContainerButtonBack}>
         <Button
           type="link"
@@ -106,17 +109,17 @@ const InvoicePage = () => {
         >
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.RgiCode}>RGI N° 000666-0001</span>
+        <span className={styles.RgiCode}>
+          RGI N° {location.state.cardData.rgi}
+        </span>
       </div>
 
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.rgiTitle}>RGI 000666-0001</h1>
+          <h1 className={styles.rgiTitle}>RGI {location.state.cardData.rgi}</h1>
           <div className={styles.statusTag}>Aguardando avaliação</div>
         </div>
       </div>
-
-      {data}
       <Card style={{ backgroundColor: "#f5f5f5", borderRadius: "10px" }}>
         <Row
           gutter={16}
@@ -159,9 +162,14 @@ const InvoicePage = () => {
         </Row>
       </Card>
 
-      <Title className={styles.titleNF} level={4}>
-        NF 0006-00010.A
-      </Title>
+      {cardData?.notas.map((nota) => {
+        return (
+          <Title className={styles.titleNF} level={4}>
+            NF {nota?.rgi}
+          </Title>
+        );
+      })}
+
       <Row gutter={16}>
         <Col span={12}>
           <OutlinedInputWithLabel

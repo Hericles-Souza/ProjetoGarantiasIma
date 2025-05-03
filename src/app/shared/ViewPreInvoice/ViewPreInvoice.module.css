@@ -1,4 +1,10 @@
 
+.Container {
+    padding: 24;
+    background-color: "#fff";
+    overflow-y: auto; /* Permite scroll vertical */
+
+}
 .ContainerButtonBack {
     display: flex;
     justify-content: space-between;
