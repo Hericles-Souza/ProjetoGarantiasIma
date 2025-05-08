@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { Table, Typography, Row, Col, Card, Button } from "antd";
+import { useEffect, useState } from "react";
+import { Table, Typography, Row, Col, Card, Button, message } from "antd";
 import styles from "./ViewPreInvoice.module.css";
 import { LeftOutlined } from "@ant-design/icons";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import api from "@shared/Interceptors";
 import { useLocation, useNavigate } from "react-router-dom";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
+import { FormPedidoModel, PedidoModel } from "@shared/models/PedidosModel";
+import { NotaFiscal } from "@shared/models/NotaFiscalModel";
+import { GarantiasItemStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 
 const { Title } = Typography;
 
 const InvoicePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormPedidoModel>({
     baseICMS: "1000,00",
     valorICMS: "180,00",
     baseICMSSubstituicao: "1200,00",
@@ -25,7 +28,7 @@ const InvoicePage = () => {
     dataNFOrigem: "",
   });
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<PedidoModel[]>([]);
   const [cardData, setCardData] = useState<GarantiasModel>();
 
   const columns = [
@@ -45,43 +48,90 @@ const InvoicePage = () => {
   const fetchData = async () => {
     try {
       if (location.state) {
+
         console.log("garantia: " + location.state.cardData);
         setCardData(location.state.cardData);
-        const response = await api.get("/pedidos/pedidos"); // Coloque a URL da sua API aqui
-        const apiData = await response.data.data;
-        console.log("pedidos: " + JSON.stringify(apiData));
-        // Preenchendo o formData com os dados da API
-        setFormData({
-          baseICMS: apiData.baseICMS,
-          valorICMS: apiData.valorICMS,
-          baseICMSSubstituicao: apiData.baseICMSSubstituicao,
-          valorICMSSubstituicao: apiData.valorICMSSubstituicao,
-          valorProdutos: apiData.valorProdutos,
-          valorIPI: apiData.valorIPI,
-          valorNota: apiData.valorNota,
-          aliquotaInterna: apiData.aliquotaInterna,
-          numeroNFOrigem: apiData.numeroNFOrigem,
-          dataNFOrigem: apiData.dataNFOrigem,
-        });
+        const response = await api.get(`/pedidos/pedidos/cliente?cdCliente=000103&page=1&limit=10`); // Coloque a URL da sua API aqui
+        const apiData = await response.data.data.data as PedidoModel[];
+        console.log("pedidos: " , apiData);
+        const responseGetItens = await api.get(
+          `/nota-fiscal/by-garantia/${cardData.id}`
+        );
+        const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
+        
+        const notaFiscalOrigem = notasFiscaisAPI.find((notaFiscal) => notaFiscal.codigo === cardData.nf);
 
-        // Preenchendo a tabela com os dados dos pedidos
-        const tableData = apiData?.map((item, index) => ({
-          key: index,
-          codigo: item.cdMaterial,
-          vlUnitario: `R$ ${item.precoUnitario}`,
-          quantidade: item.quantidade,
-          vlTotal: `R$ ${item.valorTotalItem}`,
-          bcICMS: item.baseICMS,
-          vlICMS: item.valorICMS,
-          vlIPI: item.valorIPI,
-          icms: item.cdTipoOperacao === "ICMS" ? "18%" : "0%", // Exemplo de como você pode formatar o valor
-          ipi: "18%", // Isso pode ser dinâmico também
-          mva: "0%", // Isso pode ser dinâmico
-          bcST: item.baseISS,
-          vlST: item.valorISS,
-        }));
+        if(notaFiscalOrigem == undefined){
+          setFormData({
+            baseICMS: "Não encontrado",
+            valorICMS: "Não encontrado",
+            baseICMSSubstituicao: "Não encontrado",
+            valorICMSSubstituicao: "Não encontrado",
+            valorProdutos: "Não encontrado",
+            valorIPI: "Não encontrado",
+            valorNota: "Não encontrado",
+            aliquotaInterna: "Não encontrado",
+            numeroNFOrigem: "Não encontrado",
+            dataNFOrigem: "Não encontrado",
+          })
+          message.error("Nota Fiscal não encontrada!");
 
-        setData(tableData);
+        }
+        else{
+          
+          const itensAutorized = notaFiscalOrigem.itens.filter((item) => item.codigoStatus === GarantiasItemStatusEnum2.AUTORIZADO);
+          const codigosAutorizados = new Set<string>(
+            itensAutorized
+              .map(item => item.codigoPeca)
+              .filter((codigo): codigo is string => !!codigo) // Garante que é string e não undefined/null
+          );
+          const todosCodigos = new Set<string>(
+            itensAutorized
+              .map(item => item.codigoPeca) // Garante que é string e não undefined/null
+          );
+          console.log("itensAutorized: " , itensAutorized);
+  
+          // Preenchendo o formData com os dados da API
+          setFormData({
+            baseICMS: "1000,00",
+            valorICMS: "180,00",
+            baseICMSSubstituicao: "1200,00",
+            valorICMSSubstituicao: "216,00",
+            valorProdutos: apiData?.filter(item => codigosAutorizados.has(item.cdMaterial)).reduce((acc, pedido) => {
+              const valor = Number(pedido.prUnitario);
+              return acc + (isNaN(valor) ? 0 : valor);
+            }, 0).toString(),
+            valorIPI: "250,00",
+            valorNota: apiData?.filter(item => todosCodigos.has(item.cdMaterial)).reduce((acc, pedido) => acc + pedido.prUnitario, 0).toString(),
+            aliquotaInterna: "18%",
+            numeroNFOrigem: "",
+            dataNFOrigem: "",
+          });
+  
+          // Preenchendo a tabela com os dados dos pedidos
+          const tableData = apiData?.filter(item => codigosAutorizados.has(item.cdMaterial)).map((item, index) => ({
+            key: index,
+            codigo: item.cdMaterial,
+            vlUnitario: `R$ ${item.vlTotalItemL}`,
+            quantidade: item.quantidade,
+            vlTotal: `R$ ${apiData.filter(item => codigosAutorizados.has(item.cdMaterial)).reduce((acc, pedido) => acc + pedido.vlTotalItemL, 0).toString()}`,
+            bcICMS: item.baseICMS,
+            vlICMS: item.valorICMS,
+            vlIPI: item.valorIPI,
+            icms: "180,00", // Exemplo de como você pode formatar o valor
+            ipi: "18%", // Isso pode ser dinâmico também
+            mva: "0%", // Isso pode ser dinâmico
+            bcST: item.baseISS,
+            vlST: item.valorISS,
+          })) as unknown as PedidoModel[];
+  
+          setData(tableData);
+          console.log("formData: " , formData);
+          console.log("data: " , tableData);
+        }
+
+
+
       }
     } catch (error) {
       console.error("Erro ao carregar dados da API:", error);
@@ -90,7 +140,7 @@ const InvoicePage = () => {
 
   useEffect(() => {
     fetchData();
-  }, [data]);
+  }, [location.state]);
 
   return (
     <div className={styles.Container}>
