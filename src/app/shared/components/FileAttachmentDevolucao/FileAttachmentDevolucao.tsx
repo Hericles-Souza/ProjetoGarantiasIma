@@ -179,24 +179,10 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
 
   const handleRemoveFile = async () => {
     try {
-      setLoading(true);
-      const endpoint = `${environment.apiUrl}/files/delete-private-file-item/${garantiaId}/nfDev`;
-      const response = await fetch(endpoint, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${authContext.user.token}`,
-        },
-      });
-
-      if (response.ok) {
         setFileData(null);
         setFileName(null);
         setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
         onFileChange?.(null);
-        message.success("Arquivo removido com sucesso!");
-      } else {
-        message.error("Erro ao remover o arquivo.");
-      }
     } catch (error) {
       console.error("Erro ao remover o arquivo:", error);
       message.error("Erro ao remover o arquivo.");

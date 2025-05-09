@@ -232,6 +232,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   const handleRemoveFile = () => {
     setFileData(null);
     setFileName(null);
+    setRecFile({fileNameWithExtension: "", imagemUrl: ""});
   };
 
   const canRemoveAttachment =

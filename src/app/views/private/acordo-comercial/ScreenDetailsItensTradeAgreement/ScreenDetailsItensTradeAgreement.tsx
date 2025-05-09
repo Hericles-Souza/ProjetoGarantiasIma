@@ -177,20 +177,9 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
 
   const handleRemoveFile = async () => {
     try {
-      const endpoint = `${environment.apiUrl}/files/files/delete-private-file-item/${item.id}/nfDev`;
-      const response = await fetch(endpoint, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${context.user.token}`,
-        },
-      });
 
-      if (response.ok) {
-        setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
-        message.success("Arquivo deletado com sucesso!");
-      } else {
-        message.error("Erro ao deletar arquivo.");
-      }
+      setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
+
     } catch (error) {
       console.log("Erro ao deletar arquivo: ", error);
       message.error("Ocorreu um erro ao deletar o arquivo.");
@@ -271,7 +260,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         {recFile?.fileNameWithExtension &&
           recFile?.imagemUrl &&
           item.codigoStatus !==
-            AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
+          AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
             <div className={styles.fileActions}>
               <span className={styles.fileName}>
                 <FileOutlined
@@ -304,7 +293,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         {recFile?.fileNameWithExtension &&
           recFile?.imagemUrl &&
           acordo?.codigoStatus ===
-            AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+          AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
           item.codigoStatus !== AcordoComercialItemStatusEnum2.AUTORIZADO &&
           context.user.rule.name === UserRoleEnum.Supervisor && (
             <div className="ButtonHeader">
@@ -330,7 +319,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           recFile?.imagemUrl === "" &&
           (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
             item.codigoStatus ===
-              AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
+            AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
           context.user.rule.name !== UserRoleEnum.Supervisor && (
             <label className={styles.buttonUpdateNfSale}>
               <input
@@ -346,7 +335,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
           context.user.rule.name !== UserRoleEnum.Supervisor &&
           acordo?.codigoStatus ===
-            AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && (
+          AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && (
             <label className={styles.buttonUpdateNfSale}>
               <input
                 type="file"
@@ -524,10 +513,10 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
               itens: prev.itens.map((prevItem) =>
                 prevItem.id === item.id
                   ? {
-                      ...prevItem,
-                      codigoPeca: item.codigoPeca,
-                      quantidade: item.quantidade,
-                    }
+                    ...prevItem,
+                    codigoPeca: item.codigoPeca,
+                    quantidade: item.quantidade,
+                  }
                   : prevItem
               ),
               updatedAt: new Date().toISOString(),
@@ -658,11 +647,11 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           acordo?.itens.some(
             (item) =>
               item.codigoStatus ===
-                AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+              AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
               (item.codigoStatus ===
                 AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
                 acordo.codigoStatus ===
-                  AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA)
+                AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA)
           ) &&
           acordo?.codigoStatus !== AcordoComercialStatusEnum2.CONFIRMADA && (
             <div className={styles.botoesCabecalho}>
@@ -740,7 +729,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                     }}
                     disabled={
                       item?.codigoStatus !==
-                        AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+                      AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
                       context.user.rule.name === UserRoleEnum.Supervisor
                     }
                   />
@@ -756,7 +745,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                     }}
                     disabled={
                       item?.codigoStatus !==
-                        AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+                      AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
                       context.user.rule.name === UserRoleEnum.Supervisor
                     }
                   />
