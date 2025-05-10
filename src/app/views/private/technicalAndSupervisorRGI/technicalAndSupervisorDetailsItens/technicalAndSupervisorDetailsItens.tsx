@@ -329,17 +329,18 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const handleSave = async () => {
     if (!cardData?.notas) return;
 
-    const hasInvalidDefect = notaFiscal?.itens?.some(
-      (item) =>
-        item.codigoItem?.split(".")[1] === recRgiLetter && !item.tipoDefeito
-    );
-
-    if (hasInvalidDefect) {
-      message.error("Selecione um defeito antes de salvar.");
-      return;
-    }
-
     const promises = notaFiscal?.itens?.map(async (item) => {
+      if (item.status == "Não autorizado") {
+        if (item.conclusao == null || item.tipoDefeitoOficial == null) {
+          message.error(
+            "Item " +
+              item.codigoItem +
+              " precisa ter os campos Conclusao e Defeito!"
+          );
+          return;
+        }
+      }
+
       const dataToSend = {
         ItemId: item.id,
         conclusao: item.conclusao || "",
@@ -714,6 +715,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                         e.target.value === "Autorizado"
                           ? GarantiasItemStatusEnum2.AUTORIZADO
                           : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
+
+                      console.log("SATS: ", item.status);
                       handleInputChange(item.id, "statusItem", e.target.value);
                     }}
                   />
