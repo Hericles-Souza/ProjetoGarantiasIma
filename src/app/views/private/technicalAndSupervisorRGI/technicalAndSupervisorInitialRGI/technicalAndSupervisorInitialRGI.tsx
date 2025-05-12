@@ -40,13 +40,13 @@ const TechnicalAndSupervisorInitialRGI = () => {
   >(
     nfOrigem
       ? [
-          {
-            itemId: location.state.item.id,
-            nf: nfOrigem,
-            itens: 0,
-            sequence: 0,
-          },
-        ]
+        {
+          itemId: location.state.item.id,
+          nf: nfOrigem,
+          itens: 0,
+          sequence: 0,
+        },
+      ]
       : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
@@ -144,7 +144,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
       if (
         cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
         cardData.codigoStatus ==
-          GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+        GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
       ) {
         setIsAnalysisConcluded(true);
       } else if (cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
@@ -183,7 +183,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
         } else if (
           cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
           cardData.codigoStatus ==
-            GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+          GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
         ) {
           setIsAnalysisConcluded(true);
         }
@@ -270,7 +270,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
     setCurrentNota(null);
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (envio: boolean) => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -280,12 +280,22 @@ const TechnicalAndSupervisorInitialRGI = () => {
     const seconds = String(now.getSeconds()).padStart(2, "0");
     const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
-    const statusGarantia =
-      garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
+    let statusGarantia: GarantiasStatusEnum2;
+
+    if (envio) {
+      statusGarantia = garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
         .length == garantiaNfsWithItens.length
         ? GarantiasStatusEnum2.RECUSADA
-        : garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
-        .length > 0 ?  GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE : GarantiasStatusEnum2.CONFIRMADO  
+        : GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO;
+    }
+    else {
+      statusGarantia = garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
+        .length > 0
+        ? GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+        : GarantiasStatusEnum2.CONFIRMADO;
+
+    }
+
 
     const garantia: GarantiasModel = {
       razaoSocial: location.state.garantia.razaoSocial,
@@ -485,11 +495,16 @@ const TechnicalAndSupervisorInitialRGI = () => {
             (cardData.codigoStatus ==
               GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
               cardData.codigoStatus ==
-                GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+              GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
               || cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) && (
               <div className="ButtonHeader">
                 <Button
-                  onClick={async () => handleConfirm()}
+                  onClick={async () => {
+                    if (cardData.codigoStatus != GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO)
+                      handleConfirm(true)
+                    else
+                      handleConfirm(false)
+                  }}
                   type="primary"
                   className="ButonToSend"
                 >
@@ -549,38 +564,37 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   {nota.itens.length} ITENS
                 </span>
               </div>
-              <div
-                style={{
-                  color:
-                    StatusColors[
-                      nota.tipo_nota == "Recusada"
-                        ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                        : nota.tipo_nota == "Aprovada"
-                        ? GarantiasStatusEnum2.CONFIRMADO
-                        : "#8C8C8C"
-                    ],
-                  backgroundColor: `${
-                    StatusColors[
-                      nota.tipo_nota == "Recusada"
-                        ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                        : nota.tipo_nota == "Aprovada"
-                        ? GarantiasStatusEnum2.CONFIRMADO
-                        : "#8C8C8C"
-                    ]
-                  }15`,
-                }}
-                className={stylesDetails.statusTag}
-              ></div>
             </div>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {context.user.rule.name === UserRoleEnum.Supervisor &&
                 cardData.codigoStatus ===
-                  GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+                GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
                 nota.recSellFile?.fileNameWithExtension != "" &&
                 nota.recSellFile?.imagemUrl != "" &&
                 !nota.tipo_nota.includes("Aprovada") &&
                 !nota.tipo_nota.includes("Recusada") && (
                   <>
+                    <div
+                      style={{
+                        color:
+                          StatusColors[
+                          nota.tipo_nota == "Recusada"
+                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                            : nota.tipo_nota == "Aprovada"
+                              ? GarantiasStatusEnum2.CONFIRMADO
+                              : "#8C8C8C"
+                          ],
+                        backgroundColor: `${StatusColors[
+                          nota.tipo_nota == "Recusada"
+                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                            : nota.tipo_nota == "Aprovada"
+                              ? GarantiasStatusEnum2.CONFIRMADO
+                              : "#8C8C8C"
+                        ]
+                          }15`,
+                      }}
+                      className={stylesDetails.statusTag}
+                    ></div>
                     <button
                       className={stylesDetails.buttonUpdate}
                       onClick={() => handleDownloadFile(nota)}
@@ -611,8 +625,31 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 (cardData.codigoStatus ==
                   GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
                   cardData.codigoStatus ==
-                    GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
+                  GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
+                !nota.tipo_nota.includes("Aprovada") &&
+                !nota.tipo_nota.includes("Recusada") && (
                   <>
+                    <div
+                      style={{
+                        color:
+                          StatusColors[
+                          nota.tipo_nota == "Recusada"
+                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                            : nota.tipo_nota == "Aprovada"
+                              ? GarantiasStatusEnum2.CONFIRMADO
+                              : "#8C8C8C"
+                          ],
+                        backgroundColor: `${StatusColors[
+                          nota.tipo_nota == "Recusada"
+                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                            : nota.tipo_nota == "Aprovada"
+                              ? GarantiasStatusEnum2.CONFIRMADO
+                              : "#8C8C8C"
+                        ]
+                          }15`,
+                      }}
+                      className={stylesDetails.statusTag}
+                    ></div>
                     <div className="ButtonHeader">
                       <div style={{ display: "flex", gap: "10px" }}>
                         <Button
