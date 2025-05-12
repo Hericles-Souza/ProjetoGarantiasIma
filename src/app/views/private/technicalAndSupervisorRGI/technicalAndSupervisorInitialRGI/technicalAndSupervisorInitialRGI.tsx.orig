@@ -588,7 +588,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   }15`,
               }}
               className={stylesDetails.statusTag}
-            >{nota.tipo_nota == "nota fiscal de origem" ? "" : nota.tipo_nota}</div>
+<<<<<<< HEAD
+            ></div>
+=======
+            >{nota.tipo_nota}</div>
+>>>>>>> 5c6a7af (feat: adjustmetnrsr)
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {context.user.rule.name === UserRoleEnum.Supervisor &&
                 cardData.codigoStatus ===
