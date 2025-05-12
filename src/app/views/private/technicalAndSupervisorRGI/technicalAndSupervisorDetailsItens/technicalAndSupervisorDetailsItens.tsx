@@ -334,8 +334,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         if (item.conclusao == null || item.tipoDefeitoOficial == null) {
           message.error(
             "Item " +
-              item.codigoItem +
-              " precisa ter os campos Conclusao e Defeito!"
+            item.codigoItem +
+            " precisa ter os campos Conclusao e Defeito!"
           );
           return;
         }
@@ -456,13 +456,13 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
                   >
                     Visualizar Pré-Nota
                   </Button>
-                  <Button
+                  {/* <Button
                     type="primary"
                     className={styles.ButonToSend}
                     onClick={handleSave}
                   >
                     Salvar
-                  </Button>
+                  </Button> */}
                 </>
               )}
             </>
@@ -471,30 +471,34 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       </div>
       <hr className={styles.divisor} />
       <FileAttachment
-        label="Anexo da NF de venda"
+        label="Anexar NF de compra com IMAs"
         backgroundColor="#f5f5f5"
         isRessarcimento={false}
         itemId={notaFiscal?.id}
       />
       {cardData.codigoStatus ===
         GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
-        <>
-          <FileAttachmentDevolucao
-            label="Anexo da NF de devolução"
-            backgroundColor="#f5f5f5"
-            garantiaId={notaFiscal?.id || ""}
-            recGarantia={cardData}
-          />
-          <div className={styles.TitleItens}>
-            <h3 className={styles.nfsTitle}>
-              Itens desta NF associados a esta garantia
-            </h3>
-          </div>
-        </>
-      )}
+          <>
+            <FileAttachmentDevolucao
+              label="Anexo da NF de devolução"
+              backgroundColor="#f5f5f5"
+              garantiaId={notaFiscal?.id || ""}
+              recGarantia={cardData}
+            />
+            <div className={styles.TitleItens}>
+              <h3 className={styles.nfsTitle}>
+                Itens desta NF associados a esta garantia
+              </h3>
+            </div>
+          </>
+        )}
 
       {notaFiscal.itens.map((item) => (
-        <div className={styles.containerInformacoes} key={item.id}>
+        <div className={styles.containerInformacoes} style={{
+          border: isContentVisible[item.id] ? "1px solid red" : "none",
+          borderRadius: "15px",
+          padding: isContentVisible[item.id] ? "20px" : "15px",
+        }} key={item.id}>
           <CollapsibleSection
             title={item.codigoItem || ""}
             isVisible={isContentVisible[item.id] || false}
@@ -572,7 +576,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
             </div>
 
             <FileAttachment
-              label="Anexar NF de compra com IMA"
+              label="Anexo da NF de venda"
               backgroundColor="white"
               itemId={item?.id}
               isRessarcimento={item?.solicitarRessarcimento || false}
@@ -735,8 +739,26 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               </>
             )}
           </CollapsibleSection>
+          
         </div>
       ))}
+              <div className={styles.botoesCabecalho}>
+          {cardData.codigoStatus === GarantiasStatusEnum2.EM_ANALISE && (
+            <>
+              {context.user.rule.name === UserRoleEnum.Tecnico && (
+                <>
+                  <Button
+                    type="primary"
+                    className={styles.ButonToSend}
+                    onClick={handleSave}
+                  >
+                    Salvar
+                  </Button>
+                </>
+              )}
+            </>
+          )}
+        </div>
     </div>
   );
 };

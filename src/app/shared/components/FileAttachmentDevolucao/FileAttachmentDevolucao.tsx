@@ -276,7 +276,7 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
                 <label
                   style={{
                     cursor: "pointer",
-                    color: "#1890ff",
+                    color: "#1890ff !important",
                     padding: "10px 20px",
                     backgroundColor: "#fff",
                     border: "solid 0.5px #d9d9d9",
@@ -285,7 +285,7 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
                 >
                   <input
                     type="file"
-                    style={{ display: "none" }}
+                    style={{ display: "none", color: "#262626"  }}
                     onChange={(e) => {
                       handleFileChange(e);
                       handleFileUpload(e);

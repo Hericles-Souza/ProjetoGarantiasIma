@@ -285,7 +285,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
         .length == garantiaNfsWithItens.length
         ? GarantiasStatusEnum2.RECUSADA
         : garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
-        .length > 0 ?  GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE : GarantiasStatusEnum2.CONFIRMADO  
+        .length > 0 ?  GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE : GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
 
     const garantia: GarantiasModel = {
       razaoSocial: location.state.garantia.razaoSocial,

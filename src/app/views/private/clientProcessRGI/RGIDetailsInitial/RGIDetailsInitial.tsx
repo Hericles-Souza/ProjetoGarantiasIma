@@ -22,6 +22,7 @@ import environment from "@env/environment";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { NotaFiscal } from "@shared/models/NotaFiscalModel";
 import { isUndefined } from "lodash";
+import Item from "antd/es/list/Item";
 
 // Função para extrair array de garantias (inalterada)
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -288,6 +289,14 @@ const RGIDetailsInitial: React.FC = () => {
     }
   };
 
+  const [modalRecusaOpen, setModalRecusaOpen] = useState(false);
+  const [motivoRecusa, setMotivoRecusa] = useState<string>("");
+
+  const showMotivoRecusa = (motivo: string) => {
+    setMotivoRecusa(motivo || "Motivo não especificado.");
+    setModalRecusaOpen(true);
+  };
+
   const handleDetailsNavigation = async (
     nf: { nf: string; itens: number },
     countItems: number,
@@ -534,27 +543,6 @@ const RGIDetailsInitial: React.FC = () => {
     // Validar cada NF e seus itens
     for (const nota of garantiaNfsWithItens) {
       // Verificar anexo da NF de venda usando a API
-      try {
-        const response = await fetch(
-          `${environment.apiUrl}/files/files/download-private-file-item/${nota.id}/nfVenda`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${context.user.token}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          isValid = false;
-          errorMessage = `A NF ${nota.codigo}, não possui o anexo da NF de venda.`;
-          break;
-        }
-      } catch (error) {
-        isValid = false;
-        errorMessage = `Erro ao verificar o anexo da NF de venda para a NF ${nota.codigo}.`;
-        break;
-      }
-
       // Validar cada item da NF
       for (const item of nota.itens) {
         // Campos obrigatórios do item
@@ -817,7 +805,7 @@ const RGIDetailsInitial: React.FC = () => {
       </div>
 
       <hr className={styles.divider} />
-      {cardData?.codigoStatus !== GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
+      {
         context.user.rule.name === UserRoleEnum.Cliente && (
           <div className={styles.infoContainer}>
             <h3 className={styles.infoTitle}>Informações Gerais</h3>
@@ -897,6 +885,15 @@ const RGIDetailsInitial: React.FC = () => {
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
+              {cardData?.codigoStatus == GarantiasStatusEnum2.RECUSADA && (
+                <label className={styles.buttonUpdateNfSale}>
+                  <button
+                    style={{ display: "none" }}
+                    onClick={() => showMotivoRecusa(nota.observacao || "Motivo não especificado.")} //adiciomnar a conclusão do supervisor correta
+                  />
+                  Motivo da Recusa
+                </label>
+              )}
               {cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
                 context.user.rule.name === UserRoleEnum.Cliente && (
                   <DeleteOutlined
@@ -920,7 +917,7 @@ const RGIDetailsInitial: React.FC = () => {
                   )
                 }
               >
-                 &gt;
+                &gt;
               </Button>
             </div>
           </div>
@@ -935,7 +932,22 @@ const RGIDetailsInitial: React.FC = () => {
         isSell={modalOpen.isSell}
         garantiaId={cardData?.id}
       />
-
+      <Modal
+        title="Motivo da Recusa"
+        open={modalRecusaOpen}
+        onCancel={() => setModalRecusaOpen(false)}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => setModalRecusaOpen(false)}
+            style={{ borderColor: "#dadada", color: "#5F5A56" }}
+          >
+            Fechar
+          </Button>,
+        ]}
+      >
+        <p>{motivoRecusa}</p>
+      </Modal>
       <Modal
         title="Confirmar Exclusão"
         open={modalDeleteOpen}
