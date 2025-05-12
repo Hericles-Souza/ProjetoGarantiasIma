@@ -199,36 +199,39 @@ const TechnicalAndSupervisorInitialRGI = () => {
   const handleUpdateNote = async (notaFiscal: NotaFiscal, refuse: boolean) => {
     if (refuse) {
       // Open the modal for conclusion input
+      notaFiscal.tipo_nota = "Recusada";
       setCurrentNota(notaFiscal);
       setModalRefuseOpen(true);
       return;
     }
+    else{
+      notaFiscal.tipo_nota = "Aprovada";
+      const payloadNotaFiscal: NotaFiscal = {
+        garantiaId: notaFiscal.garantia_id,
+        codigo: notaFiscal.codigo,
+        codigoRGI: notaFiscal.rgi,
+        tipo_nota: notaFiscal.tipo_nota,
+        data_emissao: notaFiscal.data_emissao,
+        id_referencia: notaFiscal.id_referencia,
+        data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        itens: notaFiscal.itens,
+        id: notaFiscal.id,
+        observacao: "",
+      };
+  
+      console.log("notaFiscalUpdate: ", payloadNotaFiscal);
+      const responseUpdate = await api.put(
+        `/nota-fiscal/update/${notaFiscal.id}`,
+        payloadNotaFiscal
+      );
+  
+      if (responseUpdate.status === 200) {
+        setGarantiaNfsWithItens([...garantiaNfsWithItens]); // Refresh UI
+        message.success("Nota Aprovada com sucesso");
+      }
 
-    // If approving, proceed without modal
-    notaFiscal.tipo_nota = "Aprovada";
-    const payloadNotaFiscal: NotaFiscal = {
-      garantiaId: notaFiscal.garantia_id,
-      codigo: notaFiscal.codigo,
-      codigoRGI: notaFiscal.rgi,
-      tipo_nota: notaFiscal.tipo_nota,
-      data_emissao: notaFiscal.data_emissao,
-      id_referencia: notaFiscal.id_referencia,
-      data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-      itens: notaFiscal.itens,
-      id: notaFiscal.id,
-      observacao: "",
-    };
-
-    console.log("notaFiscalUpdate: ", payloadNotaFiscal);
-    const responseUpdate = await api.put(
-      `/nota-fiscal/update/${notaFiscal.id}`,
-      payloadNotaFiscal
-    );
-
-    if (responseUpdate.status === 200) {
-      setGarantiaNfsWithItens([...garantiaNfsWithItens]); // Refresh UI
-      message.success("Nota Aprovada com sucesso");
     }
+    // If approving, proceed without modal
   };
 
   const handleConfirmRefusal = async () => {

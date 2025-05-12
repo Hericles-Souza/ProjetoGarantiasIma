@@ -976,6 +976,7 @@ const DetailsItensNF: React.FC = () => {
         garantia?.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ||
         garantia?.codigoStatus ===
         GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
+        notaFiscal?.tipo_nota != "Recusada" &&
         context.user.rule.name === UserRoleEnum.Cliente && (
           <div style={{ marginTop: "15px" }}>
             {garantia?.codigoStatus ===
