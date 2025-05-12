@@ -565,6 +565,27 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 </span>
               </div>
             </div>
+            <div
+              style={{
+                color:
+                  StatusColors[
+                  nota.tipo_nota == "Recusada"
+                    ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                    : nota.tipo_nota == "Aprovada"
+                      ? GarantiasStatusEnum2.CONFIRMADO
+                      : "#8C8C8C"
+                  ],
+                backgroundColor: `${StatusColors[
+                  nota.tipo_nota == "Recusada"
+                    ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                    : nota.tipo_nota == "Aprovada"
+                      ? GarantiasStatusEnum2.CONFIRMADO
+                      : "#8C8C8C"
+                ]
+                  }15`,
+              }}
+              className={stylesDetails.statusTag}
+            ></div>s
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {context.user.rule.name === UserRoleEnum.Supervisor &&
                 cardData.codigoStatus ===
@@ -574,27 +595,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 !nota.tipo_nota.includes("Aprovada") &&
                 !nota.tipo_nota.includes("Recusada") && (
                   <>
-                    <div
-                      style={{
-                        color:
-                          StatusColors[
-                          nota.tipo_nota == "Recusada"
-                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                            : nota.tipo_nota == "Aprovada"
-                              ? GarantiasStatusEnum2.CONFIRMADO
-                              : "#8C8C8C"
-                          ],
-                        backgroundColor: `${StatusColors[
-                          nota.tipo_nota == "Recusada"
-                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                            : nota.tipo_nota == "Aprovada"
-                              ? GarantiasStatusEnum2.CONFIRMADO
-                              : "#8C8C8C"
-                        ]
-                          }15`,
-                      }}
-                      className={stylesDetails.statusTag}
-                    ></div>
+
                     <button
                       className={stylesDetails.buttonUpdate}
                       onClick={() => handleDownloadFile(nota)}
@@ -629,27 +630,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
                 !nota.tipo_nota.includes("Aprovada") &&
                 !nota.tipo_nota.includes("Recusada") && (
                   <>
-                    <div
-                      style={{
-                        color:
-                          StatusColors[
-                          nota.tipo_nota == "Recusada"
-                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                            : nota.tipo_nota == "Aprovada"
-                              ? GarantiasStatusEnum2.CONFIRMADO
-                              : "#8C8C8C"
-                          ],
-                        backgroundColor: `${StatusColors[
-                          nota.tipo_nota == "Recusada"
-                            ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                            : nota.tipo_nota == "Aprovada"
-                              ? GarantiasStatusEnum2.CONFIRMADO
-                              : "#8C8C8C"
-                        ]
-                          }15`,
-                      }}
-                      className={stylesDetails.statusTag}
-                    ></div>
                     <div className="ButtonHeader">
                       <div style={{ display: "flex", gap: "10px" }}>
                         <Button
