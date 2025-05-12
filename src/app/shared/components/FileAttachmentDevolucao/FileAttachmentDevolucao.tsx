@@ -243,9 +243,9 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
                   Nenhum arquivo enviado
                 </label>
               )}
-            {(fileData ||
-              (recFile.fileNameWithExtension && recFile.imagemUrl)) &&  recGarantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO && (
-              <span>
+            {( recGarantia.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA && fileData ||
+              (recFile.fileNameWithExtension && recFile.imagemUrl)) &&  recGarantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO  &&  (
+              <span style={{backgroundColor: "white", padding: "9px 3px", borderRadius: "5PX", marginRight: "10px"}}>
                 <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
                 {recFile.fileNameWithExtension}
                 {canRemoveAttachment && (
