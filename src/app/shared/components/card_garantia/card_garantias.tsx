@@ -117,7 +117,7 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, Aco
     <CardContainer key={tab === "ACI" ? Acordo.id : GarantiaItem.id} $clickable={!!onClick} onClick={onClick}>
       <Header>
         {tab === "RGI" && (
-          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? statusStyle?.backgroundColor : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
+          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? `${statusStyle.backgroundColor}15` : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9", fontWeight: "500" , fontSize:"15px" }}>
             {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin
               ? converterStatusGarantia(GarantiaItem?.codigoStatus)
               : (GarantiaItem?.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
@@ -126,7 +126,7 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, Aco
           </Status>
         )}
         {tab === "ACI" && (
-          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? statusStyle?.backgroundColor : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
+          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? `${statusStyle.backgroundColor}15` : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
             {converterStatusAcordo(Acordo.codigoStatus)}
           </Status>
         )}

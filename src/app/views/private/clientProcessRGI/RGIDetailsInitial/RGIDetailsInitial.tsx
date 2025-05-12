@@ -883,28 +883,44 @@ const RGIDetailsInitial: React.FC = () => {
               <span className={styles.nfsQuantity}>
                 {nota.itens.length} ITENS
               </span>
+              <div
+                style={{
+                  marginLeft: "15px",
+                  color:
+                    StatusColors[
+                    nota.tipo_nota == "Recusada"
+                      ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                      : nota.tipo_nota == "Aprovada"
+                        ? GarantiasStatusEnum2.CONFIRMADO
+                        : "#8C8C8C"
+                    ],
+                  backgroundColor: `${StatusColors[
+                    nota.tipo_nota == "Recusada"
+                      ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
+                      : nota.tipo_nota == "Aprovada"
+                        ? GarantiasStatusEnum2.CONFIRMADO
+                        : "#8C8C8C"
+                  ]
+                    }15`,
+                }}
+                className={styles.statusTag}
+              >{nota.tipo_nota == "nota fiscal de origem" ? "" : nota.tipo_nota}
+              </div>
+              {nota.tipo_nota === "Aprovada" && (
+                <div
+                  style={{
+                    marginLeft: "10px",
+                    color: StatusColors[GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO],
+                    backgroundColor: `${StatusColors[GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]}15`,
+                  }}
+                  className={styles.statusTag}
+                >
+                  Aguardando NF de Devolução
+                </div>
+              )}
+
             </div>
-            <div
-              style={{
-                color:
-                  StatusColors[
-                  nota.tipo_nota == "Recusada"
-                    ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                    : nota.tipo_nota == "Aprovada"
-                      ? GarantiasStatusEnum2.CONFIRMADO
-                      : "#8C8C8C"
-                  ],
-                backgroundColor: `${StatusColors[
-                  nota.tipo_nota == "Recusada"
-                    ? GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA
-                    : nota.tipo_nota == "Aprovada"
-                      ? GarantiasStatusEnum2.CONFIRMADO
-                      : "#8C8C8C"
-                ]
-                  }15`,
-              }}
-              className={styles.statusTag}
-            >{nota.tipo_nota == "nota fiscal de origem" ? "" : nota.tipo_nota}</div>
+
             <div style={{ display: "flex", alignItems: "center" }}>
               {nota.tipo_nota == "Recusada" && (
                 <label className={styles.buttonUpdateNfSale}>

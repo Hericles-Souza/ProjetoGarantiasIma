@@ -118,7 +118,7 @@ export const StatusColors = {
   [GarantiasStatusEnum2.EM_ANALISE]: "#1890FF",
   [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: "#FA8C16", 
   [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: "#FAAD14",
-  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: "#1890FF", 
+  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: "#0CE9BD", 
   [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: "#FF4D4F", 
   [GarantiasStatusEnum2.CONFIRMADO]: "#52C41A", 
   [GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR]: "#1890FF", 
@@ -127,39 +127,39 @@ export const StatusColors = {
 
 export const statusStylesRGI = {
   [GarantiasStatusEnum2.NAO_ENVIADO]: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#5F5A56',
     color: '#5F5A56',
   },
   [GarantiasStatusEnum2.EM_ANALISE]: {
-    backgroundColor: '#B3E5FC',
-    color: '#0277BD',
+    backgroundColor: '#1890FF',
+    color: '#1890FF',
   },
   [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: {
-    backgroundColor: '#9747FF1F',
-    color: '#9747FF',
+    backgroundColor: '#FA8C16',
+    color: '#FA8C16',
   },
   [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: {
-    backgroundColor: '#FFE0B2',
-    color: '#EF6C00',
+    backgroundColor: '#FAAD14',
+    color: '#FAAD14',
   },
   [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: {
-    backgroundColor: '#FFE0B2',
-    color: '#EF6C00',
+    backgroundColor: '#0CE9BD',
+    color: '#0CE9BD',
   },
   [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: {
-    backgroundColor: '#4A32163D',
-    color: '#4A3216',
+    backgroundColor: '#FF4D4F',
+    color: '#FF4D4F',
   },
   [GarantiasStatusEnum2.CONFIRMADO]: {
-    backgroundColor: '#C8E6C9',
-    color: '#2E7D32',
+    backgroundColor: '#52C41A',
+    color: '#52C41A',
   },
   [GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR]: {
-    backgroundColor: '#B3E5FC',
-    color: '#0277BD',
+    backgroundColor: '#1890FF',
+    color: '#1890FF',
   },
   [GarantiasStatusEnum2.RECUSADA]: {
     backgroundColor: '#FF4D4F',
-    color: '#4A3216',
+    color: '#FF4D4F',
   },
 };
