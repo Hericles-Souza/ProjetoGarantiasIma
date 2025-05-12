@@ -889,7 +889,7 @@ const RGIDetailsInitial: React.FC = () => {
                 <label className={styles.buttonUpdateNfSale}>
                   <button
                     style={{ display: "none" }}
-                    onClick={() => showMotivoRecusa(nota.observacao || "Motivo não especificado.")} //adiciomnar a conclusão do supervisor correta
+                    onClick={() => showMotivoRecusa(nota?.observacao || "Motivo não especificado.")} //adiciomnar a conclusão do supervisor correta
                   />
                   Motivo da Recusa
                 </label>

@@ -585,7 +585,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   }15`,
               }}
               className={stylesDetails.statusTag}
-            ></div>s
+            ></div>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {context.user.rule.name === UserRoleEnum.Supervisor &&
                 cardData.codigoStatus ===
