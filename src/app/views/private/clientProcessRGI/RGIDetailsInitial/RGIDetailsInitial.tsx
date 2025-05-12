@@ -334,10 +334,12 @@ const RGIDetailsInitial: React.FC = () => {
       },
     ];
     const newNotaFiscal = {
+      id: notaId,
       codigoRGI: rgi + "." + proximaLetra,
       codigo: nfNumber,
       garantiaId: cardData?.id,
       id_referencia: cardData?.id,
+      observacao: "",
       tipo_nota: "Nota fiscal de origem",
       data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,

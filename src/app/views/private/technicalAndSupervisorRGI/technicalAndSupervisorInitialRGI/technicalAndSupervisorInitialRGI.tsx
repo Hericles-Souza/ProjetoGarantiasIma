@@ -282,9 +282,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
 
     const statusGarantia =
       garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
-        .length > 0
-        ? GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
-        : GarantiasStatusEnum2.CONFIRMADO;
+        .length == garantiaNfsWithItens.length
+        ? GarantiasStatusEnum2.RECUSADA
+        : garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
+        .length > 0 ?  GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE : GarantiasStatusEnum2.CONFIRMADO  
 
     const garantia: GarantiasModel = {
       razaoSocial: location.state.garantia.razaoSocial,
@@ -361,6 +362,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSave = async (
     statusGarantia: GarantiasStatusEnum2 = GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
   ) => {
@@ -483,7 +485,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
             (cardData.codigoStatus ==
               GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
               cardData.codigoStatus ==
-                GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
+                GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+              || cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) && (
               <div className="ButtonHeader">
                 <Button
                   onClick={async () => handleConfirm()}
@@ -491,45 +494,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   className="ButonToSend"
                 >
                   Enviar
-                </Button>
-              </div>
-            )}
-          {context.user.rule.name === UserRoleEnum.Supervisor &&
-            (cardData.codigoStatus ==
-              GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
-              cardData.codigoStatus ==
-                GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
-              <div className="ButtonHeader">
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <Button
-                    onClick={async () =>
-                      handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
-                    }
-                    type="primary"
-                    className={stylesDetails.buttonSendRgi}
-                  >
-                    Recusar Envio
-                  </Button>
-                  <Button
-                    type="primary"
-                    className={stylesDetails.buttonSendRgi}
-                    onClick={async () =>
-                      handleSave(GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO)
-                    }
-                  >
-                    Autorizar Envio
-                  </Button>
-                </div>
-                <Button
-                  type="default"
-                  className="ButtonDelete"
-                  onClick={() =>
-                    navigate("/view-pre-invoice", {
-                      state: { cardData },
-                    })
-                  }
-                >
-                  Visualizar Pré Nota
                 </Button>
               </div>
             )}
@@ -638,6 +602,32 @@ const TechnicalAndSupervisorInitialRGI = () => {
                           onClick={() => handleUpdateNote(nota, false)}
                         >
                           Autorizar
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              {context.user.rule.name === UserRoleEnum.Supervisor &&
+                (cardData.codigoStatus ==
+                  GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
+                  cardData.codigoStatus ==
+                    GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
+                  <>
+                    <div className="ButtonHeader">
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <Button
+                          onClick={() => handleUpdateNote(nota, true)}
+                          type="primary"
+                          className={stylesDetails.buttonSendRgi}
+                        >
+                          Recusar Envio
+                        </Button>
+                        <Button
+                          type="primary"
+                          className={stylesDetails.buttonSendRgi}
+                          onClick={() => handleUpdateNote(nota, false)}
+                        >
+                          Autorizar Envio
                         </Button>
                       </div>
                     </div>

@@ -765,9 +765,7 @@ const DetailsItensNF: React.FC = () => {
       notasFiscaisAPI.find((nota) => nota.codigo == notaFiscal.codigo).id
     );
 
-    for (const item of notaFiscal.itens.filter(
-      (value) => value.codigoItem?.split(".")[1] === recRgiLetter
-    )) {
+    notaFiscal.itens.forEach(async (item) => {
       try {
         if (
           garantiaItensAPI.some(
@@ -832,7 +830,7 @@ const DetailsItensNF: React.FC = () => {
         message.error("Erro ao atualizar a garantia.");
         isError = true;
       }
-    }
+    })
 
     if (!isError && garantia) {
       message.success("Garantia atualizada com sucesso!");
