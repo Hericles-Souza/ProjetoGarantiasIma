@@ -562,7 +562,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   {nota.itens.length} ITENS
                 </span>
               </div>
-            </div>
             <div
               style={{
                 color:
@@ -584,6 +583,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
               }}
               className={stylesDetails.statusTag}
             >{nota.tipo_nota.toLocaleLowerCase() == "nota fiscal de origem" ? "" : nota.tipo_nota}</div>
+            </div>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {context.user.rule.name === UserRoleEnum.Supervisor &&
                 cardData.codigoStatus ===
