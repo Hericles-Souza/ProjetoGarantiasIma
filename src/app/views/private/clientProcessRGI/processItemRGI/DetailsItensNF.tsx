@@ -92,8 +92,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         else fieldFile = `${matchField[0]}.img`;
       } else fieldFile = "nfRef";
 
-      if (fieldFile == "nfVenda")
-        console.log("nota fiscal id: ", garantiaItemId);
+      
       getFieldFile(garantiaItemId, fieldFile);
     }
 
@@ -436,15 +435,14 @@ const CollapsibleSection = ({
         garantiaItem?.status === GarantiasItemStatusEnum.NAO_ENVIADO
         ? GarantiasItemStatusEnum2.NAO_ANALISADO
         : garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO
-          ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
-          : GarantiasItemStatusEnum2.AUTORIZADO
+        ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
+        : GarantiasItemStatusEnum2.AUTORIZADO
     ) || "Status não disponível";
 
   const statusStyle = getStatusColor(garantiaItem?.status || "");
 
   return (
-    <div
-    >
+    <div>
       <div className={styles.tituloSecaoContainer}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <h3 className={styles.tituloSecaoVermelho}>{title}</h3>
@@ -629,9 +627,9 @@ const DetailsItensNF: React.FC = () => {
       location.state.countItems + 1);
     const newItemRgi = garantia
       ? formatItemRgi(
-        location.state.nota.codigoRGI || location.state.nota.rgi,
-        sequence
-      )
+          location.state.nota.codigoRGI || location.state.nota.rgi,
+          sequence
+        )
       : "";
 
     const payloadPost = {
@@ -646,6 +644,8 @@ const DetailsItensNF: React.FC = () => {
       environment.apiUrl + "/garantias/item/create",
       payloadPost
     );
+    console.log("payloadPostitem: ", payloadPost);
+
     if (responsePost.status !== 200 && responsePost.status !== 201) {
       message.error("Erro ao criar a garantia.");
     } else {
@@ -766,8 +766,6 @@ const DetailsItensNF: React.FC = () => {
       notasFiscaisAPI.find((nota) => nota.codigo == notaFiscal.codigo).id
     );
 
-
-
     notaFiscal.itens.forEach(async (item) => {
       try {
         if (
@@ -793,10 +791,13 @@ const DetailsItensNF: React.FC = () => {
             payloadPut
           );
           console.log("payloadPut: ", payloadPut);
+          console.log("item.id: ", item.id);
 
           if (responsePut.status !== 200 && responsePut.status !== 201) {
             message.error("Erro ao atualizar o item.");
             isError = true;
+          } else {
+            console.log(responsePut);
           }
         } else {
           item.id = crypto.randomUUID();
@@ -833,7 +834,7 @@ const DetailsItensNF: React.FC = () => {
         message.error("Erro ao atualizar a garantia.");
         isError = true;
       }
-    })
+    });
 
     if (!isError && garantia) {
       message.success("Garantia atualizada com sucesso!");
@@ -895,8 +896,9 @@ const DetailsItensNF: React.FC = () => {
           <div
             style={{
               color: StatusColors[garantia?.codigoStatus] || "#000",
-              backgroundColor: `${StatusColors[garantia?.codigoStatus] || "#000"
-                }15`,
+              backgroundColor: `${
+                StatusColors[garantia?.codigoStatus] || "#000"
+              }15`,
             }}
             className={styles.statusTag}
           >
@@ -905,7 +907,6 @@ const DetailsItensNF: React.FC = () => {
           </div>
         </div>
         <div className={styles.botoesCabecalho}>
-
           {garantia.codigoStatus ===
             GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO &&
             context.user.rule.name !== UserRoleEnum.Cliente && (
@@ -972,23 +973,23 @@ const DetailsItensNF: React.FC = () => {
         GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
         garantia?.codigoStatus == GarantiasStatusEnum2.CONFIRMADO ||
         garantia?.codigoStatus ===
-        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+          GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
         garantia?.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ||
         garantia?.codigoStatus ===
-        GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
+          GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
         notaFiscal?.tipo_nota != "Recusada" &&
         context.user.rule.name === UserRoleEnum.Cliente && (
           <div style={{ marginTop: "15px" }}>
             {garantia?.codigoStatus ===
               GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE && (
-                <div className={styles.dialoginfo}>
-                  <InfoCircleOutlined style={{ color: "#0277BD" }} />
-                  <span style={{ color: "#0277BD" }}>
-                    Anexe a NF de devolução dos itens aprovados, para prosseguir
-                    com a avaliação parcial.
-                  </span>
-                </div>
-              )}
+              <div className={styles.dialoginfo}>
+                <InfoCircleOutlined style={{ color: "#0277BD" }} />
+                <span style={{ color: "#0277BD" }}>
+                  Anexe a NF de devolução dos itens aprovados, para prosseguir
+                  com a avaliação parcial.
+                </span>
+              </div>
+            )}
             <FileAttachmentDevolucao
               label="Anexo da NF de devolução"
               backgroundColor="#f5f5f5"
@@ -1050,22 +1051,25 @@ const DetailsItensNF: React.FC = () => {
             return getNumeroFinal(a.codigoItem) - getNumeroFinal(b.codigoItem);
           })
           .map((item) => (
-            <div style={{
-              border: visibleSectionId === item.id ? "1px solid red" : "none",
-              borderRadius: "15px",
-              padding: visibleSectionId === item.id ? "20px" : "20px",
-            }} className={styles.containerInformacoes} key={item.id} >
+            <div
+              style={{
+                border: visibleSectionId === item.id ? "1px solid red" : "none",
+                borderRadius: "15px",
+                padding: visibleSectionId === item.id ? "20px" : "20px",
+              }}
+              className={styles.containerInformacoes}
+              key={item.id}
+            >
               <CollapsibleSection
                 title={item.codigoItem || "Item sem código"}
                 isVisible={visibleSectionId === item.id}
                 toggleVisibility={() => toggleSectionVisibility(item.id)}
                 showDeleteConfirm={() => showDeleteConfirm(item.id)}
                 status={item.status}
-
                 rgi={item.codigoRGI || ""}
                 isEvaluated={
                   garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
-                    context.user.rule.name === UserRoleEnum.Cliente
+                  context.user.rule.name === UserRoleEnum.Cliente
                     ? false
                     : true
                 }
@@ -1231,27 +1235,27 @@ const DetailsItensNF: React.FC = () => {
                   </div>
                   {garantia?.codigoStatus ===
                     GarantiasStatusEnum2.NAO_ENVIADO && (
-                      <div className={styles.checkboxContainer}>
-                        <ColorCheckboxes
-                          checked={item.solicitarRessarcimento || false}
-                          onChange={(e) => {
-                            item.solicitarRessarcimento = e.target.checked;
-                            handleInputChange(
-                              item.id,
-                              "solicitarRessarcimento",
-                              e.target.checked
-                            );
-                          }}
-                          disabled={
-                            garantia?.codigoStatus !==
-                            GarantiasStatusEnum2.NAO_ENVIADO
-                          }
-                        />
-                        <label className={styles.checkboxDanger}>
-                          Solicitar ressarcimento
-                        </label>
-                      </div>
-                    )}
+                    <div className={styles.checkboxContainer}>
+                      <ColorCheckboxes
+                        checked={item.solicitarRessarcimento || false}
+                        onChange={(e) => {
+                          item.solicitarRessarcimento = e.target.checked;
+                          handleInputChange(
+                            item.id,
+                            "solicitarRessarcimento",
+                            e.target.checked
+                          );
+                        }}
+                        disabled={
+                          garantia?.codigoStatus !==
+                          GarantiasStatusEnum2.NAO_ENVIADO
+                        }
+                      />
+                      <label className={styles.checkboxDanger}>
+                        Solicitar ressarcimento
+                      </label>
+                    </div>
+                  )}
                 </div>
                 {item.solicitarRessarcimento && (
                   <div className={styles.contentReimbursement}>
@@ -1282,7 +1286,7 @@ const DetailsItensNF: React.FC = () => {
                 )}
                 {item.solicitarRessarcimento === false &&
                   garantia?.codigoStatus !==
-                  GarantiasStatusEnum2.NAO_ENVIADO && (
+                    GarantiasStatusEnum2.NAO_ENVIADO && (
                     <div className={styles.dialoginfoRessarcimento}>
                       <InfoCircleOutlined style={{ color: "#bd0502" }} />
                       <span style={{ color: "#bd0502" }}>
@@ -1338,7 +1342,6 @@ const DetailsItensNF: React.FC = () => {
                       item={item}
                     />
                   ))}
-
               </CollapsibleSection>
             </div>
           ))
@@ -1351,16 +1354,22 @@ const DetailsItensNF: React.FC = () => {
         GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA,
       ].includes(garantia.codigoStatus) &&
         context.user.rule.name === UserRoleEnum.Cliente && (
-          <div style={{ right: "10px", display: "flex", justifyContent: "right" }}>
+          <div
+            style={{ right: "10px", display: "flex", justifyContent: "right" }}
+          >
             <Button
               type="primary"
               className={styles.ButonToSend}
-              onClick={
+              onClick={() => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                console.log("notaFiscal?.itens: ", notaFiscal?.itens);
+
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 garantia.codigoStatus ===
-                  GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
-                  ? saveNfDevolcao
-                  : save
-              }
+                GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
+                  ? saveNfDevolcao()
+                  : save();
+              }}
             >
               SALVAR
             </Button>

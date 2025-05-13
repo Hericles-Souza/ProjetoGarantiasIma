@@ -50,6 +50,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
       : []
   );
   const [cardData, setCardData] = useState<GarantiasModel>();
+  const [newStatus, setNewStatus] = useState<GarantiasStatusEnum2>();
   const [loading, setLoading] = useState(true);
   const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(false);
   const [modalRefuseOpen, setModalRefuseOpen] = useState(false); // State for refusal modal
@@ -109,13 +110,6 @@ const TechnicalAndSupervisorInitialRGI = () => {
     return { fileNameWithExtension, imagemUrl };
   };
 
-  const handleDownloadFile = (recNota: NotaFiscal) => {
-    const link = document.createElement("a");
-    link.href = recNota.recSellFile?.imagemUrl || "#";
-    link.download = recNota.recSellFile?.fileNameWithExtension || "download";
-    link.click();
-  };
-
   const getAssciatedNfs = async (garantiaId: string) => {
     const garantiaItemResponse = await fetch(
       `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
@@ -165,6 +159,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
           setTelefone(data.telefone);
           setDataSolicitacao(data.data);
           setCardData(data);
+          setNewStatus(data.codigoStatus);
           await getAssciatedNfs(data.id);
           setNfs([
             {
@@ -588,23 +583,17 @@ const TechnicalAndSupervisorInitialRGI = () => {
                   }15`,
               }}
               className={stylesDetails.statusTag}
-            >{nota.tipo_nota == "nota fiscal de origem" ? "" : nota.tipo_nota}</div>
+            >{nota.tipo_nota.toLocaleLowerCase() == "nota fiscal de origem" ? "" : nota.tipo_nota}</div>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {context.user.rule.name === UserRoleEnum.Supervisor &&
                 cardData.codigoStatus ===
                 GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
                 nota.recSellFile?.fileNameWithExtension != "" &&
                 nota.recSellFile?.imagemUrl != "" &&
-                !nota.tipo_nota.includes("Aprovada") &&
-                !nota.tipo_nota.includes("Recusada") && (
+                !nota.tipo_nota.includes("Recusada") && 
+                newStatus == GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&(
                   <>
 
-                    <button
-                      className={stylesDetails.buttonUpdate}
-                      onClick={() => handleDownloadFile(nota)}
-                    >
-                      Baixar Arquivo
-                    </button>
                     <div className="ButtonHeader">
                       <div style={{ display: "flex", gap: "10px" }}>
                         <Button
@@ -617,7 +606,10 @@ const TechnicalAndSupervisorInitialRGI = () => {
                         <Button
                           type="primary"
                           className={stylesDetails.buttonSendRgi}
-                          onClick={() => handleUpdateNote(nota, false)}
+                          onClick={() => {
+                            handleUpdateNote(nota, false);
+                            setNewStatus(GarantiasStatusEnum2.CONFIRMADO);
+                          }}
                         >
                           Autorizar
                         </Button>

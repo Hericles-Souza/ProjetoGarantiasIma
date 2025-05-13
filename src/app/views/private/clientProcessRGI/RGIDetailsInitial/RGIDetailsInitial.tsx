@@ -254,7 +254,7 @@ const RGIDetailsInitial: React.FC = () => {
       return;
     }
     if (!notaId) {
-      message.error("ID do item não encontrado");
+      message.error("ID da nota não encontrado");
       return;
     }
     try {
@@ -262,14 +262,18 @@ const RGIDetailsInitial: React.FC = () => {
         `/nota-fiscal/by-garantia/${cardData.id}`
       );
       const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
+      console.log("notasFiscaisAPI: ", notasFiscaisAPI);
+      
       if (
         notasFiscaisAPI.filter((value) => value.codigo === nfCodeCompare).length <= 0
       ) {
         const endpoint = environment.apiUrl + "/nota-fiscal/create";
         const responsePost = await api.post(endpoint, payloadPost);
+        console.log("payloadPost: ", payloadPost);
+        console.log("responsePost: ", responsePost);
+        
         if (responsePost.status === 200 || responsePost.status === 201) {
           message.success("Nota fiscal adicionada com sucesso!");
-          payloadPost.id = responsePost.data.data;
           setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => [
             ...prevGarantiaNfsWithItens,
             payloadPost,
@@ -325,7 +329,9 @@ const RGIDetailsInitial: React.FC = () => {
     let proximaLetra = "A";
     if (garantiaNfsWithItens.length > 0) {
       const ultimoItem = garantiaNfsWithItens[garantiaNfsWithItens.length - 1];
-      const [letra] = ultimoItem.rgi.split(".")[1];
+      console.log("ultimoItem ", ultimoItem, "garantiaNfsWithItens: ",garantiaNfsWithItens);
+      
+      const [letra] = ultimoItem.rgi != null ? ultimoItem.rgi.split(".")[1] : ultimoItem.codigoRGI.split(".")[1];
       proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
     }
     const itemCode = getRgiWithSuffix(rgi, proximaLetra, 1);
@@ -349,7 +355,7 @@ const RGIDetailsInitial: React.FC = () => {
       garantiaId: cardData?.id,
       id_referencia: cardData?.id,
       observacao: "",
-      tipo_nota: "Nota fiscal de origem",
+      tipo_nota: "nota fiscal de origem",
       data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
       itens: garantiasItem,
@@ -631,17 +637,16 @@ const RGIDetailsInitial: React.FC = () => {
     let garantia: GarantiasModel = {};
 
     try {
-      if (cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA) {
+      if (cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA || cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO) {
         garantia = {
           razaoSocial: cardData.razaoSocial,
           telefone: cardData.telefone,
           email: cardData.email,
-          nf: cardData.nf,
+          nf: cardData.notas[0].codigo,
           fornecedor: cardData.fornecedor,
           codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           observacao: cardData.observacao,
           usuarioAtualizacao: context.user.username,
-          status: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
           dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
         };
       } else {
@@ -753,12 +758,12 @@ const RGIDetailsInitial: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.RgiCode}>RGI N° {rgi}</span>
+        <span className={styles.RgiCode}>RGI N° {cardData?.rgi}</span>
       </div>
 
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.rgiTitle}>RGI {rgi}</h1>
+          <h1 className={styles.rgiTitle}>RGI {cardData?.rgi}</h1>
           <div
             style={{
               color: StatusColors[cardData?.codigoStatus],
@@ -904,7 +909,7 @@ const RGIDetailsInitial: React.FC = () => {
                     }15`,
                 }}
                 className={styles.statusTag}
-              >{nota.tipo_nota == "nota fiscal de origem" ? "" : nota.tipo_nota}
+              >{nota.tipo_nota.toLocaleLowerCase() == "nota fiscal de origem" ? "" : nota.tipo_nota}
               </div>
               {nota.tipo_nota === "Aprovada" && (
                 <div
