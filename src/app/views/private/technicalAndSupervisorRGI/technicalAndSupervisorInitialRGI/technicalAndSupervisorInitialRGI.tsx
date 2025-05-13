@@ -289,7 +289,7 @@ const TechnicalAndSupervisorInitialRGI = () => {
     else {
       statusGarantia = garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
         .length == garantiaNfsWithItens.length
-        ? GarantiasStatusEnum2.RECUSADA
+        ? GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
         : GarantiasStatusEnum2.CONFIRMADO;
 
     }

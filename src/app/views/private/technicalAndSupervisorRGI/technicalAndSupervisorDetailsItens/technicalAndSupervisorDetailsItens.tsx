@@ -477,7 +477,8 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         itemId={notaFiscal?.id}
       />
       {cardData.codigoStatus ===
-        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && (
+        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO && 
+        notaFiscal?.tipo_nota == "Aprovada" && (
           <>
             <FileAttachmentDevolucao
               label="Anexo da NF de devolução"
