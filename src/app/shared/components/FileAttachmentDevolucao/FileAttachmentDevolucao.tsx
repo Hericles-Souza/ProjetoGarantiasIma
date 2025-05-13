@@ -7,6 +7,7 @@ import {
   GarantiasModel,
   GarantiasStatusEnum2,
 } from "@shared/models/GarantiasModel";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 
 interface FileData {
   id: string;
@@ -272,6 +273,8 @@ const FileAttachmentDevolucao: React.FC<FileAttachmentDevolucaoProps> = ({
             )}
             {recFile.fileNameWithExtension === "" &&
               recFile.imagemUrl === "" &&
+              authContext.user.rule.name != UserRoleEnum.Supervisor &&
+              authContext.user.rule.name != UserRoleEnum.Tecnico &&
               canUpload && (
                 <label
                   style={{

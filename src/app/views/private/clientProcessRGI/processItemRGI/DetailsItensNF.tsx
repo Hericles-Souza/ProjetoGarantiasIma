@@ -675,16 +675,25 @@ const DetailsItensNF: React.FC = () => {
     }
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    setNotaFiscal((prevNotaFiscal) => {
-      if (prevNotaFiscal) {
-        return {
-          ...prevNotaFiscal,
-          itens: prevNotaFiscal.itens.filter((item) => item.id !== itemId),
-        };
-      }
-    });
-    setModalDeleteOpen(false);
+  const handleDeleteItem = async (itemId: string) => {
+    const response = await api.delete(
+      `/garantias/item/delete/${itemId}`
+    );
+
+    if (response.status === 200) {
+      setNotaFiscal((prevNotaFiscal) => {
+        if (prevNotaFiscal) {
+          return {
+            ...prevNotaFiscal,
+            itens: prevNotaFiscal.itens.filter((item) => item.id !== itemId),
+          };
+        }
+      });
+      setModalDeleteOpen(false);
+      message.success("Item excluído com sucesso!");
+      
+    }
+
   };
 
   const showDeleteConfirm = (itemId: string) => {
@@ -882,7 +891,7 @@ const DetailsItensNF: React.FC = () => {
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
         <span className={styles.RgiCode}>
-          RGI {garantia?.codigoRGI || "N/A"}
+          RGI {garantia?.rgi || garantia?.codigoRGI || "N/A"}
         </span>
       </div>
       <div className={styles.ContainerHeader}>

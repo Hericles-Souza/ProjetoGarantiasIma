@@ -288,8 +288,8 @@ const TechnicalAndSupervisorInitialRGI = () => {
     }
     else {
       statusGarantia = garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
-        .length > 0
-        ? GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+        .length == garantiaNfsWithItens.length
+        ? GarantiasStatusEnum2.RECUSADA
         : GarantiasStatusEnum2.CONFIRMADO;
 
     }
@@ -462,11 +462,11 @@ const TechnicalAndSupervisorInitialRGI = () => {
           >
             <LeftOutlined /> VOLTAR PARA O INÍCIO
           </Button>
-          <span className="RgiCode">RGI {cardData.rgi} </span>
+          <span className="RgiCode">RGI {cardData?.rgi || cardData?.codigoRGI} </span>
         </div>
         <div className={stylesDetails.headerContainer}>
           <div className={stylesDetails.headerLeft}>
-            <h1 className="tituloRgi">RGI {cardData.rgi}</h1>
+            <h1 className="tituloRgi">RGI {cardData?.rgi || cardData?.codigoRGI}</h1>
             <div
               style={{
                 color: StatusColors[cardData?.codigoStatus],

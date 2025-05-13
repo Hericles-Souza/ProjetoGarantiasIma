@@ -263,7 +263,7 @@ const RGIDetailsInitial: React.FC = () => {
       );
       const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
       console.log("notasFiscaisAPI: ", notasFiscaisAPI);
-      
+
       if (
         notasFiscaisAPI.filter((value) => value.codigo === nfCodeCompare).length <= 0
       ) {
@@ -271,7 +271,7 @@ const RGIDetailsInitial: React.FC = () => {
         const responsePost = await api.post(endpoint, payloadPost);
         console.log("payloadPost: ", payloadPost);
         console.log("responsePost: ", responsePost);
-        
+
         if (responsePost.status === 200 || responsePost.status === 201) {
           message.success("Nota fiscal adicionada com sucesso!");
           setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => [
@@ -329,8 +329,8 @@ const RGIDetailsInitial: React.FC = () => {
     let proximaLetra = "A";
     if (garantiaNfsWithItens.length > 0) {
       const ultimoItem = garantiaNfsWithItens[garantiaNfsWithItens.length - 1];
-      console.log("ultimoItem ", ultimoItem, "garantiaNfsWithItens: ",garantiaNfsWithItens);
-      
+      console.log("ultimoItem ", ultimoItem, "garantiaNfsWithItens: ", garantiaNfsWithItens);
+
       const [letra] = ultimoItem.rgi != null ? ultimoItem.rgi.split(".")[1] : ultimoItem.codigoRGI.split(".")[1];
       proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
     }
@@ -365,13 +365,14 @@ const RGIDetailsInitial: React.FC = () => {
 
   const handleDeleteNF = async () => {
     try {
-      const itensToDelete = cardData?.itens.filter(
-        (item) =>
-          item.codigoItem.split(".")[0] +
-          "." +
-          item.codigoItem.split(".")[1] ===
-          nfToDelete
-      );
+      if (garantiaNfsWithItens.length === 1) {
+        message.error("Não é permitido deletar a única NF vinculada a garantia.");
+        return;
+      }
+      const nfDeleted = cardData?.notas.find((nota) => nota.codigo == nfToDelete);
+
+      const itensToDelete = nfDeleted.itens;
+
       if (!itensToDelete || itensToDelete.length === 0) {
         message.error("Nenhum item encontrado para exclusão.");
         return;
@@ -396,18 +397,29 @@ const RGIDetailsInitial: React.FC = () => {
               (nf) => nf.nf !== itemToDelete.nfReferencia
             )
           );
-          setCardData((prevCardData) => ({
-            ...prevCardData,
-            itens: prevCardData.itens.filter(
-              (item) => item.codigoItem !== itemToDelete.codigoItem
-            ),
-          }));
         } else {
           message.error("Erro ao excluir a NF.");
         }
       }
-      setModalDeleteOpen(false);
-      message.success("NF excluída com sucesso!");
+
+      const response = await api.delete(
+        `/nota-fiscal/delete/${nfDeleted.id}`
+      );
+
+      if (response.status === 200) {
+        setCardData((prevCardData) => ({
+          ...prevCardData,
+          notas: prevCardData.notas.filter(
+            (nota) => nota.codigo !== nfDeleted.codigo
+          ),
+        }));
+
+        setGarantiaNfsWithItens(garantiaNfsWithItens.filter((nota) => nota.codigo != nfDeleted.codigo));
+        
+        setModalDeleteOpen(false);
+        message.success("NF excluída com sucesso!");
+      }
+
     } catch (error) {
       console.error("Erro ao excluir a NF:", error);
       message.error("Erro ao excluir a NF.");
@@ -758,12 +770,12 @@ const RGIDetailsInitial: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.RgiCode}>RGI N° {cardData?.rgi}</span>
+        <span className={styles.RgiCode}>RGI N° {cardData?.rgi || cardData?.codigoRGI}</span>
       </div>
 
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.rgiTitle}>RGI {cardData?.rgi}</h1>
+          <h1 className={styles.rgiTitle}>RGI {cardData?.rgi || cardData?.codigoRGI}</h1>
           <div
             style={{
               color: StatusColors[cardData?.codigoStatus],
