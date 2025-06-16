@@ -12,6 +12,7 @@ import TechnicalAndSupervisorDetailsItens from "./technicalAndSupervisorRGI/tech
 import TechnicalAndSupervisorInitialRGI from "./technicalAndSupervisorRGI/technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI";
 import RGIDetailsInitial from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
+import ReportScreen from "./relatorios/screenreport";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -53,7 +54,6 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
         allowedRoles: [UserRoleEnum.Admin]
       },
-
       {
         path: "view-pre-invoice",
         element: <InvoicePage />,
@@ -65,15 +65,12 @@ export const appRoutingPrivate: RouteConfig[] = [
         private: true,
         allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Tecnico, UserRoleEnum.Admin]
       }, 
-
-
       //tecnicos e supervisores
       {
         path: "technical-and-supervisor/details-itens",
         element: <TechnicalAndSupervisorDetailsItens />,
         private: true,
       },
-
       {
         path: "/garantias/technical-and-supervisor/:id",
         element: <TechnicalAndSupervisorInitialRGI />,
@@ -85,7 +82,12 @@ export const appRoutingPrivate: RouteConfig[] = [
         element: <ScreenDetailsItensTradeAgreement />,
         private: true,
       },
-
+      //tecnicos e supervisores e admin 
+      {
+        path: "/relatorio/rgi",
+        element: <ReportScreen />,
+        private: true,
+      },
     ]
   }
-]
+];
