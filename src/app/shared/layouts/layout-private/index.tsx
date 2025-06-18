@@ -16,7 +16,7 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { ChartColumn, ChevronDown, FileChartColumn } from "lucide-react";
+import { ChartColumn, ChartPie, ChevronDown, FileChartColumn, OctagonX, UserRoundPlus } from "lucide-react";
 import styles from "./styles.ts";
 import LogoIma from "@assets/image/png/logo-ima.png";
 import IconGarantia from "@assets/image/svg/icon_garantia.svg";
@@ -40,13 +40,9 @@ const menuData: MenuItem[] = [
   {
     key: "3",
     label: "Dashboard Inicial",
-    icon: (
-      <img
-        src={IconInitial}
-        alt="Dashboard"
-        style={{ width: "22px", height: "22px" }}
-      />
-    ),
+    icon: 
+      <ChartPie style={{ color: "red", height: "22px" }}/>
+    ,
     path: "/dashboard",
     allowedRoles: [
       UserRoleEnum.Admin,
@@ -74,14 +70,15 @@ const menuData: MenuItem[] = [
   {
     key: "2",
     label: "Cadastro de Usuários",
-    icon: (
-      <img
-        src={IconUser}
-        alt="Garantias"
-        style={{ width: "25px", height: "25px" }}
-      />
-    ),
+    icon: <UserRoundPlus style={{ color: "red", height: "22px" }}/>,
     path: "/users",
+    allowedRoles: [UserRoleEnum.Admin],
+  },
+  {
+    key: "5",
+    label: "Cadastro de Defeitos",
+    icon: <OctagonX style={{ color: "red", height: "22px" }} />,
+    path: "/defect",
     allowedRoles: [UserRoleEnum.Admin],
   },
   {

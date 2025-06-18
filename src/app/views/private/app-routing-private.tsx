@@ -13,6 +13,7 @@ import TechnicalAndSupervisorInitialRGI from "./technicalAndSupervisorRGI/techni
 import RGIDetailsInitial from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
 import ReportScreen from "./relatorios/screenreport";
+import ScreenDefect from "./defect/screenDefect";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -86,6 +87,11 @@ export const appRoutingPrivate: RouteConfig[] = [
       {
         path: "/relatorio/rgi",
         element: <ReportScreen />,
+        private: true,
+      },
+      {
+        path: "/defect",
+        element: <ScreenDefect/>,
         private: true,
       },
     ]

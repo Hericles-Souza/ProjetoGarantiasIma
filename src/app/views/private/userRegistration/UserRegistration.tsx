@@ -136,7 +136,7 @@ const UserRegistration: React.FC = () => {
       <div className={styles.header}>
         <Space direction="horizontal">
           <Search
-            className={styles.inputSearch}
+            // className={styles.inputSearch}
             placeholder="Pesquisar"
             onSearch={onSearchValues}
           />
