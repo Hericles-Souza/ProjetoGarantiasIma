@@ -7,10 +7,13 @@ import { TbQuestionMark } from 'react-icons/tb'
 import { styled } from 'styled-components'
 
 const Error = styled.div`
+ 
   padding: 4px 0 2px 0;
   font-size: 12px;
   color: #ff4d4f;
 `
+
+
 
 type InputPasswordProps = AntInputProps & {
   label?: string

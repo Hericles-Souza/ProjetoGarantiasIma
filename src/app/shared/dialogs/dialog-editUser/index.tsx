@@ -1,8 +1,8 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState } from 'react';
-import { Modal, Button, Space, Typography, message, Form } from 'antd';
-import Warnig from '@assets/image/png/warning.png'
-import { Checkbox, InputAdornment, TextField } from '@mui/material';
-import './dialogEditUser.style.css'
+import { Modal, Button, Space, Typography, Form } from 'antd';
+import { Checkbox, TextField } from '@mui/material';
+import './dialogEditUser.style.css';
 
 interface DialogAttentionProps {
     isVisible: boolean;
@@ -10,24 +10,19 @@ interface DialogAttentionProps {
     onConfirm: () => void;
 }
 
-const [isModalOpen, setIsModalOpen] = useState(false);
+const [, setIsModalOpen] = useState(false);
 const [value, setValue] = useState('');
 const [form] = Form.useForm();
-
 
 const closeModal = () => {
     setIsModalOpen(false);
 };
 
-
 const handleSubmit = () => {
     form.validateFields()
-        .then((values) => {
-            console.log("Form Values:", values);
+        .then(() => {
+            //console.log("Form Values:", values);
             closeModal();
-        })
-        .catch((info) => {
-            console.log("Validate Failed:", info);
         });
 };
 
@@ -36,7 +31,6 @@ const handleChange = (e) => {
 };
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
-
 
 const currencies = [
     {
@@ -53,6 +47,7 @@ const currencies = [
     },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, onConfirm, ...props }) => {
     return (
         <Modal
@@ -69,7 +64,7 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         left: '32px',
                         borderBottom: '1px solid #ddd',
                         marginBottom: '25px',
-                        width: '100%'
+                        width: '100%',
                     }}>
                     <Space >
                         <Typography
@@ -81,20 +76,19 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                                 width: '200px',
                                 marginLeft: '140px',
                                 marginBottom: '0px',
-                                paddingBottom: '0px'
+                                paddingBottom: '0px',
                             }} >
-                            CRIAR NOVO USUÁRIO
+                            EDITAR USUÁRIO
                         </Typography>
                     </Space>
                 </div>
 
-
-                <Space direction="horizontal" style={{ width: "100%" }}>
+                <Space direction="horizontal" style={{ width: '100%' }}>
                     <TextField
                         id="input-container-select"
                         select
                         label="Perfil"
-                        defaultValue="EUR"
+                        defaultValue="Cliente"
                         focused
                         className="outlined-input-select"
                         required
@@ -103,9 +97,7 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                                 native: true,
                             },
                         }}
-                        style={{ width: '265px', }}
-
-
+                        style={{ width: '265px' }}
                     >
                         {currencies.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -117,7 +109,6 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         <Checkbox
                             {...label}
                             defaultChecked
-                            //className='outlined-input-select'
                             sx={{
                                 color: '#FF0000',
                                 '&.Mui-checked': {
@@ -129,7 +120,8 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         <span style={{ marginTop: '-22px' }}>Usuário Ativo</span>
                     </div>
                 </Space>
-                <Space direction="horizontal" style={{ width: "100%" }}>
+
+                <Space direction="horizontal" style={{ width: '100%' }}>
                     <TextField
                         label="CNPJ"
                         variant="outlined"
@@ -141,10 +133,8 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         className="outlined-input-cnpj"
                         placeholder="000.000.000/0001-00"
                         {...props}
-                        style={{ width: '220px', }}
+                        style={{ width: '220px' }}
                     />
-
-
                     <TextField
                         label="Código Cigam"
                         variant="outlined"
@@ -156,13 +146,13 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         className="outlined-input-cnpj"
                         placeholder="65465465465465"
                         {...props}
-                        style={{ width: '220px', }}
+                        style={{ width: '220px' }}
                     />
-
                 </Space>
+
                 <Space style={{ width: '100%' }}>
                     <TextField
-                        label="Razão social"
+                        label="Razão Social"
                         variant="outlined"
                         value={value}
                         onChange={handleChange}
@@ -172,11 +162,11 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         placeholder="Razão Social"
                         className="outlined-input-razao"
                         {...props}
-                        style={{ width: '100%', }}
+                        style={{ width: '100%' }}
                     />
                 </Space>
 
-                <Space direction="horizontal" style={{ width: "100%", }}>
+                <Space direction="horizontal" style={{ width: '100%' }}>
                     <TextField
                         label="Telefone"
                         variant="outlined"
@@ -188,10 +178,8 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         placeholder="00 0000 0000"
                         className="outlined-input-contact"
                         {...props}
-                        style={{ width: '220px', }}
+                        style={{ width: '220px' }}
                     />
-
-
                     <TextField
                         label="E-mail"
                         variant="outlined"
@@ -203,22 +191,34 @@ const DialogEditUser: React.FC<DialogAttentionProps> = ({ isVisible, onClose, on
                         placeholder="00 0000 0000"
                         className="outlined-input-contact"
                         {...props}
-                        style={{ width: '220px', }}
+                        style={{ width: '220px' }}
                     />
                 </Space>
 
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <Button onClick={onClose} style={{ backgroundColor: "white", color: "red" }}>
-                        CANCELAR
-                    </Button>
-                    <Button type="primary" onClick={handleSubmit} style={{ backgroundColor: "red" }}>
-                        CRIAR
-                    </Button>
+                {/* Campo de Frete */}
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '15px' }}>
+                    <Checkbox
+                        {...label}
+                        defaultChecked
+                        sx={{
+                            color: '#FF0000',
+                            '&.Mui-checked': {
+                                color: '#FF0000',
+                            },
+                        }}
+                    />
+                    <span>Frete por conta da IMA</span>
                 </div>
 
-
-
-            </div >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+                    <Button onClick={onClose} style={{ backgroundColor: 'white', color: 'red' }}>
+                        CANCELAR
+                    </Button>
+                    <Button type="primary" onClick={handleSubmit} style={{ backgroundColor: 'red' }}>
+                        ATUALIZAR
+                    </Button>
+                </div>
+            </div>
         </Modal>
     );
 };

@@ -15,7 +15,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) =
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(context.user.rule.name)) {
+  if (allowedRoles && !allowedRoles.includes(context.user.rule.name as UserRoleEnum)) {
     return <Navigate to="/garantias" replace />;
   }
 

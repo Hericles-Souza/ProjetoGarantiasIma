@@ -13,6 +13,7 @@ export interface CreateUserRequest {
   ruleId: string;
   isActive: boolean;
   isAdmin: boolean;
+  frete: boolean;
   phone:string;
 }
 
@@ -39,6 +40,7 @@ export interface UpdateUserRequest {
   ruleId: string;
   isActive: boolean;
   isAdmin: boolean;
+  frete: boolean;
   phone:string;
 }
 
@@ -64,12 +66,13 @@ export function getAllUsers(page: number, limit: number): Promise<GetAllUsersRes
 }
 
 export function createUser(user: CreateUserRequest, token: string) {
+  // console.log("user: ", user);
   return api.post('/user', JSON.stringify(user), {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-  }).then((value) => console.log("request: " + value.request));
+  });
 }
 
 export function updateUser(user: UpdateUserRequest, token: string) {
@@ -78,5 +81,5 @@ export function updateUser(user: UpdateUserRequest, token: string) {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-  }).then((value) => console.log("request: " + value.request));
+  });
 }

@@ -6,6 +6,7 @@ interface OutlinedInputWithLabelProps {
   label?: string;
   value: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void; // 👈 ADICIONADO
   type?: "text" | "number" | "password";
   disabled?: boolean;
   InputProps?: object;
@@ -16,6 +17,7 @@ const OutlinedInputWithLabel: React.FC<OutlinedInputWithLabelProps> = ({
   label = "Razão social",
   value,
   onChange,
+  onKeyDown,
   type = "text",
   disabled = false,
   InputProps,
@@ -29,6 +31,7 @@ const OutlinedInputWithLabel: React.FC<OutlinedInputWithLabelProps> = ({
         variant="outlined"
         value={value}
         onChange={onChange}
+        onKeyDown={onKeyDown}
         className="outlined-input"
         type={type}
         disabled={disabled}

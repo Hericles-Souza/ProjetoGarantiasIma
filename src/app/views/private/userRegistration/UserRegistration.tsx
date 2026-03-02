@@ -1,10 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Input, Modal, Space, Table, TableColumnsType, TableProps } from 'antd';
-import { getAllUsers, GetAllUsersResponse } from "@shared/services/UserService.ts";
-import DialogUserRegistration from '@shared/dialogs/dialog-new-user';
-import styles from './UserRegistration.module.css';
-
-type TableRowSelection<T extends object = object> = TableProps<T>["rowSelection"];
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Input,
+  message,
+  Modal,
+  Space,
+  Table,
+  TableColumnsType,
+} from "antd";
+import {
+  getAllUsers,
+  GetAllUsersResponse,
+} from "@shared/services/UserService.ts";
+import DialogUserRegistration from "@shared/dialogs/dialog-new-user";
+import styles from "./UserRegistration.module.css";
+import { CheckOutlined, CloseOutlined, StopOutlined } from "@ant-design/icons";
 
 interface DataType {
   cigamCode: string;
@@ -16,47 +26,78 @@ interface DataType {
   age: string;
   status: boolean;
   email: string;
-  user: string;
   create: string;
+  frete: boolean;
   lastAlteration: string;
+  userRole: string;
 }
 
 const columns: TableColumnsType<DataType> = [
-  { title: 'ID', dataIndex: 'id' },
-  { title: 'Razão Social', dataIndex: 'age' },
-  { title: 'Código Cigam', dataIndex: 'cigamCode' },
-  { title: 'Telefone', dataIndex: 'phone' },
-  { title: 'Status', dataIndex: 'status' },
-  { title: 'E-mail', dataIndex: 'email' },
-  { title: 'Perfil do Usuário', dataIndex: 'user' },
-  { title: 'Criado', dataIndex: 'create' },
-  { title: 'Última Alteração', dataIndex: 'lastAlteration' },
+  { title: "Razão Social", dataIndex: "age" },
+  { title: "Código Cigam", dataIndex: "cigamCode" },
+  { title: "Telefone", dataIndex: "phone" },
+  { title: "CNPJ/CPF", dataIndex: "cnpj" },
+  {
+    title: "Status",
+    dataIndex: "status",
+    render: (value: boolean) =>
+      value ? (
+        <CheckOutlined style={{ color: "green", fontSize: "16px" }} />
+      ) : (
+        <CloseOutlined style={{ color: "red", fontSize: "16px" }} />
+      ),
+  },
+  { title: "E-mail", dataIndex: "email" },
+  { title: "Perfil do Usuário", dataIndex: "userRole" },
+  { title: "Senha", dataIndex: "key" },
+  { title: "Criado", dataIndex: "create" },
+  {
+    title: "Frete por conta da IMA",
+    dataIndex: "frete",
+    render: (frete: boolean, record: DataType) => {
+      const isCliente = record.userRole?.toLowerCase() === "cliente";
+      // console.log("Usuario: " + record.email + " / iscliente: " + isCliente);
+
+      if (isCliente) {
+        return frete ? (
+          <CheckOutlined style={{ color: "green", fontSize: "16px" }} />
+        ) : (
+          <CloseOutlined style={{ color: "red", fontSize: "16px" }} />
+        );
+      }
+
+      return (
+        <StopOutlined
+          style={{ color: "red", fontSize: "16px" }}
+          title="Não aplicável para este perfil"
+        />
+      );
+    },
+  },
+
+  { title: "Última Alteração", dataIndex: "lastAlteration" },
 ];
 
 const { Search } = Input;
 
 const UserRegistration: React.FC = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limitGet] = useState(1000);
+  const [limit, setLimit] = useState(14);
   const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
+  const [selectedAction, setSelectedAction] = useState<boolean>(false);
+  const [searchValue, setSearchValue] = useState<string>("");
 
-  const onSelectChange = (newSelectedRowKeys: React.Key[], selectedRows: DataType[]) => {
-    setSelectedRowKeys(newSelectedRowKeys);
-    if (selectedRows.length > 0) {
-      setSelectedUser(selectedRows[0]);
-    }
-  };
-
-  const openModal = (user: DataType | null = null) => {
+  const openModal = (user: DataType) => {
     setSelectedUser(user);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    setSelectedUser(null);
     setIsModalOpen(false);
   };
 
@@ -67,26 +108,37 @@ const UserRegistration: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response: GetAllUsersResponse = await getAllUsers(page, limit);
+      const response: GetAllUsersResponse = await getAllUsers(page, limitGet);
+      // console.log("USERS: " + JSON.stringify(response.data.data.data));
       const usersData = response.data.data.data.map((user) => ({
         key: user.id,
         id: user.id,
         age: user.fullname,
         status: user.isActive,
         email: user.email,
-        user: user.rule?.name,
+        userRole: user.rule?.name,
         create: user.createdAt,
         lastAlteration: user.updatedAt,
         cigamCode: user.codigoCigam,
         companyName: user.fullname,
         phone: user.phone,
         cnpj: user.cnpj,
+        frete: user.frete,
         isActive: user.isActive,
         isAdmin: user.isAdmin,
       }));
-      setDataSource(usersData);
+
+      const filteredData = usersData.filter(
+        (user) =>
+          user.companyName.toLowerCase().includes(searchValue.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
+          user.userRole?.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      // console.log("filteredData: ", filteredData);
+
+      setDataSource(filteredData);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
+      console.error("Erro ao buscar usuários:", error);
     } finally {
       setLoading(false);
     }
@@ -94,11 +146,24 @@ const UserRegistration: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [page, limit]);
+  }, [page, limit, searchValue]);
 
-  const rowSelection: TableRowSelection<DataType> = {
-    selectedRowKeys,
-    onChange: onSelectChange,
+  const rowSelection = {
+    type: "radio" as const,
+    selectedRowKeys: selectedUser ? [selectedUser.key] : [],
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
+      if (selectedRowKeys.length > 1) {
+        message.error("Você pode selecionar apenas uma linha!");
+      } else {
+        setSelectedUser(selectedRows[0]);
+      }
+    },
+  };
+
+  const onSearchValues = (value: string) => {
+    setSearchValue(value);
   };
 
   return (
@@ -106,14 +171,34 @@ const UserRegistration: React.FC = () => {
       <div className={styles.header}>
         <Space direction="horizontal">
           <Search
-            className={styles.inputSearch}
+            // className={styles.inputSearch}
             placeholder="Pesquisar"
-            onSearch={(value) => console.log(value)}
+            onSearch={onSearchValues}
           />
-          <Button type="default" className={styles.buttonEdite} onClick={() => openModal(selectedUser)}>
+          <Button
+            type="default"
+            className={styles.buttonEdite}
+            onClick={() => {
+              if (!selectedUser)
+                message.error("Deve ser selecionado um usário!");
+              else {
+                setSelectedAction(false);
+                openModal(selectedUser);
+                // console.log("update " + JSON.stringify(selectedUser));
+              }
+            }}
+          >
             Editar
           </Button>
-          <Button type="primary" className={styles.buttonCreate} danger onClick={() => openModal(null)}>
+          <Button
+            type="primary"
+            className={styles.buttonCreate}
+            danger
+            onClick={() => {
+              setSelectedAction(true);
+              openModal(null);
+            }}
+          >
             Criar Usuário
           </Button>
         </Space>
@@ -125,6 +210,7 @@ const UserRegistration: React.FC = () => {
             closeModal={closeModal}
             onSearch={onSearch}
             selectedUser={selectedUser}
+            selectedUserActionCreation={selectedAction}
           />
         </div>
       </Modal>
@@ -135,6 +221,7 @@ const UserRegistration: React.FC = () => {
           columns={columns}
           dataSource={dataSource}
           loading={loading}
+          scroll={{ y: 800 }}
           pagination={{
             current: page,
             pageSize: limit,

@@ -12,7 +12,8 @@ export interface AuthModel {
   isAdmin: boolean;
   codigoCigam: string;
   cnpj: string;
+  frete: boolean;
   rule?: RuleModel;
   token: string;
-  phone?: string;
+  phone: string;
 }

@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  web_garantias:
+    build: .
+    ports:
+      - "${EXTERNAL_PORT}:${VITE_SERVER_PORT}"
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+    volumes:
+      - web_garantias_data:/app/dist
+      - .:/app
+
+volumes:
+  web_garantias_data:

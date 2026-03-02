@@ -6,11 +6,19 @@ import { UserRoleEnum } from "@shared/enums/UserRoleEnum.ts";
 import UserRegistration from "@app/views/private/userRegistration/UserRegistration";
 import InvoicePage from "@shared/ViewPreInvoice/ViewPreInvoice";
 import DetailsItensNF from "./clientProcessRGI/processItemRGI/DetailsItensNF";
-import RgiDetailsPage from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import ScreenAcordoComercial from "./acordo-comercial/ScreenInitialTradeAgreement/ScreenInitialTradeAgreement";
 import Dashboard from "./dashboard/dashboard";
-import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
 import TechnicalAndSupervisorDetailsItens from "./technicalAndSupervisorRGI/technicalAndSupervisorDetailsItens/technicalAndSupervisorDetailsItens";
+import TechnicalAndSupervisorInitialRGI from "./technicalAndSupervisorRGI/technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI";
+import RGIDetailsInitial from "./clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
+import ScreenDetailsItensTradeAgreement from "./acordo-comercial/ScreenDetailsItensTradeAgreement/ScreenDetailsItensTradeAgreement";
+import ReportScreen from "./relatorios/screenreport";
+import ScreenDefect from "./defect/screenDefect";
+import AcordosReportScreen from "./relatorios/AcordosReportScreen";
+import ItensACIReportScreen from "./relatorios/screenItensACIReport";
+import RGIReportScreen from "./relatorios/screenItensRGIReport";
+import NfReportScreen from "./relatorios/screenNfReport";
+import ScreenTransportadora from "./transportadoras/screenTransportadoras";
 
 export const appRoutingPrivate: RouteConfig[] = [
   {
@@ -18,15 +26,19 @@ export const appRoutingPrivate: RouteConfig[] = [
     element: <LayoutPrivate />,
     private: true,
     children: [
-      //Tela geral de garantias
       {
         path: "garantias",
         element: <Garantias />,
-        private: true
+        private: true,
+        allowedRoles: [
+          UserRoleEnum.Supervisor,
+          UserRoleEnum.Tecnico,
+          UserRoleEnum.Cliente,
+        ],
       },
       {
         path: "garantias/rgi/:id",
-        element: <RgiDetailsPage />,
+        element: <RGIDetailsInitial />,
         private: true,
       },
       {
@@ -39,53 +51,91 @@ export const appRoutingPrivate: RouteConfig[] = [
         element: <InvoiceDetails />,
         private: true,
       },
-      //Tela de acordo comercial
       {
         path: "garantias/aci/:id",
         element: <ScreenAcordoComercial />,
         private: true,
-        allowedRoles: [UserRoleEnum.Admin]
+        allowedRoles: [
+          UserRoleEnum.Supervisor,
+          UserRoleEnum.Tecnico,
+          UserRoleEnum.Cliente,
+        ],
       },
-      {
-        path: "acordo-commercial",
-        element: <ScreenAcordoComercial />, 
-        private: true, 
-      },
+      //admin
       {
         path: "users",
         element: <UserRegistration />,
         private: true,
-        allowedRoles: [UserRoleEnum.Admin]
+        allowedRoles: [UserRoleEnum.Admin],
       },
       {
         path: "view-pre-invoice",
         element: <InvoicePage />,
         private: true,
-        allowedRoles: [UserRoleEnum.Supervisor]
       },
       {
         path: "dashboard",
         element: <Dashboard />,
         private: true,
-        allowedRoles: [UserRoleEnum.Supervisor, UserRoleEnum.Técnico, UserRoleEnum.Admin]
-      }, 
+        allowedRoles: [
+          UserRoleEnum.Supervisor,
+          UserRoleEnum.Tecnico,
+          UserRoleEnum.Admin,
+        ],
+      },
+      //tecnicos e supervisores
       {
         path: "technical-and-supervisor/details-itens",
-        element: <ScreenDetailsItensTradeAgreement />,
-        private: true,
-      },
-      {
-        path: "garantias/technical-and-supervisor/visor-inital/:id",
         element: <TechnicalAndSupervisorDetailsItens />,
         private: true,
       },
       {
-        path: "garantias/technical-and-supervisor/visor-item-details",
+        path: "/garantias/technical-and-supervisor/:id",
+        element: <TechnicalAndSupervisorInitialRGI />,
+        private: true,
+        allowedRoles: [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor],
+      },
+      {
+        path: "/garantias/aci/details-itens",
         element: <ScreenDetailsItensTradeAgreement />,
         private: true,
       },
-
-
-    ]
-  }
-]
+      //tecnicos e supervisores e admin
+      {
+        path: "/relatorio/rgi",
+        element: <ReportScreen />,
+        private: true,
+      },
+      {
+        path: "/relatorio/aci",
+        element: <AcordosReportScreen />,
+        private: true,
+      },
+      {
+        path: "/relatorio/itens-aci-report",
+        element: <ItensACIReportScreen />,
+        private: true,
+      },
+      {
+        path: "/relatorio/itens-rgi-report",
+        element: <RGIReportScreen />,
+        private: true,
+      },
+      {
+        path: "/relatorio/nf-rgi-report",
+        element: <NfReportScreen />,
+        private: true,
+      },
+      {
+        path: "/defect",
+        element: <ScreenDefect />,
+        private: true,
+      },
+      {
+        path: "/transportadora",
+        element: <ScreenTransportadora />,
+        private: true,
+      },
+    ],
+  },
+];

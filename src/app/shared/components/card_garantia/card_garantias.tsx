@@ -1,11 +1,15 @@
-import { CalendarOutlined, RightOutlined } from '@ant-design/icons';
-import React from 'react';
+import { CalendarOutlined, RightOutlined, UserOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import { converterStatusGarantia, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
-import { GarantiaItem } from "@shared/models/GarantiasModel.ts";
+import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasItemStatusEnum2, statusStylesRGI } from "@shared/enums/GarantiasStatusEnum.ts";
+import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
 import dayjs from 'dayjs';
+import { AuthContext } from '@shared/contexts/Auth/AuthContext';
+import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
+import { converterStatusAcordo, statusStylesACI } from '@shared/enums/AcordoComercialStatusEnum';
+import { AcordoComercialModel } from '@shared/models/AcordoComercialModel';
+import { useContext } from 'react';
 
-const CardContainer = styled.div<{ clickable: boolean }>`
+const CardContainer = styled.div<{ $clickable: boolean }>`
   flex: 0 0 calc(25% - 12px);
   max-width: 100%;
   box-sizing: border-box;
@@ -13,16 +17,16 @@ const CardContainer = styled.div<{ clickable: boolean }>`
   background-color: #fff;
   border-radius: 15px;
   border: 1px solid #ddd;
-  cursor: ${(props) => (props.clickable ? 'pointer' : 'default')};
+  cursor: ${(props) => (props.$clickable ? 'pointer' : 'default')};
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
   &:hover {
-    transform: ${(props) => (props.clickable ? 'scale(1.01)' : 'none')};
+    transform: ${(props) => (props.$clickable ? 'scale(1.01)' : 'none')};
     box-shadow: ${(props) =>
-      props.clickable ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+    props.$clickable ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
   }
 `;
 
@@ -48,25 +52,14 @@ const Code = styled.h3`
   margin: 2px 0;
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PieceCode = styled.p`
   font-size: 16px;
   color: #555;
   margin: 0;
 `;
 
-const Defect = styled.div`
-  font-size: 14px;
-  margin-left: 15px;
-  color: #555;
-  margin-top: 15px;
-`;
 
-const ValueDefect = styled.div`
-  font-size: 16px;
-  margin-top: 1px;
-  font-weight: bold;
-  color: #555;
-`;
 
 const Footer = styled.div`
   display: flex;
@@ -81,10 +74,20 @@ const Footer = styled.div`
 
 const Date = styled.p`
   font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
   color: #555;
   margin: 0;
 `;
+const CreatorInfo = styled.p`
+  font-size: 16px;
+  color: #555;
 
+  display: flex;
+  align-items: center;
+`;
 const RedContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -93,66 +96,57 @@ const RedContainer = styled.div`
   border-left: 5px solid #ff4d4d;
 `;
 
-const statusStyles = {
-  [GarantiasStatusEnum2.NAO_ENVIADO]: {
-    backgroundColor: '#F9F9F9',
-    color: '#5F5A56',
-  },
-  [GarantiasStatusEnum2.EM_ANALISE]: {
-    backgroundColor: '#B3E5FC',
-    color: '#0277BD',
-  },
-  [GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE]: {
-    backgroundColor: '#9747FF1F',
-    color: '#9747FF',
-  },
-  [GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO]: {
-    backgroundColor: '#FFE0B2',
-    color: '#EF6C00',
-  },
-  [GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO]: {
-    backgroundColor: '#FFE0B2',
-    color: '#EF6C00',
-  },
-  [GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA]: {
-    backgroundColor: '#4A32163D',
-    color: '#4A3216',
-  },
-  [GarantiasStatusEnum2.CONFIRMADO]: {
-    backgroundColor: '#C8E6C9',
-    color: '#2E7D32',
-  },
-};
 
 interface CardCategoriasProps {
-  GarantiaItem: GarantiaItem;
+  GarantiaItem?: GarantiasModel;
+  Acordo?: AcordoComercialModel;
   data: Date;
   codigoFormatado: string; // Código já formatado (ex: "RGI 1234567" ou "ACI 98765432")
   onClick?: () => void;
+  tab: string;
 }
 
-const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, codigoFormatado, onClick }) => {
-  const statusStyle = statusStyles[GarantiaItem.codigoStatus];
+const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, Acordo, codigoFormatado, onClick, tab }) => {
 
+  const statusStyle = tab === "RGI" ? statusStylesRGI[GarantiaItem.codigoStatus] : statusStylesACI[Acordo.codigoStatus];
+  const context = useContext(AuthContext);
+  const isTechnicalUser = context.user?.rule?.name
+    ? [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor].includes(context.user.rule.name as UserRoleEnum)
+    : false;
   return (
-    <CardContainer clickable={!!onClick} onClick={onClick}>
+    <CardContainer key={tab === "ACI" ? Acordo.id : GarantiaItem.id} $clickable={!!onClick} onClick={onClick}>
       <Header>
-        <Status style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}>
-          {converterStatusGarantia(GarantiaItem.codigoStatus)}
-        </Status>
+        {tab === "RGI" && (
+          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? `${statusStyle.backgroundColor}15` : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9", fontWeight: "500" , fontSize:"15px" }}>
+            {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin
+              ? converterStatusGarantia(GarantiaItem?.codigoStatus)
+              : (GarantiaItem?.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
+                ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, true)
+                : converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, false)}
+          </Status>
+        )}
+        {tab === "ACI" && (
+          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? `${statusStyle.backgroundColor}15` : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
+            {converterStatusAcordo(Acordo.codigoStatus)}
+          </Status>
+        )}
         <RightOutlined />
       </Header>
       <RedContainer>
         <Code>{codigoFormatado}</Code>
-        <PieceCode>Código da Peça: {GarantiaItem.nfReferencia}</PieceCode>
+
       </RedContainer>
-      <Defect>
-        Possível Defeito:
-        <ValueDefect>{GarantiaItem.tipoDefeito}</ValueDefect>
-      </Defect>
       <Footer>
         <Date>
-          <CalendarOutlined style={{ marginRight: 5 }} /> {dayjs(data).format('DD/MM/YYYY')}
+          {isTechnicalUser && tab === 'RGI' && GarantiaItem.razaoSocial && (
+            <CreatorInfo>
+              <UserOutlined style={{ marginRight: 4 }} />
+              {GarantiaItem.razaoSocial}
+            </CreatorInfo>
+          )}
+          <div>
+            <CalendarOutlined style={{ marginRight: 5 }} /> {dayjs(data).format('DD/MM/YYYY')}
+          </div>
         </Date>
       </Footer>
     </CardContainer>

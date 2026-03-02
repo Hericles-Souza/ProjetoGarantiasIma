@@ -13,5 +13,6 @@ export interface AuthResponseDto {
   codigoCigam: string;
   cnpj: string;
   phone: string;
+  frete: boolean;
   rule?: RuleModel;
 }

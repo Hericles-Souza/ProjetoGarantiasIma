@@ -4,15 +4,21 @@ import Checkbox from "@mui/material/Checkbox";
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
 interface ColorCheckboxesProps {
-  checked: boolean;  // Recebe o estado `checked` do componente pai
+  checked: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
-export default function ColorCheckboxes({ checked, onChange }: ColorCheckboxesProps) {
+export default function ColorCheckboxes({
+  checked,
+  onChange,
+  disabled, 
+}: ColorCheckboxesProps) {
   return (
     <Checkbox
       {...label}
-      checked={checked}  
+      checked={checked}
+      disabled={disabled}
       onChange={onChange}
       sx={{
         color: "#FF0000",
@@ -22,4 +28,4 @@ export default function ColorCheckboxes({ checked, onChange }: ColorCheckboxesPr
       }}
     />
   );
-}
+} 

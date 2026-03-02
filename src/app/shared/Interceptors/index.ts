@@ -31,10 +31,8 @@ api.interceptors.response.use(
     console.error('Erro na resposta:', error);
 
     if (error.response && error.response.status === 401) {
-      console.log('Erro 401: Deslogando usuário...');
-      AuthService.logout(() => {
-        window.location.href = '/login';
-      });
+      //console.log('Erro 401: Deslogando usuário...');
+      AuthService.logout();
     }
 
     return Promise.reject(error);

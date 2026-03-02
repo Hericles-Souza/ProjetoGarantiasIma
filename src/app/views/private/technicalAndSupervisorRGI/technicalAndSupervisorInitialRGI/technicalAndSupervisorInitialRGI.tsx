@@ -1,232 +1,903 @@
-import { Button } from "antd";
-import { FileOutlined, LeftOutlined } from "@ant-design/icons";
-import styles from "./technicalAndSupervisorInitialRGI.module.css";
-import { useNavigate, useParams } from "react-router-dom";
-import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
-import { getGarantiaByIdAsync } from "@shared/services/GarantiasService.ts";
-import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
-import dayjs from "dayjs";
-import { useContext, useEffect, useState } from "react";
+import "./technicalAndSupervisorInitialRGI.module.css";
+import { InfoCircleOutlined, LeftOutlined } from "@ant-design/icons";
+import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
+import { Button, message, Spin, Modal, Input } from "antd";
+import { useState, useEffect, useContext } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { GarantiasModel } from "@shared/models/GarantiasModel";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
-import { isNull } from "util";
+import {
+  converterStatusGarantia,
+  GarantiasItemStatusEnum,
+  GarantiasItemStatusEnum2,
+  GarantiasStatusEnum,
+  GarantiasStatusEnum2,
+  StatusColors,
+} from "@shared/enums/GarantiasStatusEnum";
+import api from "@shared/Interceptors";
+import environment from "@env/environment";
+import stylesDetails from "../technicalAndSupervisorInitialRGI/technicalAndSupervisorInitialRGI.module.css";
+import { NotaFiscal } from "@shared/models/NotaFiscalModel";
+import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWithLabel";
+import { getTransportadoras } from "@shared/services/PedidosService";
 
-const TechnicalAndSupervisorInitialRGI: React.FC = () => {
-  // Informações gerais fictícias
-  const [socialReason, setSocialReason] = useState("Empresa Fictícia LTDA");
-  const [phone, setPhone] = useState("(11) 12345-6789");
-  const [requestDate, setRequestDate] = useState(
-    dayjs("2025-01-01").format("DD/MM/YYYY")
-  );
-  const { id } = useParams<{ id: string }>();
+const TechnicalAndSupervisorInitialRGI = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const [, setCardData] = useState<GarantiasModel>();
   const context = useContext(AuthContext);
-  const [nfs, setNfs] = useState<
-    { nf: string; itens: number; sequence: number }[]
+  const nfOrigem: string =
+    location.state && location.state["N° NF de origem"]
+      ? location.state["N° NF de origem"]
+      : "";
+
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [duplicata, setDuplicata] = useState("");
+  const [dataSolicitacao, setDataSolicitacao] = useState("");
+  const [transportadoras, setTransportadoras] = useState<string[]>([]);
+  const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<
+    NotaFiscal[]
   >([]);
-  const [loading, setLoading] = useState<boolean>(true); // Para controlar o carregamento
+  const [, setNfs] = useState<
+    { itemId: string; nf: string; itens: number; sequence: number }[]
+  >(
+    nfOrigem
+      ? [
+          {
+            itemId: location.state.item.id,
+            nf: nfOrigem,
+            itens: 0,
+            sequence: 0,
+          },
+        ]
+      : []
+  );
+  const [cardData, setCardData] = useState<GarantiasModel>();
+  const [loading, setLoading] = useState(true);
+  const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(false);
+  const [modalRefuseOpen, setModalRefuseOpen] = useState(false); // State for refusal modal
+  const [modalCreditGranted, setModalCreditGranted] = useState(false); // State for refusal modal
+  const [currentNota, setCurrentNota] = useState<NotaFiscal | null>(null); // Track the nota being refused
+  const [conclusion, setConclusion] = useState(""); // State for conclusion input
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+  function getExtensionFromMimeType(mimeType: string): string {
+    const mimeTypes: { [key: string]: string } = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/zip": ".zip",
+      "audio/mpeg": ".mp3",
+      "video/mp4": ".mp4",
+    };
+    return mimeTypes[mimeType] || "";
+  }
+
+  function getFileExtensionFromBlob(blob: Blob): string {
+    const mimeType = blob.type;
+    const extension = getExtensionFromMimeType(mimeType);
+    return extension;
+  }
+
+  const getSellFile = async (itemId: string, field: string) => {
+    const urlGetFile =
+      environment.apiUrl +
+      `/files/files/download-private-file-item/${itemId}/${field}`;
+    // console.log(urlGetFile);
+
+    const response = await fetch(urlGetFile, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${context.user.token}`,
+      },
+    });
+
+    const blob = await response.blob();
+    const fileExtension = getFileExtensionFromBlob(blob);
+    const fileNameWithExtension = field + fileExtension;
+    const imagemUrl = URL.createObjectURL(blob);
+    // console.log(fileNameWithExtension);
+
+    return { fileNameWithExtension, imagemUrl };
+  };
+
+  const getAssciatedNfs = async (garantiaId: string) => {
+    // console.log("garantiaId: ", garantiaId);
+
+    const garantiaItemResponse = await fetch(
+      `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`,
+        },
+      }
+    );
+    const associatedNfsByGarantia = await garantiaItemResponse?.json();
+    // console.log("associatedNfsByGarantia: ", associatedNfsByGarantia);
+
+    const newAssociatedNfsByGarantia: NotaFiscal[] = [];
+
+    associatedNfsByGarantia?.data?.map(async (nfAssociated, index) => {
+      newAssociatedNfsByGarantia[index] = nfAssociated;
+      const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
+      newAssociatedNfsByGarantia[index].recSellFile = returnedSellFile;
+    });
+    // console.log("newAssociatedNfsByGarantia: ", newAssociatedNfsByGarantia);
+    setGarantiaNfsWithItens(associatedNfsByGarantia?.data);
+    if (
+      cardData?.status != GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
+    ) {
+      // console.log("status garantia: ", cardData);
+      if (
+        cardData?.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
+        cardData?.codigoStatus ==
+          GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+      ) {
+        setIsAnalysisConcluded(true);
+      } else if (cardData?.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
+        setIsAnalysisConcluded(true);
+      }
+    }
+  };
 
   useEffect(() => {
-    console.log("id existe: " + id);
-    const fetchData = async () => { 
-      let data: GarantiasModel = null;
+    const fetchUserData = async () => {
       try {
-        if (!id) {
-          await getGarantiaByIdAsync(location.pathname.split("/")[3]).then(
-            (dataReturned) => {
-              data = dataReturned.data;
-            }
-          );
-          // Se os dados vieram via location.state (por navegação interna)
-          console.log(location.pathname.split("/")[3]);
-          if (!isNull(data)) {
-            setSocialReason(data.razaoSocial);
-            setPhone(data.telefone);
-            setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
-            setCardData(data);
-            setNfs([
-              {
-                nf: data.nf,
-                itens: data.itens ? data.itens.length : 0,
-                sequence: 1,
-              },
-            ]);
-            return;
-          }
+        let data: GarantiasModel = null;
+        if (location.state) {
+          // console.log("location.state.garantia:", location.state.garantia);
+
+          data = location.state.garantia;
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-
-      try {
-        console.log("id existe: " + id);
-
-        // Se houver um ID na URL, busca os dados da garantia pela API
-        if (id) {
-          const response = await getGarantiaByIdAsync(id);
-          console.log("aqui: " + JSON.stringify(response));
-          const data = response.data.data;
-          setSocialReason(data.razaoSocial);
-          setPhone(data.telefone);
-          setRequestDate(dayjs(data.data).format("DD/MM/YYYY"));
+        if (data != null) {
+          setRazaoSocial(data.razaoSocial);
+          setTelefone(data.telefone);
+          setDataSolicitacao(data.data);
           setCardData(data);
+          await getAssciatedNfs(data.id);
           setNfs([
             {
+              itemId: location.state.item.id,
               nf: data.nf,
               itens: data.itens ? data.itens.length : 0,
               sequence: 1,
             },
           ]);
+
+          const transportadorasRec = await getTransportadoras();
+
+          setTransportadoras(transportadorasRec);
+        }
+
+        // console.log("status garantia: ", cardData);
+
+        if (cardData?.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
+          setIsAnalysisConcluded(false);
+        } else if (
+          cardData?.codigoStatus ==
+            GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR ||
+          cardData?.codigoStatus ==
+            GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
+        ) {
+          setIsAnalysisConcluded(true);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Erro ao buscar dados do usuário:", error);
       } finally {
-        console.log("finalizou");
         setLoading(false);
       }
     };
+    fetchUserData();
+  }, [location.state, cardData]);
 
-    fetchData();
-  }, [id]); // Executa a requisição apenas uma vez, quando o `id` mudar
+  const handleUpdateNote = async (notaFiscal: NotaFiscal, refuse: boolean) => {
+    if (refuse) {
+      // Open the modal for conclusion input
+      notaFiscal.tipo_nota = "Recusada";
+      setCurrentNota(notaFiscal);
+      setModalRefuseOpen(true);
+      return;
+    } else {
+      notaFiscal.tipo_nota = "Aprovada";
+      const payloadNotaFiscal: NotaFiscal = {
+        garantiaId: notaFiscal.garantia_id,
+        codigo: notaFiscal.codigo,
+        codigoRGI: notaFiscal.rgi,
+        tipo_nota: notaFiscal.tipo_nota,
+        data_emissao: notaFiscal.data_emissao,
+        id_referencia: notaFiscal.id_referencia,
+        data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        itens: notaFiscal.itens,
+        id: notaFiscal.id,
+        observacao: "",
+      };
 
-  if (loading) {
-    return <div>Carregando...</div>;
+      // console.log("notaFiscalUpdate: ", payloadNotaFiscal);
+      const responseUpdate = await api.put(
+        `/nota-fiscal/update/${notaFiscal.id}`,
+        payloadNotaFiscal
+      );
+
+      if (responseUpdate.status === 200) {
+        setGarantiaNfsWithItens([...garantiaNfsWithItens]); // Refresh UI
+        message.success("Nota Aprovada com sucesso");
+      }
+    }
+    // If approving, proceed without modal
+  };
+
+  const updateRGITransportadora = (newTransportadora: string) => {
+    if (cardData) {
+      setCardData({ ...cardData, transportadora: newTransportadora });
+    }
+  };
+
+  const handleConfirmRefusal = async () => {
+    if (!currentNota) return;
+
+    const notaFiscal = { ...currentNota };
+    notaFiscal.tipo_nota = "Recusada";
+    // notaFiscal.conclusao = conclusion; // Add the conclusion to the payload
+
+    const payloadNotaFiscal: NotaFiscal = {
+      garantiaId: notaFiscal.garantia_id,
+      codigo: notaFiscal.codigo,
+      codigoRGI: notaFiscal.rgi,
+      tipo_nota: notaFiscal.tipo_nota,
+      data_emissao: notaFiscal.data_emissao,
+      id_referencia: notaFiscal.id_referencia,
+      data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      itens: notaFiscal.itens,
+      id: notaFiscal.id,
+      observacao: conclusion,
+    };
+
+    // console.log("notaFiscalUpdate (Refused): ", payloadNotaFiscal);
+    const responseUpdate = await api.put(
+      `/nota-fiscal/update/${notaFiscal.id}`,
+      payloadNotaFiscal
+    );
+
+    if (responseUpdate.status === 200) {
+      setGarantiaNfsWithItens([...garantiaNfsWithItens]); // Refresh UI
+      message.success("Nota Recusada com sucesso");
+    } else {
+      message.error("Erro ao recusar a nota");
+    }
+
+    // Reset states and close modal
+    setModalRefuseOpen(false);
+    setConclusion("");
+    setCurrentNota(null);
+  };
+
+  const handleCreditGranted = async () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+    const statusGarantia: GarantiasStatusEnum2 =
+      GarantiasStatusEnum2.CREDITO_CONCEDIDO;
+
+    const garantia: GarantiasModel = {
+      razaoSocial: location.state.garantia.razaoSocial,
+      telefone: location.state.garantia.telefone,
+      email: context.user.email,
+      nf:
+        garantiaNfsWithItens?.filter((nota) => nota.tipo_nota == "Aprovada")[0]
+          ?.codigo || garantiaNfsWithItens[0].codigo,
+      fornecedor: context.user.fullname,
+      codigoStatus: statusGarantia,
+      observacao: "Crédito Concedido",
+      usuarioAtualizacao: context.user.username,
+      status: converterStatusGarantia(statusGarantia),
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      frete: cardData.frete,
+      duplicata: duplicata,
+      transportadora: cardData.transportadora || "",
+    };
+
+    // console.log("updateGarantia: ", garantia);
+
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
+      garantia
+    );
+
+    if (responseHeader.status === 200) {
+      message.success("Garantia atualizada com sucesso");
+      navigate("/garantias");
+    }
+  };
+
+  const handleConcludeAnalyse = async () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+    const statusGarantia: GarantiasStatusEnum2 =
+      GarantiasStatusEnum2.PECAS_AVALIADAS;
+
+    const garantia: GarantiasModel = {
+      razaoSocial: location.state.garantia.razaoSocial,
+      telefone: location.state.garantia.telefone,
+      email: context.user.email,
+      nf:
+        garantiaNfsWithItens?.filter((nota) => nota.tipo_nota == "Aprovada")[0]
+          ?.codigo || garantiaNfsWithItens[0].codigo,
+      fornecedor: context.user.fullname,
+      codigoStatus: statusGarantia,
+      observacao: "Análise das Peças Concluída",
+      usuarioAtualizacao: context.user.username,
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      frete: cardData.frete || false,
+      duplicata: cardData.duplicata || "",
+      transportadora: cardData.transportadora || "",
+    };
+
+    // console.log("updateGarantia: ", garantia);
+
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
+      garantia
+    );
+
+    if (responseHeader.status === 200) {
+      message.success("Garantia atualizada com sucesso");
+      navigate("/garantias");
+    }
+  };
+
+  const handleConfirm = async (envio: boolean) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+    let statusGarantia: GarantiasStatusEnum2;
+
+    if (envio) {
+      statusGarantia = garantiaNfsWithItens?.every((nota) =>
+        nota.itens?.every(
+          (item) =>
+            item?.codigoStatus ===
+            GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO
+        )
+      )
+        ? GarantiasStatusEnum2.RECUSADA
+        : GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO;
+    } else {
+      statusGarantia =
+        garantiaNfsWithItens.filter((nota) => nota.tipo_nota != "Aprovada")
+          .length == garantiaNfsWithItens.length
+          ? GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
+          : GarantiasStatusEnum2.CONFIRMADA;
+    }
+
+    const garantia: GarantiasModel = {
+      razaoSocial: location.state.garantia.razaoSocial,
+      telefone: location.state.garantia.telefone,
+      email: context.user.email,
+      nf:
+        garantiaNfsWithItens?.filter((nota) => nota.tipo_nota == "Aprovada")[0]
+          ?.codigo || garantiaNfsWithItens[0].codigo,
+      fornecedor: context.user.fullname,
+      codigoStatus: statusGarantia,
+      observacao: "teste",
+      usuarioAtualizacao: context.user.username,
+      status: converterStatusGarantia(statusGarantia),
+      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      frete: cardData.frete,
+      duplicata: cardData.duplicata ?? "",
+      transportadora: cardData.transportadora || "",
+    };
+
+    // console.log("updateGarantia: ", garantia);
+
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${location.state.garantia.id}/UpdateHeader`,
+      garantia
+    );
+
+    if (responseHeader.status === 200) {
+      message.success("Garantia atualizada com sucesso");
+      navigate("/garantias");
+    }
+  };
+
+  const handleSaveTec = async () => {
+    try {
+      if (context.user.rule.name === UserRoleEnum.Tecnico) {
+        let statusGarantia;
+        if (
+          garantiaNfsWithItens?.some((nota) =>
+            nota.itens.some(
+              (item) =>
+                item.status != GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO
+            )
+          )
+        ) {
+          statusGarantia = GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR;
+        } else {
+          statusGarantia = GarantiasStatusEnum2.RECUSADA;
+        }
+
+        const garantia: GarantiasModel = {
+          razaoSocial: razaoSocial,
+          telefone: telefone,
+          email: context.user.email,
+          nf: cardData.notas[0].codigo,
+          fornecedor: context.user.fullname,
+          codigoStatus: statusGarantia,
+          observacao: "Em análise supervisor",
+          usuarioAtualizacao: context.user.username,
+          dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          frete: cardData.frete || false,
+          duplicata: cardData.duplicata || "",
+          transportadora: cardData.transportadora || "",
+        };
+
+        // console.log("garantiaupdate: ", garantia);
+
+        const responseHeader = await api.put(
+          `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
+          garantia
+        );
+
+        if (responseHeader.status === 200) {
+          message.success("Garantia atualizada com sucesso!");
+          navigate("/garantias");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar a garantia:", error);
+      message.error("Erro ao atualizar a garantia");
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSave = async (
+    statusGarantia: GarantiasStatusEnum2 = GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
+  ) => {
+    try {
+      if (context.user.rule.name === UserRoleEnum.Supervisor) {
+        let finalStatusGarantia = statusGarantia;
+
+        if (statusGarantia === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO) {
+          const hasAuthorizedItems = garantiaNfsWithItens.some((nota) =>
+            nota.itens.some(
+              (item) =>
+                item?.codigoStatus === GarantiasItemStatusEnum2.ENVIO_AUTORIZADO
+            )
+          );
+          const hasNonAuthorizedItems = garantiaNfsWithItens.some((nota) =>
+            nota.itens.some(
+              (item) =>
+                item?.codigoStatus !== GarantiasItemStatusEnum2.ENVIO_AUTORIZADO
+            )
+          );
+
+          if (hasAuthorizedItems && hasNonAuthorizedItems) {
+            finalStatusGarantia =
+              GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE;
+          }
+        }
+
+        const garantia: GarantiasModel = {
+          razaoSocial: razaoSocial,
+          telefone: telefone,
+          email: context.user.email,
+          nf: cardData.notas[0].codigo,
+          codigoRGI: cardData.codigoRGI || cardData.rgi,
+          fornecedor: context.user.fullname,
+          codigoStatus: finalStatusGarantia,
+          observacao: "teste",
+          usuarioAtualizacao: context.user.username,
+          status: converterStatusGarantia(finalStatusGarantia),
+          dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          frete: cardData.frete,
+          duplicata: cardData.duplicata,
+          transportadora: cardData.transportadora || ""
+        };
+
+        // console.log("garantiaupdate: ", garantia);
+
+        const responseHeader = await api.put(
+          `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
+          garantia
+        );
+
+        if (responseHeader.status === 200) {
+          message.success("Garantia atualizada com sucesso!");
+          navigate("/garantias");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar a garantia:", error);
+      message.error("Erro ao atualizar a garantia");
+    }
+  };
+
+  if (loading || !cardData) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spin
+          size="large"
+          style={{
+            color: "red",
+            filter: "hue-rotate(0deg) saturate(100%) brightness(0.5)",
+          }}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className={styles.appContainer} style={{ backgroundColor: "#fffff" }}>
-      <div className={styles.ContainerButtonBack}>
-        <Button
-          type="link"
-          className={styles.ButtonBack}
-          onClick={() => navigate("/garantias")}
-        >
-          <LeftOutlined /> VOLTAR PARA O INÍCIO
-        </Button>
-        <span className={styles.RgiCode}>RGI N° 000666-0001</span>
-      </div>
-
-      <div className={styles.headerContainer}>
-        <div className={styles.headerLeft}>
-          <h1 className={styles.rgiTitle}>RGI 000666-0001</h1>
-          <div className={styles.statusTag}>Aguardando avaliação</div>
+    <div className="acordo-container">
+      <header className="header">
+        <div className={stylesDetails.ContainerButtonBack}>
+          <Button
+            type="link"
+            className={stylesDetails.ButtonBack}
+            onClick={() => navigate("/garantias")}
+          >
+            <LeftOutlined /> VOLTAR PARA O INÍCIO
+          </Button>
+          <span className="RgiCode">
+            RGI {cardData?.rgi || cardData?.codigoRGI}{" "}
+          </span>
         </div>
-        <div className={styles.buttonsContainer}>
-          {/* ---------------------------para o TÉCNICO aqui é oculto-------------------------------------- */}
-          {context.user.rule.name != UserRoleEnum.Técnico && (
-            <>
-              <Button
-                type="default"
-                danger
-                className={styles.buttonSaveRgi}
-                onClick={() => navigate("view-pre-invoice")}
-              >
-                Visualizar Pré-Nota
-              </Button>
-              <Button
-                type="primary"
-                danger
-                style={{ backgroundColor: "red" }}
-                className={styles.buttonSendRgi}
-              >
-                Autorizar envio de NFD
-              </Button>
-            </>
-          )}
-
-          {/* ------------------------------------------------------------------------------------------------ */}
-
-          {/* ---------------------------para o SUPERVISOR aqui é oculto-------------------------------------- */}
-          {context.user.rule.name != UserRoleEnum.Supervisor && (
-            <>
-              <Button type="default" danger className={styles.buttonSaveRgi}>
-                Salvar
-              </Button>
-              <Button
-                type="primary" 
-                danger
-                style={{ backgroundColor: "red" }}
-                className={styles.buttonSendRgi}
-              >
-                Enviar
-              </Button>
-            </>
-          )}
-
-          {/* ------------------------------------------------------------------------------------------------ */}
-        </div>
-      </div>
-
-      <hr className={styles.divider} />
-
-      <div className={styles.infoContainer}>
-        <h3 className={styles.infoTitle}>Informações Gerais</h3>
-        <div className={styles.inputsContainer}>
-          <div className={styles.inputGroup} style={{ flex: 15 }}>
-            <OutlinedInputWithLabel
-              InputProps={{ readOnly: true }}
-              label="Razão social"
-              value={socialReason}
-              fullWidth
-              disabled
-            />
-          </div>
-          <div className={styles.inputGroup} style={{ flex: 5 }}>
-            <OutlinedInputWithLabel
-              InputProps={{ readOnly: true }}
-              label="Telefone"
-              value={phone}
-              fullWidth
-              disabled
-            />
-          </div>
-          <div className={styles.inputGroup} style={{ flex: 5 }}>
-            <OutlinedInputWithLabel
-              InputProps={{ readOnly: true }}
-              label="Data da solicitação"
-              value={requestDate}
-              fullWidth
-              disabled
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.nfsContainer}>
-        <div className={styles.nfcont}>
-          <h3 className={styles.nfsTitle}>NFs associadas a esta garantia</h3>
-        </div>
-
-        {nfs.map((nf, index) => (
-          <div key={index} className={styles.nfsItem}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <FileOutlined
-                style={{
-                  marginRight: "10px",
-                  marginLeft: "20px",
-                  fontSize: "20px",
-                  color: "red",
-                }}
-              />
-              <span className={styles.nfsCode}>{nf.nf}</span>
-              <span className={styles.nfsDivider}> | </span>
-              <span className={styles.nfsQuantity}> {nf.itens} ITENS</span>
+        <div className={stylesDetails.headerContainer}>
+          <div className={stylesDetails.headerLeft}>
+            <h1 className="tituloRgi">
+              RGI {cardData?.rgi || cardData?.codigoRGI}
+            </h1>
+            <div
+              style={{
+                color: StatusColors[cardData?.codigoStatus],
+                backgroundColor: `${StatusColors[cardData?.codigoStatus]}26`,
+              }}
+              className={stylesDetails.statusTag}
+            >
+              {cardData?.status == "Recusada" ? "Recusada - Não é de nossa fabricação." : cardData?.status || ""}
             </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
+          </div>
+          {context.user.rule.name == UserRoleEnum.Tecnico &&
+            cardData?.codigoStatus == GarantiasStatusEnum2.EM_ANALISE && (
+              <div className="ButtonHeader">
+                <Button
+                  type="primary"
+                  className="ButonToSend"
+                  onClick={handleSaveTec}
+                >
+                  Finalizar Análise
+                </Button>
+              </div>
+            )}
+          {context.user.rule.name !== UserRoleEnum.Tecnico &&
+            (cardData?.codigoStatus ==
+              GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+              cardData?.codigoStatus ==
+                GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE ||
+              cardData?.codigoStatus ==
+                GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) && (
+              <div className="ButtonHeader">
+                <Button
+                  onClick={async () => {
+                    if (
+                      cardData?.codigoStatus !=
+                      GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO
+                    )
+                      handleConfirm(true);
+                    else handleConfirm(false);
+                  }}
+                  type="primary"
+                  className="ButonToSend"
+                >
+                  Enviar
+                </Button>
+              </div>
+            )}
+          {context.user.rule.name !== UserRoleEnum.Supervisor &&
+            cardData?.codigoStatus == GarantiasStatusEnum2.CONFIRMADA && (
+              <div className="ButtonHeader">
+                <Button
+                  onClick={async () => {
+                    handleConcludeAnalyse();
+                  }}
+                  type="primary"
+                  className="ButonToSend"
+                >
+                  Concluir Análise das Peças
+                </Button>
+              </div>
+            )}
+          {context.user.rule.name !== UserRoleEnum.Tecnico &&
+            cardData?.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS && (
+              <div className="ButtonHeader">
+                <Button
+                  onClick={async () => {
+                    setModalCreditGranted(true);
+                  }}
+                  type="primary"
+                  className="ButonToSend"
+                >
+                  Conceder Crédito
+                </Button>
+              </div>
+            )}
+        </div>
+      </header>
+
+      <section className={stylesDetails.infoContainer}>
+        <h2 className={stylesDetails.infoTitle}>Informações Gerais</h2>
+        <div className={stylesDetails.inputsContainer}>
+          <div className="info-row">
+            <OutlinedInputWithLabel
+              label="Razão social"
+              value={razaoSocial}
+              onChange={(e) => setRazaoSocial(e.target.value)}
+              fullWidth
+              disabled
+            />
+          </div>
+          <div className="info-row">
+            <OutlinedInputWithLabel
+              label="Telefone"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              fullWidth
+              disabled
+            />
+          </div>
+          <div className="info-row">
+            <OutlinedInputWithLabel
+              label="Data da solicitação"
+              value={dataSolicitacao}
+              onChange={(e) => setDataSolicitacao(e.target.value)}
+              fullWidth
+              disabled
+            />
+          </div>
+        </div>
+      </section>
+      {cardData?.codigoStatus != GarantiasStatusEnum2.NAO_ENVIADO &&
+        cardData?.codigoStatus != GarantiasStatusEnum2.EM_ANALISE && (
+          <>
+            {(cardData?.frete || cardData?.transportadora != '')  && (
+              <>
+                <section
+                  className={stylesDetails.infoContainer}
+                  style={{ marginTop: "30px" }}
+                >
+                  <h2 className={stylesDetails.infoTitle}>Informações Frete</h2>
+
+                  <div className={stylesDetails.dialoginfo}>
+                    <InfoCircleOutlined
+                      style={{ color: "#27BD02", paddingLeft: 5 }}
+                    />
+                    <span style={{ color: "#27BD02", paddingTop: 3 }}>
+                      O Frete é por conta da IMA.
+                    </span>
+                  </div>
+
+                  <div
+                    className={stylesDetails.containerSelectDefect}
+                    style={{ marginTop: "10px", marginBottom: "35px" }}
+                  >
+                    <OutlinedSelectWithLabel
+                      disabled={
+                        cardData?.codigoStatus !=
+                        GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR
+                      }
+                      placeholder="Selecione uma transportadora"
+                      label="Transportadoras"
+                      options={transportadoras.map((transportadora) => ({
+                        label: transportadora, // O nome do defeito
+                        value: transportadora, // O id do tipo defeito
+                      }))}
+                      value={cardData.transportadora || ""}
+                      defaultValue=""
+                      onChange={(e) => {
+                        cardData.transportadora = e.target.value;
+                        updateRGITransportadora(e.target.value);
+                      }}
+                    />
+                  </div>
+                </section>
+              </>
+            )}
+            {(!cardData?.frete && cardData?.transportadora == '') && (
+              <div
+                className={stylesDetails.dialoginfo}
+                style={{
+                  backgroundColor: "rgba(214, 1, 1, 0.174)",
+                }}
+              >
+                <InfoCircleOutlined
+                  style={{ color: "#FF0000", paddingLeft: 5 }}
+                />
+                <span style={{ color: "#FF0000", paddingTop: 3 }}>
+                  O Frete é por conta do cliente.
+                </span>
+              </div>
+            )}
+          </>
+        )}
+
+      {cardData?.codigoStatus == GarantiasStatusEnum2.CREDITO_CONCEDIDO && (
+        <div className={stylesDetails.freteInput}>
+          <OutlinedInputWithLabel
+            label="Duplicata"
+            value={cardData.duplicata ?? ""}
+            fullWidth
+            disabled
+          />
+        </div>
+      )}
+
+      <section className="nf-section">
+        <div className="headerNF">
+          <h2 className={stylesDetails.titleNf}>NFs associadas a esta RGI</h2>
+        </div>
+        {garantiaNfsWithItens?.sort().map((nota, index) => (
+          <div key={index} className={stylesDetails.nfsItem}>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <div>
+                <span className={stylesDetails.nfsCode}>
+                  {nota.codigoRGI || nota.rgi}
+                </span>
+                <span className="nf-divider"> | </span>
+                <span className={stylesDetails.nfsQuantity}>
+                  {nota.itens.length} ITENS
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              {context.user.rule.name === UserRoleEnum.Supervisor &&
+                cardData?.codigoStatus ===
+                  GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+                nota.recSellFile?.fileNameWithExtension != "" &&
+                nota.recSellFile?.imagemUrl != "" &&
+                !nota.tipo_nota.includes("Aprovada") &&
+                !nota.tipo_nota.includes("Recusada") && (
+                  <>
+                    <div className="ButtonHeader">
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <Button
+                          onClick={() => handleUpdateNote(nota, true)}
+                          type="primary"
+                          className={stylesDetails.buttonSendRgi}
+                        >
+                          Recusar NF de Devolução
+                        </Button>
+                        <Button
+                          type="primary"
+                          className={stylesDetails.buttonSendRgi}
+                          onClick={() => {
+                            handleUpdateNote(nota, false);
+                          }}
+                        >
+                          Autorizar
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
               <Button
                 type="text"
-                className={styles.nextButton}
-                onClick={() =>
-                  navigate(`/garantias/rgi/details-itens-nf/${id}`)
-                }
+                className={stylesDetails.nextButton}
+                onClick={() => {
+                  // console.log("nota: ", nota);
+                  navigate("/technical-and-supervisor/details-itens", {
+                    state: {
+                      nf: nota.codigoRGI || nota.rgi,
+                      garantia: cardData,
+                      isAnalysisConcluded:
+                        context.user.rule.name === UserRoleEnum.Tecnico &&
+                        isAnalysisConcluded,
+                      nota: nota,
+                    },
+                  });
+                }}
               >
                 &gt;
               </Button>
             </div>
           </div>
         ))}
-      </div>
+      </section>
+
+      {/* Modal for Refusal Conclusion */}
+      <Modal
+        title="Motivo da Recusa"
+        open={modalRefuseOpen}
+        onOk={handleConfirmRefusal}
+        onCancel={() => {
+          setModalRefuseOpen(false);
+          setConclusion("");
+          setCurrentNota(null);
+        }}
+        okText="Confirmar Recusa"
+        cancelText="Cancelar"
+        okButtonProps={{
+          style: { backgroundColor: "red", borderColor: "red", color: "white" },
+        }}
+        cancelButtonProps={{
+          style: { borderColor: "#dadada", color: "#5F5A56" },
+        }}
+      >
+        <p>Por favor, informe o motivo da recusa da NF de devolução:</p>
+        <Input.TextArea
+          rows={4}
+          value={conclusion}
+          onChange={(e) => setConclusion(e.target.value)}
+          placeholder="Digite a conclusão aqui..."
+        />
+      </Modal>
+
+      {/* Modal for credit Granted */}
+      <Modal
+        title="Número da duplicata"
+        open={modalCreditGranted}
+        onOk={handleCreditGranted}
+        onCancel={() => {
+          setModalCreditGranted(false);
+        }}
+        okText="Confirmar Crédito"
+        cancelText="Cancelar"
+        okButtonProps={{
+          style: { backgroundColor: "red", borderColor: "red", color: "white" },
+        }}
+        cancelButtonProps={{
+          style: { borderColor: "#dadada", color: "#5F5A56" },
+        }}
+      >
+        <p>Por favor, informe o número da duplicata:</p>
+        <OutlinedInputWithLabel
+          label="Duplicata"
+          value={duplicata}
+          onChange={(e) => {
+            setDuplicata(e.target.value);
+          }}
+          fullWidth
+        />
+      </Modal>
     </div>
   );
 };

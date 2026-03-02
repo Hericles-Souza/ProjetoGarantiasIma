@@ -1,9 +1,51 @@
-import {GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
+import {GarantiasItemStatusEnum2, GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
+import { NotaFiscal } from "./NotaFiscalModel";
+
+export interface GarantiaPedidos{
+  cdPedido: string;
+  cdMaterial: string;
+  descricaoMaterial: string;
+  cdTipoOperacao: string;
+  dataPedido: string;
+  cdCliente: string;
+  valorICMS: string;
+  valorIRRF: string;
+  valorISS: string;
+  valorIPI: string;
+  baseICMS: string;
+  baseIPI: string;
+  baseISS: string;
+  precoUnitario: string;
+  quantidade: string;
+  valorTotalItem: string;
+}
 
 export interface GarantiaItem {
-  codigoPeca: string;
-  id: string;
-  rgi: string;
+  anoVeiculo?: string;
+  codigoPeca?: string;
+  id?: string;
+  codigoRGI?: string;
+  codigoItem: string;
+  tipoDefeito?: string;
+  tipoDefeitoOficial?: string;
+  modeloVeiculoAplicado?: string;
+  torqueAplicado?: number;
+  nfReferencia: string;
+  loteItemOficial?: string;
+  loteItem?: string;
+  status?: string; 
+  codigoStatus: GarantiasItemStatusEnum2;
+  solicitarRessarcimento?: boolean;
+  analiseTecnica?:string;
+  conclusao?:string;
+  anexos?: string;
+  autorizado?: string;
+  nota_fiscal_id?: string;
+  rgi?: string;
+}
+
+export interface UpdateItemRequest {
+  garantiaId: string;
   codigoItem: string;
   tipoDefeito: string;
   modeloVeiculoAplicado: string;
@@ -11,16 +53,17 @@ export interface GarantiaItem {
   nfReferencia: string;
   loteItemOficial: string;
   loteItem: string;
-  status: string; 
-  codigoStatus: GarantiasStatusEnum2;
-  solicitarRessarcimento: boolean;
-  anexos?: string;
+  codigoStatus: number;
+  solicitarRessarcimento: number;
+  index: string;
 }
+
 
 export interface GarantiasModel {
   id?: string; 
   createdAt?: string;
   updatedAt?: string; 
+  codigoRGI?: string;
   rgi?: string;
   razaoSocial?: string;
   telefone?: string;
@@ -34,6 +77,12 @@ export interface GarantiasModel {
   usuarioInsercao?: string;
   dataAtualizacao?: string;
   usuarioAtualizacao?: string;
-  itens?: GarantiaItem[];
+  frete?: boolean;
+  duplicata?: string;
+  notas?: NotaFiscal[];
   anexos?: string;
+  itens?: GarantiaItem[];
+  transportadora?: string;
 }
+
+export { GarantiasStatusEnum2 };

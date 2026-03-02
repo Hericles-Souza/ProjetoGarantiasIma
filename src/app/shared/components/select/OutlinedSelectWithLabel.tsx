@@ -7,17 +7,21 @@ import './OutlinedSelectWithLabel.css';
 // Adicione uma interface para definir as props
 interface OutlinedSelectWithLabelProps {
   label: string;
+  placeholder?: string;
   options: { value: string; label: string }[];
   defaultValue?: string;
+  disabled?: boolean;
   className?: string; // Permite que o componente receba uma classe CSS
-  [key: string]: any; // Captura outras propriedades adicionais
+  [key: string]: unknown; // Captura outras propriedades adicionais
 }
 
 export default function OutlinedSelectWithLabel({
   label,
   options,
   defaultValue,
+  disabled = false,
   className,
+  placeholder,
   ...props // Captura propriedades adicionais
 }: OutlinedSelectWithLabelProps) {
   return (
@@ -32,8 +36,10 @@ export default function OutlinedSelectWithLabel({
     >
       <div className={`input-container ${className || ''}`} style={{ width: '100%' }}>
         <TextField
+          disabled={disabled}
           id="outlined-select-currency"
           select
+          placeholder={placeholder}
           label={label}
           defaultValue={defaultValue || options[0]?.value}
           helperText=""
@@ -56,6 +62,17 @@ export default function OutlinedSelectWithLabel({
             },
           }}
           className={`outlined-select ${className || ''}`}
+          // ✅ Apenas esta linha foi adicionada
+          SelectProps={{
+            MenuProps: {
+              PaperProps: {
+                style: {
+                  maxHeight: 300,
+                  overflowY: 'auto',
+                },
+              },
+            },
+          }}
           {...props} // Repassa propriedades adicionais ao TextField
         >
           {options.map((option) => (
