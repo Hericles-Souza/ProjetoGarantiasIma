@@ -1,5 +1,5 @@
-import {AuthResponseDto} from "@shared/dtos/AuthResponseDto.ts";
-import {AuthModel} from "@shared/models/AuthModel.ts";
+import { AuthResponseDto } from "@shared/dtos/AuthResponseDto.ts";
+import { AuthModel } from "@shared/models/AuthModel.ts";
 
 export const mapMeResponseToAuthModel = (meResponse: AuthResponseDto, token: string): AuthModel => {
   return {
@@ -17,6 +17,6 @@ export const mapMeResponseToAuthModel = (meResponse: AuthResponseDto, token: str
     shortname: meResponse.shortname,
     updatedAt: meResponse.updatedAt,
     token: token,
-    frete: meResponse.frete
+    frete: meResponse.frete,
   };
 };

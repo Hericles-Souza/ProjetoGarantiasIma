@@ -9,11 +9,7 @@ interface ColorCheckboxesProps {
   disabled?: boolean;
 }
 
-export default function ColorCheckboxes({
-  checked,
-  onChange,
-  disabled, 
-}: ColorCheckboxesProps) {
+export default function ColorCheckboxes({ checked, onChange, disabled }: ColorCheckboxesProps) {
   return (
     <Checkbox
       {...label}
@@ -28,4 +24,4 @@ export default function ColorCheckboxes({
       }}
     />
   );
-} 
+}

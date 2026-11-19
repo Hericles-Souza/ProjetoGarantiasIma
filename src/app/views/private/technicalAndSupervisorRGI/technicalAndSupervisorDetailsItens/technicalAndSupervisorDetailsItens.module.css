@@ -28,10 +28,9 @@
   font-size: 14px;
   color: #000000;
   outline: none !important;
-
 }
 
-.ButtonBack:hover{
+.ButtonBack:hover {
   outline: none;
   border-color: transparent;
   color: red !important;
@@ -44,13 +43,10 @@
   text-align: right;
 }
 
-.containerSelectDefect{
+.containerSelectDefect {
   margin-top: 20px;
   margin-bottom: 30px;
-
 }
-
-
 
 .ContainerHeader {
   display: flex;
@@ -88,7 +84,7 @@
 }
 
 .tituloSecao {
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 20.83px;
@@ -98,14 +94,14 @@
 }
 
 .tituloSecaoVermelho {
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: 400;
   font-size: 20px;
   color: #ff0000;
 }
 
 .tituloA {
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 20.83px;
@@ -230,7 +226,6 @@
   border-color: #ff4d4f;
 }
 
-
 .botoesCabecalho .excluir {
   background-color: transparent;
   color: #5f5a56;
@@ -262,7 +257,6 @@
   align-items: center;
 }
 
-
 .itemAnexoImagem {
   display: flex;
   justify-content: space-between;
@@ -283,7 +277,6 @@
   height: 100px;
   font-size: 14px;
 }
-
 
 .dialoginfo {
   display: flex;
@@ -362,7 +355,6 @@
   margin-bottom: 20px;
 }
 
-
 .descriptionUpdateNFSale {
   color: #5f5a56;
 }
@@ -417,7 +409,7 @@
 .fileUpdateContent {
   display: flex;
   align-items: center;
-  gap:10px;
+  gap: 10px;
   /* padding-top: 10px; */
 }
 
@@ -426,8 +418,6 @@
   align-items: center;
   justify-content: space-between;
 }
-
-
 
 .contentReimbursement {
   border-radius: 15px;
@@ -470,15 +460,13 @@
   outline: none !important;
 }
 
-
 .ButtonUpdate:hover {
   outline: none !important;
   border: solid 1px red;
   color: red !important;
-
 }
 
-.toggleButton{
+.toggleButton {
   outline: none !important;
 }
 
@@ -491,66 +479,65 @@
   background-color: red !important;
   border-radius: 10px !important;
   height: 45px !important;
-  font-size: "16px"!important;
-  color: #FFF !important;
+  font-size: "16px" !important;
+  color: #fff !important;
   padding: 0 25px !important;
   outline: none !important;
   border: none;
 }
 
-.ButtonSave{
+.ButtonSave {
   border-radius: 10px !important;
   height: 45px !important;
-  font-size: "16px"!important;
+  font-size: "16px" !important;
   padding: 0 25px !important;
   outline: none !important;
 }
 
-.ButtonSave:hover{
+.ButtonSave:hover {
   border: solid 0.5px #d92a2e !important;
   color: #dc3545 !important;
 }
 
-
-.ButtonDelete{
+.ButtonDelete {
   background-color: white !important;
   border-radius: 10px !important;
-  font-size: "16px"!important;
+  font-size: "16px" !important;
   height: 45px !important;
   padding: 0 25px !important;
   outline: none !important;
 }
 
-.ButtonDelete:hover{
+.ButtonDelete:hover {
   border: solid 1px red !important;
   color: red !important;
 }
 
-.DeleteOutlined:hover{
+.DeleteOutlined:hover {
   color: red !important;
 }
 
-.statusAuthorized  {
+.statusAuthorized {
   color: #28a745; /* Verde */
   font-weight: 500;
   padding: 8px 15px;
   margin-left: 10px;
-  background-color: #d4edda; 
+  background-color: #d4edda;
   border-radius: 10px;
   font-size: 14px;
 }
 
-.statusRejected  {
-  color: #dc3545; 
+.statusRejected {
+  color: #dc3545;
   font-weight: 500;
   padding: 8px 10px;
   margin-left: 10px;
-  background-color: #f8d7da; 
+  background-color: #f8d7da;
   border-radius: 10px;
   font-size: 14px;
 }
 
-.checkboxContainer{
+.checkboxContainer {
   display: flex !important;
   justify-content: center;
   height: 40px;

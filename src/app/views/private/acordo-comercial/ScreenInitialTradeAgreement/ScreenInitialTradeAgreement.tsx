@@ -6,10 +6,7 @@ import { Button, message, Modal } from "antd";
 import { ModalModel } from "../../clientProcessRGI/RGIDetailsInitial/RGIDetailsInitial";
 import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import {
-  AcordoComercialItem,
-  AcordoComercialModel,
-} from "@shared/models/AcordoComercialModel";
+import { AcordoComercialItem, AcordoComercialModel } from "@shared/models/AcordoComercialModel";
 import {
   AcordoComercialItemStatusEnum2,
   AcordoComercialStatusEnum2,
@@ -77,7 +74,7 @@ const ScreenAcordoComercial: React.FC = () => {
       IPI: 0,
       mva: 0,
       nf: nfNumber,
-      tipoDefeitoOficial: ""
+      tipoDefeitoOficial: "",
     };
 
     acordo.itens.push(itemAcordoPost);
@@ -94,7 +91,7 @@ const ScreenAcordoComercial: React.FC = () => {
       valorIPI: 0,
       ICMSSubstituicao: 0,
       itens: acordo.itens,
-      duplicata: acordo.duplicata
+      duplicata: acordo.duplicata,
     };
 
     await updateAciHeaderByIdAsync(payloadAcordoPut, acordo.id);
@@ -120,19 +117,17 @@ const ScreenAcordoComercial: React.FC = () => {
       setTelefone(recAcordo.telefone);
       setDataSolicitacao(recAcordo.data);
       const recNfs = recAcordo.itens
-        .map(
-          (value) =>
-            value.codigoItem.split(".")[0] +
-            "." +
-            value.codigoItem.split(".")[1]
-        )
+        .map((value) => value.codigoItem.split(".")[0] + "." + value.codigoItem.split(".")[1])
         .filter((nf) => nf !== "");
 
       // Contar as ocorrências
-      const nfCountMap = recNfs.reduce((acc, nf) => {
-        acc[nf] = (acc[nf] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const nfCountMap = recNfs.reduce(
+        (acc, nf) => {
+          acc[nf] = (acc[nf] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       // Gerar o array de objetos com nf e quantidade
       const nfsFormatted = Object.entries(nfCountMap).map(([nf, itens]) => ({
@@ -152,15 +147,13 @@ const ScreenAcordoComercial: React.FC = () => {
     if (context.user.rule.name == UserRoleEnum.Supervisor) {
       if (
         !recAcordo.itens.some(
-          (item) =>
-            item.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
+          (item) => item.codigoStatus != AcordoComercialItemStatusEnum2.AUTORIZADO
         )
       ) {
         statusACI = AcordoComercialStatusEnum2.CONFIRMADA;
       } else if (
         recAcordo.itens.some(
-          (item) =>
-            item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
+          (item) => item.codigoStatus == AcordoComercialItemStatusEnum2.NAO_AUTORIZADO
         )
       ) {
         statusACI = AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA;
@@ -169,11 +162,11 @@ const ScreenAcordoComercial: React.FC = () => {
       statusACI = AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO;
 
       // Atualiza o status dos itens para "NÃO ANALISADO" quando o cliente envia
-      recAcordo.itens = recAcordo.itens.map(item => {
+      recAcordo.itens = recAcordo.itens.map((item) => {
         if (item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO) {
           return {
             ...item,
-            codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO
+            codigoStatus: AcordoComercialItemStatusEnum2.NAO_ANALISADO,
           };
         }
         return item;
@@ -192,14 +185,11 @@ const ScreenAcordoComercial: React.FC = () => {
       valorIPI: 0,
       ICMSSubstituicao: 0,
       itens: recAcordo.itens,
-      duplicata: recAcordo.duplicata
+      duplicata: recAcordo.duplicata,
     };
 
     try {
-      const response = await updateAciHeaderByIdAsync(
-        payloadAcordoPut,
-        recAcordo.id
-      );
+      const response = await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
       recAcordo.codigoStatus = statusACI;
       if (response.status == 200 || response.status == 201) {
         setAcordo(recAcordo);
@@ -229,14 +219,11 @@ const ScreenAcordoComercial: React.FC = () => {
       valorIPI: 0,
       ICMSSubstituicao: 0,
       itens: recAcordo.itens,
-      duplicata: recAcordo.duplicata
+      duplicata: recAcordo.duplicata,
     };
 
     try {
-      const response = await updateAciHeaderByIdAsync(
-        payloadAcordoPut,
-        recAcordo.id
-      );
+      const response = await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
       recAcordo.codigoStatus = statusACI;
       if (response.status == 200 || response.status == 201) {
         setAcordo(recAcordo);
@@ -266,14 +253,11 @@ const ScreenAcordoComercial: React.FC = () => {
       valorIPI: 0,
       ICMSSubstituicao: 0,
       itens: recAcordo.itens,
-      duplicata: duplicata
+      duplicata: duplicata,
     };
 
     try {
-      const response = await updateAciHeaderByIdAsync(
-        payloadAcordoPut,
-        recAcordo.id
-      );
+      const response = await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
       recAcordo.codigoStatus = statusACI;
       if (response.status == 200 || response.status == 201) {
         setAcordo(recAcordo);
@@ -282,7 +266,7 @@ const ScreenAcordoComercial: React.FC = () => {
     } catch (error) {
       // console.log("erro ao atualizar aci: ", error);
     }
-  }
+  };
 
   useEffect(() => {
     if (location.state) {
@@ -294,11 +278,7 @@ const ScreenAcordoComercial: React.FC = () => {
     <div className="acordo-container">
       <header className="header">
         <div className="ContainerButtonBack">
-          <Button
-            type="link"
-            className="ButtonBack"
-            onClick={() => navigate(`/garantias`)}
-          >
+          <Button type="link" className="ButtonBack" onClick={() => navigate(`/garantias`)}>
             <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO ACI
           </Button>
           <span className="RgiCode">ACI N° {acordo?.cdAci}</span>
@@ -310,52 +290,38 @@ const ScreenAcordoComercial: React.FC = () => {
             <div
               style={{
                 color: statusStylesACI[acordo?.codigoStatus]?.color,
-                backgroundColor: `${statusStylesACI[acordo?.codigoStatus]?.backgroundColor
-                  }26`,
+                backgroundColor: `${statusStylesACI[acordo?.codigoStatus]?.backgroundColor}26`,
               }}
               className={"statusTag"}
             >
               {converterStatusAcordo(acordo?.codigoStatus)}
             </div>
           </div>
-          {acordo?.codigoStatus !=
-            AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
-            acordo?.codigoStatus !=
-            AcordoComercialStatusEnum2.CONFIRMADA &&
+          {acordo?.codigoStatus != AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+            acordo?.codigoStatus != AcordoComercialStatusEnum2.CONFIRMADA &&
             context.user.rule?.name == UserRoleEnum.Cliente && (
               <div className="ButtonHeader">
                 <Button type="default" className="ButtonDelete">
                   EXCLUIR
                 </Button>
-                <Button
-                  type="primary"
-                  className="ButonToSend"
-                  onClick={handleSendACI}
-                >
+                <Button type="primary" className="ButonToSend" onClick={handleSendACI}>
                   ENVIAR
                 </Button>
               </div>
             )}
-          {(acordo?.codigoStatus ==
-            AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
-            acordo?.codigoStatus !=
-            AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && acordo?.codigoStatus !=
-            AcordoComercialStatusEnum2.CONFIRMADA) &&
+          {(acordo?.codigoStatus == AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+            (acordo?.codigoStatus != AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA &&
+              acordo?.codigoStatus != AcordoComercialStatusEnum2.CONFIRMADA)) &&
             context.user.rule?.name == UserRoleEnum.Supervisor && (
               <div className="ButtonHeader">
-                <Button
-                  type="primary"
-                  className="ButonToSend"
-                  onClick={handleSendACI}
-                >
+                <Button type="primary" className="ButonToSend" onClick={handleSendACI}>
                   ENVIAR
                 </Button>
               </div>
             )}
 
           {context.user.rule.name !== UserRoleEnum.Supervisor &&
-            acordo?.codigoStatus ==
-            AcordoComercialStatusEnum2.CONFIRMADA && (
+            acordo?.codigoStatus == AcordoComercialStatusEnum2.CONFIRMADA && (
               <div className="ButtonHeader">
                 <Button
                   onClick={async () => {
@@ -528,7 +494,6 @@ const ScreenAcordoComercial: React.FC = () => {
             setDuplicata(e.target.value);
           }}
           fullWidth
-
         />
       </Modal>
     </div>

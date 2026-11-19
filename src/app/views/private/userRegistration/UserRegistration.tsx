@@ -1,17 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-  Button,
-  Input,
-  message,
-  Modal,
-  Space,
-  Table,
-  TableColumnsType,
-} from "antd";
-import {
-  getAllUsers,
-  GetAllUsersResponse,
-} from "@shared/services/UserService.ts";
+import { Button, Input, message, Modal, Space, Table, TableColumnsType } from "antd";
+import { getAllUsers, GetAllUsersResponse } from "@shared/services/UserService.ts";
 import DialogUserRegistration from "@shared/dialogs/dialog-new-user";
 import styles from "./UserRegistration.module.css";
 import { CheckOutlined, CloseOutlined, StopOutlined } from "@ant-design/icons";
@@ -179,8 +168,7 @@ const UserRegistration: React.FC = () => {
             type="default"
             className={styles.buttonEdite}
             onClick={() => {
-              if (!selectedUser)
-                message.error("Deve ser selecionado um usário!");
+              if (!selectedUser) message.error("Deve ser selecionado um usário!");
               else {
                 setSelectedAction(false);
                 openModal(selectedUser);

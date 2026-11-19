@@ -39,13 +39,12 @@ const OutlinedInputWithLabel: React.FC<OutlinedInputWithLabelProps> = ({
           ...InputProps,
           sx: {
             "& .MuiInputLabel-root": { backgroundColor: "transparent" },
-            "& .MuiInputLabel-root.Mui-focused": { backgroundColor: "transparent" }
-          }
+            "& .MuiInputLabel-root.Mui-focused": { backgroundColor: "transparent" },
+          },
         }}
         fullWidth={fullWidth}
         {...props}
       />
-
     </div>
   );
 };

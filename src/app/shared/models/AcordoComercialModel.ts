@@ -1,4 +1,7 @@
-import { AcordoComercialItemStatusEnum2, AcordoComercialStatusEnum2 } from "@shared/enums/AcordoComercialStatusEnum";
+import {
+  AcordoComercialItemStatusEnum2,
+  AcordoComercialStatusEnum2,
+} from "@shared/enums/AcordoComercialStatusEnum";
 
 export interface AcordoComercialItem {
   id?: string;
@@ -49,7 +52,7 @@ export interface AcordoComercialModel {
   usuarioAtualizacao?: string;
 }
 
-export interface ResponseNfItem{
+export interface ResponseNfItem {
   success: boolean;
   data: NfItem[];
 }
@@ -76,22 +79,20 @@ export interface NfItem {
 }
 
 export interface UpdateItemResponse {
-  
-    codigoItem: string,
-    codigoPeca: string,
-    precoUnitario: number,
-    quantidade: number,
-    codigoStatus: number,
-    valorTotalItem: number,
-    tipoOperacao: string,
-    baseICMS: number,
-    valorICMS: number,
-    valorIPI: number,
-    ICMS: number,
-    IPI: number,
-    mva: number,
-    nf: string,
-    usuarioAtualizacao: string,
-    tipoDefeitoOficial: string
-  
+  codigoItem: string;
+  codigoPeca: string;
+  precoUnitario: number;
+  quantidade: number;
+  codigoStatus: number;
+  valorTotalItem: number;
+  tipoOperacao: string;
+  baseICMS: number;
+  valorICMS: number;
+  valorIPI: number;
+  ICMS: number;
+  IPI: number;
+  mva: number;
+  nf: string;
+  usuarioAtualizacao: string;
+  tipoDefeitoOficial: string;
 }

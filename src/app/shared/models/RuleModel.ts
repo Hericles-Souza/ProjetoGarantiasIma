@@ -1,4 +1,3 @@
-
 export interface RuleModel {
   id: string;
   createdAt: string;

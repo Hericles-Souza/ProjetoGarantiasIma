@@ -1,98 +1,40 @@
 import api from "@shared/Interceptors";
 import { GarantiasModel, UpdateItemRequest } from "@shared/models/GarantiasModel.ts";
 
+export const createGarantiaAsync = (data: GarantiasModel) => api.post("/garantias", data);
 
-export const createGarantiaAsync = (data: GarantiasModel) => {
-  return api.post('/garantias', data);
-}
+export const getAllGarantiasAsync = () => api.get("/garantias");
 
+export const getGarantiaByIdAsync = (id: string) => api.get(`/garantias/${id}`);
 
-export const getAllGarantiasAsync = () => {
-  return api.get('/garantias');
-}
+export const deleteGarantiaByIdAsync = (id: string) => api.delete(`/garantias/garantias/${id}`);
 
-export const getGarantiaByIdAsync = (id: string) => {
-  return api.get(`/garantias/${id}`);
-}
+export const updateGarantiasHeaderByIdAsync = (data: GarantiasModel) =>
+  api.put(`/garantias/garantiasHeader/${data.id}/UpdateHeader`, data);
 
-export const deleteGarantiaByIdAsync = (id: string) => {
-  return api.delete(`/garantias/garantias/${id}`);
-}
-
-export const updateGarantiasHeaderByIdAsync = (data: GarantiasModel) => {
-  return api.put(`garantias/garantiasHeader/${data.id}/UpdateHeader`, data);
-}
-
-export const updateGarantiasItemStatusAsync = (descricao: string) => {
-  return api.put(`/garantias/garantia-item-status`, JSON.stringify(descricao));
-}
-
-export const updateGarantiaItemByIdAsync = async (itemId: string, data: UpdateItemRequest) => {
+export const updateGarantiaItemByIdAsync = (itemId: string, data: UpdateItemRequest) => {
   if (!itemId) {
-    throw new Error('ID da garantia é obrigatório');
+    return Promise.reject(new Error("ID do item da garantia é obrigatório"));
   }
-  
-  const teste = await api.put(`garantias/item/update/${itemId}`, data);
-  
-  // console.log("teste: ", teste);
-
-  return teste;
+  return api.put(`/garantias/item/update/${itemId}`, data);
 };
 
-export const getGarantiasPaginationAsync = (page: number, limit: number, search?: string) => {
+export const getGarantiasPaginationAsync = (page: number, limit: number, search?: string) =>
+  api.post(`/garantias/garantias/pagination`, { page, limit, search });
 
-  const data = {
-    page,
-    limit,
-    search
-  }
+export const getGarantiasByStatusAsync = (page: number, limit: number, status: number) =>
+  api.get(`/garantias/garantias/status`, { params: { page, limit, codigoStatus: status } });
 
-  return api.post(`/garantias/garantias/pagination`, data);
-}
-
-export const getGarantiasByStatusAsync = (page: number, limit: number, status: number) => {
-  return api.get(`/garantias/garantias/status?page=${page}&limit=${limit}&codigoStatus=${status}`);
-}
-
-export const getGarantiasByUser = (username: string) => {
-  return api.get(`/garantias/by-user/${username}`);
-}
-
+/** O backend recebe o usuário por query string (antes era enviado no caminho e dava 404). */
+export const getGarantiasByUser = (username: string) =>
+  api.get(`/garantias/by-user`, { params: { username } });
 
 export const getAllRGIItens = async () => {
-  const token = localStorage.getItem('authToken');
-  if (!token) throw new Error('Token de autenticação não encontrado');
-
-  try {
-    const response = await api.get('/garantias/item/getAll', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Accept': 'application/json',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar itens RGI:', error);
-    throw error;
-  }
-}
+  const response = await api.get("/garantias/item/getAll");
+  return response.data;
+};
 
 export const getAllNewItems = async () => {
-  const token = localStorage.getItem('authToken');
-  if (!token) throw new Error('Token de autenticação não encontrado');
-
-  try {
-    const response = await api.get('/nota-fiscal/get-all', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Accept': 'application/json',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar itens novos:', error);
-    throw error;
-  }
-}
-
-
+  const response = await api.get("/nota-fiscal/get-all");
+  return response.data;
+};

@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useContext, useEffect, useRef, useState } from "react";
 import { Button, message, Spin } from "antd";
-import {
-  DownOutlined,
-  LeftOutlined,
-  FileOutlined,
-  RightOutlined,
-} from "@ant-design/icons";
+import { DownOutlined, LeftOutlined, FileOutlined, RightOutlined } from "@ant-design/icons";
 import styles from "./technicalAndSupervisorDetailsItens.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -18,10 +13,7 @@ import OutlinedSelectWithLabel from "@shared/components/select/OutlinedSelectWit
 import ColorCheckboxes from "@shared/components/checkBox/checkBox";
 import MultilineTextFields from "@shared/components/multline/multLine";
 import api from "@shared/Interceptors";
-import {
-  GarantiasModel,
-  UpdateItemRequest,
-} from "@shared/models/GarantiasModel";
+import { GarantiaItem, GarantiasModel, UpdateItemRequest } from "@shared/models/GarantiasModel";
 import {
   converterStatusGarantia,
   converterStatusGarantiaInverso,
@@ -39,139 +31,8 @@ import FileAttachmentDevolucao from "@shared/components/FileAttachmentDevolucao/
 import { Defect } from "@shared/models/DefectModel";
 import { getDefect } from "@shared/services/defectService";
 import { updateGarantiaItemByIdAsync } from "@shared/services/GarantiasService";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import { QuillItemEditor } from "@shared/components/quillItemEditor/QuillItemEditor";
-
-
-const RichTextItemEditor = React.memo(
-  ({
-    itemId,
-    value,
-    disabled,
-    onChangeHtml,
-  }: {
-    itemId: string;
-    value: string;
-    disabled?: boolean;
-    onChangeHtml: (html: string) => void;
-  }) => {
-    const context = useContext(AuthContext);
-
-    // Editor instance por item (key externa no map garante isolamento)
-    const editor = useEditor({
-      extensions: [
-        StarterKit,
-        Image.configure({
-          inline: false,
-          allowBase64: true, // permite dataURI se você optar por base64
-        }),
-      ],
-      content: value || "<p></p>",
-      immediatelyRender: false, // evita warning/issue em alguns setups [web:20]
-      editable: !disabled,
-      onUpdate: ({ editor }) => {
-        onChangeHtml(editor.getHTML());
-      },
-    });
-
-    // Mantém editor sincronizado se o value vier do backend/reload
-    useEffect(() => {
-      if (!editor) return;
-      const current = editor.getHTML();
-      if ((value || "<p></p>") !== current) {
-        editor.commands.setContent(value || "<p></p>");
-      }
-    }, [value, editor]);
-
-    const handlePickImage = async () => {
-      if (!editor) return;
-
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (!file) return;
-
-        try {
-          // Ajuste o endpoint conforme seu backend.
-          // A ideia é: enviar arquivo e receber uma URL (public ou private).
-          const form = new FormData();
-          form.append("file", file);
-          form.append("itemId", itemId);
-
-          const res = await fetch(`${environment.apiUrl}/files/files/upload-private-image-editor`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${context.user.token}`,
-            },
-            body: form,
-          });
-
-          if (!res.ok) {
-            message.error("Falha ao enviar imagem.");
-            return;
-          }
-
-          // Espera algo tipo: { url: "https://..." }
-          const data = await res.json();
-          const url = data?.url;
-          if (!url) {
-            message.error("Backend não retornou a URL da imagem.");
-            return;
-          }
-
-          editor.commands.setImage({ src: url }); // [web:59]
-        } catch (e) {
-          message.error("Erro ao enviar imagem.");
-        }
-      };
-
-      input.click();
-    };
-
-    if (!editor) return null;
-
-    return (
-      <div style={{ marginTop: 12 }}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <Button
-            size="small"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            disabled={disabled}
-          >
-            Negrito
-          </Button>
-          <Button
-            size="small"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            disabled={disabled}
-          >
-            Itálico
-          </Button>
-          <Button size="small" icon={<FileOutlined />} onClick={handlePickImage} disabled={disabled}>
-            Inserir imagem
-          </Button>
-        </div>
-
-        <div
-          style={{
-            border: "1px solid #dadada",
-            borderRadius: 8,
-            padding: 10,
-            background: "#fff",
-          }}
-        >
-          <EditorContent editor={editor} />
-        </div>
-      </div>
-    );
-  }
-);
-
-
+import { nowDataAtualizacao } from "@shared/utils/dateParts";
 
 // Componente FileAttachment
 const FileAttachment = React.memo(
@@ -219,8 +80,7 @@ const FileAttachment = React.memo(
         "image/gif": ".gif",
         "application/pdf": ".pdf",
         "application/msword": ".doc",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-          ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
         "application/zip": ".zip",
         "audio/mpeg": ".mp3",
         "video/mp4": ".mp4",
@@ -237,8 +97,7 @@ const FileAttachment = React.memo(
     const fetchImagem = async (itemId: string, field: string) => {
       try {
         const urlGetFile =
-          environment.apiUrl +
-          `/files/files/download-private-file-item/${itemId}/${field}`;
+          environment.apiUrl + `/files/files/download-private-file-item/${itemId}/${field}`;
 
         const response = await fetch(urlGetFile, {
           method: "GET",
@@ -271,16 +130,10 @@ const FileAttachment = React.memo(
     };
 
     return (
-      <div
-        className={styles.fileAttachmentContainer}
-        style={{ backgroundColor }}
-      >
+      <div className={styles.fileAttachmentContainer} style={{ backgroundColor }}>
         <span className={styles.labelAnexo}>{label}</span>
         {recFile?.fileNameWithExtension === "" && recFile?.imagemUrl === "" && (
-          <label
-            className={styles.buttonUpdateNfSale}
-            style={{ cursor: "default", opacity: 0.6 }}
-          >
+          <label className={styles.buttonUpdateNfSale} style={{ cursor: "default", opacity: 0.6 }}>
             Nenhum arquivo enviado
           </label>
         )}
@@ -289,12 +142,7 @@ const FileAttachment = React.memo(
             <label className={styles.buttonUpdateNfSale}>
               <button
                 style={{ backgroundColor: "red", display: "none" }}
-                onClick={() =>
-                  handleDownload(
-                    recFile.fileNameWithExtension,
-                    recFile.imagemUrl
-                  )
-                }
+                onClick={() => handleDownload(recFile.fileNameWithExtension, recFile.imagemUrl)}
               />
               Baixar Arquivo
             </label>
@@ -323,16 +171,11 @@ const CollapsibleSection = ({
 }) => {
   const context = useContext(AuthContext);
 
-  const statusStyleMapping: Record<
-    string,
-    { backgroundColor: string; color: string }
-  > = {
-    [GarantiasItemStatusEnum.AUTORIZADO]:
-      statusStylesRGI[GarantiasItemStatusEnum.AUTORIZADO],
+  const statusStyleMapping: Record<string, { backgroundColor: string; color: string }> = {
+    [GarantiasItemStatusEnum.AUTORIZADO]: statusStylesRGI[GarantiasItemStatusEnum.AUTORIZADO],
     [GarantiasItemStatusEnum.NAO_AUTORIZADO]:
       statusStylesRGI[GarantiasItemStatusEnum.NAO_AUTORIZADO],
-    [GarantiasItemStatusEnum.NAO_ANALISADO]:
-      statusStylesRGI[GarantiasItemStatusEnum.NAO_ANALISADO],
+    [GarantiasItemStatusEnum.NAO_ANALISADO]: statusStylesRGI[GarantiasItemStatusEnum.NAO_ANALISADO],
     [GarantiasItemStatusEnum.ENVIO_AUTORIZADO]:
       statusStylesRGI[GarantiasItemStatusEnum.ENVIO_AUTORIZADO],
     [GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO]:
@@ -393,17 +236,9 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   const [isAnalysisConcluded, setIsAnalysisConcluded] = useState(
     location.state?.isAnalysisConcluded || false
   );
-  const [imageMapsByItem, setImageMapsByItem] = useState<Record<string, Record<string, string>>>({});
-
-
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  const seconds = String(now.getSeconds()).padStart(2, "0");
-  const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+  const [imageMapsByItem, setImageMapsByItem] = useState<Record<string, Record<string, string>>>(
+    {}
+  );
 
   const fetchItems = async () => {
     try {
@@ -417,12 +252,11 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         const itensFiltrados =
           location.state.garantia.codigoStatus === 12
             ? itemsResponse.data.filter(
-              (item) =>
-                item.status !== GarantiasItemStatusEnum.NAO_AUTORIZADO &&
-                item.status !== GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO &&
-                item.status !== GarantiasItemStatusEnum.ENVIO_NF_DEV_NAO_AUTORIZADO
-
-            )
+                (item) =>
+                  item.status !== GarantiasItemStatusEnum.NAO_AUTORIZADO &&
+                  item.status !== GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO &&
+                  item.status !== GarantiasItemStatusEnum.ENVIO_NF_DEV_NAO_AUTORIZADO
+              )
             : itemsResponse.data;
 
         console.log("itensFiltrados: ", itensFiltrados);
@@ -440,10 +274,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
 
         if (updatedCardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE) {
           setIsAnalysisConcluded(false);
-        } else if (
-          updatedCardData.codigoStatus ==
-          GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR
-        ) {
+        } else if (updatedCardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR) {
           setIsAnalysisConcluded(true);
         }
         const defects = await getDefect(1, 1000);
@@ -503,7 +334,7 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         tipo_nota: notaFiscal.tipo_nota,
         data_emissao: notaFiscal.data_emissao,
         id_referencia: notaFiscal.id_referencia,
-        data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        data_atualizacao: nowDataAtualizacao(),
         itens: notaFiscal.itens,
         id: notaFiscal.id,
         observacao: "",
@@ -523,15 +354,6 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
   };
 
   const handleConfirm = async () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
-
     const garantia: GarantiasModel = {
       razaoSocial: location.state.garantia.razaoSocial,
       telefone: location.state.garantia.telefone,
@@ -539,10 +361,10 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
       nf: cardData?.nf || "",
       fornecedor: context.user.fullname,
       codigoStatus: GarantiasStatusEnum2.CONFIRMADA,
-      observacao: "teste",
+      observacao: cardData.observacao || "-",
       usuarioAtualizacao: context.user.username,
       status: GarantiasStatusEnum.CONFIRMADA,
-      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      dataAtualizacao: nowDataAtualizacao(),
       frete: cardData.frete,
       duplicata: cardData.duplicata,
     };
@@ -577,121 +399,122 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
     }));
   };
 
-  const getItemImageMap = (itemId: string): Record<string, string> =>
-    imageMapsByItem[itemId] || {};
+  const getItemImageMap = (itemId: string): Record<string, string> => imageMapsByItem[itemId] || {};
 
+  /** Cabeçalho da RGI com os dados atuais; só registra quem atualizou e quando. */
+  const buildHeader = (frete: boolean | null | undefined): GarantiasModel => ({
+    razaoSocial: cardData.razaoSocial,
+    telefone: cardData.telefone,
+    email: context.user.email,
+    nf: cardData.notas[0].codigo,
+    codigoRGI: cardData.codigoRGI || cardData.rgi,
+    fornecedor: context.user.fullname,
+    codigoStatus: cardData.codigoStatus,
+    observacao: cardData.observacao || "-",
+    usuarioAtualizacao: context.user.username,
+    status: cardData.status,
+    dataAtualizacao: nowDataAtualizacao(),
+    frete,
+    duplicata: cardData.duplicata || "",
+    transportadora: cardData.frete ? cardData.transportadora : "",
+  });
 
-  const handleSave = async () => {
-    if (!cardData?.notas) return;
+  /** Atualiza o cabeçalho uma única vez e volta para a tela da RGI. */
+  const saveHeaderAndGoBack = async (frete: boolean | null | undefined) => {
+    const garantia = buildHeader(frete);
+    const responseHeader = await api.put(
+      `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
+      garantia
+    );
 
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+    if (responseHeader.data?.success === false) {
+      message.error(responseHeader.data?.error || "Erro ao atualizar a garantia.");
+      return;
+    }
 
-    const promises = notaFiscal?.itens?.map(async (item) => {
-      if (item.status == "Não autorizado") {
-        if (item.conclusao == null || item.tipoDefeitoOficial == null) {
-          message.error(
-            "Item " +
-            item.codigoItem +
-            " precisa ter os campos Conclusao e Defeito!"
-          );
-          return;
-        }
+    message.success("Garantia atualizada com sucesso!");
+    navigate(`/garantias/technical-and-supervisor/${cardData.id}`, {
+      state: { item: garantia, garantia: cardData },
+    });
+  };
+
+  /** Executa a gravação item a item e devolve os códigos que falharam. */
+  const saveEachItem = async (
+    save: (item: GarantiaItem) => Promise<{ data?: { success?: boolean } }>
+  ) => {
+    const falhas: string[] = [];
+    for (const item of notaFiscal?.itens ?? []) {
+      try {
+        const response = await save(item);
+        // O backend responde 200 com success=false quando a gravação falha.
+        if (response.data?.success === false) falhas.push(item.codigoItem);
+      } catch (error) {
+        console.error(`Erro ao salvar o item ${item.codigoItem}:`, error);
+        falhas.push(item.codigoItem);
       }
+    }
+    return falhas;
+  };
 
-      const imagesMap = getItemImageMap(item.id);
-      const analiseTecnicaImagensTratadas = normalizeAnaliseHtml(item.analiseTecnica, imagesMap);
+  /**
+   * Antes: o cabeçalho era gravado uma vez por item, a tela navegava antes de as análises
+   * terminarem de salvar, e um item "Não autorizado" incompleto era só pulado.
+   */
+  const handleSave = async () => {
+    if (!cardData?.notas || !notaFiscal?.itens) return;
 
+    const incompletos = notaFiscal.itens.filter(
+      (item) =>
+        item.status == GarantiasItemStatusEnum.NAO_AUTORIZADO &&
+        (item.conclusao == null || item.tipoDefeitoOficial == null)
+    );
+    if (incompletos.length) {
+      incompletos.forEach((item) =>
+        message.error(`Item ${item.codigoItem} precisa ter os campos Conclusão e Defeito!`)
+      );
+      return;
+    }
 
-      const dataToSend = {
+    const falhas = await saveEachItem((item) =>
+      api.put(`/garantias/analisetecnica/`, {
         ItemId: item.id,
         conclusao: item.conclusao || "",
         status: item.status || GarantiasItemStatusEnum.NAO_ANALISADO,
-        codigoStatus:
-          item.codigoStatus || GarantiasItemStatusEnum2.NAO_ANALISADO,
+        codigoStatus: item.codigoStatus || GarantiasItemStatusEnum2.NAO_ANALISADO,
         tipoDefeitoOficial: item.tipoDefeitoOficial || "",
-        analiseTecnica: analiseTecnicaImagensTratadas,
-      };
+        analiseTecnica: normalizeAnaliseHtml(item.analiseTecnica, getItemImageMap(item.id)),
+      })
+    );
 
-      const garantia: GarantiasModel = {
-        razaoSocial: cardData.razaoSocial,
-        telefone: cardData.telefone,
-        email: context.user.email,
-        nf: cardData.notas[0].codigo,
-        codigoRGI: cardData.codigoRGI || cardData.rgi,
-        fornecedor: context.user.fullname,
-        codigoStatus: cardData.codigoStatus,
-        observacao: "teste",
-        usuarioAtualizacao: context.user.username,
-        status: cardData.status,
-        dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-        frete: cardData.frete,
-        duplicata: cardData.duplicata || "",
-        transportadora: cardData.frete ? cardData.transportadora : "",
-      };
+    if (falhas.length) {
+      message.error(`Falha ao salvar o(s) item(ns): ${falhas.join(", ")}.`);
+      await fetchItems();
+      return;
+    }
 
-
-      const responseHeader = await api.put(
-        `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
-        garantia
-      );
-
-      if (responseHeader.status === 200) {
-        message.success("Garantia atualizada com sucesso!");
-        navigate(`/garantias/technical-and-supervisor/${cardData.id}`, {
-          state: { item: garantia, garantia: cardData },
-        });
-      }
-      try {
-        const response = await api.put(
-          `/garantias/analisetecnica/`,
-          dataToSend
-        );
-
-        if (response.status === 200) {
-          message.success("Dados salvos com sucesso!");
-        } else {
-          message.error(`Falha ao salvar o item ${item.codigoItem}.`);
-        }
-      } catch (error) {
-        console.error(`Erro ao salvar o item ${item.codigoItem}:`, error);
-        message.error(`Erro ao salvar o item ${item.codigoItem}.`);
-      }
-    });
-
-    await Promise.all(promises || []);
-
-    // Recarregar os dados do backend para atualizar os status na interface
-    await fetchItems();
+    await saveHeaderAndGoBack(cardData.frete);
   };
 
   const handleSaveNFDev = async () => {
-    if (!cardData?.notas) return;
+    if (!cardData?.notas || !notaFiscal?.itens) return;
 
-    const isValid = notaFiscal?.itens?.every(
+    const todosAvaliados = notaFiscal.itens.every(
       (item) =>
-        item.codigoStatus ===
-        GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO ||
-        item.codigoStatus ===
-        GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO
+        item.codigoStatus === GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO ||
+        item.codigoStatus === GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO
     );
 
-    if (!isValid) {
+    // Antes a mensagem aparecia, mas a gravação seguia mesmo assim.
+    if (!todosAvaliados) {
       message.error("É necessário avaliar todos os itens!");
+      return;
     }
 
-    const promises = notaFiscal?.itens?.map(async (item) => {
-      const payloadUpdateItem = {
+    const falhas = await saveEachItem((item) =>
+      api.put(`/garantias/garantiasItem/${item.id}/UpdateItem`, {
         codigoItem: item.codigoItem,
         tipoDefeito: item.tipoDefeito,
-        torqueAplicado:
-          item.torqueAplicado != null ? Number(item.torqueAplicado) : 0,
+        torqueAplicado: item.torqueAplicado != null ? Number(item.torqueAplicado) : 0,
         modeloVeiculoAplicado: item.modeloVeiculoAplicado || "",
         nfReferencia: item.nfReferencia,
         codigoPeca: item.codigoPeca,
@@ -700,69 +523,16 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         anoVeiculo: item.anoVeiculo || "",
         codigoStatus: item.codigoStatus,
         solicitarRessarcimento: item.solicitarRessarcimento ? 1 : 0,
-      };
-
-
-      try {
-        const response = await api.put(
-          `/garantias/garantiasItem/${item.id}/UpdateItem`,
-          payloadUpdateItem
-        );
-
-        if (response.status === 200) {
-          message.success("Dados salvos com sucesso!");
-        } else {
-          message.error(`Falha ao salvar o item ${item.codigoItem}.`);
-        }
-      } catch (error) {
-        message.error(`Erro ao salvar o item ${item.codigoItem}.`);
-      }
-    });
-
-    await Promise.all(promises);
-    let statusGarantia;
-    if (
-      notaFiscal?.itens?.some(
-        (item) =>
-          item.codigoStatus == GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO
-      )
-    )
-      statusGarantia = GarantiasStatusEnum.AGUARDANDO_NF_DEVOLUCAO;
-    else statusGarantia = GarantiasStatusEnum.RECUSADA;
-
-    const garantia: GarantiasModel = {
-      razaoSocial: cardData.razaoSocial,
-      telefone: cardData.telefone,
-      email: context.user.email,
-      nf: cardData.notas[0].codigo,
-      codigoRGI: cardData.codigoRGI || cardData.rgi,
-      fornecedor: context.user.fullname,
-      codigoStatus: cardData.codigoStatus,
-      observacao: "teste",
-      usuarioAtualizacao: context.user.username,
-      status: cardData.status,
-      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-      frete: cardData.frete || false,
-      duplicata: cardData.duplicata || "",
-      transportadora: cardData.frete ? cardData.transportadora : "",
-    };
-
-
-    const responseHeader = await api.put(
-      `/garantias/garantiasHeader/${cardData.id}/UpdateHeader`,
-      garantia
+      })
     );
 
-
-    if (responseHeader.status === 200) {
-      message.success("Garantia atualizada com sucesso!");
-      navigate(`/garantias/technical-and-supervisor/${cardData.id}`, {
-        state: { item: garantia, garantia: cardData },
-      });
+    if (falhas.length) {
+      message.error(`Falha ao salvar o(s) item(ns): ${falhas.join(", ")}.`);
+      await fetchItems();
+      return;
     }
 
-    // Recarregar os dados do backend para atualizar os status na interface
-    await fetchItems();
+    await saveHeaderAndGoBack(cardData.frete || false);
   };
 
   const updateItemDefect = (itemId: string, newDefect: string) => {
@@ -865,17 +635,19 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
         isRessarcimento={false}
         itemId={notaFiscal?.id}
       />
-      {(cardData.codigoStatus ===
-        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO || cardData.codigoStatus ===
-        GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA || cardData.codigoStatus ===
-        GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO || cardData.codigoStatus ===
-        GarantiasStatusEnum2.CONFIRMADA || cardData.codigoStatus ===
-        GarantiasStatusEnum2.PECAS_AVALIADAS || cardData.codigoStatus ===
-        GarantiasStatusEnum2.CREDITO_CONCEDIDO) &&
-        notaFiscal.itens.some((x) => x.codigoStatus == GarantiasItemStatusEnum2.ENVIO_AUTORIZADO ||
-          x.codigoStatus == GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO ||
-          x.codigoStatus == GarantiasItemStatusEnum2.AUTORIZADO ||
-          x.codigoStatus == GarantiasItemStatusEnum2.NAO_AUTORIZADO) && (
+      {(cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+        cardData.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ||
+        cardData.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
+        cardData.codigoStatus === GarantiasStatusEnum2.CONFIRMADA ||
+        cardData.codigoStatus === GarantiasStatusEnum2.PECAS_AVALIADAS ||
+        cardData.codigoStatus === GarantiasStatusEnum2.CREDITO_CONCEDIDO) &&
+        notaFiscal.itens.some(
+          (x) =>
+            x.codigoStatus == GarantiasItemStatusEnum2.ENVIO_AUTORIZADO ||
+            x.codigoStatus == GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO ||
+            x.codigoStatus == GarantiasItemStatusEnum2.AUTORIZADO ||
+            x.codigoStatus == GarantiasItemStatusEnum2.NAO_AUTORIZADO
+        ) && (
           <>
             <FileAttachmentDevolucao
               label="Anexo da NF de devolução"
@@ -884,398 +656,370 @@ const TechnicalAndSupervisorDetailsItens: React.FC = () => {
               recGarantia={cardData}
             />
             <div className={styles.TitleItens}>
-              <h3 className={styles.nfsTitle}>
-                Itens desta NF associados a esta garantia
-              </h3>
+              <h3 className={styles.nfsTitle}>Itens desta NF associados a esta garantia</h3>
             </div>
           </>
         )}
 
-      {notaFiscal.itens.sort((a, b) =>
-        parseInt(a.codigoItem.split(".").pop() || "0") -
-        parseInt(b.codigoItem.split(".").pop() || "0")
-      ).map((item) => (
-        <div
-          className={styles.containerInformacoes}
-          style={{
-            border: isContentVisible[item.id] ? "1px solid red" : "none",
-            borderRadius: "15px",
-            padding: isContentVisible[item.id] ? "20px" : "15px",
-          }}
-          key={item.id}
-        >
-          <CollapsibleSection
-            title={item.codigoItem || ""}
-            isVisible={isContentVisible[item.id] || false}
-            toggleVisibility={() => toggleContentVisibility(item.id)}
-            handleConfirm={handleConfirm}
-            statusGarantia={item.status || "Não analisado"}
+      {notaFiscal.itens
+        .sort(
+          (a, b) =>
+            parseInt(a.codigoItem.split(".").pop() || "0") -
+            parseInt(b.codigoItem.split(".").pop() || "0")
+        )
+        .map((item) => (
+          <div
+            className={styles.containerInformacoes}
+            style={{
+              border: isContentVisible[item.id] ? "1px solid red" : "none",
+              borderRadius: "15px",
+              padding: isContentVisible[item.id] ? "20px" : "15px",
+            }}
+            key={item.id}
           >
-            <h3 className={styles.tituloSecao}>Informações Gerais</h3>
-            <div className={styles.inputsContainer}>
-              <div className={styles.inputsConjun}>
+            <CollapsibleSection
+              title={item.codigoItem || ""}
+              isVisible={isContentVisible[item.id] || false}
+              toggleVisibility={() => toggleContentVisibility(item.id)}
+              handleConfirm={handleConfirm}
+              statusGarantia={item.status || "Não analisado"}
+            >
+              <h3 className={styles.tituloSecao}>Informações Gerais</h3>
+              <div className={styles.inputsContainer}>
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      label="Código da peça"
+                      value={item?.codigoPeca || ""}
+                      fullWidth
+                      disabled
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      label="Referência / Lote da Peça"
+                      value={item.loteItem || ""}
+                      fullWidth
+                      disabled
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 1 }}>
+                    <OutlinedInputWithLabel
+                      label="Modelo do veículo que aplicou"
+                      fullWidth
+                      disabled
+                      value={item.modeloVeiculoAplicado || ""}
+                    />
+                  </div>
+                  <div className={styles.inputGroup} style={{ flex: 0.3 }}>
+                    <OutlinedInputWithLabel
+                      label="Ano do veículo"
+                      disabled
+                      value={item.anoVeiculo || ""}
+                      fullWidth
+                    />
+                  </div>
+                </div>
                 <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                   <OutlinedInputWithLabel
-                    label="Código da peça"
-                    value={item?.codigoPeca || ""}
+                    label="Defeito"
+                    value={item?.tipoDefeito || ""}
                     fullWidth
                     disabled
                   />
                 </div>
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Referência / Lote da Peça"
-                    value={item.loteItem || ""}
-                    fullWidth
-                    disabled
-                  />
+                {context.user.rule.name === UserRoleEnum.Supervisor && (
+                  <div className={styles.inputGroup} style={{ flex: 0.5 }}>
+                    <OutlinedInputWithLabel
+                      label="Defeito Oficial"
+                      value={item?.tipoDefeitoOficial?.replace(/_/g, " ") || ""}
+                      fullWidth
+                      disabled
+                    />
+                  </div>
+                )}
+                <div className={styles.inputsConjun}>
+                  <div className={styles.inputGroup} style={{ flex: 1 }}>
+                    <OutlinedInputWithLabel
+                      label="Torque aplicado à peça"
+                      value={item?.torqueAplicado?.toString() || ""}
+                      fullWidth
+                      disabled
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel
-                    label="Modelo do veículo que aplicou"
-                    fullWidth
-                    disabled
-                    value={item.modeloVeiculoAplicado || ""}
-                  />
-                </div>
-                <div className={styles.inputGroup} style={{ flex: 0.3 }}>
-                  <OutlinedInputWithLabel
-                    label="Ano do veículo"
-                    disabled
-                    value={item.anoVeiculo || ""}
-                    fullWidth
-                  />
-                </div>
-              </div>
-              <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                <OutlinedInputWithLabel
-                  label="Defeito"
-                  value={item?.tipoDefeito || ""}
-                  fullWidth
-                  disabled
-                />
-              </div>
-              {context.user.rule.name === UserRoleEnum.Supervisor && (
-                <div className={styles.inputGroup} style={{ flex: 0.5 }}>
-                  <OutlinedInputWithLabel
-                    label="Defeito Oficial"
-                    value={item?.tipoDefeitoOficial?.replace(/_/g, " ") || ""}
-                    fullWidth
-                    disabled
-                  />
-                </div>
-              )}
-              <div className={styles.inputsConjun}>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <OutlinedInputWithLabel
-                    label="Torque aplicado à peça"
-                    value={item?.torqueAplicado?.toString() || ""}
-                    fullWidth
-                    disabled
-                  />
-                </div>
-              </div>
-            </div>
+              <FileAttachment
+                label="Anexo da NF de venda"
+                backgroundColor="white"
+                itemId={item?.id}
+                isRessarcimento={item?.solicitarRessarcimento || false}
+              />
+              {item.solicitarRessarcimento &&
+                context.user.rule.name !== UserRoleEnum.Supervisor && (
+                  <div className={styles.contentReimbursement}>
+                    <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
+                    {[
+                      "1. Documento de identificação (RG ou CNH):",
+                      "2. Documentação do veículo:",
+                      "3. NFs de serviço:",
+                      "4. NF de outras despesa/produtos pertinentes:",
+                    ].map((itemRes, index) => (
+                      <FileAttachment
+                        key={index}
+                        label={itemRes}
+                        itemId={item.id}
+                        backgroundColor="#f5f5f5"
+                        isRessarcimento={item.solicitarRessarcimento}
+                      />
+                    ))}
+                  </div>
+                )}
 
-            <FileAttachment
-              label="Anexo da NF de venda"
-              backgroundColor="white"
-              itemId={item?.id}
-              isRessarcimento={item?.solicitarRessarcimento || false}
-            />
-            {item.solicitarRessarcimento &&
-              context.user.rule.name !== UserRoleEnum.Supervisor && (
-                <div className={styles.contentReimbursement}>
-                  <h3 className={styles.tituloA}>
-                    Anexo de dados adicionais para ressarcimento
-                  </h3>
+              {context.user.rule.name !== UserRoleEnum.Supervisor && (
+                <>
+                  <h3 className={styles.tituloA}>Anexos de Imagens</h3>
                   {[
-                    "1. Documento de identificação (RG ou CNH):",
-                    "2. Documentação do veículo:",
-                    "3. NFs de serviço:",
-                    "4. NF de outras despesa/produtos pertinentes:",
-                  ].map((itemRes, index) => (
+                    "1. Foto do lado onde está a gravação IMA:",
+                    "2. Foto da parte danificada/amassada/quebrada:",
+                    "3. Foto marcações suspeitas na peça:",
+                    "4. Foto da peça completa:",
+                    "5. Outras fotos pertinentes:",
+                  ].map((itemQuestion, index) => (
                     <FileAttachment
                       key={index}
-                      label={itemRes}
+                      label={itemQuestion}
+                      backgroundColor="white"
                       itemId={item.id}
-                      backgroundColor="#f5f5f5"
-                      isRessarcimento={item.solicitarRessarcimento}
+                      isRessarcimento={false}
                     />
                   ))}
-                </div>
+                </>
               )}
+            </CollapsibleSection>
+            {context.user.rule.name !== UserRoleEnum.Supervisor &&
+              cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE &&
+              item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO && (
+                <>
+                  <div className="ButtonHeader">
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <Button
+                        onClick={() => {
+                          item.status = GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO;
+                          item.codigoStatus = GarantiasItemStatusEnum2.ENVIO_NAO_AUTORIZADO;
+                          handleInputChange(item.id, "statusItem", "Envio não autorizado");
+                        }}
+                        type="primary"
+                        className={styles.buttonSendRgi}
+                      >
+                        Recusar Envio
+                      </Button>
+                      <Button
+                        type="primary"
+                        className={styles.buttonSendRgi}
+                        onClick={() => {
+                          item.status = GarantiasItemStatusEnum.ENVIO_AUTORIZADO;
+                          item.codigoStatus = GarantiasItemStatusEnum2.ENVIO_AUTORIZADO;
 
-            {context.user.rule.name !== UserRoleEnum.Supervisor && (
-              <>
-                <h3 className={styles.tituloA}>Anexos de Imagens</h3>
-                {[
-                  "1. Foto do lado onde está a gravação IMA:",
-                  "2. Foto da parte danificada/amassada/quebrada:",
-                  "3. Foto marcações suspeitas na peça:",
-                  "4. Foto da peça completa:",
-                  "5. Outras fotos pertinentes:",
-                ].map((itemQuestion, index) => (
-                  <FileAttachment
-                    key={index}
-                    label={itemQuestion}
-                    backgroundColor="white"
-                    itemId={item.id}
-                    isRessarcimento={false}
-                  />
-                ))}
-              </>
-            )}
-          </CollapsibleSection>
-          {context.user.rule.name !== UserRoleEnum.Supervisor &&
-            cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE &&
-            item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO && (
-              <>
-                <div className="ButtonHeader">
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <Button
-                      onClick={() => {
-                        item.status =
-                          GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO;
-                        item.codigoStatus =
-                          GarantiasItemStatusEnum2.ENVIO_NAO_AUTORIZADO;
-                        handleInputChange(
-                          item.id,
-                          "statusItem",
-                          "Envio não autorizado"
-                        );
-                      }}
-                      type="primary"
-                      className={styles.buttonSendRgi}
-                    >
-                      Recusar Envio
-                    </Button>
-                    <Button
-                      type="primary"
-                      className={styles.buttonSendRgi}
-                      onClick={() => {
-                        item.status = GarantiasItemStatusEnum.ENVIO_AUTORIZADO;
-                        item.codigoStatus =
-                          GarantiasItemStatusEnum2.ENVIO_AUTORIZADO;
-
-                        handleInputChange(
-                          item.id,
-                          "statusItem",
-                          "Envio autorizado"
-                        );
-                      }}
-                    >
-                      Autorizar Envio
-                    </Button>
+                          handleInputChange(item.id, "statusItem", "Envio autorizado");
+                        }}
+                      >
+                        Autorizar Envio
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          {context.user.rule.name == UserRoleEnum.Supervisor &&
-            cardData.codigoStatus ==
-            GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR &&
-            item.codigoStatus !=
-            GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO &&
-            item.codigoStatus !=
-            GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO && (
-              <>
-                <div className="ButtonHeader">
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <Button
-                      onClick={() => {
+                </>
+              )}
+            {context.user.rule.name == UserRoleEnum.Supervisor &&
+              cardData.codigoStatus == GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR &&
+              item.codigoStatus != GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO &&
+              item.codigoStatus != GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO && (
+                <>
+                  <div className="ButtonHeader">
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <Button
+                        onClick={() => {
+                          item.status = GarantiasItemStatusEnum.ENVIO_NF_DEV_NAO_AUTORIZADO;
+                          item.codigoStatus = GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO;
+
+                          // console.log("SATS: ", item.status);
+                          handleInputChange(
+                            item.id,
+                            "statusItem",
+                            "Envio nf de devolução não autorizado"
+                          );
+                        }}
+                        type="primary"
+                        className={styles.buttonSendRgi}
+                      >
+                        Recusar Envio NF Devolução
+                      </Button>
+                      <Button
+                        type="primary"
+                        className={styles.buttonSendRgi}
+                        onClick={() => {
+                          item.status = GarantiasItemStatusEnum.ENVIO_NF_DEV_AUTORIZADO;
+                          item.codigoStatus = GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO;
+
+                          handleInputChange(
+                            item.id,
+                            "statusItem",
+                            "Envio nf de devolução autorizado"
+                          );
+                        }}
+                      >
+                        Autorizar Envio NF Devolução
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            {context.user.rule.name !== UserRoleEnum.Supervisor &&
+              (cardData.codigoStatus == GarantiasStatusEnum2.CONFIRMADA ||
+                cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS ||
+                cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
+                <>
+                  <div className={styles.containerSelect}>
+                    <OutlinedSelectWithLabel
+                      label="Análise"
+                      options={[
+                        {
+                          value: "Autorizado",
+                          label: "Procedente",
+                        },
+                        { value: "Não autorizado", label: "Improcedente" },
+                      ]}
+                      value={item?.status}
+                      onChange={(e) => {
                         item.status =
-                          GarantiasItemStatusEnum.ENVIO_NF_DEV_NAO_AUTORIZADO;
+                          e.target.value === "Autorizado"
+                            ? GarantiasItemStatusEnum.AUTORIZADO
+                            : GarantiasItemStatusEnum.NAO_AUTORIZADO;
                         item.codigoStatus =
-                          GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO;
+                          e.target.value === "Autorizado"
+                            ? GarantiasItemStatusEnum2.AUTORIZADO
+                            : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
 
                         // console.log("SATS: ", item.status);
-                        handleInputChange(
-                          item.id,
-                          "statusItem",
-                          "Envio nf de devolução não autorizado"
-                        );
+                        handleInputChange(item.id, "statusItem", e.target.value);
                       }}
-                      type="primary"
-                      className={styles.buttonSendRgi}
-                    >
-                      Recusar Envio NF Devolução
-                    </Button>
-                    <Button
-                      type="primary"
-                      className={styles.buttonSendRgi}
-                      onClick={() => {
-                        item.status =
-                          GarantiasItemStatusEnum.ENVIO_NF_DEV_AUTORIZADO;
-                        item.codigoStatus =
-                          GarantiasItemStatusEnum2.ENVIO_NF_DEV_AUTORIZADO;
-
-                        handleInputChange(
-                          item.id,
-                          "statusItem",
-                          "Envio nf de devolução autorizado"
-                        );
-                      }}
-                    >
-                      Autorizar Envio NF Devolução
-                    </Button>
+                    />
                   </div>
-                </div>
-              </>
-            )}
-          {context.user.rule.name !== UserRoleEnum.Supervisor &&
-            (cardData.codigoStatus == GarantiasStatusEnum2.CONFIRMADA
-              || cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS
-              || cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
-            ) && (
-              <>
-                <div className={styles.containerSelect}>
-                  <OutlinedSelectWithLabel
-                    label="Análise"
-                    options={[
-                      {
-                        value: "Autorizado",
-                        label: "Procedente",
-                      },
-                      { value: "Não autorizado", label: "Improcedente" },
-                    ]}
-                    value={item?.status}
-                    onChange={(e) => {
-                      item.status =
-                        e.target.value === "Autorizado"
-                          ? GarantiasItemStatusEnum.AUTORIZADO
-                          : GarantiasItemStatusEnum.NAO_AUTORIZADO;
-                      item.codigoStatus =
-                        e.target.value === "Autorizado"
-                          ? GarantiasItemStatusEnum2.AUTORIZADO
-                          : GarantiasItemStatusEnum2.NAO_AUTORIZADO;
-
-                      // console.log("SATS: ", item.status);
-                      handleInputChange(item.id, "statusItem", e.target.value);
-                    }}
-                  />
-                </div>
-                <div className={styles.containerSelectDefect}>
-                  <OutlinedSelectWithLabel
-                    placeholder="Selecione um defeito"
-                    label="Defeito"
-                    options={defects.filter(x => {
-                      if (item.status == GarantiasItemStatusEnum.NAO_AUTORIZADO) return x.defeito.startsWith("I")
-                      else if (item.status == GarantiasItemStatusEnum.AUTORIZADO) return x.defeito.startsWith("P")
-                    }).map((defect) => ({
-                      label: defect.defeito, // O nome do defeito
-                      value: defect.defeito, // O id do tipo defeito
-                    }))}
-                    value={item.tipoDefeitoOficial || ""}
-                    defaultValue=""
-                    onChange={(e) => {
-                      item.tipoDefeitoOficial = e.target.value;
-                      updateItemDefect(item.id, e.target.value);
-                    }}
-                  />
-                </div>
-                {item.status == GarantiasItemStatusEnum.NAO_AUTORIZADO && (
-                  <>
-                    <h3 className={styles.tituloA}>Análise técnica</h3>
-                    <QuillItemEditor
-                      itemId={item.id}
-                      value={item.analiseTecnica || ""}
-                      onChangeHtml={(html) => {
-                        item.analiseTecnica = html;
-                        handleInputChange(item.id, "analiseTecnicaHtml", html);
-                      }}
-                      onUploadMapped={(localSrc, remoteUrl) => addImageMapping(item.id, localSrc, remoteUrl)}
-                    />
-
-                    <h3 className={styles.tituloA}>Conclusão</h3>
-                    <MultilineTextFields
-                      value={item?.conclusao || ""}
-                      onChange={(e) => {
-                        item.conclusao = e.target.value;
-                        setConclusao(e.target.value);
-                      }}
-                      label="Conclusão"
-                      placeholder="Digite a conclusão aqui..."
-                    />
-                  </>
-                )}
-              </>
-            )}
-          {context.user.rule.name == UserRoleEnum.Supervisor &&
-            (
-              cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS ||
-              cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE
-            ) && (
-              <>
-                {item.status == GarantiasItemStatusEnum.NAO_AUTORIZADO && (
-                  <>
-                    <h3 className={styles.tituloA}>Conclusão</h3>
-                    <MultilineTextFields
-                      disabled
-                      value={item?.conclusao || ""}
-                      onChange={null}
-                      label="Conclusão"
-                    />
-                  </>
-                )}
-
-                {item.status == GarantiasItemStatusEnum.AUTORIZADO && (
-                  <>
-                    <h3 className={styles.tituloA}>Conclusão</h3>
+                  <div className={styles.containerSelectDefect}>
                     <OutlinedSelectWithLabel
+                      placeholder="Selecione um defeito"
                       label="Defeito"
-                      options={[
-                        { label: item?.tipoDefeitoOficial, value: item?.tipoDefeitoOficial }
-                      ]}
-                      value={item?.tipoDefeitoOficial || ""}
+                      options={defects
+                        .filter((x) => {
+                          if (item.status == GarantiasItemStatusEnum.NAO_AUTORIZADO)
+                            return x.defeito.startsWith("I");
+                          else if (item.status == GarantiasItemStatusEnum.AUTORIZADO)
+                            return x.defeito.startsWith("P");
+                        })
+                        .map((defect) => ({
+                          label: defect.defeito, // O nome do defeito
+                          value: defect.defeito, // O id do tipo defeito
+                        }))}
+                      value={item.tipoDefeitoOficial || ""}
                       defaultValue=""
-                      disabled
-                      onChange={null}
+                      onChange={(e) => {
+                        item.tipoDefeitoOficial = e.target.value;
+                        updateItemDefect(item.id, e.target.value);
+                      }}
                     />
-                  </>
-                )}
-              </>
-            )
-          }
+                  </div>
+                  {item.status == GarantiasItemStatusEnum.NAO_AUTORIZADO && (
+                    <>
+                      <h3 className={styles.tituloA}>Análise técnica</h3>
+                      <QuillItemEditor
+                        itemId={item.id}
+                        value={item.analiseTecnica || ""}
+                        onChangeHtml={(html) => {
+                          item.analiseTecnica = html;
+                          handleInputChange(item.id, "analiseTecnicaHtml", html);
+                        }}
+                        onUploadMapped={(localSrc, remoteUrl) =>
+                          addImageMapping(item.id, localSrc, remoteUrl)
+                        }
+                      />
 
+                      <h3 className={styles.tituloA}>Conclusão</h3>
+                      <MultilineTextFields
+                        value={item?.conclusao || ""}
+                        onChange={(e) => {
+                          item.conclusao = e.target.value;
+                          setConclusao(e.target.value);
+                        }}
+                        label="Conclusão"
+                        placeholder="Digite a conclusão aqui..."
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            {context.user.rule.name == UserRoleEnum.Supervisor &&
+              (cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS ||
+                cardData.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
+                <>
+                  {item.status == GarantiasItemStatusEnum.NAO_AUTORIZADO && (
+                    <>
+                      <h3 className={styles.tituloA}>Conclusão</h3>
+                      <MultilineTextFields
+                        disabled
+                        value={item?.conclusao || ""}
+                        onChange={null}
+                        label="Conclusão"
+                      />
+                    </>
+                  )}
 
-        </div>
-      ))}
+                  {item.status == GarantiasItemStatusEnum.AUTORIZADO && (
+                    <>
+                      <h3 className={styles.tituloA}>Conclusão</h3>
+                      <OutlinedSelectWithLabel
+                        label="Defeito"
+                        options={[
+                          { label: item?.tipoDefeitoOficial, value: item?.tipoDefeitoOficial },
+                        ]}
+                        value={item?.tipoDefeitoOficial || ""}
+                        defaultValue=""
+                        disabled
+                        onChange={null}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+          </div>
+        ))}
       <div className={styles.botoesCabecalho}>
         {(cardData.codigoStatus === GarantiasStatusEnum2.EM_ANALISE ||
           cardData.codigoStatus === GarantiasStatusEnum2.CONFIRMADA) && (
-            <>
-              {context.user.rule.name === UserRoleEnum.Tecnico && (
-                <>
-                  <Button
-                    type="primary"
-                    className={styles.ButonToSend}
-                    onClick={handleSave}
-                  >
-                    Salvar
-                  </Button>
-                </>
-              )}
-            </>
-          )}
-        {cardData.codigoStatus ===
-          GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR && (
-            <>
-              {context.user.rule.name === UserRoleEnum.Supervisor && (
-                <>
-                  <Button
-                    type="primary"
-                    className={styles.ButonToSend}
-                    onClick={handleSaveNFDev}
-                  >
-                    Salvar
-                  </Button>
-                </>
-              )}
-            </>
-          )}
+          <>
+            {context.user.rule.name === UserRoleEnum.Tecnico && (
+              <>
+                <Button type="primary" className={styles.ButonToSend} onClick={handleSave}>
+                  Salvar
+                </Button>
+              </>
+            )}
+          </>
+        )}
+        {cardData.codigoStatus === GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR && (
+          <>
+            {context.user.rule.name === UserRoleEnum.Supervisor && (
+              <>
+                <Button type="primary" className={styles.ButonToSend} onClick={handleSaveNFDev}>
+                  Salvar
+                </Button>
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

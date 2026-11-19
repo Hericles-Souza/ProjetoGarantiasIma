@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const HeaderContainer = styled.div`
   display: flex;
@@ -6,7 +6,7 @@ export const HeaderContainer = styled.div`
   align-items: center;
   outline: none;
   height: 65px;
-  background-color: #F9F9F9;
+  background-color: #f9f9f9;
   border-bottom: 1px solid #ddd;
 `;
 
@@ -18,8 +18,8 @@ export const TabContainer = styled.div`
 
 export const Tab = styled.button<{ isActive: boolean }>`
   background: white;
-  color: ${({ isActive }) => (isActive ? '#FF4D4D' : '#333')};
-  border: ${({ isActive }) => (isActive ? '1px solid #FF4D4D' : '1.5px solid #ddd')};
+  color: ${({ isActive }) => (isActive ? "#FF4D4D" : "#333")};
+  border: ${({ isActive }) => (isActive ? "1px solid #FF4D4D" : "1.5px solid #ddd")};
   border-radius: 5px;
   padding: 8px 16px;
   outline: none;
@@ -28,12 +28,11 @@ export const Tab = styled.button<{ isActive: boolean }>`
   font-size: 14px;
   &:hover {
     background-color: #e43e3e;
-    border: 1px solid #FF4D4D;
-    color: #FFFFFF; 
+    border: 1px solid #ff4d4d;
+    color: #ffffff;
     outline: none;
   }
 `;
-
 
 export const Button = styled.button`
   background-color: #ff4d4d;

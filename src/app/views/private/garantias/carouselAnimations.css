@@ -1,18 +1,18 @@
 .carousel-container {
   padding: 1rem;
   display: flex;
-  overflow-x: auto; 
+  overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
   white-space: nowrap;
-  width: 100%; 
+  width: 100%;
 
-  scrollbar-width: none; 
-  -ms-overflow-style: none; 
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .carousel-container::-webkit-scrollbar {
-  display: none; 
+  display: none;
 }
 
 .carousel-content {
@@ -30,7 +30,6 @@
   transform: scale(1.05);
   transition: transform 0.2s;
 }
-
 
 .slide-in-left {
   animation: slideInLeft 0.3s ease-in-out;

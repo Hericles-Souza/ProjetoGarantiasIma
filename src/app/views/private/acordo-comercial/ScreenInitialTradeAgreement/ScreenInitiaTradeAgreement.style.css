@@ -12,7 +12,7 @@
   text-align: right;
 }
 
-.headerActions { 
+.headerActions {
   display: flex;
   justify-content: space-between;
   width: 100%;
@@ -56,7 +56,7 @@
 .delete-btn {
   background-color: #ffffff;
   border: solid 1px #dadada;
-  color: #5F5A56;
+  color: #5f5a56;
   padding-left: 10px;
   padding-right: 10px;
 }
@@ -69,7 +69,7 @@
 .save-btn {
   background-color: #ffffff;
   border: solid 1px #dadada;
-  color: #5F5A56;
+  color: #5f5a56;
   padding-left: 10px;
   padding-right: 10px;
   outline: none;
@@ -89,7 +89,7 @@
   margin-top: 20px;
   display: flex;
   flex-direction: column;
-  background-color: #F9F9F9;
+  background-color: #f9f9f9;
   border-radius: 15px;
   padding: 20px;
 }
@@ -137,7 +137,6 @@
   padding: 10px;
 }
 
-
 .code-aci {
   color: red;
   font-size: 28px;
@@ -146,7 +145,6 @@
 .back-arrow {
   margin-right: 8px;
   font-size: 16px;
-
 }
 
 .outlined-input {
@@ -164,10 +162,10 @@ label {
   margin-bottom: 8px;
 }
 
-.title-infos-general{
+.title-infos-general {
   font-size: 20px;
   font-weight: 700;
-  color: #5F5A56;
+  color: #5f5a56;
   margin-bottom: 15px;
 }
 
@@ -182,24 +180,23 @@ label {
 .title-nf {
   font-size: 20px;
   font-weight: 700;
-  color: #5F5A56;
-
+  color: #5f5a56;
 }
 
 .nf-number {
-  color: #5F5A56;
+  color: #5f5a56;
   font-size: 18px;
   margin-left: 10px;
   margin-right: 5px;
 }
 
 .nf-divider {
-  color: #5F5A56;
+  color: #5f5a56;
   font-size: 18px;
 }
 
 .nf-details {
-  color: #5F5A56;
+  color: #5f5a56;
   margin-left: 5px;
   font-size: 18px;
 }
@@ -212,7 +209,6 @@ label {
   color: #555;
 }
 
-
 .divisor {
   margin-bottom: 16px;
   border: none;
@@ -224,7 +220,7 @@ label {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  color: #5F5A56 !important;
+  color: #5f5a56 !important;
   margin-top: 30px;
 }
 
@@ -236,10 +232,9 @@ label {
   font-size: 14px;
   color: #a7a7a7 !important;
   outline: none !important;
-
 }
 
-.ButtonBack:hover{
+.ButtonBack:hover {
   outline: none;
   border-color: transparent;
   color: red !important;
@@ -264,18 +259,17 @@ label {
   align-items: center;
   margin-bottom: 20px;
   overflow-y: auto; /* Permite scroll vertical */
-
 }
 
 .statusTag {
   background-color: #f5f5f5;
   padding: 4px 8px;
   border-radius: 4px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: 400;
   font-size: 14px;
   line-height: 18.23px;
-  color: #5F5A56;
+  color: #5f5a56;
 }
 
 .ContainerHeader {
@@ -301,12 +295,12 @@ label {
   font-weight: 400;
 }
 
-.ButtonHeader{
+.ButtonHeader {
   display: flex;
   gap: 10px;
 }
 
-.ButtonDelete{
+.ButtonDelete {
   background-color: white !important;
   border-radius: 10px !important;
   height: 45px !important;
@@ -314,7 +308,7 @@ label {
   outline: none !important;
 }
 
-.ButtonDelete:hover{
+.ButtonDelete:hover {
   border: solid 1px red !important;
   color: red !important;
 }

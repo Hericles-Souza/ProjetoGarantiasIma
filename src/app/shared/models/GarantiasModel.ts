@@ -1,7 +1,10 @@
-import {GarantiasItemStatusEnum2, GarantiasStatusEnum2} from "@shared/enums/GarantiasStatusEnum.ts";
+import {
+  GarantiasItemStatusEnum2,
+  GarantiasStatusEnum2,
+} from "@shared/enums/GarantiasStatusEnum.ts";
 import { NotaFiscal } from "./NotaFiscalModel";
 
-export interface GarantiaPedidos{
+export interface GarantiaPedidos {
   cdPedido: string;
   cdMaterial: string;
   descricaoMaterial: string;
@@ -33,11 +36,11 @@ export interface GarantiaItem {
   nfReferencia: string;
   loteItemOficial?: string;
   loteItem?: string;
-  status?: string; 
+  status?: string;
   codigoStatus: GarantiasItemStatusEnum2;
   solicitarRessarcimento?: boolean;
-  analiseTecnica?:string;
-  conclusao?:string;
+  analiseTecnica?: string;
+  conclusao?: string;
   anexos?: string;
   autorizado?: string;
   nota_fiscal_id?: string;
@@ -58,11 +61,10 @@ export interface UpdateItemRequest {
   index: string;
 }
 
-
 export interface GarantiasModel {
-  id?: string; 
+  id?: string;
   createdAt?: string;
-  updatedAt?: string; 
+  updatedAt?: string;
   codigoRGI?: string;
   rgi?: string;
   razaoSocial?: string;
@@ -73,7 +75,7 @@ export interface GarantiasModel {
   status?: string;
   codigoStatus?: GarantiasStatusEnum2;
   observacao?: string;
-  data?: string; 
+  data?: string;
   usuarioInsercao?: string;
   dataAtualizacao?: string;
   usuarioAtualizacao?: string;

@@ -10,10 +10,7 @@ interface CreateAccountProps {
   onClose: () => void;
 }
 
-const DialogCreateAccount: React.FC<CreateAccountProps> = ({
-  isVisible,
-  onClose,
-}) => {
+const DialogCreateAccount: React.FC<CreateAccountProps> = ({ isVisible, onClose }) => {
   const [form] = Form.useForm();
   const [focusedField, setFocusedField] = useState<string | null>(null);
 

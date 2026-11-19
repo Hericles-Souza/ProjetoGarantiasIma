@@ -11,7 +11,7 @@ import * as Yup from "yup";
 import { PiCopySimpleLight } from "react-icons/pi";
 import { TfiReload } from "react-icons/tfi";
 import InputMask from "react-input-mask";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 import {
   createUser,
   CreateUserRequest,
@@ -72,9 +72,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
       cigamCode: Yup.string().required("Código Cigam obrigatório"),
       companyName: Yup.string().required("Razão Social obrigatória"),
       phone: Yup.string().required("Telefone obrigatório"),
-      email: Yup.string()
-        .email("E-mail inválido")
-        .required("E-mail obrigatório"),
+      email: Yup.string().email("E-mail inválido").required("E-mail obrigatório"),
     }),
     onSubmit: () => {
       //console.log('Form Values:', values);
@@ -91,9 +89,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
         //console.log("response data: ", response.data);
 
         const initialUserRole = selectedUser ? selectedUser.userRole : "admin";
-        const foundRule = response.data.data.find(
-          (value) => value.name === initialUserRole
-        );
+        const foundRule = response.data.data.find((value) => value.name === initialUserRole);
         if (foundRule) {
           setSelectedProfile(foundRule.name);
           //console.log(foundRule.name);
@@ -143,9 +139,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
     if (formik.values.password) {
       navigator.clipboard
         .writeText(formik.values.password)
-        .then(() =>
-          message.success("Senha copiada para a área de transferência!")
-        )
+        .then(() => message.success("Senha copiada para a área de transferência!"))
         .catch(() => message.error("Falha ao copiar a senha."));
     } else {
       message.warning("Nenhuma senha para copiar.").then();
@@ -180,7 +174,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
         CNPJ: formik.values.cnpj || "",
         codigoCigam: formik.values.cigamCode,
         ruleId: selectedRule.id,
-        frete: formik.values.frete
+        frete: formik.values.frete,
       };
 
       const response = await createUser(userRequest, context.user.token);
@@ -196,8 +190,6 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
 
       // Se chegou aqui, houve algum erro não tratado
       message.error("Erro ao criar usuário!");
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Erro detalhado:", error);
 
@@ -216,18 +208,12 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
         if (error.response?.status === 400) {
           const apiErrors = error.response.data?.errors || [];
           if (apiErrors.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const errorMessages = apiErrors
-              .map(
-                (err: any) =>
-                  `${err.field || "Erro"}: ${err.message || "Dados inválidos"}`
-              )
+              .map((err: any) => `${err.field || "Erro"}: ${err.message || "Dados inválidos"}`)
               .join("\n");
             message.error(`Corrija os seguintes campos:\n${errorMessages}`);
           } else {
-            message.error(
-              error.response.data?.message || "Dados inválidos enviados"
-            );
+            message.error(error.response.data?.message || "Dados inválidos enviados");
           }
           return;
         }
@@ -260,8 +246,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
         shortname: formik.values.companyName.trim()[0],
         isActive: formik.values.isActive,
         isAdmin:
-          selectedProfile ==
-            rule.find((value) => value.name === UserRoleEnum.Admin).id
+          selectedProfile == rule.find((value) => value.name === UserRoleEnum.Admin).id
             ? true
             : false,
         phone: formik.values.phone || "+99 99 99999-9999",
@@ -273,8 +258,8 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
       };
       // console.log("uupdateUserserdata: " , updateUserRequest);
       const responseUpdate = await updateUser(updateUserRequest, context.user.token);
-      
-      if(responseUpdate.status == 200 ||responseUpdate.status == 201){
+
+      if (responseUpdate.status == 200 || responseUpdate.status == 201) {
         message.success("Usuário atualizado com sucesso!");
         selectedUser = null;
         closeModal();
@@ -312,9 +297,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
               paddingBottom: "0px",
             }}
           >
-            {selectedUserActionCreation
-              ? "Criar Novo Usuário"
-              : "Editar Usuário"}
+            {selectedUserActionCreation ? "Criar Novo Usuário" : "Editar Usuário"}
           </Typography>
         </div>
       </div>
@@ -326,9 +309,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
           value={selectedProfile}
           onChange={(e) => {
             const value = e.target.value;
-            const valueProfile = rule.find(
-              (ruleSelected) => ruleSelected.name == value
-            );
+            const valueProfile = rule.find((ruleSelected) => ruleSelected.name == value);
             setSelectedProfile(valueProfile.name);
             formik.setFieldValue("userRole", valueProfile.name);
             //console.log("profile selected: " + selectedProfile);
@@ -368,75 +349,71 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
           />
           <span style={{ marginTop: "-22px" }}>Usuário Ativo</span>
         </div>
-        {["cliente"].includes(
-          formik.values.userRole.toLowerCase()
-        ) && (<div style={{ display: "flex", alignItems: "center", flex: 1 }}>
-          <Checkbox
-            checked={formik.values.frete}
-            onChange={(e) => formik.setFieldValue("frete", e.target.checked)}
-            sx={{
-              color: "#FF0000",
-              "&.Mui-checked": {
-                color: "#FF0000",
-              },
-              marginTop: "-22px",
-            }}
-          />
-          <span style={{ marginTop: "-22px" }}>Frete por conta da IMA</span>
-        </div>)}
-      </div>
-      {!["tecnico", "supervisor"].includes(
-        formik.values.userRole.toLowerCase()
-      ) && (
-          <div className={style.row}>
-            <InputMask
-              mask="99.999.999/9999-99"
-              value={formik.values.cnpj}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            >
-              {() => (
-                <TextField
-                  label="CNPJ"
-                  variant="outlined"
-                  {...formik.getFieldProps("cnpj")}
-                  fullWidth
-                  focused
-                  required
-                  className="outlined-input-cnpj"
-                  placeholder="000.000.000/0001-00"
-                  sx={{
-                    "& fieldset": {
-                      width: "100%",
-                    },
-                  }}
-                />
-              )}
-            </InputMask>
-
-            <TextField
-              label="Código Cigam"
-              variant="outlined"
-              {...formik.getFieldProps("cigamCode")}
-              fullWidth
-              focused
-              required
-              className="outlined-input-cnpj"
-              placeholder="65465465465465"
+        {["cliente"].includes(formik.values.userRole.toLowerCase()) && (
+          <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+            <Checkbox
+              checked={formik.values.frete}
+              onChange={(e) => formik.setFieldValue("frete", e.target.checked)}
               sx={{
-                "& fieldset": {
-                  width: "100%",
+                color: "#FF0000",
+                "&.Mui-checked": {
+                  color: "#FF0000",
                 },
+                marginTop: "-22px",
               }}
             />
+            <span style={{ marginTop: "-22px" }}>Frete por conta da IMA</span>
           </div>
         )}
+      </div>
+      {!["tecnico", "supervisor"].includes(formik.values.userRole.toLowerCase()) && (
+        <div className={style.row}>
+          <InputMask
+            mask="99.999.999/9999-99"
+            value={formik.values.cnpj}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          >
+            {() => (
+              <TextField
+                label="CNPJ"
+                variant="outlined"
+                {...formik.getFieldProps("cnpj")}
+                fullWidth
+                focused
+                required
+                className="outlined-input-cnpj"
+                placeholder="000.000.000/0001-00"
+                sx={{
+                  "& fieldset": {
+                    width: "100%",
+                  },
+                }}
+              />
+            )}
+          </InputMask>
+
+          <TextField
+            label="Código Cigam"
+            variant="outlined"
+            {...formik.getFieldProps("cigamCode")}
+            fullWidth
+            focused
+            required
+            className="outlined-input-cnpj"
+            placeholder="65465465465465"
+            sx={{
+              "& fieldset": {
+                width: "100%",
+              },
+            }}
+          />
+        </div>
+      )}
       <div className={style.row}>
         <TextField
           label={
-            !["tecnico", "supervisor", "admin"].includes(
-              formik.values.userRole.toLowerCase()
-            )
+            !["tecnico", "supervisor", "admin"].includes(formik.values.userRole.toLowerCase())
               ? "Razão Social"
               : "Nome"
           }
@@ -446,9 +423,7 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
           required
           focused
           placeholder={
-            !["tecnico", "supervisor", "admin"].includes(
-              formik.values.userRole.toLowerCase()
-            )
+            !["tecnico", "supervisor", "admin"].includes(formik.values.userRole.toLowerCase())
               ? "Razão Social"
               : "Nome"
           }
@@ -461,34 +436,32 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
         />
       </div>
       <div className={style.row}>
-        {!["tecnico", "supervisor", "admin"].includes(
-          formik.values.userRole.toLowerCase()
-        ) && (
-            <InputMask
-              mask="+99 99 99999-9999"
-              value={formik.values.phone}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            >
-              {() => (
-                <TextField
-                  label="Telefone"
-                  variant="outlined"
-                  {...formik.getFieldProps("phone")}
-                  fullWidth
-                  focused
-                  required
-                  placeholder="00 0000 0000"
-                  className="outlined-input-contact"
-                  sx={{
-                    "& fieldset": {
-                      width: "100%",
-                    },
-                  }}
-                />
-              )}
-            </InputMask>
-          )}
+        {!["tecnico", "supervisor", "admin"].includes(formik.values.userRole.toLowerCase()) && (
+          <InputMask
+            mask="+99 99 99999-9999"
+            value={formik.values.phone}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          >
+            {() => (
+              <TextField
+                label="Telefone"
+                variant="outlined"
+                {...formik.getFieldProps("phone")}
+                fullWidth
+                focused
+                required
+                placeholder="00 0000 0000"
+                className="outlined-input-contact"
+                sx={{
+                  "& fieldset": {
+                    width: "100%",
+                  },
+                }}
+              />
+            )}
+          </InputMask>
+        )}
 
         <TextField
           label="E-mail"
@@ -509,17 +482,13 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
       {
         <div className={style.row}>
           <TextField
-            label={
-              selectedUserActionCreation ? "Senha Provisória" : "Nova Senha"
-            }
+            label={selectedUserActionCreation ? "Senha Provisória" : "Nova Senha"}
             variant="outlined"
             {...formik.getFieldProps("password")}
             fullWidth
             focused
             required
-            placeholder={
-              selectedUserActionCreation ? "Senha Provisória" : "Nova Senha"
-            }
+            placeholder={selectedUserActionCreation ? "Senha Provisória" : "Nova Senha"}
             className="outlined-input-contact"
             InputProps={{
               endAdornment: (
@@ -534,14 +503,9 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
                 >
                   <TfiReload
                     style={{ cursor: "pointer", color: "#FF0000" }}
-                    onClick={() =>
-                      formik.setFieldValue("password", generatePassword())
-                    }
+                    onClick={() => formik.setFieldValue("password", generatePassword())}
                   />
-                  <PiCopySimpleLight
-                    style={{ cursor: "pointer" }}
-                    onClick={handleCopyPassword}
-                  />
+                  <PiCopySimpleLight style={{ cursor: "pointer" }} onClick={handleCopyPassword} />
                 </InputAdornment>
               ),
             }}
@@ -554,27 +518,16 @@ const DialogUserRegistration: React.FC<DialogUserRegistrationProps> = ({
         </div>
       }
       <div style={{ display: "flex", justifyContent: "end", gap: "1rem" }}>
-        <Button
-          onClick={closeModal}
-          style={{ backgroundColor: "white", color: "red" }}
-        >
+        <Button onClick={closeModal} style={{ backgroundColor: "white", color: "red" }}>
           CANCELAR
         </Button>
         {selectedUserActionCreation && (
-          <Button
-            onClick={createNewUser}
-            type="primary"
-            style={{ backgroundColor: "red" }}
-          >
+          <Button onClick={createNewUser} type="primary" style={{ backgroundColor: "red" }}>
             {"CRIAR"}
           </Button>
         )}
         {!selectedUserActionCreation && (
-          <Button
-            onClick={updateExistUser}
-            type="primary"
-            style={{ backgroundColor: "red" }}
-          >
+          <Button onClick={updateExistUser} type="primary" style={{ backgroundColor: "red" }}>
             {"ATUALIZAR"}
           </Button>
         )}

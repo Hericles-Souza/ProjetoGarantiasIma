@@ -1,8 +1,8 @@
-import React from 'react';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import './OutlinedSelectWithLabel.css';
+import React from "react";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import "./OutlinedSelectWithLabel.css";
 
 // Adicione uma interface para definir as props
 interface OutlinedSelectWithLabelProps {
@@ -28,13 +28,13 @@ export default function OutlinedSelectWithLabel({
     <Box
       component="form"
       sx={{
-        gap: '3px',
-        width: '100%',
+        gap: "3px",
+        width: "100%",
       }}
       noValidate
       autoComplete="off"
     >
-      <div className={`input-container ${className || ''}`} style={{ width: '100%' }}>
+      <div className={`input-container ${className || ""}`} style={{ width: "100%" }}>
         <TextField
           disabled={disabled}
           id="outlined-select-currency"
@@ -44,31 +44,31 @@ export default function OutlinedSelectWithLabel({
           defaultValue={defaultValue || options[0]?.value}
           helperText=""
           sx={{
-            width: '100%',
-            height: '40px',
-            borderRadius: '4px',
-            '& .MuiOutlinedInput-root': {
-              borderColor: '#5F5A56',
+            width: "100%",
+            height: "40px",
+            borderRadius: "4px",
+            "& .MuiOutlinedInput-root": {
+              borderColor: "#5F5A56",
             },
-            '& .MuiInputLabel-root': {
-              color: '#5F5A56',
+            "& .MuiInputLabel-root": {
+              color: "#5F5A56",
             },
-            '& .MuiOutlinedInput-root.Mui-focused': {
-              borderColor: '#5F5A56',
+            "& .MuiOutlinedInput-root.Mui-focused": {
+              borderColor: "#5F5A56",
             },
-            '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#dadada',
-              borderWidth: '2px',
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#dadada",
+              borderWidth: "2px",
             },
           }}
-          className={`outlined-select ${className || ''}`}
+          className={`outlined-select ${className || ""}`}
           // ✅ Apenas esta linha foi adicionada
           SelectProps={{
             MenuProps: {
               PaperProps: {
                 style: {
                   maxHeight: 300,
-                  overflowY: 'auto',
+                  overflowY: "auto",
                 },
               },
             },

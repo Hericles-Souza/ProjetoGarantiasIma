@@ -1,6 +1,6 @@
 import React from "react";
 
-import {UserRoleEnum} from "@shared/enums/UserRoleEnum.ts";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum.ts";
 
 export interface RouteConfig {
   path: string;

@@ -39,9 +39,7 @@ interface FileAttachmentProps {
   item?: AcordoComercialItem;
   codigoNotaFiscal: string;
   acordo: AcordoComercialModel | undefined;
-  SetAcordo: React.Dispatch<
-    React.SetStateAction<AcordoComercialModel | undefined>
-  >;
+  SetAcordo: React.Dispatch<React.SetStateAction<AcordoComercialModel | undefined>>;
 }
 
 const FileAttachment: React.FC<FileAttachmentProps> = ({
@@ -82,8 +80,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       "image/gif": ".gif",
       "application/pdf": ".pdf",
       "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
@@ -98,15 +95,10 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     return extension;
   }
 
-  const getFieldFile = async (
-    itemId: string,
-    field: string,
-    signal?: AbortSignal
-  ) => {
+  const getFieldFile = async (itemId: string, field: string, signal?: AbortSignal) => {
     try {
       const urlGetFile =
-        environment.apiUrl +
-        `/files/files/download-private-file-item/${itemId}/${field}`;
+        environment.apiUrl + `/files/files/download-private-file-item/${itemId}/${field}`;
 
       const response = await fetch(urlGetFile, {
         method: "GET",
@@ -167,26 +159,21 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     formDataUpload.append("codigoNotaFiscal", codigoNotaFiscal);
 
     try {
-      const resp = await fetch(
-        `${environment.apiUrl}/pedidos/pedidos/upload-xml-aci`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${context.user.token}`, // Usa authContext do escopo do componente
-            Accept: "*/*",
-          },
-          body: formDataUpload,
-        }
-      );
+      const resp = await fetch(`${environment.apiUrl}/pedidos/pedidos/upload-xml-aci`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${context.user.token}`, // Usa authContext do escopo do componente
+          Accept: "*/*",
+        },
+        body: formDataUpload,
+      });
 
       if (resp.ok) {
         const json = await resp.json(); // Ex.: { success: true, inserted: 15, message: "...", nfeInfo: {...} }
         message.success(`XML enviado: ${json.inserted} registros processados!`);
       } else {
         const errorJson = await resp.json();
-        message.error(
-          `Falha no upload do XML: ${errorJson.message || "Erro desconhecido"}`
-        );
+        message.error(`Falha no upload do XML: ${errorJson.message || "Erro desconhecido"}`);
         return;
       }
     } catch (err) {
@@ -196,9 +183,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       const endpoint = environment.apiUrl + "/files/upload-private-file-item";
@@ -207,8 +192,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       if (label.includes("XML")) {
         fileData.append("itemId", acordo.id + codigoNotaFiscal);
         fileData.append("field", "nfRef");
-      }
-      else {
+      } else {
         fileData.append("itemId", item.id);
         fileData.append("field", "nfDev");
       }
@@ -251,9 +235,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
 
   const handleRemoveFile = async () => {
     try {
-
       setRecFile({ fileNameWithExtension: "", imagemUrl: "" });
-
     } catch (error) {
       // console.log("Erro ao deletar arquivo: ", error);
       message.error("Ocorreu um erro ao deletar o arquivo.");
@@ -279,8 +261,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       mva: item.mva,
       nf: item.nf,
       usuarioAtualizacao: context.user.fullname,
-      tipoDefeitoOficial: item.tipoDefeitoOficial
-
+      tipoDefeitoOficial: item.tipoDefeitoOficial,
     };
 
     const response = await updateAciItemByIdAsync(itemUpdate, item.id);
@@ -294,9 +275,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         if (!prev?.itens) return prev;
 
         const updatedItens = prev.itens.map((prevItem) =>
-          prevItem.id === item.id
-            ? { ...prevItem, codigoStatus: item.codigoStatus }
-            : prevItem
+          prevItem.id === item.id ? { ...prevItem, codigoStatus: item.codigoStatus } : prevItem
         );
 
         return {
@@ -309,8 +288,6 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       // console.log("item salvo com sucesso: ", response);
     }
   };
-
-
 
   const canRemoveAttachment =
     (item?.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
@@ -335,8 +312,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           )}
         {recFile?.fileNameWithExtension &&
           recFile?.imagemUrl &&
-          item?.codigoStatus !==
-          AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
+          item?.codigoStatus !== AcordoComercialItemStatusEnum2.NAO_AUTORIZADO && (
             <div className={styles.fileActions}>
               <span className={styles.fileName}>
                 <FileOutlined
@@ -368,8 +344,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           )}
         {recFile?.fileNameWithExtension &&
           recFile?.imagemUrl &&
-          acordo?.codigoStatus ===
-          AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
+          acordo?.codigoStatus === AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
           item?.codigoStatus !== AcordoComercialItemStatusEnum2.AUTORIZADO &&
           context.user.rule.name === UserRoleEnum.Supervisor && (
             <div className="ButtonHeader">
@@ -394,16 +369,14 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
         {recFile?.fileNameWithExtension === "" &&
           recFile?.imagemUrl === "" &&
           (item?.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
-            item?.codigoStatus ===
-            AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
+            item?.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO) &&
           context.user.rule.name !== UserRoleEnum.Supervisor && (
             <label className={styles.buttonUpdateNfSale}>
               <input
                 type="file"
                 style={{ display: "none" }}
                 onChange={(e) => {
-                  if (label.includes("XML"))
-                    handleXMLFileUpload(e, acordo.id, codigoNotaFiscal);
+                  if (label.includes("XML")) handleXMLFileUpload(e, acordo.id, codigoNotaFiscal);
 
                   handleFileUpload(e);
                 }}
@@ -415,15 +388,13 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           recFile?.imagemUrl === "" &&
           item?.codigoStatus === AcordoComercialItemStatusEnum2.NAO_AUTORIZADO &&
           context.user.rule.name !== UserRoleEnum.Supervisor &&
-          acordo?.codigoStatus ===
-          AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && (
+          acordo?.codigoStatus === AcordoComercialStatusEnum2.NF_DEVOLUCAO_RECUSADA && (
             <label className={styles.buttonUpdateNfSale}>
               <input
                 type="file"
                 style={{ display: "none" }}
                 onChange={(e) => {
-                  if (label.includes("XML"))
-                    handleXMLFileUpload(e, acordo.id, codigoNotaFiscal);
+                  if (label.includes("XML")) handleXMLFileUpload(e, acordo.id, codigoNotaFiscal);
 
                   handleFileUpload(e);
                 }}
@@ -526,8 +497,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
   const setAcordoByGet = async (id: string, nfParam: string) => {
     const response = await getAcordoByIdAsync(id);
     if (response.status === 200 || response.status === 201) {
-      const recAcordoResponse = (await response.data
-        .data) as AcordoComercialModel;
+      const recAcordoResponse = (await response.data.data) as AcordoComercialModel;
       const itensFiltrados = recAcordoResponse.itens.filter((item) => {
         const [itemBase] = item.codigoItem.split(".");
         const [nfBase, nfLetra] = nfParam.split(".");
@@ -584,7 +554,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           mva: item.mva,
           nf: item.nf,
           usuarioAtualizacao: context.user.fullname,
-          tipoDefeitoOficial: item.tipoDefeitoOficial
+          tipoDefeitoOficial: item.tipoDefeitoOficial,
         };
 
         const response = await updateAciItemByIdAsync(itemUpdate, item.id);
@@ -598,10 +568,10 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
               itens: prev.itens.map((prevItem) =>
                 prevItem.id === item.id
                   ? {
-                    ...prevItem,
-                    codigoPeca: item.codigoPeca,
-                    quantidade: item.quantidade,
-                  }
+                      ...prevItem,
+                      codigoPeca: item.codigoPeca,
+                      quantidade: item.quantidade,
+                    }
                   : prevItem
               ),
               updatedAt: new Date().toISOString(),
@@ -625,7 +595,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
     if (!acordo) return;
 
     try {
-
       for (const item of acordo.itens) {
         const itemUpdate: UpdateItemResponse = {
           codigoItem: item.codigoItem,
@@ -643,9 +612,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
           mva: item.mva,
           nf: item.nf,
           usuarioAtualizacao: context.user.fullname,
-          tipoDefeitoOficial: item.tipoDefeitoOficial
-
-
+          tipoDefeitoOficial: item.tipoDefeitoOficial,
         };
 
         const response = await updateAciItemByIdAsync(itemUpdate, item.id);
@@ -659,10 +626,10 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
               itens: prev.itens.map((prevItem) =>
                 prevItem.id === item.id
                   ? {
-                    ...prevItem,
-                    codigoPeca: item.codigoPeca,
-                    quantidade: item.quantidade,
-                  }
+                      ...prevItem,
+                      codigoPeca: item.codigoPeca,
+                      quantidade: item.quantidade,
+                    }
                   : prevItem
               ),
               updatedAt: new Date().toISOString(),
@@ -681,8 +648,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       message.error("Ocorreu um erro ao salvar os itens");
     }
   };
-
-
 
   const addNewItem = async () => {
     const response = await getAcordoByIdAsync(acordo?.id);
@@ -709,7 +674,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       IPI: 0,
       mva: 0,
       nf: nf,
-      tipoDefeitoOficial: ''
+      tipoDefeitoOficial: "",
     };
 
     recAcordo?.itens.push(newItem);
@@ -733,7 +698,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       valorIPI: 0,
       ICMSSubstituicao: 0,
       itens: recAcordo.itens,
-      duplicata: recAcordo.duplicata
+      duplicata: recAcordo.duplicata,
     };
 
     await updateAciHeaderByIdAsync(payloadAcordoPut, recAcordo.id);
@@ -801,47 +766,36 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
         <h1 className={styles.tituloRgi}>{"NF " + nf}</h1>
 
         {acordo?.codigoStatus != AcordoComercialStatusEnum2.NAO_ENVIADO && (
-            <div className={styles.botoesCabecalho}>
-              <Button
-                type="default"
-                className={styles.ButtonDelete}
-                onClick={() =>
-                  navigate("/view-pre-invoice", {
-                    state: { acordo, codigoNotaFiscal: nf },
-                  })
-                }
-              >
-                Visualizar Pré-Nota
-              </Button>
-            </div>
-          )}
+          <div className={styles.botoesCabecalho}>
+            <Button
+              type="default"
+              className={styles.ButtonDelete}
+              onClick={() =>
+                navigate("/view-pre-invoice", {
+                  state: { acordo, codigoNotaFiscal: nf },
+                })
+              }
+            >
+              Visualizar Pré-Nota
+            </Button>
+          </div>
+        )}
         {acordo?.codigoStatus != AcordoComercialStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO &&
           acordo?.codigoStatus !== AcordoComercialStatusEnum2.CONFIRMADA && (
             <div className={styles.botoesCabecalho}>
-              <Button
-                type="primary"
-                className={styles.ButonToSend}
-                onClick={handleSaveClient}
-              >
+              <Button type="primary" className={styles.ButonToSend} onClick={handleSaveClient}>
                 Salvar
               </Button>
             </div>
           )}
-          
 
         {context.user.rule.name === UserRoleEnum.Tecnico &&
           acordo?.itens.some(
-            (item) =>
-              item.codigoStatus ===
-              AcordoComercialItemStatusEnum2.NAO_ENVIADO
+            (item) => item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO
           ) &&
           acordo?.codigoStatus == AcordoComercialStatusEnum2.CONFIRMADA && (
             <div className={styles.botoesCabecalho}>
-              <Button
-                type="primary"
-                className={styles.ButonToSend}
-                onClick={handleSaveAnalyse}
-              >
+              <Button type="primary" className={styles.ButonToSend} onClick={handleSaveAnalyse}>
                 Salvar
               </Button>
             </div>
@@ -860,13 +814,10 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
       />
 
       <div className={styles.TitleItens}>
-        <h3 className={styles.nfsTitle}>
-          Itens desta NF associados a este acordo
-        </h3>
+        <h3 className={styles.nfsTitle}>Itens desta NF associados a este acordo</h3>
         {context.user.rule.name === UserRoleEnum.Cliente &&
           acordo?.itens.some(
-            (item) =>
-              item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO
+            (item) => item.codigoStatus === AcordoComercialItemStatusEnum2.NAO_ENVIADO
           ) && (
             <Button
               className={styles.buttonRed}
@@ -908,8 +859,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                       handleInputChange(item.id, "codigoPeca", e.target.value);
                     }}
                     disabled={
-                      item?.codigoStatus !==
-                      AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+                      item?.codigoStatus !== AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
                       context.user.rule.name === UserRoleEnum.Supervisor
                     }
                   />
@@ -924,8 +874,7 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                       item.quantidade = Number(e.target.value);
                     }}
                     disabled={
-                      item?.codigoStatus !==
-                      AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
+                      item?.codigoStatus !== AcordoComercialItemStatusEnum2.NAO_ENVIADO ||
                       context.user.rule.name === UserRoleEnum.Supervisor
                     }
                   />
@@ -1039,7 +988,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
                   )}
                 </>
               )}
-
           </CollapsibleSection>
           <div style={{ height: "10px" }}></div>
           <FileAttachment
@@ -1051,7 +999,6 @@ const ScreenDetailsItensTradeAgreement: React.FC = () => {
             SetAcordo={SetAcordo}
           />
         </div>
-
       ))}
 
       <Modal

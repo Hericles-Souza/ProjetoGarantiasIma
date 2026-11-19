@@ -1,5 +1,5 @@
-import {createContext} from "react";
-import {AuthModel} from "@shared/models/AuthModel.ts";
+import { createContext } from "react";
+import { AuthModel } from "@shared/models/AuthModel.ts";
 
 interface AuthContextType {
   user: AuthModel | null;

@@ -12,10 +12,7 @@ import {
 import { Defect, TypeDefect } from "@shared/models/DefectModel";
 import { Pagination } from "antd";
 
-class ErrorBoundary extends Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
 
   static getDerivedStateFromError() {
@@ -26,8 +23,7 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div style={{ textAlign: "center", padding: "32px", color: "red" }}>
-          Ocorreu um erro na renderização. Tente recarregar a página ou contate
-          o suporte.
+          Ocorreu um erro na renderização. Tente recarregar a página ou contate o suporte.
         </div>
       );
     }
@@ -85,8 +81,7 @@ const ScreenDefect: React.FC = () => {
 
       // Filtra os defeitos pelo tipo ativo
       const filteredDefects = defectsResponse.data.filter(
-        (defect: Defect) =>
-          defect.tipoDefeito?.tipoDefeito?.toLowerCase() === activeTab
+        (defect: Defect) => defect.tipoDefeito?.tipoDefeito?.toLowerCase() === activeTab
       );
 
       // Calcula a página atual e os defeitos a serem exibidos
@@ -129,9 +124,7 @@ const ScreenDefect: React.FC = () => {
     fetchData();
   }, [currentPage]); // Executa fetchData quando a página mudar
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewDefect((prev) => ({ ...prev, [name]: value }));
   };
@@ -178,9 +171,7 @@ const ScreenDefect: React.FC = () => {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (err: any) {
-      setError(
-        "Erro ao atualizar defeito. Verifique o endpoint /defeitos/:id (PUT)."
-      );
+      setError("Erro ao atualizar defeito. Verifique o endpoint /defeitos/:id (PUT).");
       setTimeout(() => setError(null), 3000);
     }
   };
@@ -210,9 +201,7 @@ const ScreenDefect: React.FC = () => {
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
       } catch (err: any) {
-        setError(
-          "Erro ao excluir defeito. Verifique o endpoint /defeitos/:id (DELETE)."
-        );
+        setError("Erro ao excluir defeito. Verifique o endpoint /defeitos/:id (DELETE).");
         setTimeout(() => setError(null), 3000);
       }
     }
@@ -224,15 +213,11 @@ const ScreenDefect: React.FC = () => {
   };
 
   const filteredDefects = Array.isArray(defects)
-    ? defects.filter((defect) =>
-        defect.defeito?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    ? defects.filter((defect) => defect.defeito?.toLowerCase().includes(searchTerm.toLowerCase()))
     : [];
 
   if (loading) {
-    return (
-      <div style={{ textAlign: "center", padding: "32px" }}>Carregando...</div>
-    );
+    return <div style={{ textAlign: "center", padding: "32px" }}>Carregando...</div>;
   }
 
   return (
@@ -440,19 +425,12 @@ const ScreenDefect: React.FC = () => {
                       padding: "4px 12px",
                       borderRadius: "5px",
                       fontSize: "12px",
-                      color:
-                        defect.tipoDefeito?.tipoDefeito === "Cliente"
-                          ? "#038E60"
-                          : "#0280DA",
+                      color: defect.tipoDefeito?.tipoDefeito === "Cliente" ? "#038E60" : "#0280DA",
                       backgroundColor:
-                        defect.tipoDefeito?.tipoDefeito === "Cliente"
-                          ? "#C3EFE1"
-                          : "#BDE0F9",
+                        defect.tipoDefeito?.tipoDefeito === "Cliente" ? "#C3EFE1" : "#BDE0F9",
                     }}
                   >
-                    {defect.tipoDefeito?.tipoDefeito === "Cliente"
-                      ? "Cliente"
-                      : "Técnico"}
+                    {defect.tipoDefeito?.tipoDefeito === "Cliente" ? "Cliente" : "Técnico"}
                   </span>
                 </div>
                 <div
@@ -474,12 +452,8 @@ const ScreenDefect: React.FC = () => {
                       borderRadius: "4px",
                       transition: "background-color 0.2s",
                     }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#eff6ff")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
+                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#eff6ff")}
+                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
                     <Edit style={{ color: "#0280DA", height: "20px" }} />
                   </button>
@@ -495,12 +469,8 @@ const ScreenDefect: React.FC = () => {
                       borderRadius: "4px",
                       transition: "background-color 0.2s",
                     }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#fef2f2")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
+                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#fef2f2")}
+                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
                     <Trash2 style={{ color: "red", height: "20px" }} />
                   </button>
@@ -563,8 +533,7 @@ const ScreenDefect: React.FC = () => {
               >
                 {isEditing
                   ? "Atualize os detalhes do defeito."
-                  : "Crie um novo defeito para utilizar ao analisar uma peça."
-                }
+                  : "Crie um novo defeito para utilizar ao analisar uma peça."}
               </p>
             </div>
             <label style={{ fontWeight: "bold", fontSize: "13px" }}>Nome</label>
@@ -585,9 +554,7 @@ const ScreenDefect: React.FC = () => {
                 fontSize: "14px",
               }}
             />
-            <label style={{ fontWeight: "bold", fontSize: "13px" }}>
-              Tipo Defeito
-            </label>
+            <label style={{ fontWeight: "bold", fontSize: "13px" }}>Tipo Defeito</label>
             <select
               name="tipoDefeitoId"
               value={newDefect.tipoDefeitoId || typeDefects[0]?.id?.toString()}
@@ -641,12 +608,8 @@ const ScreenDefect: React.FC = () => {
                   fontWeight: "500",
                   transition: "background-color 0.2s",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "rgb(240, 240, 240)")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "rgb(240, 240, 240)")}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 Cancelar
               </button>
@@ -696,14 +659,10 @@ const ScreenDefect: React.FC = () => {
             >
               Confirmar Exclusão
             </h3>
-            <p
-              style={{ margin: "0 0 20px", fontSize: "14px", color: "#666666" }}
-            >
+            <p style={{ margin: "0 0 20px", fontSize: "14px", color: "#666666" }}>
               Tem certeza que deseja excluir este defeito?
             </p>
-            <div
-              style={{ display: "flex", justifyContent: "center", gap: "12px" }}
-            >
+            <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
               <button
                 onClick={cancelDelete}
                 style={{
@@ -716,12 +675,8 @@ const ScreenDefect: React.FC = () => {
                   fontSize: "14px",
                   fontWeight: "500",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "rgb(240, 240, 240)")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "rgb(240, 240, 240)")}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 Cancelar
               </button>
@@ -737,12 +692,8 @@ const ScreenDefect: React.FC = () => {
                   fontSize: "14px",
                   fontWeight: "500",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#dc2626")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#ef4444")
-                }
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#dc2626")}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#ef4444")}
               >
                 Confirmar
               </button>

@@ -1,13 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import {
-  ConfigProvider,
-  Dropdown,
-  Layout,
-  Spin,
-  Avatar,
-  DropdownProps,
-  MenuProps,
-} from "antd";
+import { ConfigProvider, Dropdown, Layout, Spin, Avatar, DropdownProps, MenuProps } from "antd";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import {
   ArrowLeftOutlined,
@@ -16,7 +8,15 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { ChartColumn, ChartPie, ChevronDown, FileChartColumn, OctagonX, Truck, UserRoundPlus } from "lucide-react";
+import {
+  ChartColumn,
+  ChartPie,
+  ChevronDown,
+  FileChartColumn,
+  OctagonX,
+  Truck,
+  UserRoundPlus,
+} from "lucide-react";
 import styles from "./styles.ts";
 import LogoIma from "@assets/image/png/logo-ima.png";
 import IconGarantia from "@assets/image/svg/icon_garantia.svg";
@@ -38,32 +38,16 @@ const menuData: MenuItem[] = [
   {
     key: "3",
     label: "Dashboard Inicial",
-    icon:
-      <ChartPie style={{ color: "red", height: "22px" }} />
-    ,
+    icon: <ChartPie style={{ color: "red", height: "22px" }} />,
     path: "/dashboard",
-    allowedRoles: [
-      UserRoleEnum.Admin,
-      UserRoleEnum.Tecnico,
-      UserRoleEnum.Supervisor,
-    ],
+    allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Tecnico, UserRoleEnum.Supervisor],
   },
   {
     key: "1",
     label: "Garantias",
-    icon: (
-      <img
-        src={IconGarantia}
-        alt="Garantias"
-        style={{ width: "22px", height: "22px" }}
-      />
-    ),
+    icon: <img src={IconGarantia} alt="Garantias" style={{ width: "22px", height: "22px" }} />,
     path: "/garantias",
-    allowedRoles: [
-      UserRoleEnum.Tecnico,
-      UserRoleEnum.Supervisor,
-      UserRoleEnum.Cliente,
-    ],
+    allowedRoles: [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor, UserRoleEnum.Cliente],
   },
   {
     key: "2",
@@ -79,10 +63,10 @@ const menuData: MenuItem[] = [
     path: "/defect",
     allowedRoles: [UserRoleEnum.Admin],
   },
-    {
+  {
     key: "6",
     label: "Cadastro de Transportadoras",
-    icon: <Truck  style={{ color: "red", height: "22px" }} />,
+    icon: <Truck style={{ color: "red", height: "22px" }} />,
     path: "/transportadora",
     allowedRoles: [UserRoleEnum.Admin],
   },
@@ -91,66 +75,42 @@ const menuData: MenuItem[] = [
     label: "Relatórios",
     icon: <ChartColumn style={{ color: "red", height: "22px" }} />,
     path: "",
-    allowedRoles: [
-      UserRoleEnum.Admin,
-      UserRoleEnum.Supervisor,
-      UserRoleEnum.Tecnico,
-    ],
+    allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Supervisor, UserRoleEnum.Tecnico],
     children: [
       {
         key: "4-1",
         label: "Relatório RGI",
         icon: <FileChartColumn style={{ color: "red", height: "22px" }} />,
         path: "/relatorio/rgi",
-        allowedRoles: [
-          UserRoleEnum.Admin,
-          UserRoleEnum.Supervisor,
-          UserRoleEnum.Tecnico,
-        ],
+        allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Supervisor, UserRoleEnum.Tecnico],
       },
       {
         key: "4-2",
         label: "Relatório ACI",
         icon: <FileChartColumn style={{ color: "red", height: "22px" }} />,
         path: "/relatorio/aci",
-        allowedRoles: [
-          UserRoleEnum.Admin,
-          UserRoleEnum.Supervisor,
-          UserRoleEnum.Tecnico,
-        ],
+        allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Supervisor, UserRoleEnum.Tecnico],
       },
       {
         key: "4-3",
         label: "Relatório Itens ACI",
         icon: <FileChartColumn style={{ color: "red", height: "22px" }} />,
         path: "/relatorio/itens-aci-report",
-        allowedRoles: [
-          UserRoleEnum.Admin,
-          UserRoleEnum.Supervisor,
-          UserRoleEnum.Tecnico,
-        ],
+        allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Supervisor, UserRoleEnum.Tecnico],
       },
       {
         key: "4-4",
         label: "Relatório Itens RGI",
         icon: <FileChartColumn style={{ color: "red", height: "22px" }} />,
         path: "/relatorio/itens-rgi-report",
-        allowedRoles: [
-          UserRoleEnum.Admin,
-          UserRoleEnum.Supervisor,
-          UserRoleEnum.Tecnico,
-        ],
+        allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Supervisor, UserRoleEnum.Tecnico],
       },
       {
         key: "4-5",
         label: "Relatório NF RGI",
         icon: <FileChartColumn style={{ color: "red", height: "22px" }} />,
         path: "/relatorio/nf-rgi-report",
-        allowedRoles: [
-          UserRoleEnum.Admin,
-          UserRoleEnum.Supervisor,
-          UserRoleEnum.Tecnico,
-        ],
+        allowedRoles: [UserRoleEnum.Admin, UserRoleEnum.Supervisor, UserRoleEnum.Tecnico],
       },
     ],
   },
@@ -164,16 +124,7 @@ interface CustomDropdownProps extends DropdownProps {
 }
 
 const DropdownWithRef = React.forwardRef<HTMLDivElement, CustomDropdownProps>(
-  (
-    {
-      children,
-      menu,
-      placement = "bottomRight",
-      trigger = ["click"],
-      ...restProps
-    },
-    ref
-  ) => {
+  ({ children, menu, placement = "bottomRight", trigger = ["click"], ...restProps }, ref) => {
     const [open, setOpen] = useState(false);
 
     const handleOpenChange = (flag: boolean) => {
@@ -240,7 +191,6 @@ const LayoutPrivate: React.FC = () => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-
     let currentItem: MenuItem | undefined;
     let currentChild: MenuItem | undefined;
 
@@ -250,9 +200,7 @@ const LayoutPrivate: React.FC = () => {
         currentItem = item;
       }
       if (item.children) {
-        const child = item.children.find((child) =>
-          location.pathname.startsWith(child.path)
-        );
+        const child = item.children.find((child) => location.pathname.startsWith(child.path));
         if (child) {
           currentItem = item;
           currentChild = child;
@@ -266,8 +214,7 @@ const LayoutPrivate: React.FC = () => {
     // Definir expandedKeys para expandir o menu pai, se houver subitem
     if (
       currentItem?.children &&
-      (currentChild ||
-        (currentItem.path && location.pathname.startsWith(currentItem.path)))
+      (currentChild || (currentItem.path && location.pathname.startsWith(currentItem.path)))
     ) {
       setExpandedKeys([currentItem.key]);
       // console.log("Expanding:", currentItem.key);
@@ -347,9 +294,7 @@ const LayoutPrivate: React.FC = () => {
   }
 
   const filteredMenu = menuData.filter(
-    (item) =>
-      !item.allowedRoles ||
-      item.allowedRoles.includes(user.rule.name as UserRoleEnum)
+    (item) => !item.allowedRoles || item.allowedRoles.includes(user.rule.name as UserRoleEnum)
   );
 
   return (
@@ -389,11 +334,8 @@ const LayoutPrivate: React.FC = () => {
                         alignItems: "center",
                         justifyContent: collapsed ? "center" : "flex-start",
                         backgroundColor:
-                          item.key === selectedKey
-                            ? "rgba(255, 0, 0, 0.14)"
-                            : "transparent",
-                        color:
-                          item.key === selectedKey ? "#FF0000" : "#808080",
+                          item.key === selectedKey ? "rgba(255, 0, 0, 0.14)" : "transparent",
+                        color: item.key === selectedKey ? "#FF0000" : "#808080",
                         border:
                           item.key === selectedKey
                             ? "0.25px solid rgba(255, 0, 0, 0.35)"
@@ -422,10 +364,9 @@ const LayoutPrivate: React.FC = () => {
                       )}
                       {!collapsed && (
                         <ChevronDown
-                          className={`h-5 w-5 transition-transform duration-300 ${expandedKeys.includes(item.key)
-                              ? "text-[#E56425]"
-                              : "text-foreground"
-                            }`}
+                          className={`h-5 w-5 transition-transform duration-300 ${
+                            expandedKeys.includes(item.key) ? "text-[#E56425]" : "text-foreground"
+                          }`}
                           style={{
                             marginLeft: "10px",
                             transition: "transform 0.3s",
@@ -438,51 +379,47 @@ const LayoutPrivate: React.FC = () => {
                     </div>
                     {!collapsed &&
                       expandedKeys.includes(item.key) &&
-                      item.children.map((child) => (
-                        child.allowedRoles?.includes(
-                          user.rule.name as UserRoleEnum
-                        ) && (
-                          <Link
-                            key={child.key}
-                            to={child.path}
-                            style={{
-                              ...styles.menuItem,
-                              height: "55px",
-                              marginTop: "10px",
-                              borderRadius: "15px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "flex-start",
-                              backgroundColor:
-                                child.key === selectedKey
-                                  ? "rgba(255, 0, 0, 0.14)"
-                                  : "transparent",
-                              color:
-                                child.key === selectedKey
-                                  ? "#FF0000"
-                                  : "#808080",
-                              border:
-                                child.key === selectedKey
-                                  ? "0.25px solid rgba(255, 0, 0, 0.35)"
-                                  : "0.25px solid rgb(230, 230, 230)",
-                              paddingLeft: collapsed ? "0px" : "14px",
-                              textDecoration: "none",
-                              marginLeft: "15px",
-                            }}
-                            onClick={() => setSelectedKey(child.key)}
-                          >
-                            {child.icon}
-                            <span
+                      item.children.map(
+                        (child) =>
+                          child.allowedRoles?.includes(user.rule.name as UserRoleEnum) && (
+                            <Link
+                              key={child.key}
+                              to={child.path}
                               style={{
+                                ...styles.menuItem,
+                                height: "55px",
+                                marginTop: "10px",
+                                borderRadius: "15px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "flex-start",
+                                backgroundColor:
+                                  child.key === selectedKey
+                                    ? "rgba(255, 0, 0, 0.14)"
+                                    : "transparent",
+                                color: child.key === selectedKey ? "#FF0000" : "#808080",
+                                border:
+                                  child.key === selectedKey
+                                    ? "0.25px solid rgba(255, 0, 0, 0.35)"
+                                    : "0.25px solid rgb(230, 230, 230)",
+                                paddingLeft: collapsed ? "0px" : "14px",
+                                textDecoration: "none",
                                 marginLeft: "15px",
-                                fontSize: "16px",
                               }}
+                              onClick={() => setSelectedKey(child.key)}
                             >
-                              {child.label}
-                            </span>
-                          </Link>
-                        )
-                      ))}
+                              {child.icon}
+                              <span
+                                style={{
+                                  marginLeft: "15px",
+                                  fontSize: "16px",
+                                }}
+                              >
+                                {child.label}
+                              </span>
+                            </Link>
+                          )
+                      )}
                   </div>
                 ) : (
                   <Link
@@ -496,9 +433,7 @@ const LayoutPrivate: React.FC = () => {
                       alignItems: "center",
                       justifyContent: collapsed ? "center" : "flex-start",
                       backgroundColor:
-                        item.key === selectedKey
-                          ? "rgba(255, 0, 0, 0.14)"
-                          : "transparent",
+                        item.key === selectedKey ? "rgba(255, 0, 0, 0.14)" : "transparent",
                       color: item.key === selectedKey ? "#FF0000" : "#808080",
                       border:
                         item.key === selectedKey
@@ -534,20 +469,12 @@ const LayoutPrivate: React.FC = () => {
         </Sider>
         <Layout>
           <Header style={styles.header}>
-            <div
-              style={styles.arrowButtonMenu(collapsed)}
-              onClick={toggleSidebar}
-            >
-              {React.createElement(
-                collapsed ? ArrowRightOutlined : ArrowLeftOutlined,
-                {
-                  style: { fontSize: 12, cursor: "pointer" },
-                }
-              )}
+            <div style={styles.arrowButtonMenu(collapsed)} onClick={toggleSidebar}>
+              {React.createElement(collapsed ? ArrowRightOutlined : ArrowLeftOutlined, {
+                style: { fontSize: 12, cursor: "pointer" },
+              })}
             </div>
-            <h2 style={{ margin: 0, fontSize: "18px" }}>
-              {getHeaderTitle()}
-            </h2>
+            <h2 style={{ margin: 0, fontSize: "18px" }}>{getHeaderTitle()}</h2>
             <div
               style={{
                 display: "flex",
@@ -568,13 +495,10 @@ const LayoutPrivate: React.FC = () => {
                     padding: "0.5rem 1rem",
                   }}
                 >
-                  <Avatar
-                    icon={<UserOutlined />}
-                    style={{ backgroundColor: "#FF0000" }}
-                  />
+                  <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#FF0000" }} />
                   <span style={{ fontWeight: "500" }}>
                     {user.rule.name === UserRoleEnum.Cliente ||
-                      user.rule.name === UserRoleEnum.Admin
+                    user.rule.name === UserRoleEnum.Admin
                       ? user.cnpj
                       : user.username}
                   </span>

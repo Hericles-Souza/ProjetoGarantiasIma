@@ -6,7 +6,7 @@
   gap: 40px;
 }
 
-.graphicPizza{
+.graphicPizza {
   border: 1px solid #dadada;
   border-radius: 15px;
   padding: 20px 30px;
@@ -14,29 +14,29 @@
   width: 50%;
 }
 
-.containerChart{
-    border: 1px solid #dadada;
-    border-radius: 15px;
-    padding: 20px 30px;
-    background-color: #ffffff;
-    margin-top: 20px;
+.containerChart {
+  border: 1px solid #dadada;
+  border-radius: 15px;
+  padding: 20px 30px;
+  background-color: #ffffff;
+  margin-top: 20px;
 }
 
-.containerDashboard{
-    display: flex;
-    flex-direction: row;
-    border-bottom: solid 1px #dadada;
-    align-items: center;
-    margin-bottom: 20px;
-    margin-top: 0px;
-    padding: 10px 15px;
-    justify-content: space-between;
-    gap: 20px;
+.containerDashboard {
+  display: flex;
+  flex-direction: row;
+  border-bottom: solid 1px #dadada;
+  align-items: center;
+  margin-bottom: 20px;
+  margin-top: 0px;
+  padding: 10px 15px;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .inputSearch {
-  color: #5F5A56;
-  background-color: white;              
+  color: #5f5a56;
+  background-color: white;
   border: 1px solid #dadada;
   border-radius: 10px;
   padding: 12px 15px;
@@ -47,5 +47,5 @@
 
 .inputSearch::-webkit-calendar-picker-indicator {
   filter: invert(1);
-  color: #5F5A56;
+  color: #5f5a56;
 }

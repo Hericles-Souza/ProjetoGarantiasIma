@@ -7,11 +7,9 @@ import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { ModalModel } from "../RGIDetailsInitial/RGIDetailsInitial";
 import environment from "@env/environment";
 import { GarantiasModel } from "@shared/models/GarantiasModel";
-import {
-  GarantiasStatusEnum,
-  GarantiasStatusEnum2,
-} from "@shared/enums/GarantiasStatusEnum";
+import { GarantiasStatusEnum, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum";
 import api from "@shared/Interceptors";
+import { nowDataAtualizacao } from "@shared/utils/dateParts";
 
 interface NFModalProps {
   open: boolean;
@@ -22,14 +20,7 @@ interface NFModalProps {
   garantiaId: string;
 }
 
-const NFModal = ({
-  open,
-  onOpenChange,
-  onAddNF,
-  isSell,
-  itemId,
-  garantiaId,
-}: NFModalProps) => {
+const NFModal = ({ open, onOpenChange, onAddNF, isSell, itemId, garantiaId }: NFModalProps) => {
   const [inputValue, setInputValue] = useState("");
   const [fileName, setFileName] = useState<string>("");
   const [, setFile] = useState(null);
@@ -41,7 +32,7 @@ const NFModal = ({
     const title = isSell ? "N° NF de origem *" : "N° NF de devolução *";
     setLabel(title);
     setIdGarantia(garantiaId);
-  });
+  }, [isSell, garantiaId]);
 
   const handleRemoveFile = () => {
     setFileName("");
@@ -62,24 +53,13 @@ const NFModal = ({
         //console.log(file);
       }
     } else if (!isSell) {
-      
       //console.log("garantiaId: ", garantiaId);
-      if(!garantiaId)
-        message.error("Id da garantia vazio");
-
+      if (!garantiaId) message.error("Id da garantia vazio");
 
       setInputValue("");
       onOpenChange({ isOpen: false, isSell: false });
       //console.log(inputValue);
       //console.log(file);
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
-      const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
       const garantia: GarantiasModel = {
         razaoSocial: context.user.fullname,
@@ -88,12 +68,12 @@ const NFModal = ({
         nf: inputValue,
         fornecedor: context.user.fullname,
         codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-        observacao: "teste",
+        observacao: "NF de devolução enviada",
         usuarioAtualizacao: context.user.username,
         status: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-        dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        dataAtualizacao: nowDataAtualizacao(),
         frete: null,
-        duplicata: null
+        duplicata: null,
       };
 
       const responseHeader = await api.put(
@@ -197,12 +177,7 @@ const NFModal = ({
           <Button onClick={handleCancel} className="cancel-button">
             Cancelar
           </Button>
-          <Button
-            type="primary"
-            danger
-            className="creating-button"
-            onClick={handleCreateNF}
-          >
+          <Button type="primary" danger className="creating-button" onClick={handleCreateNF}>
             Criar
           </Button>
         </div>

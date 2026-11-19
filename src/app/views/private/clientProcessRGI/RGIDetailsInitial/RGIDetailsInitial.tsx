@@ -2,12 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useContext, useEffect, useState } from "react";
 import { Button, Checkbox, message, Modal, Spin } from "antd";
-import {
-  DeleteOutlined,
-  LeftOutlined,
-  FileOutlined,
-  InfoCircleOutlined,
-} from "@ant-design/icons";
+import { DeleteOutlined, LeftOutlined, FileOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import styles from "./RGIDetailsInitial.module.css";
 import OutlinedInputWithLabel from "@shared/components/input-outlined-with-label/OutlinedInputWithLabel.tsx";
 import { GarantiaItem, GarantiasModel } from "@shared/models/GarantiasModel.ts";
@@ -30,6 +25,7 @@ import { isUndefined } from "lodash";
 import Item from "antd/es/list/Item";
 import { getTransportadoraByName } from "@shared/services/transportadorasService";
 import { Transportadora } from "@shared/models/TransportadoraModel";
+import { nowDataAtualizacao } from "@shared/utils/dateParts";
 
 // Função para extrair array de garantias (inalterada)
 const extractGarantiasArray = (data: any): GarantiasModel[] => {
@@ -67,9 +63,7 @@ const RGIDetailsInitial: React.FC = () => {
   const [associatedNfsWithItens, setAssociatedNfsWithItens] = useState<
     { nf: string; countItems: number }[]
   >([]);
-  const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<
-    NotaFiscal[]
-  >([]);
+  const [garantiaNfsWithItens, setGarantiaNfsWithItens] = useState<NotaFiscal[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [nfToDelete, setNfToDelete] = useState<string>("");
@@ -78,15 +72,6 @@ const RGIDetailsInitial: React.FC = () => {
   const location = useLocation();
   const context = useContext(AuthContext);
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  const seconds = String(now.getSeconds()).padStart(2, "0");
-  const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
-
   function getExtensionFromMimeType(mimeType: string): string {
     const mimeTypes: { [key: string]: string } = {
       "image/jpeg": ".jpg",
@@ -94,8 +79,7 @@ const RGIDetailsInitial: React.FC = () => {
       "image/gif": ".gif",
       "application/pdf": ".pdf",
       "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
@@ -122,17 +106,19 @@ const RGIDetailsInitial: React.FC = () => {
 
   const getSellFile = async (itemId: string, field: string) => {
     const urlGetFile =
-      environment.apiUrl +
-      `/files/files/download-private-file-item/${itemId}/${field}`;
+      environment.apiUrl + `/files/files/download-private-file-item/${itemId}/${field}`;
     const response = await fetch(urlGetFile, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${context.user.token}`,
       },
     });
+    // Sem arquivo o backend devolve 404 em JSON, que antes virava um "anexo" na tela.
+    if (!response.ok) {
+      return { fileNameWithExtension: "", imagemUrl: "" };
+    }
     const blob = await response.blob();
-    const fileExtension = getFileExtensionFromBlob(blob);
-    const fileNameWithExtension = field + fileExtension;
+    const fileNameWithExtension = field + getFileExtensionFromBlob(blob);
     const imagemUrl = URL.createObjectURL(blob);
     return { fileNameWithExtension, imagemUrl };
   };
@@ -141,10 +127,7 @@ const RGIDetailsInitial: React.FC = () => {
     return `${RgiCode}.${letter}.${index}`;
   };
 
-  const getAssciatedNfs = async (
-    garantiaId: string,
-    statusGarantia: number
-  ) => {
+  const getAssciatedNfs = async (garantiaId: string, statusGarantia: number) => {
     try {
       const garantiaItemResponse = await fetch(
         `${environment.apiUrl}/nota-fiscal/by-garantia/${garantiaId}`,
@@ -157,10 +140,7 @@ const RGIDetailsInitial: React.FC = () => {
       );
       const associatedNfsByGarantia = await garantiaItemResponse.json();
       const newAssociatedNfsByGarantia: NotaFiscal[] = [];
-      for (const [
-        index,
-        nfAssociated,
-      ] of associatedNfsByGarantia.data.entries()) {
+      for (const [index, nfAssociated] of (associatedNfsByGarantia.data ?? []).entries()) {
         newAssociatedNfsByGarantia[index] = nfAssociated;
         if (statusGarantia > GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) {
           const returnedSellFile = await getSellFile(nfAssociated.id, "nfDev");
@@ -203,15 +183,10 @@ const RGIDetailsInitial: React.FC = () => {
         if (location.state) {
           data = location.state.garantiaData;
 
-          const associatedNotas = await getAssciatedNfs(
-            data.id,
-            data.codigoStatus
-          );
+          const associatedNotas = await getAssciatedNfs(data.id, data.codigoStatus);
           setSocialReason(data.razaoSocial);
           setPhone(data.telefone);
-          setDate(
-            `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
-          );
+          setDate(nowDataAtualizacao());
           data.notas = associatedNotas;
           setCardData(data);
           setRgi(data.codigoRGI || data.rgi);
@@ -225,9 +200,7 @@ const RGIDetailsInitial: React.FC = () => {
             );
             ordenarItens();
           }
-          const transportadoraRec = await getTransportadoraByName(
-            data.transportadora
-          );
+          const transportadoraRec = await getTransportadoraByName(data.transportadora);
           setTransportadora(transportadoraRec);
         }
       } catch (error) {
@@ -255,9 +228,7 @@ const RGIDetailsInitial: React.FC = () => {
       },
       onOk: async () => {
         try {
-          const response = await api.delete(
-            `/garantias/garantias/${cardData.id}`
-          );
+          const response = await api.delete(`/garantias/garantias/${cardData.id}`);
           if (response.status === 200) {
             message.success("Garantia excluída com sucesso!");
             navigate("/garantias");
@@ -287,16 +258,11 @@ const RGIDetailsInitial: React.FC = () => {
       return;
     }
     try {
-      const responseGetItens = await api.get(
-        `/nota-fiscal/by-garantia/${cardData.id}`
-      );
+      const responseGetItens = await api.get(`/nota-fiscal/by-garantia/${cardData.id}`);
       const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
       // console.log("notasFiscaisAPI: ", notasFiscaisAPI);
 
-      if (
-        notasFiscaisAPI.filter((value) => value.codigo === nfCodeCompare)
-          .length <= 0
-      ) {
+      if (notasFiscaisAPI.filter((value) => value.codigo === nfCodeCompare).length <= 0) {
         const endpoint = environment.apiUrl + "/nota-fiscal/create";
         const responsePost = await api.post(endpoint, payloadPost);
         // console.log("payloadPost: ", payloadPost);
@@ -364,9 +330,7 @@ const RGIDetailsInitial: React.FC = () => {
       // console.log("ultimoItem ", ultimoItem, "garantiaNfsWithItens: ", garantiaNfsWithItens);
 
       const [letra] =
-        ultimoItem.rgi != null
-          ? ultimoItem.rgi.split(".")[1]
-          : ultimoItem.codigoRGI.split(".")[1];
+        ultimoItem.rgi != null ? ultimoItem.rgi.split(".")[1] : ultimoItem.codigoRGI.split(".")[1];
       proximaLetra = String.fromCharCode(letra.charCodeAt(0) + 1);
     }
     const itemCode = getRgiWithSuffix(rgi, proximaLetra, 1);
@@ -391,8 +355,8 @@ const RGIDetailsInitial: React.FC = () => {
       id_referencia: cardData?.id,
       observacao: "",
       tipo_nota: "nota fiscal de origem",
-      data_atualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
-      data_emissao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      data_atualizacao: nowDataAtualizacao(),
+      data_emissao: nowDataAtualizacao(),
       itens: garantiasItem,
     } as NotaFiscal;
     await postOrPutGarantiaItemAsync(newNotaFiscal, itemCode, nfNumber, notaId);
@@ -401,14 +365,10 @@ const RGIDetailsInitial: React.FC = () => {
   const handleDeleteNF = async () => {
     try {
       if (garantiaNfsWithItens.length === 1) {
-        message.error(
-          "Não é permitido deletar a única NF vinculada a garantia."
-        );
+        message.error("Não é permitido deletar a única NF vinculada a garantia.");
         return;
       }
-      const nfDeleted = cardData?.notas.find(
-        (nota) => nota.codigo == nfToDelete
-      );
+      const nfDeleted = cardData?.notas.find((nota) => nota.codigo == nfToDelete);
 
       const itensToDelete = nfDeleted.itens;
 
@@ -417,24 +377,18 @@ const RGIDetailsInitial: React.FC = () => {
         return;
       }
       for (const itemToDelete of itensToDelete) {
-        const response = await api.delete(
-          `/garantias/item/delete/${itemToDelete.id}`
-        );
+        const response = await api.delete(`/garantias/item/delete/${itemToDelete.id}`);
         if (response.status === 200) {
           setGroupedItems((prevGroupedItems) =>
             prevGroupedItems?.filter(
               (item) =>
                 item.codigoItem !==
-                itemToDelete.codigoItem.split(".")[0] +
-                  "." +
-                  itemToDelete.codigoItem.split(".")[1]
+                itemToDelete.codigoItem.split(".")[0] + "." + itemToDelete.codigoItem.split(".")[1]
             )
           );
           ordenarItens();
           setAssociatedNfsWithItens((prevAssociatedNfs) =>
-            prevAssociatedNfs.filter(
-              (nf) => nf.nf !== itemToDelete.nfReferencia
-            )
+            prevAssociatedNfs.filter((nf) => nf.nf !== itemToDelete.nfReferencia)
           );
         } else {
           message.error("Erro ao excluir a NF.");
@@ -446,9 +400,7 @@ const RGIDetailsInitial: React.FC = () => {
       if (response.status === 200) {
         setCardData((prevCardData) => ({
           ...prevCardData,
-          notas: prevCardData.notas.filter(
-            (nota) => nota.codigo !== nfDeleted.codigo
-          ),
+          notas: prevCardData.notas.filter((nota) => nota.codigo !== nfDeleted.codigo),
         }));
 
         setGarantiaNfsWithItens(
@@ -499,9 +451,7 @@ const RGIDetailsInitial: React.FC = () => {
           notaFiscal.recSellFile = { fileNameWithExtension, imagemUrl };
           setGarantiaNfsWithItens((prevGarantiaNfsWithItens) => {
             const updatedNfs = prevGarantiaNfsWithItens.map((item) =>
-              item.id === notaFiscal.id
-                ? { ...item, recSellFile: notaFiscal.recSellFile }
-                : item
+              item.id === notaFiscal.id ? { ...item, recSellFile: notaFiscal.recSellFile } : item
             );
             // console.log("Estado atualizado de garantiaNfsWithItens:", updatedNfs);
             return updatedNfs;
@@ -517,7 +467,7 @@ const RGIDetailsInitial: React.FC = () => {
   };
 
   const handleDownloadFile = (recNota: NotaFiscal) => {
-    if (!recNota.recSellFile) return;
+    if (!recNota.recSellFile?.imagemUrl) return;
     const link = document.createElement("a");
     link.href = recNota.recSellFile.imagemUrl || "#";
     link.download = recNota.recSellFile.fileNameWithExtension || "download";
@@ -529,14 +479,6 @@ const RGIDetailsInitial: React.FC = () => {
       message.error("ID da garantia não encontrado");
       return;
     }
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
     const garantia: GarantiasModel = {
       razaoSocial: socialReason || cardData.razaoSocial,
@@ -544,9 +486,9 @@ const RGIDetailsInitial: React.FC = () => {
       email: context.user.email || cardData.email,
       nf: cardData.notas?.[0]?.codigo,
       fornecedor: context.user.fullname || cardData.fornecedor,
-      observacao: cardData.observacao || "teste",
+      observacao: cardData.observacao || "-",
       usuarioAtualizacao: context.user.username,
-      dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+      dataAtualizacao: nowDataAtualizacao(),
       codigoStatus: GarantiasStatusEnum2.NAO_ENVIADO,
       status: GarantiasStatusEnum.NAO_ENVIADO,
       frete: cardData.frete,
@@ -603,9 +545,7 @@ const RGIDetailsInitial: React.FC = () => {
 
     // Se a validação falhar, exibir mensagem de erro
     if (!isValid) {
-      message.error(
-        errorMessage || "Preencha todos os campos obrigatórios antes de enviar."
-      );
+      message.error(errorMessage || "Preencha todos os campos obrigatórios antes de enviar.");
       return;
     }
 
@@ -620,14 +560,6 @@ const RGIDetailsInitial: React.FC = () => {
     }));
 
     // Continuar com a lógica de envio
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
     let garantia: GarantiasModel = {};
 
@@ -644,10 +576,10 @@ const RGIDetailsInitial: React.FC = () => {
           nf: cardData.nf ?? cardData.notas?.[0]?.codigo,
           fornecedor: context.user.fullname || cardData.fornecedor,
           codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-          observacao: cardData.observacao || "teste",
+          observacao: cardData.observacao || "-",
           usuarioAtualizacao: context.user.username,
           status: GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-          dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          dataAtualizacao: nowDataAtualizacao(),
           frete: false,
           duplicata: "",
           transportadora: cardData.frete ? cardData.transportadora : "",
@@ -662,7 +594,7 @@ const RGIDetailsInitial: React.FC = () => {
         //   codigoStatus: GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
         //   observacao: cardData.observacao || "",
         //   usuarioAtualizacao: context.user.username,
-        //   dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        //   dataAtualizacao: nowDataAtualizacao(),
         //   frete: cardData.frete ?? false,
         //   duplicata: "",
         // };
@@ -677,13 +609,13 @@ const RGIDetailsInitial: React.FC = () => {
             cardData.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
               ? GarantiasStatusEnum2.EM_ANALISE
               : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-          observacao: cardData.observacao || "teste",
+          observacao: cardData.observacao || "-",
           usuarioAtualizacao: context.user.username,
           status:
             cardData.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
               ? GarantiasStatusEnum.EM_ANALISE
               : GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-          dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+          dataAtualizacao: nowDataAtualizacao(),
           frete: false,
           duplicata: "",
           transportadora: cardData.frete ? cardData.transportadora : "",
@@ -698,13 +630,13 @@ const RGIDetailsInitial: React.FC = () => {
         //     cardData.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
         //       ? GarantiasStatusEnum2.EM_ANALISE
         //       : GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-        //   observacao: cardData.observacao || "teste",
+        //   observacao: cardData.observacao || "-",
         //   usuarioAtualizacao: context.user.username,
         //   status:
         //     cardData.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO
         //       ? GarantiasStatusEnum.EM_ANALISE
         //       : GarantiasStatusEnum.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO,
-        //   dataAtualizacao: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`,
+        //   dataAtualizacao: nowDataAtualizacao(),
         //   frete: false,
         //   duplicata: "",
         // };
@@ -719,9 +651,7 @@ const RGIDetailsInitial: React.FC = () => {
         // Restaurar os statuses dos itens após a atualização
         setGarantiaNfsWithItens((prevGarantiaNfsWithItens) =>
           prevGarantiaNfsWithItens.map((nota) => {
-            const originalNota = originalItemStatuses.find(
-              (orig) => orig.notaId === nota.id
-            );
+            const originalNota = originalItemStatuses.find((orig) => orig.notaId === nota.id);
             if (originalNota) {
               return {
                 ...nota,
@@ -789,23 +719,15 @@ const RGIDetailsInitial: React.FC = () => {
   return (
     <div className={styles.appContainer} style={{ backgroundColor: "#ffffff" }}>
       <div className={styles.ContainerButtonBack}>
-        <Button
-          type="link"
-          className={styles.ButtonBack}
-          onClick={() => navigate("/garantias")}
-        >
+        <Button type="link" className={styles.ButtonBack} onClick={() => navigate("/garantias")}>
           <LeftOutlined /> VOLTAR PARA O INÍCIO
         </Button>
-        <span className={styles.RgiCode}>
-          RGI N° {cardData?.rgi || cardData?.codigoRGI}
-        </span>
+        <span className={styles.RgiCode}>RGI N° {cardData?.rgi || cardData?.codigoRGI}</span>
       </div>
 
       <div className={styles.headerContainer}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.rgiTitle}>
-            RGI {cardData?.rgi || cardData?.codigoRGI}
-          </h1>
+          <h1 className={styles.rgiTitle}>RGI {cardData?.rgi || cardData?.codigoRGI}</h1>
           <div
             style={{
               color: StatusColors[cardData?.codigoStatus],
@@ -813,8 +735,7 @@ const RGIDetailsInitial: React.FC = () => {
             }}
             className={styles.statusTag}
           >
-            {converterStatusGarantia(cardData?.codigoStatus) ||
-              "Status não disponível"}
+            {converterStatusGarantia(cardData?.codigoStatus) || "Status não disponível"}
           </div>
         </div>
         <div className={styles.buttonsContainer}>
@@ -829,13 +750,10 @@ const RGIDetailsInitial: React.FC = () => {
                 Excluir
               </Button>
             )}
-          {(cardData?.codigoStatus ===
-            GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
+          {(cardData?.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
             cardData?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO ||
-            cardData?.codigoStatus ===
-              GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ||
-            cardData?.codigoStatus ===
-              GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
+            cardData?.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ||
+            cardData?.codigoStatus === GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
             context.user.rule.name === UserRoleEnum.Cliente && (
               <>
                 <Button
@@ -891,30 +809,24 @@ const RGIDetailsInitial: React.FC = () => {
         cardData.codigoStatus != GarantiasStatusEnum2.EM_ANALISE &&
         cardData.codigoStatus != GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR && (
           <>
-            {(cardData?.frete || cardData?.transportadora != '') && (
+            {(cardData?.frete || cardData?.transportadora != "") && (
               <div className={styles.dialoginfo}>
-                <InfoCircleOutlined
-                  style={{ color: "#27BD02", paddingLeft: 5 }}
-                />
-                <span style={{ color: "#27BD02", paddingTop: 3 }}>
-                  O Frete é por conta da IMA.
-                </span>
+                <InfoCircleOutlined style={{ color: "#27BD02", paddingLeft: 5 }} />
+                <span style={{ color: "#27BD02", paddingTop: 3 }}>O Frete é por conta da IMA.</span>
                 <InfoCircleOutlined style={{ paddingLeft: 5 }} />
                 <span style={{ paddingTop: 3 }}>
                   {transportadora?.razaoSocial} / CNPJ: {transportadora?.cnpj}
                 </span>
               </div>
             )}
-            {(!cardData?.frete && cardData?.transportadora == '') && (
+            {!cardData?.frete && cardData?.transportadora == "" && (
               <div
                 className={styles.dialoginfo}
                 style={{
                   backgroundColor: "rgba(214, 1, 1, 0.174)",
                 }}
               >
-                <InfoCircleOutlined
-                  style={{ color: "#FF0000", paddingLeft: 5 }}
-                />
+                <InfoCircleOutlined style={{ color: "#FF0000", paddingLeft: 5 }} />
                 <span style={{ color: "#FF0000", paddingTop: 3 }}>
                   O Frete é por conta do cliente.
                 </span>
@@ -1044,13 +956,9 @@ const RGIDetailsInitial: React.FC = () => {
                   color: "red",
                 }}
               />
-              <span className={styles.nfsCode}>
-                {nota.codigoRGI || nota.rgi}
-              </span>
+              <span className={styles.nfsCode}>{nota.codigoRGI || nota.rgi}</span>
               <span className={styles.nfsDivider}> | </span>
-              <span className={styles.nfsQuantity}>
-                {nota.itens.length} ITENS
-              </span>
+              <span className={styles.nfsQuantity}>{nota.itens.length} ITENS</span>
             </div>
 
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -1058,11 +966,7 @@ const RGIDetailsInitial: React.FC = () => {
                 <label className={styles.buttonUpdateNfSale}>
                   <button
                     style={{ display: "none" }}
-                    onClick={() =>
-                      showMotivoRecusa(
-                        nota?.observacao || "Motivo não especificado."
-                      )
-                    } //adiciomnar a conclusão do supervisor correta
+                    onClick={() => showMotivoRecusa(nota?.observacao || "Motivo não especificado.")} //adiciomnar a conclusão do supervisor correta
                   />
                   Motivo da Recusa
                 </label>

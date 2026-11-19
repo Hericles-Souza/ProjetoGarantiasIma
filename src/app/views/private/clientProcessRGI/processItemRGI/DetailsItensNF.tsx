@@ -76,9 +76,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   recSellFile = { fileNameWithExtension: "", imagemUrl: "" },
   notaFiscal,
 }) => {
-  const [fileData, setFileData] = useState<FileData | null>(
-    initialFileData || null
-  );
+  const [fileData, setFileData] = useState<FileData | null>(initialFileData || null);
   const [, setFileName] = useState<string | null>(
     initialFileData ? initialFileData.fileName : null
   );
@@ -114,8 +112,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
       "image/gif": ".gif",
       "application/pdf": ".pdf",
       "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
       "application/zip": ".zip",
       "audio/mpeg": ".mp3",
       "video/mp4": ".mp4",
@@ -133,8 +130,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
   const getFieldFile = async (itemId: string, field: string) => {
     try {
       const urlGetFile =
-        environment.apiUrl +
-        `/files/files/download-private-file-item/${itemId}/${field}`;
+        environment.apiUrl + `/files/files/download-private-file-item/${itemId}/${field}`;
 
       const response = await fetch(urlGetFile, {
         method: "GET",
@@ -168,9 +164,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     }
   };
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       setFileData({ id: "", fileName: file.name });
@@ -264,26 +258,21 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
     formDataUpload.append("codigoNotaFiscal", codigoNotaFiscal); // Campo para o ID da nota fiscal
 
     try {
-      const resp = await fetch(
-        `${environment.apiUrl}/pedidos/pedidos/upload-xml-rgi`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authContext.user.token}`, // Usa authContext do escopo do componente
-            Accept: "*/*",
-          },
-          body: formDataUpload,
-        }
-      );
+      const resp = await fetch(`${environment.apiUrl}/pedidos/pedidos/upload-xml-rgi`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authContext.user.token}`, // Usa authContext do escopo do componente
+          Accept: "*/*",
+        },
+        body: formDataUpload,
+      });
 
       if (resp.ok) {
         const json = await resp.json(); // Ex.: { success: true, inserted: 15, message: "...", nfeInfo: {...} }
         message.success(`XML enviado: ${json.inserted} registros processados!`);
       } else {
         const errorJson = await resp.json();
-        message.error(
-          `Falha no upload do XML: ${errorJson.message || "Erro desconhecido"}`
-        );
+        message.error(`Falha no upload do XML: ${errorJson.message || "Erro desconhecido"}`);
         return;
       }
     } catch (err) {
@@ -319,8 +308,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
             </label>
           )}
 
-        {(fileData ||
-          (recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "")) &&
+        {(fileData || (recFile?.fileNameWithExtension != "" && recFile?.imagemUrl != "")) &&
           recGarantia?.codigoStatus <= 1 && (
             <span className={styles.fileName}>
               <FileOutlined style={{ color: "red", paddingLeft: "5px" }} />{" "}
@@ -330,9 +318,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
                   type="link"
                   onClick={handleRemoveFile}
                   style={{ outline: "none" }}
-                  icon={
-                    <DeleteOutlined style={{ color: "red", border: "none" }} />
-                  }
+                  icon={<DeleteOutlined style={{ color: "red", border: "none" }} />}
                   title="Remover arquivo"
                 />
               }
@@ -342,10 +328,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
           recFile?.imagemUrl != "" &&
           recGarantia?.codigoStatus >= 1 && (
             <label className={styles.buttonUpdateNfSale}>
-              <button
-                style={{ display: "none" }}
-                onClick={handleDownloadFile}
-              />
+              <button style={{ display: "none" }} onClick={handleDownloadFile} />
               Baixar Arquivo
             </label>
           )}
@@ -358,8 +341,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({
                 style={{ display: "none" }}
                 onChange={(e) => {
                   handleFileChange(e);
-                  if (label.includes("XML"))
-                    handleXMLFileUpload(e, notaFiscal.id, notaFiscal.rgi);
+                  if (label.includes("XML")) handleXMLFileUpload(e, notaFiscal.id, notaFiscal.rgi);
 
                   handleFileUpload(e);
                 }}
@@ -397,15 +379,10 @@ const CollapsibleSection = ({
   const [, setRecFile] = useState<Blob[]>([]);
   const context = useContext(AuthContext);
 
-  const getFieldFile = async (
-    itemId: string,
-    field: string,
-    tempRecFiles: Blob[]
-  ) => {
+  const getFieldFile = async (itemId: string, field: string, tempRecFiles: Blob[]) => {
     try {
       const urlGetFile =
-        environment.apiUrl +
-        `/files/files/download-private-file-item/${itemId}/${field}`;
+        environment.apiUrl + `/files/files/download-private-file-item/${itemId}/${field}`;
 
       const response = await fetch(urlGetFile, {
         method: "GET",
@@ -423,10 +400,7 @@ const CollapsibleSection = ({
     }
   };
 
-  async function buildDataUrlsFromZip(
-    itemId: string,
-    token: string
-  ): Promise<string[]> {
+  async function buildDataUrlsFromZip(itemId: string, token: string): Promise<string[]> {
     const zipUrl = `${environment.apiUrl}/files/files/download-private-file-item-list/${itemId}/technicalAnalyse`;
 
     const res = await fetch(zipUrl, {
@@ -463,38 +437,29 @@ const CollapsibleSection = ({
 
     // força PNG quando vier como application/octet-stream
     if (dataUrl.startsWith("data:application/octet-stream;base64,")) {
-      return dataUrl.replace(
-        "data:application/octet-stream;base64,",
-        "data:image/png;base64,"
-      );
+      return dataUrl.replace("data:application/octet-stream;base64,", "data:image/png;base64,");
     }
 
     // fallback genérico
     return dataUrl.replace("data:application/octet-stream", "data:image/png");
   }
 
-
   function replaceImgsWithDataUrls(html: string, rawDataUrls: string[]): string {
     if (!html || rawDataUrls.length === 0) return html;
 
     let idx = 0;
 
-    return html.replace(
-      /<img[^>]*src="([^"]+)"[^>]*>/g,
-      (match, src) => {
-        if (!src.includes("download-private-file-item-list")) return match;
+    return html.replace(/<img[^>]*src="([^"]+)"[^>]*>/g, (match, src) => {
+      if (!src.includes("download-private-file-item-list")) return match;
 
-        let dataUrl = rawDataUrls[idx] ?? rawDataUrls[rawDataUrls.length - 1];
-        idx++;
+      let dataUrl = rawDataUrls[idx] ?? rawDataUrls[rawDataUrls.length - 1];
+      idx++;
 
-        dataUrl = normalizeDataUrlAsImage(dataUrl);
+      dataUrl = normalizeDataUrlAsImage(dataUrl);
 
-        return `<img src="${dataUrl}" />`;
-      }
-    );
+      return `<img src="${dataUrl}" />`;
+    });
   }
-
-
 
   async function prepareItemForPdf(
     item: Item,
@@ -506,18 +471,13 @@ const CollapsibleSection = ({
     const dataUrls = await buildDataUrlsFromZip(itemId, token);
     if (dataUrls.length === 0) return { item, dataUrls: [] };
 
-    const analiseHtmlForPdf = replaceImgsWithDataUrls(
-      item.analiseTecnica,
-      dataUrls
-    );
+    const analiseHtmlForPdf = replaceImgsWithDataUrls(item.analiseTecnica, dataUrls);
 
     return {
       item: { ...item, analiseTecnica: analiseHtmlForPdf },
       dataUrls,
     };
   }
-
-
 
   const handleDownloadPDF = async () => {
     let fieldFile: string = "";
@@ -536,8 +496,7 @@ const CollapsibleSection = ({
 
       if (value.includes("devolução")) fieldFile = "nfDev";
       else if (matchField) {
-        if (garantiaItem.solicitarRessarcimento)
-          fieldFile = `${matchField[0]}.res`;
+        if (garantiaItem.solicitarRessarcimento) fieldFile = `${matchField[0]}.res`;
         else fieldFile = `${matchField[0]}.img`;
       } else fieldFile = "nfRef";
 
@@ -547,9 +506,7 @@ const CollapsibleSection = ({
     await Promise.all(promises);
     setRecFile(tempRecFiles);
 
-    const now = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
-    );
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
 
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -574,7 +531,6 @@ const CollapsibleSection = ({
       dataEmissao: `${day}/${month}/${year}`,
     };
 
-
     let dataUrls: string[] = [];
 
     // ============ NOVO: preparar HTML com imagens do ZIP ============
@@ -584,7 +540,6 @@ const CollapsibleSection = ({
       dataUrls = result.dataUrls;
       // console.log('item: ', item);
       // console.log("Qtde imagens dataUrls:", dataUrls.length);
-
     } catch (error) {
       console.error("Erro ao carregar imagens do ZIP:", error);
       // continua mesmo assim, só sem as imagens
@@ -595,8 +550,6 @@ const CollapsibleSection = ({
     //   "Primeiro src encontrado:",
     //   (item.analiseTecnica.match(/src="([^"]+)"/) || [])[1]
     // );
-
-
 
     const pdfBlob = await pdf(<ReportPDF item={item} images={dataUrls} />).toBlob();
 
@@ -629,21 +582,21 @@ const CollapsibleSection = ({
   };
   // console.log("garantiaItem?.status: ", garantiaItem?.status);
 
-  const itemStatus = converterStatusItemGarantia(
-    status === GarantiasItemStatusEnum.NAO_ANALISADO ||
-      status === GarantiasItemStatusEnum.NAO_ENVIADO
-      ? GarantiasItemStatusEnum2.NAO_ANALISADO
-      : status === GarantiasItemStatusEnum.NAO_AUTORIZADO
-        ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
-        : status === GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO
-          ? GarantiasItemStatusEnum2.ENVIO_NAO_AUTORIZADO
-          : status === GarantiasItemStatusEnum.ENVIO_NF_DEV_NAO_AUTORIZADO
-            ? GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO
-            : status === GarantiasItemStatusEnum.AUTORIZADO
-              ? GarantiasItemStatusEnum2.AUTORIZADO
-              : GarantiasItemStatusEnum2.NAO_AUTORIZADO
-  ) || "Status não disponível";
-
+  const itemStatus =
+    converterStatusItemGarantia(
+      status === GarantiasItemStatusEnum.NAO_ANALISADO ||
+        status === GarantiasItemStatusEnum.NAO_ENVIADO
+        ? GarantiasItemStatusEnum2.NAO_ANALISADO
+        : status === GarantiasItemStatusEnum.NAO_AUTORIZADO
+          ? GarantiasItemStatusEnum2.NAO_AUTORIZADO
+          : status === GarantiasItemStatusEnum.ENVIO_NAO_AUTORIZADO
+            ? GarantiasItemStatusEnum2.ENVIO_NAO_AUTORIZADO
+            : status === GarantiasItemStatusEnum.ENVIO_NF_DEV_NAO_AUTORIZADO
+              ? GarantiasItemStatusEnum2.ENVIO_NF_DEV_NAO_AUTORIZADO
+              : status === GarantiasItemStatusEnum.AUTORIZADO
+                ? GarantiasItemStatusEnum2.AUTORIZADO
+                : GarantiasItemStatusEnum2.NAO_AUTORIZADO
+    ) || "Status não disponível";
 
   const statusStyle = getStatusColor(garantiaItem?.status || "");
   // console.log("item: ", garantiaItem.codigoItem, "status: ", status);
@@ -670,10 +623,7 @@ const CollapsibleSection = ({
           {garantiaItem?.status === GarantiasItemStatusEnum.NAO_AUTORIZADO &&
             garantia?.status != GarantiasStatusEnum.NAO_ENVIADO && (
               <label className={styles.buttonUpdateNfSale}>
-                <button
-                  style={{ display: "none" }}
-                  onClick={handleDownloadPDF}
-                />
+                <button style={{ display: "none" }} onClick={handleDownloadPDF} />
                 Baixar Laudo
               </label>
             )}
@@ -756,9 +706,7 @@ const DetailsItensNF: React.FC = () => {
       cancelButtonProps: { className: "custom-cancel-button" },
       onOk: async () => {
         try {
-          const response = await api.delete(
-            `/garantias/garantias/${garantia?.id}`
-          );
+          const response = await api.delete(`/garantias/garantias/${garantia?.id}`);
           if (response.status === 200) {
             message.success("Garantia excluída com sucesso!");
             navigate("/garantias");
@@ -778,8 +726,7 @@ const DetailsItensNF: React.FC = () => {
       try {
         let data: GarantiasModel | null = null;
         if (location.state && "garantiaData" in location.state) {
-          data = (location.state as { garantiaData: GarantiasModel })
-            .garantiaData;
+          data = (location.state as { garantiaData: GarantiasModel }).garantiaData;
           const actualNf = location.state.nfNumber || "N/A";
           setRecRgiLetter(actualNf.split(".")[1] || "A");
         }
@@ -787,7 +734,6 @@ const DetailsItensNF: React.FC = () => {
           if (data && JSON.stringify(data) !== JSON.stringify(garantia)) {
             setGarantia(data);
             // console.log("data: ", data);
-
           }
 
           if (
@@ -796,12 +742,9 @@ const DetailsItensNF: React.FC = () => {
           ) {
             setNotaFiscal(location.state.nota);
             // console.log("nota: ", location.state.nota);
-
           }
 
-          const transformedItems = await getItemsByNotaId(
-            location.state.notaId
-          );
+          const transformedItems = await getItemsByNotaId(location.state.notaId);
           setRecSellFile(
             location.state?.sellFile || {
               fileNameWithExtension: "",
@@ -815,10 +758,7 @@ const DetailsItensNF: React.FC = () => {
           );
           setDefects(filteredDefects);
 
-          if (
-            transformedItems?.length > 0 &&
-            transformedItems[0].id !== visibleSectionId
-          ) {
+          if (transformedItems?.length > 0 && transformedItems[0].id !== visibleSectionId) {
             setVisibleSectionId(transformedItems[0].id);
           }
         } else {
@@ -842,13 +782,9 @@ const DetailsItensNF: React.FC = () => {
 
   const addNewItem = async () => {
     const newItemId = crypto.randomUUID();
-    const sequence = (location.state.countItems =
-      location.state.countItems + 1);
+    const sequence = (location.state.countItems = location.state.countItems + 1);
     const newItemRgi = garantia
-      ? formatItemRgi(
-        location.state.nota.codigoRGI || location.state.nota.rgi,
-        sequence
-      )
+      ? formatItemRgi(location.state.nota.codigoRGI || location.state.nota.rgi, sequence)
       : "";
 
     const payloadPost = {
@@ -859,10 +795,7 @@ const DetailsItensNF: React.FC = () => {
       codigoStatus: GarantiasItemStatusEnum2.NAO_ANALISADO,
       nota_fiscal_id: notaFiscal.id,
     };
-    const responsePost = await api.post(
-      environment.apiUrl + "/garantias/item/create",
-      payloadPost
-    );
+    const responsePost = await api.post(environment.apiUrl + "/garantias/item/create", payloadPost);
     // console.log("payloadPostitem: ", payloadPost);
 
     if (responsePost.status !== 200 && responsePost.status !== 201) {
@@ -897,17 +830,17 @@ const DetailsItensNF: React.FC = () => {
           notas: prevGarantia.notas.map((nf) =>
             nf.id === notaFiscal.id
               ? {
-                ...nf,
-                itens: [...nf.itens, novoItem],
-              }
+                  ...nf,
+                  itens: [...nf.itens, novoItem],
+                }
               : nf
           ),
           notasFiscais: prevGarantia.notas.map((nf) =>
             nf.id === notaFiscal.id
               ? {
-                ...nf,
-                itens: [...nf.itens, novoItem],
-              }
+                  ...nf,
+                  itens: [...nf.itens, novoItem],
+                }
               : nf
           ),
         }));
@@ -994,12 +927,8 @@ const DetailsItensNF: React.FC = () => {
     }
   };
 
-  const getItemsByNotaId = async (
-    idGarantia: string
-  ): Promise<GarantiaItem[]> => {
-    const responseGetItens = await api.get(
-      `/garantias/item/by-garantia/${idGarantia}`
-    );
+  const getItemsByNotaId = async (idGarantia: string): Promise<GarantiaItem[]> => {
+    const responseGetItens = await api.get(`/garantias/item/by-garantia/${idGarantia}`);
     return responseGetItens.data.data as GarantiaItem[];
   };
 
@@ -1011,27 +940,26 @@ const DetailsItensNF: React.FC = () => {
 
     let isError: boolean = false;
 
-    const responseGetItens = await api.get(
-      `/nota-fiscal/by-garantia/${garantia.id}`
-    );
+    const responseGetItens = await api.get(`/nota-fiscal/by-garantia/${garantia.id}`);
     const notasFiscaisAPI = responseGetItens.data.data as NotaFiscal[];
 
-    const garantiaItensAPI = await getItemsByNotaId(
-      notasFiscaisAPI.find((nota) => nota.codigo == notaFiscal.codigo).id
-    );
+    const notaFiscalAPI = notasFiscaisAPI?.find((nota) => nota.codigo == notaFiscal.codigo);
+    if (!notaFiscalAPI) {
+      message.error("Nota fiscal não encontrada na garantia.");
+      return;
+    }
 
-    notaFiscal.itens.forEach(async (item) => {
+    const garantiaItensAPI = await getItemsByNotaId(notaFiscalAPI.id);
+
+    // Antes era forEach(async): a mensagem de sucesso e a navegação aconteciam antes
+    // das gravações terminarem, e erros nunca eram percebidos.
+    for (const item of notaFiscal.itens) {
       try {
-        if (
-          garantiaItensAPI.some(
-            (apiItem) => apiItem.codigoItem === item.codigoItem
-          )
-        ) {
+        if (garantiaItensAPI.some((apiItem) => apiItem.codigoItem === item.codigoItem)) {
           const payloadPut = {
             codigoItem: item.codigoItem,
             tipoDefeito: item.tipoDefeito,
-            torqueAplicado:
-              item.torqueAplicado != null ? Number(item.torqueAplicado) : 0,
+            torqueAplicado: item.torqueAplicado != null ? Number(item.torqueAplicado) : 0,
             modeloVeiculoAplicado: item.modeloVeiculoAplicado || "",
             nfReferencia: item.nfReferencia,
             codigoPeca: item.codigoPeca,
@@ -1048,8 +976,9 @@ const DetailsItensNF: React.FC = () => {
           );
           // console.log("item.id: ", item.id);
 
-          if (responsePut.status !== 200 && responsePut.status !== 201) {
-            message.error("Erro ao atualizar o item.");
+          // O backend responde 200 com success=false quando a gravação falha.
+          if (responsePut.data?.success === false) {
+            message.error(responsePut.data?.error || "Erro ao atualizar o item.");
             isError = true;
           }
         } else {
@@ -1060,8 +989,7 @@ const DetailsItensNF: React.FC = () => {
             codigoItem: item.codigoItem,
             tipoDefeito: item.tipoDefeito,
             modeloVeiculoAplicado: item.modeloVeiculoAplicado || "",
-            torqueAplicado:
-              item.torqueAplicado != null ? Number(item.torqueAplicado) : null,
+            torqueAplicado: item.torqueAplicado != null ? Number(item.torqueAplicado) : null,
             nfReferencia: location.state.nfNumber,
             codigoPeca: item.codigoPeca,
             loteItemOficial: item.loteItem || "",
@@ -1072,14 +1000,10 @@ const DetailsItensNF: React.FC = () => {
             index: notaFiscal.itens.length + 1,
             id: item.id,
           };
-          const responsePost = await api.post(
-            environment.apiUrl + "/garantias/item/create",
-            payloadPost
-          );
-          // console.log("payloadPost: ", payloadPost);
+          const responsePost = await api.post("/garantias/item/create", payloadPost);
 
-          if (responsePost.status !== 200 && responsePost.status !== 201) {
-            message.error("Erro ao criar a garantia.");
+          if (responsePost.data?.success === false) {
+            message.error(responsePost.data?.error || "Erro ao criar o item.");
             isError = true;
           }
         }
@@ -1088,7 +1012,7 @@ const DetailsItensNF: React.FC = () => {
         message.error("Erro ao atualizar a garantia.");
         isError = true;
       }
-    });
+    }
 
     if (!isError && garantia) {
       message.success("Garantia atualizada com sucesso!");
@@ -1135,28 +1059,21 @@ const DetailsItensNF: React.FC = () => {
         >
           <LeftOutlined /> VOLTAR PARA INFORMAÇÕES DO RGI
         </Button>
-        <span className={styles.RgiCode}>
-          RGI {garantia?.rgi || garantia?.codigoRGI || "N/A"}
-        </span>
+        <span className={styles.RgiCode}>RGI {garantia?.rgi || garantia?.codigoRGI || "N/A"}</span>
       </div>
       <div className={styles.ContainerHeader}>
         <div className={styles.headerLeft}>
           <h1 className={styles.tituloRgi}>
-            NF{" "}
-            {notaFiscal?.codigoRGI ||
-              notaFiscal?.rgi ||
-              "Código da NF não disponível"}
+            NF {notaFiscal?.codigoRGI || notaFiscal?.rgi || "Código da NF não disponível"}
           </h1>
           <div
             style={{
               color: StatusColors[garantia?.codigoStatus] || "#000",
-              backgroundColor: `${StatusColors[garantia?.codigoStatus] || "#000"
-                }15`,
+              backgroundColor: `${StatusColors[garantia?.codigoStatus] || "#000"}15`,
             }}
             className={styles.statusTag}
           >
-            {converterStatusGarantia(garantia?.codigoStatus) ||
-              "Status não disponível"}
+            {converterStatusGarantia(garantia?.codigoStatus) || "Status não disponível"}
           </div>
         </div>
         <div className={styles.botoesCabecalho}>
@@ -1183,9 +1100,7 @@ const DetailsItensNF: React.FC = () => {
             </div>
           )}
           {garantia.codigoStatus === GarantiasStatusEnum2.EM_ANALISE && (
-            <p>
-              Esta garantia está em análise. Nenhuma ação disponível no momento.
-            </p>
+            <p>Esta garantia está em análise. Nenhuma ação disponível no momento.</p>
           )}
         </div>
       </div>
@@ -1196,9 +1111,7 @@ const DetailsItensNF: React.FC = () => {
         isRessarcimento={false}
         backgroundColor="#f5f5f5"
         initialFileData={
-          garantia?.anexos
-            ? { id: garantia.anexos, fileName: garantia.anexos }
-            : undefined
+          garantia?.anexos ? { id: garantia.anexos, fileName: garantia.anexos } : undefined
         }
         recGarantia={garantia}
         recSellFile={{ fileNameWithExtension: "", imagemUrl: "" }}
@@ -1221,35 +1134,29 @@ const DetailsItensNF: React.FC = () => {
           imagemUrl: "",
         }}
       /> */}
-      {(garantia?.codigoStatus ===
-        GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
+      {(garantia?.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO ||
         garantia?.codigoStatus == GarantiasStatusEnum2.CONFIRMADA ||
-        garantia?.codigoStatus ===
-        GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
+        garantia?.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_VALIDACAO_NF_DEVOLUCAO ||
         garantia?.codigoStatus === GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA ||
-        garantia?.codigoStatus ===
-        GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
+        garantia?.codigoStatus === GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
         context.user.rule.name === UserRoleEnum.Cliente && (
           <div style={{ marginTop: "15px" }}>
-            {garantia?.codigoStatus ===
-              GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE && (
-                <div className={styles.dialoginfo}>
-                  <InfoCircleOutlined style={{ color: "#0277BD" }} />
-                  <span style={{ color: "#0277BD" }}>
-                    Anexe a NF de devolução dos itens aprovados, para prosseguir
-                    com a avaliação parcial.
-                  </span>
-                </div>
-              )}
+            {garantia?.codigoStatus === GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE && (
+              <div className={styles.dialoginfo}>
+                <InfoCircleOutlined style={{ color: "#0277BD" }} />
+                <span style={{ color: "#0277BD" }}>
+                  Anexe a NF de devolução dos itens aprovados, para prosseguir com a avaliação
+                  parcial.
+                </span>
+              </div>
+            )}
             <FileAttachmentDevolucao
               label="Anexo da NF de devolução"
               backgroundColor="#f5f5f5"
               garantiaId={notaFiscal?.id || ""}
               recGarantia={garantia}
               initialFileData={
-                garantia?.anexos
-                  ? { id: garantia.anexos, fileName: garantia.anexos }
-                  : undefined
+                garantia?.anexos ? { id: garantia.anexos, fileName: garantia.anexos } : undefined
               }
               onFileSelect={(file) => {
                 // console.log("Arquivo selecionado:", file.name);
@@ -1263,9 +1170,7 @@ const DetailsItensNF: React.FC = () => {
           </div>
         )}
       <div className={styles.TitleItens}>
-        <h3 className={styles.nfsTitle}>
-          Itens desta NF associados a esta garantia
-        </h3>
+        <h3 className={styles.nfsTitle}>Itens desta NF associados a esta garantia</h3>
         {garantia.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
           context.user.rule.name === UserRoleEnum.Cliente && (
             <Button
@@ -1287,8 +1192,7 @@ const DetailsItensNF: React.FC = () => {
       <div className={styles.dialoginfo}>
         <InfoCircleOutlined style={{ color: "#0277BD" }} />
         <span style={{ color: "#0277BD" }}>
-          Caso a peça não possua um lote, o campo Lote da peça deve ser
-          preenchido com “Não contém”
+          Caso a peça não possua um lote, o campo Lote da peça deve ser preenchido com “Não contém”
         </span>
       </div>
       {notaFiscal?.itens?.length > 0 && recRgiLetter ? (
@@ -1302,7 +1206,6 @@ const DetailsItensNF: React.FC = () => {
             return getNumeroFinal(a.codigoItem) - getNumeroFinal(b.codigoItem);
           })
           .map((item) => (
-
             <div
               style={{
                 border: visibleSectionId === item.id ? "1px solid red" : "none",
@@ -1321,7 +1224,7 @@ const DetailsItensNF: React.FC = () => {
                 rgi={item.codigoRGI || ""}
                 isEvaluated={
                   garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO &&
-                    context.user.rule.name === UserRoleEnum.Cliente
+                  context.user.rule.name === UserRoleEnum.Cliente
                     ? false
                     : true
                 }
@@ -1333,38 +1236,24 @@ const DetailsItensNF: React.FC = () => {
                   <div className={styles.inputsConjun}>
                     <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                       <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
+                        disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
                         label="Código da peça"
                         fullWidth
                         value={item.codigoPeca || ""}
                         onChange={(e) => {
-                          handleInputChange(
-                            item.id,
-                            "codigoPeca",
-                            e.target.value
-                          );
+                          handleInputChange(item.id, "codigoPeca", e.target.value);
                           item.codigoPeca = e.target.value;
                         }}
                       />
                     </div>
                     <div className={styles.inputGroup} style={{ flex: 0.5 }}>
                       <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
+                        disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
                         label="Referência / Lote da Peça"
                         fullWidth
                         value={item.loteItem || ""}
                         onChange={(e) => {
-                          handleInputChange(
-                            item.id,
-                            "loteItem",
-                            e.target.value
-                          );
+                          handleInputChange(item.id, "loteItem", e.target.value);
                           item.loteItem = e.target.value;
                         }}
                       />
@@ -1373,10 +1262,7 @@ const DetailsItensNF: React.FC = () => {
                   <div className={styles.inputsConjun}>
                     <div className={styles.inputGroup} style={{ flex: 0.4 }}>
                       <OutlinedSelectWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
+                        disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
                         label="Defeito"
                         fullWidth
                         options={defects.map((defect) => ({
@@ -1385,18 +1271,14 @@ const DetailsItensNF: React.FC = () => {
                         }))}
                         value={item.tipoDefeito || ""}
                         onChange={(e) => {
-                          handleInputChange(
-                            item.id,
-                            "tipoDefeito",
-                            e.target.value
-                          );
+                          handleInputChange(item.id, "tipoDefeito", e.target.value);
                           item.tipoDefeito = e.target.value;
                         }}
                         MenuProps={{
                           PaperProps: {
                             style: {
                               maxHeight: 300, // altura máxima do dropdown
-                              overflowY: 'auto', // ativa o scroll
+                              overflowY: "auto", // ativa o scroll
                             },
                           },
                         }}
@@ -1404,38 +1286,24 @@ const DetailsItensNF: React.FC = () => {
                     </div>
                     <div className={styles.inputGroup} style={{ flex: 1 }}>
                       <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
+                        disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
                         label="Modelo do veículo que aplicou"
                         fullWidth
                         value={item.modeloVeiculoAplicado || ""}
                         onChange={(e) => {
-                          handleInputChange(
-                            item.id,
-                            "modeloVeiculoAplicado",
-                            e.target.value
-                          );
+                          handleInputChange(item.id, "modeloVeiculoAplicado", e.target.value);
                           item.modeloVeiculoAplicado = e.target.value;
                         }}
                       />
                     </div>
                     <div className={styles.inputGroup} style={{ flex: 0.3 }}>
                       <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
+                        disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
                         label="Ano do veículo"
                         fullWidth
                         value={item.anoVeiculo || ""}
                         onChange={(e) => {
-                          handleInputChange(
-                            item.id,
-                            "anoVeiculo",
-                            e.target.value
-                          );
+                          handleInputChange(item.id, "anoVeiculo", e.target.value);
                           item.anoVeiculo = e.target.value;
                         }}
                       />
@@ -1444,10 +1312,7 @@ const DetailsItensNF: React.FC = () => {
                   <div className={styles.inputsConjun}>
                     <div className={styles.inputGroup} style={{ flex: 1 }}>
                       <OutlinedInputWithLabel
-                        disabled={
-                          garantia?.codigoStatus !==
-                          GarantiasStatusEnum2.NAO_ENVIADO
-                        }
+                        disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
                         type="number"
                         label="Torque aplicado à peça"
                         fullWidth
@@ -1465,47 +1330,29 @@ const DetailsItensNF: React.FC = () => {
                           // Impede ter mais de um ponto
                           value = value.replace(/(\..*)\./g, "$1");
 
-                          handleInputChange(
-                            item.id,
-                            "torqueAplicado",
-                            Number(value)
-                          );
+                          handleInputChange(item.id, "torqueAplicado", Number(value));
                           item.torqueAplicado = Number(value);
                         }}
                       />
                     </div>
-
-
                   </div>
-                  {garantia?.codigoStatus ===
-                    GarantiasStatusEnum2.NAO_ENVIADO && (
-                      <div className={styles.checkboxContainer}>
-                        <ColorCheckboxes
-                          checked={item.solicitarRessarcimento || false}
-                          onChange={(e) => {
-                            item.solicitarRessarcimento = e.target.checked;
-                            handleInputChange(
-                              item.id,
-                              "solicitarRessarcimento",
-                              e.target.checked
-                            );
-                          }}
-                          disabled={
-                            garantia?.codigoStatus !==
-                            GarantiasStatusEnum2.NAO_ENVIADO
-                          }
-                        />
-                        <label className={styles.checkboxDanger}>
-                          Solicitar ressarcimento
-                        </label>
-                      </div>
-                    )}
+                  {garantia?.codigoStatus === GarantiasStatusEnum2.NAO_ENVIADO && (
+                    <div className={styles.checkboxContainer}>
+                      <ColorCheckboxes
+                        checked={item.solicitarRessarcimento || false}
+                        onChange={(e) => {
+                          item.solicitarRessarcimento = e.target.checked;
+                          handleInputChange(item.id, "solicitarRessarcimento", e.target.checked);
+                        }}
+                        disabled={garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO}
+                      />
+                      <label className={styles.checkboxDanger}>Solicitar ressarcimento</label>
+                    </div>
+                  )}
                 </div>
                 {item.solicitarRessarcimento && (
                   <div className={styles.contentReimbursement}>
-                    <h3 className={styles.tituloA}>
-                      Anexo de dados adicionais para ressarcimento
-                    </h3>
+                    <h3 className={styles.tituloA}>Anexo de dados adicionais para ressarcimento</h3>
                     {[
                       "1. Documento de identificação (RG ou CNH):",
                       "2. Documentação do veículo:",
@@ -1529,13 +1376,10 @@ const DetailsItensNF: React.FC = () => {
                   </div>
                 )}
                 {item.solicitarRessarcimento === false &&
-                  garantia?.codigoStatus !==
-                  GarantiasStatusEnum2.NAO_ENVIADO && (
+                  garantia?.codigoStatus !== GarantiasStatusEnum2.NAO_ENVIADO && (
                     <div className={styles.dialoginfoRessarcimento}>
                       <InfoCircleOutlined style={{ color: "#bd0502" }} />
-                      <span style={{ color: "#bd0502" }}>
-                        Item Não Possui Ressarcimento.
-                      </span>
+                      <span style={{ color: "#bd0502" }}>Item Não Possui Ressarcimento.</span>
                     </div>
                   )}
                 {/* {context.user.rule.name === UserRoleEnum.Cliente && (
@@ -1587,26 +1431,24 @@ const DetailsItensNF: React.FC = () => {
                     />
                   ))}
               </CollapsibleSection>
-              {
-                (garantia?.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS ||
-                  garantia?.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) &&
-                (
-                  <>
-                    <div className={styles.block}>
-                      <OutlinedSelectWithLabel
-                        disabled
-                        label="Análise"
-                        options={[
-                          {
-                            value: "Autorizado",
-                            label: "Procedente",
-                          },
-                          { value: "Não autorizado", label: "Improcedente" },
-                        ]}
-                        value={item?.status}
-                      />
-                    </div>
-                    {/* <div className={styles.block}>
+              {(garantia?.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS ||
+                garantia?.codigoStatus == GarantiasStatusEnum2.PECAS_AVALIADAS_PARCIAMENTE) && (
+                <>
+                  <div className={styles.block}>
+                    <OutlinedSelectWithLabel
+                      disabled
+                      label="Análise"
+                      options={[
+                        {
+                          value: "Autorizado",
+                          label: "Procedente",
+                        },
+                        { value: "Não autorizado", label: "Improcedente" },
+                      ]}
+                      value={item?.status}
+                    />
+                  </div>
+                  {/* <div className={styles.block}>
                       <OutlinedInputWithLabel
                         label="Defeito"
                         value={item?.tipoDefeitoOficial || ""}
@@ -1614,26 +1456,20 @@ const DetailsItensNF: React.FC = () => {
                         fullWidth
                       />
                     </div> */}
-                    {item?.status == GarantiasItemStatusEnum.NAO_AUTORIZADO && (
-                      <>
-                        <h3 className={styles.tituloA}>Conclusão</h3>
-                        <MultilineTextFields
-                          disabled
-                          value={item?.conclusao || ""}
-                          onChange={null}
-                          label="Conclusão"
-                        />
-                      </>
-                    )}
-                    {item?.status == GarantiasItemStatusEnum.AUTORIZADO && (
-                      <>
-
-                      </>
-                    )}
-                  </>
-                )
-              }
-
+                  {item?.status == GarantiasItemStatusEnum.NAO_AUTORIZADO && (
+                    <>
+                      <h3 className={styles.tituloA}>Conclusão</h3>
+                      <MultilineTextFields
+                        disabled
+                        value={item?.conclusao || ""}
+                        onChange={null}
+                        label="Conclusão"
+                      />
+                    </>
+                  )}
+                  {item?.status == GarantiasItemStatusEnum.AUTORIZADO && <></>}
+                </>
+              )}
             </div>
           ))
       ) : (
@@ -1645,9 +1481,7 @@ const DetailsItensNF: React.FC = () => {
         GarantiasStatusEnum2.NF_DEVOLUCAO_RECUSADA,
       ].includes(garantia.codigoStatus) &&
         context.user.rule.name === UserRoleEnum.Cliente && (
-          <div
-            style={{ right: "10px", display: "flex", justifyContent: "right" }}
-          >
+          <div style={{ right: "10px", display: "flex", justifyContent: "right" }}>
             <Button
               type="primary"
               className={styles.ButonToSend}
@@ -1655,8 +1489,7 @@ const DetailsItensNF: React.FC = () => {
                 // console.log("notaFiscal?.itens: ", notaFiscal?.itens);
 
                 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                garantia.codigoStatus ===
-                  GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
+                garantia.codigoStatus === GarantiasStatusEnum2.AGUARDANDO_NF_DEVOLUCAO
                   ? saveNfDevolcao()
                   : save();
               }}

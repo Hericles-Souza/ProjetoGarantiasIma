@@ -1,113 +1,52 @@
 import api from "@shared/Interceptors";
-import { AcordoComercialModel, ResponseNfItem, UpdateItemResponse } from "@shared/models/AcordoComercialModel";
+import {
+  AcordoComercialModel,
+  ResponseNfItem,
+  UpdateItemResponse,
+} from "@shared/models/AcordoComercialModel";
+import { logApiError } from "./logApiError";
 
-
-export const createAcordoAsync = (data: AcordoComercialModel) => {
-  return api.post('/acordos/ACI', data);
-}
-
-
-
-export const getAllAcordosComerciaisByUser = async (data: AcordoComercialModel) => {
-  try {
-    const response = await api.post('/acordos/ACI/getByUserAndStatus', data);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching all acordos comerciais:', error);
-    throw error;
-  }
-};
-
-export const getAcordosComerciaisByStatusAsync = async (
-  usuarioInsercao: number,
-  codigoStatus: number,
-  page: number,
-  limit: number
-) => {
-  try {
-    const response = await api.get('/acordos/ACI/getByUserAndStatus', {
-      params: {
-        usuarioInsercao,
-        codigoStatus,
-        page,
-        limit,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching acordos comerciais by status:', error);
-    throw error;
-  }
-};
+export const createAcordoAsync = (data: AcordoComercialModel) => api.post("/acordos/ACI", data);
 
 export const getItemsByNfAsync = async (nfCode: string): Promise<ResponseNfItem> => {
   try {
-    const nfItems = await api.get(`garantias/item/by-nf/${nfCode}`);
+    const nfItems = await api.get(`/garantias/item/by-nf/${nfCode}`);
     return nfItems.data;
   } catch (error) {
-    console.error('Error fetching acordos comerciais by status:', error);
+    logApiError("getItemsByNfAsync", error);
     throw error;
   }
-}
+};
 
 export const getAcordosByUser = async (page: number, limit: number) => {
   try {
-    const data = {
-      page,
-      limit
-    }
-    const acordos = await api.post(`acordos/ACI/getAllByUser`, data);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return acordos as any;
+    return (await api.post(`/acordos/ACI/getAllByUser`, { page, limit })) as any;
   } catch (error) {
-    console.error('Error fetching acordos comerciais by status:', error);
+    logApiError("getAcordosByUser", error);
     throw error;
   }
-}
+};
 
 export const getAllAcordos = async (page: number, limit: number) => {
   try {
-    const data = {
-      page,
-      limit
-    }
-    const acordos = await api.post(`acordos/ACI/getAll`, data);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return acordos as any;
+    return (await api.post(`/acordos/ACI/getAll`, { page, limit })) as any;
   } catch (error) {
-    console.error('Error fetching acordos comerciais by status:', error);
+    logApiError("getAllAcordos", error);
     throw error;
   }
-}
+};
 
-export const updateAciHeaderByIdAsync = async (data: AcordoComercialModel, acordoId: string) => {
+export const updateAciHeaderByIdAsync = (data: AcordoComercialModel, acordoId: string) =>
+  api.put(`/acordos/ACI/${acordoId}/UpdateHeader`, data);
 
-  return await api.put(`acordos/ACI/${acordoId}/UpdateHeader`, data);
-}
+export const updateAciItemByIdAsync = (data: UpdateItemResponse, idItem: string) =>
+  api.put(`/acordos/ACI/${idItem}/UpdateItem`, data);
 
-export const updateAciItemByIdAsync = (data: UpdateItemResponse, idItem: string) => {
-  return api.put(`/acordos/ACI/${idItem}/UpdateItem`, data);
-}
-
-
-export const getAcordoByIdAsync = (id: string) => {
-  return api.get(`/acordos/${id}`);
-}
+export const getAcordoByIdAsync = (id: string) => api.get(`/acordos/${id}`);
 
 export const getAllItensACI = async () => {
-  const token = localStorage.getItem('authToken');
-  if (!token) throw new Error('Token de autenticação não encontrado');
-
-  try {
-    const response = await api.get('/acordos/item/getAll', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Accept': 'application/json',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar itens ACI:', error);
-    throw error;
-  }
-}
+  const response = await api.get("/acordos/item/getAll");
+  return response.data;
+};

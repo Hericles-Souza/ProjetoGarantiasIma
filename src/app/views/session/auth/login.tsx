@@ -48,9 +48,7 @@ export const LoginPage = () => {
   return (
     <>
       <ToastContainer />
-      {isModalVisible && (
-        <DialogCreateAccount isVisible={isModalVisible} onClose={hideModal} />
-      )}
+      {isModalVisible && <DialogCreateAccount isVisible={isModalVisible} onClose={hideModal} />}
       <div
         style={{
           display: "flex",
@@ -108,8 +106,7 @@ export const LoginPage = () => {
                 marginBottom: "35px",
               }}
             >
-              Agilidade, confiança e transparência no atendimento às suas
-              necessidades.
+              Agilidade, confiança e transparência no atendimento às suas necessidades.
             </p>
           </div>
 
@@ -204,7 +201,7 @@ export const LoginPage = () => {
                       fontSize: "18px",
                       borderRadius: "15px",
                     }}
-                    
+
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -271,18 +268,8 @@ export const LoginPage = () => {
               >
                 Desenvolvido por
               </span>
-              <img
-                src={LogoCigam}
-                width={80}
-                style={{ marginLeft: "12px" }}
-                alt=""
-              />
-              <img
-                src={LogoAllSoft}
-                width={80}
-                style={{ marginLeft: "12px" }}
-                alt=""
-              />
+              <img src={LogoCigam} width={80} style={{ marginLeft: "12px" }} alt="" />
+              <img src={LogoAllSoft} width={80} style={{ marginLeft: "12px" }} alt="" />
             </div>
           </div>
         </div>

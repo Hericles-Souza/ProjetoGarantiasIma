@@ -6,14 +6,11 @@ import {
   getTransportadoras,
   createTransportadora,
   deleteTransportadora,
-  updateTransportadora
+  updateTransportadora,
 } from "@shared/services/transportadorasService";
 import { Transportadora } from "@shared/models/TransportadoraModel";
 
-class ErrorBoundary extends Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() {
     return { hasError: true };
@@ -22,8 +19,7 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div style={{ textAlign: "center", padding: "32px", color: "red" }}>
-          Ocorreu um erro na renderização. Tente recarregar a página ou contate
-          o suporte.
+          Ocorreu um erro na renderização. Tente recarregar a página ou contate o suporte.
         </div>
       );
     }
@@ -39,9 +35,7 @@ const ScreenTransportadora: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [transportadoraToDelete, setTransportadoraToDelete] = useState<
-    string | null
-  >(null);
+  const [transportadoraToDelete, setTransportadoraToDelete] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +68,6 @@ const ScreenTransportadora: React.FC = () => {
     const { name, value } = e.target;
     setNewTransportadora((prev) => ({ ...prev, [name]: value }));
   };
-
 
   const handleCreate = async () => {
     if (!newTransportadora.razaoSocial) {
@@ -128,7 +121,6 @@ const ScreenTransportadora: React.FC = () => {
     });
     setIsEditing(true);
     setIsModalOpen(true);
-
   };
 
   const handleUpdate = async () => {
@@ -160,7 +152,6 @@ const ScreenTransportadora: React.FC = () => {
     }
   };
 
-
   const handleDelete = (id: string) => {
     setTransportadoraToDelete(id);
     setIsDeleteModalOpen(true);
@@ -170,9 +161,7 @@ const ScreenTransportadora: React.FC = () => {
     if (transportadoraToDelete) {
       try {
         await deleteTransportadora(transportadoraToDelete);
-        setTransportadoras((prev) =>
-          prev.filter((t) => t.id !== transportadoraToDelete)
-        );
+        setTransportadoras((prev) => prev.filter((t) => t.id !== transportadoraToDelete));
         setIsDeleteModalOpen(false);
         setTransportadoraToDelete(null);
         setShowToast(true);
@@ -189,11 +178,9 @@ const ScreenTransportadora: React.FC = () => {
     setTransportadoraToDelete(null);
   };
 
-
-
-
   const handleCardClick = (transportadora: Transportadora) => {
-    setNewTransportadora({ // Preenche o formulário
+    setNewTransportadora({
+      // Preenche o formulário
       razaoSocial: transportadora.razaoSocial,
       cnpj: transportadora.cnpj,
       rua: transportadora.rua,
@@ -213,15 +200,11 @@ const ScreenTransportadora: React.FC = () => {
   };
 
   const filteredTransportadoras = Array.isArray(transportadoras)
-    ? transportadoras.filter((t) =>
-      t.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    ? transportadoras.filter((t) => t.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase()))
     : [];
 
   if (loading) {
-    return (
-      <div style={{ textAlign: "center", padding: "32px" }}>Carregando...</div>
-    );
+    return <div style={{ textAlign: "center", padding: "32px" }}>Carregando...</div>;
   }
 
   return (
@@ -301,9 +284,7 @@ const ScreenTransportadora: React.FC = () => {
           }}
         >
           {filteredTransportadoras.length === 0 ? (
-            <p style={{ textAlign: "center" }}>
-              Nenhuma transportadora encontrada.
-            </p>
+            <p style={{ textAlign: "center" }}>Nenhuma transportadora encontrada.</p>
           ) : (
             filteredTransportadoras.map((t) => (
               <div
@@ -337,10 +318,12 @@ const ScreenTransportadora: React.FC = () => {
                     }}
                   >
                     <Edit style={{ color: "#0280DA", height: "20px" }} />
-
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(t.id);
+                    }}
                     style={{
                       background: "none",
                       border: "none",
@@ -480,9 +463,7 @@ const ScreenTransportadora: React.FC = () => {
             >
               <h4>Confirmar Exclusão</h4>
               <p>Deseja excluir esta transportadora?</p>
-              <div
-                style={{ display: "flex", justifyContent: "center", gap: "12px" }}
-              >
+              <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
                 <button
                   onClick={cancelDelete}
                   style={{

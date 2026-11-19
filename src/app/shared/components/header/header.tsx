@@ -10,10 +10,7 @@ interface HeaderProps {
   handleFilterChange: (key: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  filterStatus,
-  handleFilterChange,
-}) => {
+const Header: React.FC<HeaderProps> = ({ filterStatus, handleFilterChange }) => {
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const context = useContext(AuthContext);
 
@@ -53,9 +50,7 @@ const Header: React.FC<HeaderProps> = ({
       </div>
       {!context.user.rule.name.includes(UserRoleEnum.Tecnico) &&
         !context.user.rule.name.includes(UserRoleEnum.Supervisor) && (
-          <div
-            style={{ display: "flex", padding: "1rem", alignItems: "center" }}
-          >
+          <div style={{ display: "flex", padding: "1rem", alignItems: "center" }}>
             <Button style={{ margin: "0" }} onClick={handleDialogOpen}>
               NOVA SOLICITAÇÃO
             </Button>

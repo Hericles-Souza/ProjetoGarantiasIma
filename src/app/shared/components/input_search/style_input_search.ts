@@ -1,12 +1,12 @@
-import styled from 'styled-components';
-import { SearchOutlined } from '@ant-design/icons';
+import styled from "styled-components";
+import { SearchOutlined } from "@ant-design/icons";
 
 export const SearchContainer = styled.div`
   display: flex;
   align-items: center;
   border: 1px solid #ddd;
   border-radius: 10px;
-  padding-right:15px;
+  padding-right: 15px;
   padding-left: 10px;
   background-color: white;
   height: 40px;

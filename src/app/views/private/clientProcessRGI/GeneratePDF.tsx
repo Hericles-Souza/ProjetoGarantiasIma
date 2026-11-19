@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  Image,
-} from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { Html } from "react-pdf-html";
 import logoBase64 from "../../../../assets/image/png/logo-ima.png";
 
@@ -153,9 +146,7 @@ const ReportPDF: React.FC<PDFProps> = ({ item, images = [] }) => {
         {/* Header with logo, title and date */}
         <View style={styles.header}>
           <Image src={logoBase64} style={styles.logo} />
-          <Text style={styles.headerTitle}>
-            Laudo Técnico de Solicitação de Garantia
-          </Text>
+          <Text style={styles.headerTitle}>Laudo Técnico de Solicitação de Garantia</Text>
           <View style={styles.dateField}>
             <Text style={styles.dateLabel}>Data de Emissão</Text>
             <Text style={styles.dateInput}>{item.dataEmissao}</Text>
@@ -175,9 +166,7 @@ const ReportPDF: React.FC<PDFProps> = ({ item, images = [] }) => {
             </View>
             <View style={[styles.inputField, { width: "50%" }]}>
               <Text style={styles.inputLabel}>CNPJ</Text>
-              <Text style={styles.input}>
-                CNPJ: {safeText(item?.cnpj) || "CNPJ Não Informado"}
-              </Text>
+              <Text style={styles.input}>CNPJ: {safeText(item?.cnpj) || "CNPJ Não Informado"}</Text>
             </View>
           </View>
 
@@ -200,9 +189,7 @@ const ReportPDF: React.FC<PDFProps> = ({ item, images = [] }) => {
           <View style={styles.inputGroup}>
             <View style={[styles.inputField, { width: "50%" }]}>
               <Text style={styles.inputLabel}>Código da peça *</Text>
-              <Text style={styles.input}>
-                {safeText(item?.codigo) || "ALR-84888"}
-              </Text>
+              <Text style={styles.input}>{safeText(item?.codigo) || "ALR-84888"}</Text>
             </View>
             <View style={[styles.inputField, { width: "50%" }]}>
               <Text style={styles.inputLabel}>Referência / Lote da Peça *</Text>
@@ -216,18 +203,12 @@ const ReportPDF: React.FC<PDFProps> = ({ item, images = [] }) => {
               <Text style={styles.input}>{safeText(item?.defeito)}</Text>
             </View>
             <View style={[styles.inputField, { width: "33%" }]}>
-              <Text style={styles.inputLabel}>
-                Modelo do veículo que aplicou *
-              </Text>
-              <Text style={styles.input}>
-                {safeText(item?.modelo) || "Modelo X"}
-              </Text>
+              <Text style={styles.inputLabel}>Modelo do veículo que aplicou *</Text>
+              <Text style={styles.input}>{safeText(item?.modelo) || "Modelo X"}</Text>
             </View>
             <View style={[styles.inputField, { width: "33%" }]}>
               <Text style={styles.inputLabel}>Aro do veículo *</Text>
-              <Text style={styles.input}>
-                {safeText(item?.aroVeiculo) || "Modelo X"}
-              </Text>
+              <Text style={styles.input}>{safeText(item?.aroVeiculo) || "Modelo X"}</Text>
             </View>
           </View>
 
@@ -292,11 +273,7 @@ const ReportPDF: React.FC<PDFProps> = ({ item, images = [] }) => {
 
               <View style={styles.imageContainer}>
                 {chunk.map((src, idx) => (
-                  <Image
-                    key={`${pageIdx}-${idx}`}
-                    src={src}
-                    style={styles.analysisImage}
-                  />
+                  <Image key={`${pageIdx}-${idx}`} src={src} style={styles.analysisImage} />
                 ))}
               </View>
             </View>

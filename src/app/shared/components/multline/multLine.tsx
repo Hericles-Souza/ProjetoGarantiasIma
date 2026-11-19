@@ -1,6 +1,6 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
+import * as React from "react";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
 
 interface MultilineTextFieldsProps {
   value: string;
@@ -20,16 +20,11 @@ export default function MultilineTextFields({
   placeholder = "Digite algo...",
   rows = 4,
   fullWidth = true,
-  borderRadius = '12px',
+  borderRadius = "12px",
   disabled = false,
 }: MultilineTextFieldsProps) {
   return (
-    <Box
-      component="form"
-      sx={{ '& .MuiTextField-root': { m: 1 } }}
-      noValidate
-      autoComplete="off"
-    >
+    <Box component="form" sx={{ "& .MuiTextField-root": { m: 1 } }} noValidate autoComplete="off">
       <TextField
         id="outlined-multiline-static"
         label={label}
@@ -41,7 +36,7 @@ export default function MultilineTextFields({
         fullWidth={fullWidth}
         disabled={disabled}
         sx={{
-          '& .MuiOutlinedInput-root': {
+          "& .MuiOutlinedInput-root": {
             borderRadius: borderRadius,
           },
         }}

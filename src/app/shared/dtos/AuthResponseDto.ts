@@ -1,4 +1,4 @@
-import {RuleModel} from "@shared/models/RuleModel.ts";
+import { RuleModel } from "@shared/models/RuleModel.ts";
 
 export interface AuthResponseDto {
   id: string;

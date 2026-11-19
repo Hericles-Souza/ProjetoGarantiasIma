@@ -11,18 +11,12 @@ import {
   getGarantiasPaginationAsync,
 } from "@shared/services/GarantiasService.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
-import {
-  GarantiasStatusEnum,
-  GarantiasStatusEnum2,
-} from "@shared/enums/GarantiasStatusEnum.ts";
+import { GarantiasStatusEnum, GarantiasStatusEnum2 } from "@shared/enums/GarantiasStatusEnum.ts";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@shared/contexts/Auth/AuthContext";
 import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
 import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
-import {
-  getAcordosByUser,
-  getAllAcordos,
-} from "@shared/services/AcordoComercialService";
+import { getAcordosByUser, getAllAcordos } from "@shared/services/AcordoComercialService";
 import { AcordoStatusEnum } from "@shared/enums/AcordoComercialStatusEnum";
 import { TbRefresh } from "react-icons/tb";
 
@@ -37,16 +31,14 @@ const Garantias: React.FC = () => {
   const context = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [filteredItems, setFilteredItems] = useState<GarantiasModel[]>([]);
-  const [filteredAcordoItems, setFilteredAcordoItems] = useState<
-    AcordoComercialModel[]
-  >([]);
+  const [filteredAcordoItems, setFilteredAcordoItems] = useState<AcordoComercialModel[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
   const isTechnicalUser = context.user?.rule?.name
     ? [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor].includes(
-      context.user.rule.name as UserRoleEnum
-    )
+        context.user.rule.name as UserRoleEnum
+      )
     : false;
 
   useEffect(() => {
@@ -76,10 +68,7 @@ const Garantias: React.FC = () => {
         let status: number[] = [];
 
         if (context.user.rule.name === UserRoleEnum.Tecnico) {
-          status = [
-            GarantiasStatusEnum2.EM_ANALISE,
-            GarantiasStatusEnum2.CONFIRMADA,
-          ];
+          status = [GarantiasStatusEnum2.EM_ANALISE, GarantiasStatusEnum2.CONFIRMADA];
         } else if (context.user.rule.name === UserRoleEnum.Supervisor) {
           status = [
             GarantiasStatusEnum2.EM_ANALISE_SUPERVISOR,
@@ -123,15 +112,12 @@ const Garantias: React.FC = () => {
       const filtered = cardData.filter((card) => {
         const matchesStatus =
           filterStatus === "todos" ||
-          (card.status &&
-            normalize(card.status) === normalize(filterStatus));
+          (card.status && normalize(card.status) === normalize(filterStatus));
 
         const matchesSearch =
           searchTerm === "" ||
-          (card.rgi &&
-            normalize(card.rgi).includes(normalize(searchTerm))) ||
-          (card.status &&
-            normalize(card.status).includes(normalize(searchTerm))) ||
+          (card.rgi && normalize(card.rgi).includes(normalize(searchTerm))) ||
+          (card.status && normalize(card.status).includes(normalize(searchTerm))) ||
           (card.itens &&
             card.itens.some((item) =>
               normalize(item.tipoDefeito || "").includes(normalize(searchTerm))
@@ -146,15 +132,12 @@ const Garantias: React.FC = () => {
       const filtered = acordoData.filter((card) => {
         const matchesStatus =
           filterStatus === "todos" ||
-          (card.status &&
-            card.status.toLowerCase() === filterStatus.toLowerCase());
+          (card.status && card.status.toLowerCase() === filterStatus.toLowerCase());
 
         const matchesSearch =
           searchTerm === "" ||
-          (card.cdAci &&
-            card.cdAci.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (card.status &&
-            card.status.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (card.cdAci && card.cdAci.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (card.status && card.status.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (card.itens &&
             card.itens.some((item) =>
               item.codigoItem?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -246,11 +229,8 @@ const Garantias: React.FC = () => {
                       color={filterStatus === status ? "red" : "default"}
                       onClick={() => {
                         // console.log(status);
-                        setFilterStatus((prev) =>
-                          prev === status ? "todos" : status
-                        )
-                      }
-                      }
+                        setFilterStatus((prev) => (prev === status ? "todos" : status));
+                      }}
                     >
                       {status}
                     </Tag>
@@ -269,18 +249,10 @@ const Garantias: React.FC = () => {
             >
               {!isTechnicalUser && (
                 <>
-                  <Button
-                    className={styled.button}
-                    type="default"
-                    onClick={handlePrevious}
-                  >
+                  <Button className={styled.button} type="default" onClick={handlePrevious}>
                     &lt;
                   </Button>
-                  <Button
-                    className={styled.button}
-                    type="default"
-                    onClick={handleNext}
-                  >
+                  <Button className={styled.button} type="default" onClick={handleNext}>
                     &gt;
                   </Button>
                 </>
@@ -292,11 +264,7 @@ const Garantias: React.FC = () => {
                   tabKey={activeTab}
                 />
               </div>
-              <Button
-                type="primary"
-                onClick={handleRefresh}
-                className={styled.ButonToSend}
-              >
+              <Button type="primary" onClick={handleRefresh} className={styled.ButonToSend}>
                 <TbRefresh />
               </Button>
             </div>
@@ -323,17 +291,12 @@ const Garantias: React.FC = () => {
                           state: { item, garantiaData: garantia },
                         });
                       } else if (
-                        context.user?.rule?.name.includes(
-                          UserRoleEnum.Tecnico
-                        ) ||
-                        context.user?.rule?.name.includes(
-                          UserRoleEnum.Supervisor
-                        )
+                        context.user?.rule?.name.includes(UserRoleEnum.Tecnico) ||
+                        context.user?.rule?.name.includes(UserRoleEnum.Supervisor)
                       ) {
-                        navigate(
-                          `/garantias/technical-and-supervisor/${garantia.id}`,
-                          { state: { item, garantia } }
-                        );
+                        navigate(`/garantias/technical-and-supervisor/${garantia.id}`, {
+                          state: { item, garantia },
+                        });
                       }
                     }}
                     tab="RGI"
@@ -375,9 +338,7 @@ const Garantias: React.FC = () => {
                       className={`carousel-tag ${styled.tab}`}
                       color={filterStatus === status ? "red" : "default"}
                       onClick={() =>
-                        setFilterStatus((prev) =>
-                          prev === status ? "todos" : status
-                        )
+                        setFilterStatus((prev) => (prev === status ? "todos" : status))
                       }
                     >
                       {status}
@@ -397,18 +358,10 @@ const Garantias: React.FC = () => {
             >
               {!isTechnicalUser && (
                 <>
-                  <Button
-                    className={styled.button}
-                    type="default"
-                    onClick={handlePrevious}
-                  >
+                  <Button className={styled.button} type="default" onClick={handlePrevious}>
                     &lt;
                   </Button>
-                  <Button
-                    className={styled.button}
-                    type="default"
-                    onClick={handleNext}
-                  >
+                  <Button className={styled.button} type="default" onClick={handleNext}>
                     &gt;
                   </Button>
                 </>
@@ -420,11 +373,7 @@ const Garantias: React.FC = () => {
                   tabKey={activeTab}
                 />
               </div>
-              <Button
-                type="primary"
-                onClick={handleRefresh}
-                className={styled.ButonToSend}
-              >
+              <Button type="primary" onClick={handleRefresh} className={styled.ButonToSend}>
                 <TbRefresh />
               </Button>
             </div>

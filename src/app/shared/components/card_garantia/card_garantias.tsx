@@ -1,13 +1,18 @@
-import { CalendarOutlined, RightOutlined, UserOutlined } from '@ant-design/icons';
-import styled from 'styled-components';
-import { converterStatusGarantia, converterStatusGarantiaTecnicoAndSupervisor, GarantiasItemStatusEnum2, statusStylesRGI } from "@shared/enums/GarantiasStatusEnum.ts";
+import { CalendarOutlined, RightOutlined, UserOutlined } from "@ant-design/icons";
+import styled from "styled-components";
+import {
+  converterStatusGarantia,
+  converterStatusGarantiaTecnicoAndSupervisor,
+  GarantiasItemStatusEnum2,
+  statusStylesRGI,
+} from "@shared/enums/GarantiasStatusEnum.ts";
 import { GarantiasModel } from "@shared/models/GarantiasModel.ts";
-import dayjs from 'dayjs';
-import { AuthContext } from '@shared/contexts/Auth/AuthContext';
-import { UserRoleEnum } from '@shared/enums/UserRoleEnum';
-import { converterStatusAcordo, statusStylesACI } from '@shared/enums/AcordoComercialStatusEnum';
-import { AcordoComercialModel } from '@shared/models/AcordoComercialModel';
-import { useContext } from 'react';
+import dayjs from "dayjs";
+import { AuthContext } from "@shared/contexts/Auth/AuthContext";
+import { UserRoleEnum } from "@shared/enums/UserRoleEnum";
+import { converterStatusAcordo, statusStylesACI } from "@shared/enums/AcordoComercialStatusEnum";
+import { AcordoComercialModel } from "@shared/models/AcordoComercialModel";
+import { useContext } from "react";
 
 const CardContainer = styled.div<{ $clickable: boolean }>`
   flex: 0 0 calc(25% - 12px);
@@ -17,16 +22,17 @@ const CardContainer = styled.div<{ $clickable: boolean }>`
   background-color: #fff;
   border-radius: 15px;
   border: 1px solid #ddd;
-  cursor: ${(props) => (props.$clickable ? 'pointer' : 'default')};
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
   &:hover {
-    transform: ${(props) => (props.$clickable ? 'scale(1.01)' : 'none')};
-    box-shadow: ${(props) =>
-    props.$clickable ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none'};
+    transform: ${(props) => (props.$clickable ? "scale(1.01)" : "none")};
+    box-shadow: ${(props) => (props.$clickable ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "none")};
   }
 `;
 
@@ -58,8 +64,6 @@ const PieceCode = styled.p`
   color: #555;
   margin: 0;
 `;
-
-
 
 const Footer = styled.div`
   display: flex;
@@ -96,7 +100,6 @@ const RedContainer = styled.div`
   border-left: 5px solid #ff4d4d;
 `;
 
-
 interface CardCategoriasProps {
   GarantiaItem?: GarantiasModel;
   Acordo?: AcordoComercialModel;
@@ -106,27 +109,63 @@ interface CardCategoriasProps {
   tab: string;
 }
 
-const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, Acordo, codigoFormatado, onClick, tab }) => {
-
-  const statusStyle = tab === "RGI" ? statusStylesRGI[GarantiaItem.codigoStatus] : statusStylesACI[Acordo.codigoStatus];
+const CardCategorias: React.FC<CardCategoriasProps> = ({
+  data,
+  GarantiaItem,
+  Acordo,
+  codigoFormatado,
+  onClick,
+  tab,
+}) => {
+  const statusStyle =
+    tab === "RGI"
+      ? statusStylesRGI[GarantiaItem.codigoStatus]
+      : statusStylesACI[Acordo.codigoStatus];
   const context = useContext(AuthContext);
   const isTechnicalUser = context.user?.rule?.name
-    ? [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor].includes(context.user.rule.name as UserRoleEnum)
+    ? [UserRoleEnum.Tecnico, UserRoleEnum.Supervisor].includes(
+        context.user.rule.name as UserRoleEnum
+      )
     : false;
   return (
-    <CardContainer key={tab === "ACI" ? Acordo.id : GarantiaItem.id} $clickable={!!onClick} onClick={onClick}>
+    <CardContainer
+      key={tab === "ACI" ? Acordo.id : GarantiaItem.id}
+      $clickable={!!onClick}
+      onClick={onClick}
+    >
       <Header>
         {tab === "RGI" && (
-          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? `${statusStyle.backgroundColor}15` : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9", fontWeight: "500" , fontSize:"15px" }}>
-            {context.user.rule.name === UserRoleEnum.Cliente || context.user.rule.name === UserRoleEnum.Admin
+          <Status
+            style={{
+              backgroundColor: statusStyle?.backgroundColor
+                ? `${statusStyle.backgroundColor}15`
+                : "#F9F9F9",
+              color: statusStyle?.color ? statusStyle?.color : "#F9F9F9",
+              fontWeight: "500",
+              fontSize: "15px",
+            }}
+          >
+            {context.user.rule.name === UserRoleEnum.Cliente ||
+            context.user.rule.name === UserRoleEnum.Admin
               ? converterStatusGarantia(GarantiaItem?.codigoStatus)
-              : (GarantiaItem?.notas.some(nota => nota.itens.some(item => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO)))
+              : GarantiaItem?.notas.some((nota) =>
+                    nota.itens.some(
+                      (item) => item.codigoStatus == GarantiasItemStatusEnum2.NAO_ANALISADO
+                    )
+                  )
                 ? converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, true)
                 : converterStatusGarantiaTecnicoAndSupervisor(GarantiaItem?.codigoStatus, false)}
           </Status>
         )}
         {tab === "ACI" && (
-          <Status style={{ backgroundColor: statusStyle?.backgroundColor ? `${statusStyle.backgroundColor}15` : "#F9F9F9", color: statusStyle?.color ? statusStyle?.color : "#F9F9F9" }}>
+          <Status
+            style={{
+              backgroundColor: statusStyle?.backgroundColor
+                ? `${statusStyle.backgroundColor}15`
+                : "#F9F9F9",
+              color: statusStyle?.color ? statusStyle?.color : "#F9F9F9",
+            }}
+          >
             {converterStatusAcordo(Acordo.codigoStatus)}
           </Status>
         )}
@@ -134,18 +173,17 @@ const CardCategorias: React.FC<CardCategoriasProps> = ({ data, GarantiaItem, Aco
       </Header>
       <RedContainer>
         <Code>{codigoFormatado}</Code>
-
       </RedContainer>
       <Footer>
         <Date>
-          {isTechnicalUser && tab === 'RGI' && GarantiaItem.razaoSocial && (
+          {isTechnicalUser && tab === "RGI" && GarantiaItem.razaoSocial && (
             <CreatorInfo>
               <UserOutlined style={{ marginRight: 4 }} />
               {GarantiaItem.razaoSocial}
             </CreatorInfo>
           )}
           <div>
-            <CalendarOutlined style={{ marginRight: 5 }} /> {dayjs(data).format('DD/MM/YYYY')}
+            <CalendarOutlined style={{ marginRight: 5 }} /> {dayjs(data).format("DD/MM/YYYY")}
           </div>
         </Date>
       </Footer>
